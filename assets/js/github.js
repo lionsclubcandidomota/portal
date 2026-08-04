@@ -1,6 +1,6 @@
-import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.34.0';
-import { normalizeGitHubToken } from './core/portal-security.js?v=6.34.0';
-import { createPublicPortalState } from './core/portal-data-boundary.js?v=6.34.0';
+import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.34.1';
+import { findSensitivePortalFields, normalizeGitHubToken } from './core/portal-security.js?v=6.34.1';
+import { createPublicPortalState, hasPrivatePortalData } from './core/portal-data-boundary.js?v=6.34.1';
 
 export const GITHUB_CONFIG = Object.freeze({
   owner: 'lionsclubcandidomota',
@@ -363,8 +363,7 @@ export async function saveGitHubState(
   expectedDataSha,
   commitMessage = 'Atualiza dados do painel Lions',
   mediaAssets = [],
-  deletedPaths = [],
-  options = {}
+  deletedPaths = []
 ) {
   const safeToken = normalizeGitHubToken(token);
   const currentDataFile = await readRepositoryFile(safeToken);
@@ -373,14 +372,15 @@ export async function saveGitHubState(
   }
 
   const deploymentId = `${Date.now()}-${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
-  const publishState = options.publicOnly === false
-    ? sanitizeState(state)
-    : createPublicPortalState(sanitizeState(state));
-  const payload = createPortalEnvelope(publishState, {
+  const payload = createPortalEnvelope(sanitizeState(state), {
     updatedAt: new Date().toISOString(),
     deploymentId,
-    audience: options.publicOnly === false ? 'legacy-full' : 'public'
+    audience: 'public'
   });
+  const sensitiveFields = findSensitivePortalFields(payload.data);
+  if (hasPrivatePortalData(payload.data) || sensitiveFields.length) {
+    throw new Error('A publicação foi bloqueada porque o JSON público ainda contém dados privados.');
+  }
   const jsonContent = encodeBase64Utf8(`${JSON.stringify(payload, null, 2)}\n`);
 
   const headSha = await getBranchHead(safeToken);

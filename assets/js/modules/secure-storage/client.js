@@ -1,7 +1,7 @@
 import {
   createPrivatePortalState,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.34.0';
+} from '../../core/portal-data-boundary.js?v=6.34.1';
 
 const SESSION_REFRESH_MARGIN_MS = 60_000;
 const R2_STORAGE_KIND = 'r2';

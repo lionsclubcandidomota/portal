@@ -1,4 +1,4 @@
-# Portões de qualidade — v6.34.0
+# Portões de qualidade — v6.34.1
 
 ## Comando principal
 

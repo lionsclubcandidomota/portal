@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.34.1 — Correção definitiva da fronteira pública na publicação
+
+- Remove a opção legada que permitia publicar o estado completo no GitHub.
+- Faz o envelope público ser sanitizado depois da normalização do esquema, impedindo que categorias financeiras padrão retornem ao JSON público.
+- Bloqueia a publicação antes do commit caso qualquer coleção privada ou campo sensível permaneça no payload final.
+- Aplica a mesma fronteira ao cache público e à cópia sincronizada mantida no navegador.
+- Adiciona teste de regressão que tenta forçar `publicOnly: false` com movimentações, contas, grupos e credenciais privadas.
+- Mantém o estado financeiro e os anexos exclusivamente no Cloudflare R2.
+
 ## 6.34.0 — Backup e integridade do estado privado
 
 - Cria backups versionados no Cloudflare R2 antes de cada substituição do estado privado e após cada publicação confirmada.

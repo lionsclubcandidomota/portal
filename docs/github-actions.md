@@ -44,7 +44,7 @@ Arquivo: `.github/workflows/release-artifacts.yml`
 É executado:
 
 - manualmente pela aba **Actions**;
-- quando uma tag iniciada por `v` é enviada, por exemplo `v6.34.0`.
+- quando uma tag iniciada por `v` é enviada, por exemplo `v6.34.1`.
 
 O workflow:
 
@@ -58,7 +58,7 @@ O workflow não realiza deploy no GitHub Pages nem no Cloudflare. A publicação
 
 ## Primeira ativação no repositório
 
-1. Envie a pasta `.github/workflows` junto com o restante da versão 6.34.0.
+1. Envie a pasta `.github/workflows` junto com o restante da versão 6.34.1.
 2. No GitHub, abra a aba **Actions**.
 3. Confirme que o workflow **Qualidade do Portal** foi iniciado.
 4. Aguarde a aprovação dos trabalhos:

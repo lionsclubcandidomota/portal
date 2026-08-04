@@ -1,5 +1,6 @@
-import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.34.0';
-import { normalizeMemberRecord } from './portal-members.js?v=6.34.0';
+import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.34.1';
+import { normalizeMemberRecord } from './portal-members.js?v=6.34.1';
+import { createPublicPortalState } from './portal-data-boundary.js?v=6.34.1';
 
 export const PORTAL_APP_ID = 'Lions Clube de Cândido Mota Dashboard';
 export const CURRENT_SCHEMA_VERSION = 10;
@@ -400,13 +401,17 @@ export function migratePortalPayload(payload) {
 export function createPortalEnvelope(state, metadata = {}) {
   const normalized = normalizePortalStateShape(state);
   const safeMetadata = stripSensitivePortalFields(metadata);
-  assertValidPortalState(normalized);
+  const audience = String(safeMetadata.audience || '').trim().toLowerCase();
+  const envelopeState = audience === 'public' || audience === 'public-cache'
+    ? createPublicPortalState(normalized)
+    : normalized;
+  assertValidPortalState(envelopeState);
 
   return {
     ...safeMetadata,
     app: PORTAL_APP_ID,
     schemaVersion: CURRENT_SCHEMA_VERSION,
     version: CURRENT_SCHEMA_VERSION,
-    data: normalized
+    data: envelopeState
   };
 }

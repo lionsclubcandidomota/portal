@@ -1,7 +1,6 @@
 {
-  "updatedAt": "2026-08-04T21:43:13.256Z",
-  "deploymentId": "1785879793255-563d9ebe-c6f3-4afa-8ba3-9fb8ee88e6c5",
-  "audience": "public",
+  "updatedAt": "2026-08-04T15:02:49.013Z",
+  "deploymentId": "1785855769013-a52a5b69-8005-453f-9d39-c09b0bb99263",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 10,
   "version": 10,
@@ -11,9 +10,13 @@
       "logo": "./public/logo.png",
       "primaryColor": "#00529B",
       "accentColor": "#F2C100",
-      "membershipMonthlyFee": 0,
-      "membershipFamilyPrimaryFee": 0,
-      "membershipFamilyAdditionalFee": 0,
+      "secureStorage": {
+        "version": 1,
+        "enabled": true,
+        "provider": "cloudflare-r2",
+        "workerUrl": "https://lions-portal-anexos.lionsclubcandidomota.workers.dev"
+      },
+      "initialized": true,
       "accessProfiles": {
         "director": {
           "version": 2,
@@ -22,14 +25,7 @@
           "label": "Diretoria",
           "configuredAt": "2026-08-04T15:02:44.005Z"
         }
-      },
-      "secureStorage": {
-        "version": 1,
-        "enabled": true,
-        "provider": "cloudflare-r2",
-        "workerUrl": "https://lions-portal-anexos.lionsclubcandidomota.workers.dev"
-      },
-      "initialized": true
+      }
     },
     "birthdays": [
       {
@@ -324,19 +320,7 @@
       }
     ],
     "treasuryAccounts": [],
-    "treasuryCategories": [
-      "Mensalidades",
-      "Mútuas",
-      "Material de escritório",
-      "Documentação",
-      "Projeto",
-      "Evento",
-      "Patrocínio",
-      "Combustível",
-      "Taxa bancária",
-      "Doação",
-      "Outros"
-    ],
+    "treasuryCategories": [],
     "familyGroups": [],
     "mutualGroups": [],
     "treasury": [],

@@ -1,4 +1,4 @@
-# Homologação — v6.34.0
+# Homologação — v6.34.1
 
 ## Fluxos prioritários do Portal
 
@@ -51,16 +51,16 @@ Execute esta seção somente depois de publicar o Worker e salvar sua URL em Con
 Antes da homologação funcional, publique o Worker atualizado e execute a migração descrita em `docs/private-data-migration.md`.
 
 
-## Pipeline de release — versão 6.34.0
+## Pipeline de release — versão 6.34.1
 
 1. Execute `npm run release:build`.
 2. Confirme que a pasta `dist` contém os três ZIPs e `checksums.sha256`.
 3. Execute `npm run release:dist:verify` e confirme a validação dos artefatos.
-4. Publique somente o conteúdo de `portal-site-v6.34.0.zip` no GitHub Pages.
+4. Publique somente o conteúdo de `portal-site-v6.34.1.zip` no GitHub Pages.
 5. Atualize o Worker primeiro com o pacote `cloudflare-worker-v1.2.0.zip` quando houver alteração no Worker.
 
 
-## GitHub Actions — versão 6.34.0
+## GitHub Actions — versão 6.34.1
 
 1. Envie a pasta `.github/workflows` ao repositório.
 2. Na aba **Actions**, confirme a execução de **Qualidade do Portal**.

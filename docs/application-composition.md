@@ -1,4 +1,4 @@
-# Composição da aplicação — v6.34.0
+# Composição da aplicação — v6.34.1
 
 ## Raiz de composição
 

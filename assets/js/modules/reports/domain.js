@@ -1,4 +1,4 @@
-import { memberIsActive, memberStatusLabel } from '../../core/portal-members.js?v=6.34.0';
+import { memberIsActive, memberStatusLabel } from '../../core/portal-members.js?v=6.34.1';
 import { dateFromInput, periodLabel } from '../admin-dashboard/domain.js';
 import {
   isMutualEntry,

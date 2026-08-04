@@ -4,8 +4,8 @@ import {
   createDefaultPortalState,
   createPortalEnvelope,
   migratePortalPayload
-} from './core/portal-schema.js?v=6.34.0';
-import { createPublicPortalState } from './core/portal-data-boundary.js?v=6.34.0';
+} from './core/portal-schema.js?v=6.34.1';
+import { createPublicPortalState } from './core/portal-data-boundary.js?v=6.34.1';
 
 const STORAGE_KEY = 'lionsCandidoMota.dashboard.v1';
 const SESSION_STORAGE_KEY = 'lionsCandidoMota.dashboard.privateSession.v1';

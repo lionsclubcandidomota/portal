@@ -78,12 +78,25 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
   t.after(() => { globalThis.fetch = previousFetch; });
 
   const result = await saveGitHubState('token-seguro', {
-    settings: { clubName: 'Publicação', initialized: true },
+    settings: {
+      clubName: 'Publicação',
+      initialized: true,
+      membershipMonthlyFee: 150,
+      accessProfiles: {
+        director: {
+          enabled: true,
+          label: 'Diretoria',
+          passwordHash: 'hash-privado',
+          salt: 'salt-privado'
+        }
+      }
+    },
     birthdays: [],
-    treasuryAccounts: [],
-    treasuryCategories: [],
-    familyGroups: [],
-    treasury: [],
+    treasuryAccounts: [{ id: 'acc-private', name: 'Conta privada' }],
+    treasuryCategories: ['Privada'],
+    familyGroups: [{ id: 'family-private' }],
+    mutualGroups: [{ id: 'mutual-private' }],
+    treasury: [{ id: 'movement-private', description: 'Movimentação privada' }],
     events: [],
     meetings: [],
     notices: []
@@ -91,7 +104,7 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
     path: 'public/members/b1-foto.jpg',
     content: '/9j/AA==',
     encoding: 'base64'
-  }]);
+  }], [], { publicOnly: false });
 
   const blobRequests = requests.filter(item => item.url.endsWith('/git/blobs'));
   assert.equal(blobRequests.length, 2);
@@ -100,6 +113,15 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
   assert.equal(payload.schemaVersion, CURRENT_SCHEMA_VERSION);
   assert.equal(payload.version, CURRENT_SCHEMA_VERSION);
   assert.equal(payload.data.settings.clubName, 'Publicação');
+  assert.equal(payload.audience, 'public');
+  assert.deepEqual(payload.data.treasuryAccounts, []);
+  assert.deepEqual(payload.data.treasuryCategories, []);
+  assert.deepEqual(payload.data.familyGroups, []);
+  assert.deepEqual(payload.data.mutualGroups, []);
+  assert.deepEqual(payload.data.treasury, []);
+  assert.equal('membershipMonthlyFee' in payload.data.settings, false);
+  assert.equal('passwordHash' in payload.data.settings.accessProfiles.director, false);
+  assert.equal('salt' in payload.data.settings.accessProfiles.director, false);
   assert.ok(payload.deploymentId);
 
   const treeRequest = requests.find(item => item.url.endsWith('/git/trees'));

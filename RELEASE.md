@@ -1,57 +1,34 @@
-# Release 6.34.0
+# Release 6.34.1
 
-Esta versão conclui o plano principal de refatoração do Portal com proteção operacional do estado privado no Cloudflare R2.
+Esta versão corrige a serialização usada nas publicações feitas diretamente pelo Portal.
 
-## Backups remotos
+## Correção
 
-O Worker 1.2.0 passa a manter uma linha do tempo privada em:
+O normalizador do esquema preenchia novamente as categorias financeiras padrão depois que o estado já havia sido sanitizado. Com isso, uma inclusão ou exclusão publicada pelo painel podia fazer o GitHub Actions bloquear `data/dados.json` como privado.
 
-```text
-__portal/backups/private-state-v1/
-```
+A publicação agora segue esta ordem obrigatória:
 
-Antes de substituir o estado principal, o Worker preserva a versão anterior. Depois da gravação, a nova revisão também recebe uma cópia restaurável. São mantidas automaticamente as 20 versões mais recentes.
+1. normaliza o estado completo;
+2. cria o envelope público;
+3. remove todas as coleções e configurações privadas;
+4. verifica novamente o payload final;
+5. somente então prepara o blob e o commit no GitHub.
 
-Cada objeto possui checksum SHA-256, revisão, data, autor e resumo de movimentações, contas e anexos.
+A opção legada que permitia desativar a sanitização foi removida.
 
-## Proteções de escrita
+## Dados preservados
 
-- Controle otimista de revisão continua impedindo conflitos entre sessões.
-- Uma publicação que tentaria remover todos os dados privados é bloqueada com erro 422.
-- O estado principal é validado pelo checksum antes de ser carregado.
-- Uma restauração cria um backup de segurança do estado atual antes de aplicar a versão selecionada.
-
-## Integridade dos anexos
-
-A Central de Recuperação consulta o Worker e informa:
-
-- comprovantes referenciados e encontrados;
-- arquivos ausentes;
-- referências inválidas ou duplicadas;
-- objetos no prefixo `treasury/` sem vínculo com movimentações atuais;
-- quantidade de backups disponíveis.
-
-A Diretoria possui consulta somente leitura. Criação manual e restauração de backups permanecem exclusivas do Administrador.
+- Tesouraria, contas, grupos, mensalidades e credenciais derivadas continuam no R2.
+- Aniversariantes, agenda, reuniões, avisos e configurações visuais permanecem no JSON público.
+- O Worker 1.2.0 não foi alterado e não precisa ser republicado.
 
 ## Validação
 
-- 246 testes automatizados;
-- lint e grafo de imports;
-- auditorias de CSS, acessibilidade e segurança;
-- bloqueio de dados financeiros no pacote público;
-- verificação dos endpoints e contratos do Worker;
-- artefatos determinísticos e hashes SHA-256.
+- teste de regressão com tentativa explícita de publicar dados privados;
+- auditoria de segurança do JSON público;
+- testes, lint, CSS, acessibilidade e manifesto de release;
+- geração determinística dos artefatos.
 
-## Publicação obrigatória
+## Publicação
 
-Esta versão altera o Worker. Publique primeiro o pacote `cloudflare-worker-v1.2.0.zip` e confirme no endpoint `/health` os campos:
-
-```json
-{
-  "privateBackups": "versioned",
-  "privateBackupRetention": 20,
-  "attachmentIntegrity": "available"
-}
-```
-
-Depois publique `portal-site-v6.34.0.zip`.
+Substitua o repositório pelo conteúdo de `portal-main-v6.34.1.zip`, incluindo `data/dados.json` e `release-manifest.json`. Para o site, use `portal-site-v6.34.1.zip`.

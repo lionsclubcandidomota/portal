@@ -1,7 +1,7 @@
-import { createPortalEnvelope, migratePortalPayload } from '../../core/portal-schema.js?v=6.34.0';
-import { RUNTIME_STORAGE_KEYS } from './constants.js?v=6.34.0';
-import { normalizePendingChanges } from './domain.js?v=6.34.0';
-import { createPublicPortalState } from '../../core/portal-data-boundary.js?v=6.34.0';
+import { createPortalEnvelope, migratePortalPayload } from '../../core/portal-schema.js?v=6.34.1';
+import { RUNTIME_STORAGE_KEYS } from './constants.js?v=6.34.1';
+import { normalizePendingChanges } from './domain.js?v=6.34.1';
+import { createPublicPortalState } from '../../core/portal-data-boundary.js?v=6.34.1';
 
 function readJson(storage, key) {
   try {
@@ -61,7 +61,7 @@ export function createRuntimeMetadataStore(storage, privateStorage = globalThis.
     writeSyncedState(state) {
       if (hasSeparatePrivateStorage) {
         writeJson(privateStorage, RUNTIME_STORAGE_KEYS.syncedState, createPortalEnvelope(state));
-        writeJson(storage, RUNTIME_STORAGE_KEYS.syncedState, createPortalEnvelope(createPublicPortalState(state)));
+        writeJson(storage, RUNTIME_STORAGE_KEYS.syncedState, createPortalEnvelope(createPublicPortalState(state), { audience: 'public-cache' }));
       } else {
         writeJson(storage, RUNTIME_STORAGE_KEYS.syncedState, createPortalEnvelope(state));
       }
