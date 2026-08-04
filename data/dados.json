@@ -1,6 +1,7 @@
 {
-  "updatedAt": "2026-08-04T15:02:49.013Z",
-  "deploymentId": "1785855769013-a52a5b69-8005-453f-9d39-c09b0bb99263",
+  "updatedAt": "2026-08-04T21:41:56.043Z",
+  "deploymentId": "1785879716042-45e515c1-43eb-4082-870e-93b328f7479a",
+  "audience": "public",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 10,
   "version": 10,
@@ -10,13 +11,9 @@
       "logo": "./public/logo.png",
       "primaryColor": "#00529B",
       "accentColor": "#F2C100",
-      "secureStorage": {
-        "version": 1,
-        "enabled": true,
-        "provider": "cloudflare-r2",
-        "workerUrl": "https://lions-portal-anexos.lionsclubcandidomota.workers.dev"
-      },
-      "initialized": true,
+      "membershipMonthlyFee": 0,
+      "membershipFamilyPrimaryFee": 0,
+      "membershipFamilyAdditionalFee": 0,
       "accessProfiles": {
         "director": {
           "version": 2,
@@ -25,7 +22,14 @@
           "label": "Diretoria",
           "configuredAt": "2026-08-04T15:02:44.005Z"
         }
-      }
+      },
+      "secureStorage": {
+        "version": 1,
+        "enabled": true,
+        "provider": "cloudflare-r2",
+        "workerUrl": "https://lions-portal-anexos.lionsclubcandidomota.workers.dev"
+      },
+      "initialized": true
     },
     "birthdays": [
       {
@@ -317,10 +321,31 @@
         "status": "Mútua",
         "active": true,
         "photo": ""
+      },
+      {
+        "id": "b_msf6kjs3_6dkm9q",
+        "memberNumber": "",
+        "name": "teste",
+        "birthDate": "2000-01-01",
+        "status": "Ativo",
+        "active": true,
+        "photo": ""
       }
     ],
     "treasuryAccounts": [],
-    "treasuryCategories": [],
+    "treasuryCategories": [
+      "Mensalidades",
+      "Mútuas",
+      "Material de escritório",
+      "Documentação",
+      "Projeto",
+      "Evento",
+      "Patrocínio",
+      "Combustível",
+      "Taxa bancária",
+      "Doação",
+      "Outros"
+    ],
     "familyGroups": [],
     "mutualGroups": [],
     "treasury": [],
