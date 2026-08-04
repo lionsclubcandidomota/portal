@@ -1,7 +1,6 @@
 {
-  "updatedAt": "2026-08-04T23:42:17.822Z",
-  "deploymentId": "1785886937822-9e84bb36-1e71-44ff-ad6a-f9b559c26369",
-  "audience": "public",
+  "updatedAt": "2026-08-04T15:02:49.013Z",
+  "deploymentId": "1785855769013-a52a5b69-8005-453f-9d39-c09b0bb99263",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 10,
   "version": 10,
@@ -316,15 +315,6 @@
         "name": "João Batista de Melo Jabur",
         "birthDate": "2000-01-01",
         "status": "Mútua",
-        "active": true,
-        "photo": ""
-      },
-      {
-        "id": "b_msfaywrh_z23xhp",
-        "memberNumber": "",
-        "name": "teste",
-        "birthDate": "2026-08-04",
-        "status": "Ativo",
         "active": true,
         "photo": ""
       }

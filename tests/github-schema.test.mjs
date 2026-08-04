@@ -4,7 +4,8 @@ import { CURRENT_SCHEMA_VERSION } from '../assets/js/core/portal-schema.js';
 import {
   GITHUB_CONFIG,
   loadPublicGitHubPayload,
-  saveGitHubState
+  saveGitHubState,
+  updateReleaseManifestForPublication
 } from '../assets/js/github.js';
 
 test('configuração do GitHub aponta para o repositório público correto', () => {
@@ -41,6 +42,25 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
   const previousFetch = globalThis.fetch;
   const requests = [];
   let blobIndex = 0;
+  const currentManifest = {
+    application: 'portal-lions-candido-mota',
+    artifactType: 'source',
+    version: '6.34.2',
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    generatedAt: '2026-08-04T23:50:00.000Z',
+    summary: {
+      files: 2,
+      javascript: 0,
+      css: 0,
+      tests: 0,
+      memberImages: 0,
+      totalBytes: 12
+    },
+    files: [
+      { path: 'data/dados.json', bytes: 2, sha256: 'old-data' },
+      { path: 'index.html', bytes: 10, sha256: 'static-index' }
+    ]
+  };
 
   globalThis.fetch = async (url, options = {}) => {
     const method = options.method || 'GET';
@@ -49,6 +69,16 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
 
     if (String(url).includes('/contents/data/dados.json')) {
       return { ok: true, status: 200, json: async () => ({ sha: 'old-sha' }) };
+    }
+    if (String(url).includes('/contents/release-manifest.json')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          sha: 'manifest-old-sha',
+          content: Buffer.from(JSON.stringify(currentManifest)).toString('base64')
+        })
+      };
     }
     if (String(url).includes('/git/ref/heads/')) {
       return { ok: true, status: 200, json: async () => ({ object: { sha: 'head-sha' } }) };
@@ -107,7 +137,7 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
   }], [], { publicOnly: false });
 
   const blobRequests = requests.filter(item => item.url.endsWith('/git/blobs'));
-  assert.equal(blobRequests.length, 2);
+  assert.equal(blobRequests.length, 3);
   const json = Buffer.from(blobRequests[1].body.content, 'base64').toString('utf8');
   const payload = JSON.parse(json);
   assert.equal(payload.schemaVersion, CURRENT_SCHEMA_VERSION);
@@ -124,23 +154,74 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
   assert.equal('salt' in payload.data.settings.accessProfiles.director, false);
   assert.ok(payload.deploymentId);
 
+  const nextManifest = JSON.parse(Buffer.from(blobRequests[2].body.content, 'base64').toString('utf8'));
+  const manifestPaths = nextManifest.files.map(file => file.path);
+  assert.deepEqual(manifestPaths, [
+    'data/dados.json',
+    'index.html',
+    'public/members/b1-foto.jpg'
+  ]);
+  assert.equal(nextManifest.files.find(file => file.path === 'data/dados.json').bytes, Buffer.byteLength(json));
+  assert.equal(nextManifest.files.find(file => file.path === 'public/members/b1-foto.jpg').bytes, 4);
+  assert.equal(nextManifest.summary.files, 3);
+  assert.equal(nextManifest.summary.memberImages, 1);
+  assert.ok(nextManifest.runtimeUpdatedAt);
+
   const treeRequest = requests.find(item => item.url.endsWith('/git/trees'));
   assert.deepEqual(treeRequest.body.tree.map(item => item.path), [
     'public/members/b1-foto.jpg',
-    'data/dados.json'
+    'data/dados.json',
+    'release-manifest.json'
   ]);
   assert.equal(result.sha, 'blob-2');
+  assert.equal(result.manifestSha, 'blob-3');
   assert.equal(result.commitSha, 'commit-sha');
   assert.equal(result.mediaCount, 1);
 });
 
+test('atualização do manifesto remove arquivos excluídos e preserva hashes estáticos', async () => {
+  const manifest = await updateReleaseManifestForPublication({
+    application: 'portal',
+    summary: { files: 3, totalBytes: 30 },
+    files: [
+      { path: 'index.html', bytes: 10, sha256: 'static' },
+      { path: 'data/dados.json', bytes: 10, sha256: 'old-data' },
+      { path: 'public/treasury/old/file.jpg', bytes: 10, sha256: 'old-file' }
+    ]
+  }, {
+    dataContent: '{}\n',
+    deletedPaths: ['public/treasury/old/file.jpg'],
+    updatedAt: '2026-08-04T23:50:00.000Z'
+  });
+
+  assert.deepEqual(manifest.files.map(file => file.path), ['data/dados.json', 'index.html']);
+  assert.equal(manifest.files.find(file => file.path === 'index.html').sha256, 'static');
+  assert.equal(manifest.summary.files, 2);
+  assert.equal(manifest.runtimeUpdatedAt, '2026-08-04T23:50:00.000Z');
+});
+
 test('publicação bloqueia quando o JSON remoto mudou desde a conexão', async t => {
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => ({
-    ok: true,
-    status: 200,
-    json: async () => ({ sha: 'sha-remoto-novo' })
-  });
+  globalThis.fetch = async url => {
+    const target = String(url);
+    if (target.includes('/git/ref/heads/')) {
+      return { ok: true, status: 200, json: async () => ({ object: { sha: 'head-sha' } }) };
+    }
+    if (target.includes('/contents/data/dados.json')) {
+      return { ok: true, status: 200, json: async () => ({ sha: 'sha-remoto-novo' }) };
+    }
+    if (target.includes('/contents/release-manifest.json')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          sha: 'manifest-sha',
+          content: Buffer.from(JSON.stringify({ files: [], summary: {} })).toString('base64')
+        })
+      };
+    }
+    throw new Error(`Requisição inesperada: ${target}`);
+  };
   t.after(() => { globalThis.fetch = previousFetch; });
 
   await assert.rejects(

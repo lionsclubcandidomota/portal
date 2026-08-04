@@ -1,34 +1,31 @@
-# Release 6.34.1
+# Release 6.34.2
 
-Esta versão corrige a serialização usada nas publicações feitas diretamente pelo Portal.
+Esta versão corrige a sincronização do manifesto de integridade quando uma publicação é feita diretamente pelo Portal.
 
 ## Correção
 
-O normalizador do esquema preenchia novamente as categorias financeiras padrão depois que o estado já havia sido sanitizado. Com isso, uma inclusão ou exclusão publicada pelo painel podia fazer o GitHub Actions bloquear `data/dados.json` como privado.
+Nas versões anteriores, o Portal atualizava `data/dados.json` e os arquivos de mídia em um commit, mas mantinha o `release-manifest.json` com os hashes da publicação anterior. O GitHub Actions detectava corretamente a divergência e interrompia o trabalho de qualidade.
 
-A publicação agora segue esta ordem obrigatória:
+Agora o mesmo commit contém:
 
-1. normaliza o estado completo;
-2. cria o envelope público;
-3. remove todas as coleções e configurações privadas;
-4. verifica novamente o payload final;
-5. somente então prepara o blob e o commit no GitHub.
+1. o JSON público sanitizado;
+2. as mídias incluídas ou removidas;
+3. o manifesto recalculado para todos os arquivos alterados.
 
-A opção legada que permitia desativar a sanitização foi removida.
+O manifesto preserva os hashes dos arquivos estáticos, atualiza o SHA-256 e o tamanho do JSON público, adiciona novas fotos e remove referências de arquivos excluídos.
 
-## Dados preservados
+## Concorrência
 
-- Tesouraria, contas, grupos, mensalidades e credenciais derivadas continuam no R2.
-- Aniversariantes, agenda, reuniões, avisos e configurações visuais permanecem no JSON público.
-- O Worker 1.2.0 não foi alterado e não precisa ser republicado.
+A publicação passa a consultar `data/dados.json` e `release-manifest.json` na mesma revisão da branch. Caso outro commit seja enviado durante a operação, a atualização da branch é recusada sem sobrescrever o trabalho remoto.
 
-## Validação
+## Dados privados
 
-- teste de regressão com tentativa explícita de publicar dados privados;
-- auditoria de segurança do JSON público;
-- testes, lint, CSS, acessibilidade e manifesto de release;
-- geração determinística dos artefatos.
+A fronteira introduzida na versão 6.34.1 permanece ativa. Tesouraria, contas, grupos, mensalidades e credenciais derivadas continuam exclusivamente no Cloudflare R2.
+
+## Worker
+
+O Cloudflare Worker permanece na versão 1.2.0 e não precisa ser republicado.
 
 ## Publicação
 
-Substitua o repositório pelo conteúdo de `portal-main-v6.34.1.zip`, incluindo `data/dados.json` e `release-manifest.json`. Para o site, use `portal-site-v6.34.1.zip`.
+Substitua o repositório pelo conteúdo de `portal-main-v6.34.2.zip`, incluindo obrigatoriamente `data/dados.json` e `release-manifest.json`. Para atualizar somente os arquivos públicos do site, use `portal-site-v6.34.2.zip`.

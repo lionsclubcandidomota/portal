@@ -82,6 +82,7 @@ Concluída na versão 6.34.0:
 - consulta de integridade em modo somente leitura para a Diretoria;
 - integração completa com a Central de Recuperação.
 - correção 6.34.1: sanitização aplicada após a normalização do esquema e bloqueio absoluto de dados privados no commit público.
+- correção 6.34.2: atualização transacional do manifesto no mesmo commit de cada publicação feita pelo Portal.
 
 ## Encerramento
 

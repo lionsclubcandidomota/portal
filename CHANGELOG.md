@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.34.2 — Manifesto sincronizado nas publicações do Portal
+
+- Atualiza `release-manifest.json` no mesmo commit que altera `data/dados.json`.
+- Recalcula automaticamente hash SHA-256, tamanho e totais do arquivo público publicado.
+- Inclui no manifesto novas fotos de associados e o logotipo enviados pelo Portal.
+- Remove do manifesto arquivos públicos excluídos durante a publicação.
+- Usa a mesma revisão da branch para ler os dados e o manifesto, evitando sobrescritas concorrentes.
+- Adiciona testes de regressão para publicação, inclusão de mídia e exclusão de arquivos.
+
 ## 6.34.1 — Correção definitiva da fronteira pública na publicação
 
 - Remove a opção legada que permitia publicar o estado completo no GitHub.

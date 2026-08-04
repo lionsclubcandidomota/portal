@@ -1,7 +1,7 @@
 import {
   AUDIT_LOG_SCHEMA_VERSION,
   normalizeAuditEntries
-} from './domain.js?v=6.34.1';
+} from './domain.js?v=6.34.2';
 
 export const AUDIT_LOG_STORAGE_KEY = 'lionsCandidoMota.audit.v1';
 

@@ -7,7 +7,7 @@ import {
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
-import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.34.1';
+import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.34.2';
 
 
 function attachmentIcon(type = '') {

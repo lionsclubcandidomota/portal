@@ -1,7 +1,7 @@
-import { createPortalEnvelope, migratePortalPayload } from '../../core/portal-schema.js?v=6.34.1';
-import { RUNTIME_STORAGE_KEYS } from './constants.js?v=6.34.1';
-import { normalizePendingChanges } from './domain.js?v=6.34.1';
-import { createPublicPortalState } from '../../core/portal-data-boundary.js?v=6.34.1';
+import { createPortalEnvelope, migratePortalPayload } from '../../core/portal-schema.js?v=6.34.2';
+import { RUNTIME_STORAGE_KEYS } from './constants.js?v=6.34.2';
+import { normalizePendingChanges } from './domain.js?v=6.34.2';
+import { createPublicPortalState } from '../../core/portal-data-boundary.js?v=6.34.2';
 
 function readJson(storage, key) {
   try {

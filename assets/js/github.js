@@ -1,6 +1,6 @@
-import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.34.1';
-import { findSensitivePortalFields, normalizeGitHubToken } from './core/portal-security.js?v=6.34.1';
-import { createPublicPortalState, hasPrivatePortalData } from './core/portal-data-boundary.js?v=6.34.1';
+import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.34.2';
+import { findSensitivePortalFields, normalizeGitHubToken } from './core/portal-security.js?v=6.34.2';
+import { createPublicPortalState, hasPrivatePortalData } from './core/portal-data-boundary.js?v=6.34.2';
 
 export const GITHUB_CONFIG = Object.freeze({
   owner: 'lionsclubcandidomota',
@@ -11,6 +11,7 @@ export const GITHUB_CONFIG = Object.freeze({
 });
 
 const API_VERSION = '2022-11-28';
+const RELEASE_MANIFEST_PATH = 'release-manifest.json';
 
 function repositoryApiUrl(suffix = '') {
   const { owner, repo } = GITHUB_CONFIG;
@@ -45,6 +46,99 @@ function encodeBase64Utf8(value) {
     binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
   }
   return btoa(binary);
+}
+
+function decodeBase64Bytes(value) {
+  const binary = atob(String(value || '').replace(/\s+/g, ''));
+  return Uint8Array.from(binary, char => char.charCodeAt(0));
+}
+
+function normalizeRepositoryPath(value) {
+  return String(value || '').replace(/^\.\//, '').replaceAll('\\', '/');
+}
+
+async function sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)]
+    .map(value => value.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function repositoryFileText(token, file, label) {
+  let encodedContent = '';
+  if (typeof file?.content === 'string' && file.content.trim()) {
+    encodedContent = file.content;
+  } else if (file?.sha) {
+    encodedContent = await readLargeFileBlob(token, file.sha, label);
+  }
+  if (!encodedContent) throw new Error(`${label} está vazio ou indisponível no GitHub.`);
+  try {
+    return decodeBase64Utf8(encodedContent).replace(/^\uFEFF/, '').trim();
+  } catch {
+    throw new Error(`Não foi possível decodificar ${label}.`);
+  }
+}
+
+function summarizeManifestFiles(files, previousSummary = {}) {
+  const extensionCount = extension => files.filter(file => file.path.endsWith(extension)).length;
+  return {
+    ...previousSummary,
+    files: files.length,
+    javascript: extensionCount('.js') + extensionCount('.mjs'),
+    css: extensionCount('.css'),
+    tests: files.filter(file => file.path.startsWith('tests/')).length,
+    memberImages: files.filter(file => file.path.startsWith('public/members/')).length,
+    totalBytes: files.reduce((sum, file) => sum + Number(file.bytes || 0), 0)
+  };
+}
+
+async function manifestEntry(path, bytes) {
+  return {
+    path: normalizeRepositoryPath(path),
+    bytes: bytes.byteLength,
+    sha256: await sha256Hex(bytes)
+  };
+}
+
+export async function updateReleaseManifestForPublication(manifest, {
+  dataContent,
+  mediaAssets = [],
+  deletedPaths = [],
+  updatedAt = new Date().toISOString()
+} = {}) {
+  if (!manifest || typeof manifest !== 'object' || !Array.isArray(manifest.files)) {
+    throw new Error('release-manifest.json está inválido. Atualize o repositório antes de publicar novamente.');
+  }
+
+  const filesByPath = new Map(
+    manifest.files
+      .filter(file => file?.path)
+      .map(file => [normalizeRepositoryPath(file.path), { ...file, path: normalizeRepositoryPath(file.path) }])
+  );
+
+  const dataBytes = new TextEncoder().encode(String(dataContent || ''));
+  filesByPath.set(GITHUB_CONFIG.path, await manifestEntry(GITHUB_CONFIG.path, dataBytes));
+
+  for (const asset of Array.isArray(mediaAssets) ? mediaAssets : []) {
+    const path = normalizeRepositoryPath(asset?.path);
+    if (!path || asset?.encoding !== 'base64' || !asset?.content) continue;
+    filesByPath.set(path, await manifestEntry(path, decodeBase64Bytes(asset.content)));
+  }
+
+  for (const path of Array.isArray(deletedPaths) ? deletedPaths : []) {
+    const normalized = normalizeRepositoryPath(path);
+    if (normalized) filesByPath.delete(normalized);
+  }
+
+  const files = [...filesByPath.values()]
+    .sort((first, second) => first.path.localeCompare(second.path));
+
+  return {
+    ...manifest,
+    runtimeUpdatedAt: updatedAt,
+    summary: summarizeManifestFiles(files, manifest.summary),
+    files
+  };
 }
 
 function normalizePayload(parsed, { publicOnly = false } = {}) {
@@ -89,8 +183,8 @@ function throwGitHubAccessError(response, fallback = 'Falha ao acessar o GitHub.
   throw new Error(`${fallback} (${response.status}).`);
 }
 
-async function readRepositoryFile(token, path = GITHUB_CONFIG.path) {
-  const response = await fetch(`${contentApiUrl(path)}?ref=${encodeURIComponent(GITHUB_CONFIG.branch)}`, {
+async function readRepositoryFile(token, path = GITHUB_CONFIG.path, ref = GITHUB_CONFIG.branch) {
+  const response = await fetch(`${contentApiUrl(path)}?ref=${encodeURIComponent(ref)}`, {
     headers: authorizedHeaders(token),
     cache: 'no-store'
   });
@@ -98,21 +192,21 @@ async function readRepositoryFile(token, path = GITHUB_CONFIG.path) {
   return parseJsonResponse(response, 'O GitHub retornou uma resposta vazia ou inválida.');
 }
 
-async function readLargeFileBlob(token, sha) {
+async function readLargeFileBlob(token, sha, label = 'arquivo do repositório') {
   const response = await fetch(repositoryApiUrl(`/git/blobs/${encodeURIComponent(sha)}`), {
     headers: authorizedHeaders(token),
     cache: 'no-store'
   });
   if (!response.ok) {
-    throw new Error(`Não foi possível carregar o arquivo data/dados.json (${response.status}).`);
+    throw new Error(`Não foi possível carregar ${label} (${response.status}).`);
   }
 
   const blob = await parseJsonResponse(
     response,
-    'O GitHub retornou uma resposta inválida ao carregar data/dados.json.'
+    `O GitHub retornou uma resposta inválida ao carregar ${label}.`
   );
   if (blob.encoding !== 'base64' || typeof blob.content !== 'string' || !blob.content.trim()) {
-    throw new Error('O GitHub não retornou o conteúdo de data/dados.json em um formato compatível.');
+    throw new Error(`O GitHub não retornou o conteúdo de ${label} em um formato compatível.`);
   }
   return blob.content;
 }
@@ -366,14 +460,19 @@ export async function saveGitHubState(
   deletedPaths = []
 ) {
   const safeToken = normalizeGitHubToken(token);
-  const currentDataFile = await readRepositoryFile(safeToken);
+  const headSha = await getBranchHead(safeToken);
+  const [currentDataFile, currentManifestFile] = await Promise.all([
+    readRepositoryFile(safeToken, GITHUB_CONFIG.path, headSha),
+    readRepositoryFile(safeToken, RELEASE_MANIFEST_PATH, headSha)
+  ]);
   if (expectedDataSha && currentDataFile.sha !== expectedDataSha) {
     throw new Error('Conflito de edição. Recarregue os dados do GitHub antes de publicar novamente.');
   }
 
+  const publishedAt = new Date().toISOString();
   const deploymentId = `${Date.now()}-${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
   const payload = createPortalEnvelope(sanitizeState(state), {
-    updatedAt: new Date().toISOString(),
+    updatedAt: publishedAt,
     deploymentId,
     audience: 'public'
   });
@@ -381,28 +480,57 @@ export async function saveGitHubState(
   if (hasPrivatePortalData(payload.data) || sensitiveFields.length) {
     throw new Error('A publicação foi bloqueada porque o JSON público ainda contém dados privados.');
   }
-  const jsonContent = encodeBase64Utf8(`${JSON.stringify(payload, null, 2)}\n`);
 
-  const headSha = await getBranchHead(safeToken);
+  const jsonText = `${JSON.stringify(payload, null, 2)}\n`;
+  const jsonContent = encodeBase64Utf8(jsonText);
+  let currentManifest;
+  try {
+    currentManifest = JSON.parse(await repositoryFileText(
+      safeToken,
+      currentManifestFile,
+      RELEASE_MANIFEST_PATH
+    ));
+  } catch (error) {
+    if (/release-manifest\.json está/i.test(error?.message || '')) throw error;
+    throw new Error('release-manifest.json está inválido. Atualize o repositório antes de publicar novamente.');
+  }
+
+  const validMediaAssets = (Array.isArray(mediaAssets) ? mediaAssets : [])
+    .filter(asset => asset?.path && asset.encoding === 'base64' && asset.content)
+    .map(asset => ({
+      ...asset,
+      path: normalizeRepositoryPath(asset.path),
+      content: String(asset.content).replace(/\s+/g, '')
+    }));
+  const validDeletedPaths = [...new Set(Array.isArray(deletedPaths) ? deletedPaths : [])]
+    .map(normalizeRepositoryPath)
+    .filter(path => /^public\/treasury\/[a-z0-9/_-]+\.[a-z0-9]+$/i.test(path));
+
+  const nextManifest = await updateReleaseManifestForPublication(currentManifest, {
+    dataContent: jsonText,
+    mediaAssets: validMediaAssets,
+    deletedPaths: validDeletedPaths,
+    updatedAt: publishedAt
+  });
+  const manifestContent = encodeBase64Utf8(`${JSON.stringify(nextManifest, null, 2)}\n`);
+
   const baseTreeSha = await getCommitTree(safeToken, headSha);
   const entries = [];
 
-  for (const asset of Array.isArray(mediaAssets) ? mediaAssets : []) {
-    if (!asset?.path || asset.encoding !== 'base64' || !asset.content) continue;
+  for (const asset of validMediaAssets) {
     entries.push({
-      path: String(asset.path).replace(/^\.\//, ''),
-      sha: await createGitBlob(safeToken, String(asset.content).replace(/\s+/g, ''))
+      path: asset.path,
+      sha: await createGitBlob(safeToken, asset.content)
     });
   }
 
-  for (const path of [...new Set(Array.isArray(deletedPaths) ? deletedPaths : [])]) {
-    const normalizedPath = String(path || '').replace(/^\.\//, '');
-    if (!/^public\/treasury\/[a-z0-9/_-]+\.[a-z0-9]+$/i.test(normalizedPath)) continue;
-    entries.push({ path: normalizedPath, sha: null });
-  }
+  for (const path of validDeletedPaths) entries.push({ path, sha: null });
 
   const dataBlobSha = await createGitBlob(safeToken, jsonContent);
   entries.push({ path: GITHUB_CONFIG.path, sha: dataBlobSha });
+
+  const manifestBlobSha = await createGitBlob(safeToken, manifestContent);
+  entries.push({ path: RELEASE_MANIFEST_PATH, sha: manifestBlobSha });
 
   const treeSha = await createGitTree(safeToken, baseTreeSha, entries);
   const commit = await createGitCommit(safeToken, commitMessage, treeSha, headSha);
@@ -410,11 +538,12 @@ export async function saveGitHubState(
 
   return {
     sha: dataBlobSha,
+    manifestSha: manifestBlobSha,
     commitSha: commit.sha,
     commitUrl: commit.html_url || `https://github.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/commit/${commit.sha}`,
-    committedAt: new Date().toISOString(),
+    committedAt: publishedAt,
     deploymentId,
-    mediaCount: entries.filter(entry => entry.sha).length - 1,
-    deletedMediaCount: entries.filter(entry => entry.sha === null).length
+    mediaCount: validMediaAssets.length,
+    deletedMediaCount: validDeletedPaths.length
   };
 }

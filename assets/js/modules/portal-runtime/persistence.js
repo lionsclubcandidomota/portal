@@ -1,6 +1,6 @@
-import { migratePortalPayload } from '../../core/portal-schema.js?v=6.34.1';
-import { cloneState } from '../../core/portal-state.js?v=6.34.1';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.34.1';
+import { migratePortalPayload } from '../../core/portal-schema.js?v=6.34.2';
+import { cloneState } from '../../core/portal-state.js?v=6.34.2';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.34.2';
 
 export function createPersistenceActions(context) {
   const { dependencies, services, model } = context;
