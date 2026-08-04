@@ -1,0 +1,29 @@
+{
+  "name": "portal-lions-candido-mota",
+  "version": "6.34.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:css": "node tools/build-css.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "lint": "node tools/lint.mjs",
+    "audit:css": "node tools/css-audit.mjs",
+    "audit:a11y": "node tools/accessibility-audit.mjs",
+    "version:sync": "node tools/sync-version.mjs",
+    "version:check": "node tools/sync-version.mjs --check",
+    "validate": "node tools/validate.mjs",
+    "check": "npm test && npm run build:css:check && npm run version:check && npm run lint && npm run audit:css && npm run audit:a11y && npm run audit:security && npm run validate",
+    "migrate:media": "node tools/extract-media.mjs",
+    "audit:security": "node tools/security-audit.mjs",
+    "release:manifest": "node tools/release-manifest.mjs",
+    "release:audit": "node tools/release-audit.mjs",
+    "release:verify": "node tools/release-manifest.mjs --check",
+    "release:check": "npm run check && npm run release:audit && npm run release:verify",
+    "homologacao": "node tools/homologation-server.mjs --open",
+    "homologacao:server": "node tools/homologation-server.mjs",
+    "build:css:check": "node tools/build-css.mjs --check",
+    "release:dist:verify": "node tools/release-dist-verify.mjs",
+    "release:build": "npm run build:css && npm run version:sync && npm run release:manifest && npm run release:check && node tools/release-build.mjs && npm run release:dist:verify"
+  },
+  "releaseTimestamp": "2026-08-04T20:45:00.000Z"
+}

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#00529B">
+  <meta name="description" content="Dashboard interno do Lions Clube de Cândido Mota">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://avatars.githubusercontent.com; connect-src 'self' https://api.github.com https://lionsclubcandidomota.github.io https://*.workers.dev; font-src 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'">
+  <title>Portal Lions • Cândido Mota</title>
+  <link rel="icon" type="image/png" href="./public/favicon.png">
+  <link rel="apple-touch-icon" href="./public/apple-touch-icon.png">
+  <link rel="stylesheet" href="./assets/css/app.css?v=6.34.0">
+  <link rel="modulepreload" href="./assets/js/app.js?v=6.34.0">
+  <link rel="modulepreload" href="./assets/js/modules/portal-app.js?v=6.34.0">
+  <link rel="modulepreload" href="./assets/js/storage.js">
+  <link rel="modulepreload" href="./assets/js/utils.js">
+  <link rel="modulepreload" href="./assets/js/github.js?v=6.34.0">
+</head>
+<body class="app-loading visitor-mode">
+  <a class="skip-link" href="#mainContent">Pular para o conteúdo principal</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu principal">
+      <div class="brand">
+        <div class="brand-logo-wrap">
+          <img id="sidebarLogo" src="./public/logo.png" alt="Logo do Lions Clube" class="brand-logo">
+          <div id="fallbackLogo" class="fallback-logo" aria-hidden="true">L</div>
+        </div>
+        <div>
+          <strong id="sidebarClubName">Lions Clube de Cândido Mota</strong>
+          <small>Portal de gestão do clube</small>
+        </div>
+      </div>
+
+      <div class="nav-section-label">Navegação</div>
+      <nav class="nav-list" id="mainNav">
+        <button type="button" class="nav-item active" data-view="dashboard" aria-current="page"><span>▦</span><span class="nav-label">Dashboard</span></button>
+        <button type="button" class="nav-item" data-view="birthdays"><span>🎂</span><span class="nav-label">Aniversariantes</span></button>
+        <button type="button" class="nav-item admin-only" data-view="treasury" id="treasuryNav" hidden><span>💰</span><span class="nav-label">Tesouraria</span></button>
+        <button type="button" class="nav-item" data-view="agenda"><span>🗓️</span><span class="nav-label">Agenda</span></button>
+        <button type="button" class="nav-item" data-view="notices"><span>📢</span><span class="nav-label">Avisos</span></button>
+        <div class="nav-divider" aria-hidden="true"></div>
+        <button type="button" class="nav-item" data-view="admin" id="adminAccessNav"><span>🔐</span><span class="nav-label">Acesso Administrativo</span></button>
+        <button type="button" class="nav-item admin-only administrator-only" data-view="settings" id="settingsNav" hidden aria-hidden="true" style="display:none"><span>⚙️</span><span class="nav-label">Configurações</span></button>
+      </nav>
+
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="main-content" id="mainContent" tabindex="-1">
+      <header class="topbar">
+        <button type="button" class="icon-btn menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">☰</button>
+        <div class="topbar-title">
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageDescription">Visão geral das informações do clube</p>
+          <small id="currentDate" class="topbar-date"></small>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-ghost btn-sm portal-refresh-button admin-only" id="portalRefreshButton" type="button" aria-label="Atualizar todo o painel sem encerrar a sessão" title="Atualizar painel" hidden>
+            <span class="portal-refresh-icon" aria-hidden="true">↻</span>
+            <span data-portal-refresh-label>Atualizar painel</span>
+          </button>
+          <span class="mode-chip" id="modeChip">Modo visitante</span>
+          <div class="clock" id="clock">00:00:00</div>
+          <div class="sync-header" id="publishProgressNotice" aria-live="polite" hidden>
+            <button class="sync-header-trigger" id="publishCenterToggle" type="button" aria-expanded="false" aria-controls="publishCenterBody">
+              <span class="publish-progress-icon" aria-hidden="true">☁️</span>
+              <span class="sync-header-trigger-copy">
+                <strong id="publishProgressTitle">Portal sincronizado</strong>
+                <small id="publishProgressDetail">Nenhuma alteração pendente</small>
+              </span>
+              <span class="publish-center-count" id="publishCenterCount" hidden>0</span>
+              <span class="publish-center-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="sync-header-popover" id="publishCenterBody" role="dialog" aria-label="Portal de Sincronização">
+              <div class="sync-popover-heading">
+                <div class="sync-popover-heading-copy"><span class="sync-popover-brand-icon" aria-hidden="true">☁</span><div><span class="sync-popover-eyebrow">Portal de Sincronização</span><strong>Publicação e segurança dos dados</strong></div></div>
+                <button class="sync-popover-close" id="publishCenterClose" type="button" aria-label="Minimizar central de sincronização" title="Minimizar">×</button>
+              </div>
+              <div class="sync-popover-status">
+                <span class="sync-popover-status-icon" aria-hidden="true">✓</span>
+                <div><strong id="publishPopoverTitle">Portal sincronizado</strong><p id="publishPopoverDetail">Nenhuma alteração pendente.</p></div>
+              </div>
+              <div class="publish-progress-block">
+                <div class="publish-progress-copy"><span>Progresso da sincronização</span><small>O processo continua mesmo com esta janela minimizada.</small></div>
+                <div class="publish-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="publishProgressBar"></span></div>
+              </div>
+              <div class="sync-flow-steps" aria-label="Etapas da publicação"><span data-sync-step="review"><i aria-hidden="true">1</i>Revisar</span><span data-sync-step="send"><i aria-hidden="true">2</i>Enviar</span><span data-sync-step="publish"><i aria-hidden="true">3</i>Disponibilizar</span></div>
+              <button class="publish-review-trigger" id="publishCenterReview" type="button">
+                <span class="publish-review-icon" aria-hidden="true">☷</span>
+                <span class="publish-review-copy"><strong>Revisar alterações</strong><small id="publishCenterReviewSummary">Veja tudo o que será enviado ao portal</small></span>
+                <span class="publish-review-arrow" aria-hidden="true">›</span>
+              </button>
+              <div class="publish-center-actions">
+                <button class="btn btn-danger-soft btn-sm" id="publishCenterDiscard" type="button">Descartar</button>
+                <button class="btn btn-primary btn-sm" id="publishCenterSend" type="button">Publicar alterações</button>
+              </div>
+              <p class="sync-popover-footnote"><span aria-hidden="true">🛡️</span>As alterações locais permanecem protegidas até a confirmação da publicação.</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="content-area" id="viewRoot" aria-live="polite">
+        <div class="initial-loading" role="status" aria-label="Carregando informações do portal">
+          <div class="loading-heading"><span class="loading-spinner" aria-hidden="true"></span><div><strong>Carregando o painel</strong><small>Buscando as informações mais recentes…</small></div></div>
+          <div class="loading-kpis"><span></span><span></span><span></span><span></span></div>
+          <div class="loading-panels"><span></span><span></span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Atalhos principais">
+    <button type="button" data-mobile-view="dashboard" class="active" aria-current="page"><span>▦</span><small>Início</small></button>
+    <button type="button" data-mobile-view="agenda"><span>🗓️</span><small>Agenda</small></button>
+    <button type="button" data-mobile-view="treasury" hidden><span>💰</span><small>Tesouraria</small></button>
+    <button type="button" data-mobile-view="birthdays"><span>🎂</span><small>Aniversários</small></button>
+    <button type="button" id="mobileMoreBtn"><span>☰</span><small>Menu</small></button>
+  </nav>
+
+  <div class="modal" id="modal" role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modalTitle">Formulário</h2>
+        <button type="button" class="icon-btn" data-close-modal aria-label="Fechar">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="confirmation-modal" id="confirmModal" role="alertdialog" tabindex="-1" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage" hidden>
+    <div class="confirmation-backdrop" data-close-confirm></div>
+    <div class="confirmation-card">
+      <button class="confirmation-close" type="button" data-close-confirm aria-label="Fechar">×</button>
+      <div class="confirmation-icon" id="confirmIcon" aria-hidden="true">⚠️</div>
+      <div class="confirmation-content"><span class="confirmation-eyebrow">Confirmação necessária</span><h2 id="confirmTitle">Confirmar ação</h2><p id="confirmMessage"></p></div>
+      <div class="confirmation-actions" id="confirmActions"><button class="btn btn-ghost" type="button" id="confirmCancel" data-close-confirm>Cancelar</button><button class="btn btn-danger-soft" type="button" id="confirmSecondary" hidden>Opção secundária</button><button class="btn btn-danger" type="button" id="confirmAccept">Confirmar</button></div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+  <input type="file" id="jsonImportInput" accept="application/json" hidden>
+  <input type="file" id="imageInput" accept="image/*" hidden>
+
+  <script type="module" src="./assets/js/app.js?v=6.34.0"></script>
+</body>
+</html>

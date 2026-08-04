@@ -1,0 +1,78 @@
+{
+  "exportedAt": "2026-08-04T18:30:36.215Z",
+  "audience": "example",
+  "app": "Lions Clube de Cândido Mota Dashboard",
+  "schemaVersion": 10,
+  "version": 10,
+  "data": {
+    "settings": {
+      "clubName": "Lions Clube de Cândido Mota",
+      "logo": "./public/logo.png",
+      "primaryColor": "#00529B",
+      "accentColor": "#F2C100",
+      "membershipMonthlyFee": 0,
+      "membershipFamilyPrimaryFee": 0,
+      "membershipFamilyAdditionalFee": 0,
+      "accessProfiles": {},
+      "secureStorage": {
+        "version": 1,
+        "enabled": false,
+        "workerUrl": ""
+      },
+      "initialized": true
+    },
+    "birthdays": [
+      {
+        "id": "b-exemplo",
+        "memberNumber": "1234567",
+        "name": "Associado de exemplo",
+        "birthDate": "1980-08-15",
+        "photo": "",
+        "status": "Ativo",
+        "active": true
+      }
+    ],
+    "treasuryAccounts": [
+      {
+        "id": "acc-current",
+        "name": "Conta corrente",
+        "type": "Conta corrente",
+        "initialBalance": 0,
+        "active": true
+      },
+      {
+        "id": "acc-investment",
+        "name": "Aplicação",
+        "type": "Aplicação",
+        "initialBalance": 0,
+        "active": true
+      },
+      {
+        "id": "acc-cash",
+        "name": "Dinheiro em caixa",
+        "type": "Dinheiro em caixa",
+        "initialBalance": 0,
+        "active": true
+      }
+    ],
+    "treasuryCategories": [
+      "Mensalidades",
+      "Mútuas",
+      "Material de escritório",
+      "Documentação",
+      "Projeto",
+      "Evento",
+      "Patrocínio",
+      "Combustível",
+      "Taxa bancária",
+      "Doação",
+      "Outros"
+    ],
+    "familyGroups": [],
+    "mutualGroups": [],
+    "treasury": [],
+    "events": [],
+    "meetings": [],
+    "notices": []
+  }
+}

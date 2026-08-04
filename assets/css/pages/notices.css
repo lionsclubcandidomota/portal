@@ -1,0 +1,143 @@
+/* v3.7.7 — cards de Avisos responsivos no celular */
+@media (max-width:700px){
+  .notice-desktop-table,
+  .notice-desktop-table .dated-generic-wrap,
+  .notice-desktop-table .table-wrap{
+    width:100%;max-width:100%;min-width:0;overflow:visible;border:0;background:transparent;box-shadow:none;
+  }
+  .notice-desktop-table{padding:0;background:transparent;}
+  .notice-desktop-table .dated-generic-table{display:block;width:100%;min-width:0!important;max-width:100%;border-collapse:separate;}
+  .notice-desktop-table thead{display:none;}
+  .notice-desktop-table tbody{display:grid;width:100%;}
+  .notice-desktop-table tr{grid-template-columns:minmax(0,1fr) auto;width:100%;min-width:0;}
+  .notice-desktop-table td{display:block;width:auto;min-width:0;max-width:100%;padding:0!important;border:0!important;overflow:visible;white-space:normal;overflow-wrap:anywhere;word-break:break-word;}
+  .notice-desktop-table td:nth-child(1){grid-column:1/-1;}
+  .notice-desktop-table td:nth-child(2){grid-column:1;align-self:center;}
+  .notice-desktop-table td:nth-child(3){grid-column:2;align-self:start;justify-self:end;}
+  .notice-desktop-table td:nth-child(4){grid-column:1/-1;}
+  .notice-desktop-table .desktop-message-cell,.notice-desktop-table .notice-message-cell,.notice-desktop-table .desktop-message-body{width:100%;min-width:0;max-width:100%;}
+  .notice-desktop-table .desktop-message-title{display:block;margin-bottom:8px;overflow-wrap:anywhere;}
+  .notice-desktop-table .desktop-message-body{overflow:hidden;}
+  .notice-desktop-table .desktop-message-body p{width:100%;max-width:100%;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+  .notice-desktop-table .desktop-message-body:not(.expanded) p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden;max-height:none;}
+  .notice-desktop-table .desktop-message-body.expanded p{display:block;overflow:visible;}
+  .notice-desktop-table .structured-text-toggle{display:inline-flex;padding:0;border:0;background:transparent;color:var(--primary);font:inherit;font-size:.82rem;font-weight:800;cursor:pointer;}
+  .notice-desktop-table .notice-period-cell{font-size:.82rem;}
+  .notice-desktop-table .notice-period-cell strong,.notice-desktop-table .notice-period-cell small{white-space:normal;overflow-wrap:anywhere;}
+  .notice-desktop-table td:last-child .actions{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;}
+  .visitor-mode .notice-desktop-table tr{grid-template-columns:minmax(0,1fr) auto;}
+  .visitor-mode .notice-desktop-table td:nth-child(4){display:none;}
+  .notice-desktop-table tr:has(td[colspan]){display:block;}
+}
+@media (max-width:380px){
+  .notice-desktop-table tr{grid-template-columns:1fr;}
+  .notice-desktop-table td:nth-child(2),.notice-desktop-table td:nth-child(3){grid-column:1;justify-self:start;}
+  .notice-desktop-table td:last-child .actions{grid-template-columns:1fr;}
+}
+
+/* v3.7.9 — padronização visual dos cards de Avisos no mobile */
+@media (max-width:700px){
+  .notice-desktop-table tbody{gap:11px;}
+  .notice-desktop-table tr{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    padding:14px;
+    border:1px solid var(--border);
+    border-radius:16px;
+    background:var(--surface);
+    box-shadow:0 8px 24px rgba(20,52,86,.06);
+    position:relative;
+    overflow:hidden;
+  }
+  .notice-desktop-table tr::before{
+    content:"";
+    position:absolute;
+    inset:0 auto 0 0;
+    width:4px;
+    background:var(--primary);
+  }
+  .notice-desktop-table td,
+  .notice-desktop-table td:nth-child(1),
+  .notice-desktop-table td:nth-child(2),
+  .notice-desktop-table td:nth-child(3),
+  .notice-desktop-table td:nth-child(4){
+    width:100%;
+    grid-column:auto;
+    align-self:auto;
+    justify-self:auto;
+  }
+  .notice-desktop-table .desktop-message-title{
+    margin:0;
+    padding-left:2px;
+    font-size:1rem;
+    font-weight:800;
+    line-height:1.35;
+  }
+  .notice-desktop-table .desktop-message-body{
+    margin-top:10px;
+    padding:0 2px;
+    border-radius:0;
+    background:transparent;
+  }
+  .notice-desktop-table .desktop-message-body p{
+    color:var(--muted);
+    font-size:.86rem;
+    line-height:1.5;
+  }
+  .notice-desktop-table .structured-text-toggle{
+    margin-top:8px;
+    min-height:32px;
+    align-items:center;
+  }
+  .notice-desktop-table .notice-period-cell{
+    display:flex;
+    flex-direction:row;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px;
+    margin-top:12px;
+    padding-top:11px!important;
+    border-top:1px solid var(--border)!important;
+    color:var(--muted);
+  }
+  .notice-desktop-table .notice-period-cell strong,
+  .notice-desktop-table .notice-period-cell small{
+    display:inline;
+    font-size:.8rem;
+    line-height:1.35;
+  }
+  .notice-desktop-table td:nth-child(3){
+    margin-top:8px;
+  }
+  .notice-desktop-table td:nth-child(3) .badge{
+    display:inline-flex;
+    width:auto;
+  }
+  .notice-desktop-table td:last-child .actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:12px;
+    padding-top:11px;
+    border-top:1px solid var(--border);
+  }
+  .notice-desktop-table td:last-child .btn{
+    width:auto;
+    min-width:44px;
+    padding:9px 12px;
+  }
+  .visitor-mode .notice-desktop-table td:nth-child(3){margin-top:8px;}
+  .notice-desktop-table tr:has(td[colspan]){
+    padding:0;
+    border:0;
+    box-shadow:none;
+    background:transparent;
+  }
+  .notice-desktop-table tr:has(td[colspan])::before{display:none;}
+}
+@media (max-width:390px){
+  .notice-desktop-table tr{padding:13px;border-radius:15px;}
+  .notice-desktop-table td:last-child .actions{display:grid;grid-template-columns:1fr 1fr;width:100%;}
+  .notice-desktop-table td:last-child .btn{width:100%;min-width:0;}
+}

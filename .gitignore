@@ -1,0 +1,12 @@
+cloudflare/attachment-worker/node_modules/
+cloudflare/attachment-worker/.dev.vars*
+cloudflare/attachment-worker/.env*
+cloudflare/attachment-worker/wrangler.toml
+
+# Artefatos gerados pelo pipeline de release
+dist/
+.release-tmp/
+
+# Cache e saída local do Wrangler
+cloudflare/attachment-worker/.wrangler/
+cloudflare/attachment-worker/.wrangler-dist/

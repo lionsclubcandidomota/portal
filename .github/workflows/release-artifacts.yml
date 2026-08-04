@@ -1,0 +1,56 @@
+name: Pacotes de release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Gerar e validar pacotes
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Obter o código-fonte
+        uses: actions/checkout@v6
+
+      - name: Preparar Node.js e cache do npm
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/attachment-worker/package-lock.json
+
+      - name: Instalar dependências bloqueadas do Worker
+        run: npm ci --prefix cloudflare/attachment-worker
+
+      - name: Validar o Worker sem publicar
+        run: npm run check --prefix cloudflare/attachment-worker
+
+      - name: Gerar e validar os pacotes do Portal
+        run: npm run release:build
+
+      - name: Reprovar arquivos-fonte desatualizados
+        run: git diff --exit-code -- . ':(exclude)dist'
+
+      - name: Publicar ZIPs e comprovantes da execução
+        uses: actions/upload-artifact@v6
+        with:
+          name: portal-release-${{ github.run_number }}
+          path: |
+            dist/*.zip
+            dist/checksums.sha256
+            dist/release-summary.json
+            dist/README.md
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0

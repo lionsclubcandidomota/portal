@@ -1,0 +1,85 @@
+/* Portal Lions v6.0 — menu de ações das mensalidades */
+
+/* O menu de cobrança deve sempre ficar acima dos cards vizinhos. */
+.membership-list {
+  position: relative;
+  isolation: isolate;
+}
+
+.membership-member.is-actions-open,
+.membership-member:has(.membership-more-menu:not([hidden])) {
+  z-index: var(--z-card-active) !important;
+  transform: none !important;
+}
+
+.membership-member.is-actions-open .membership-member-actions,
+.membership-member:has(.membership-more-menu:not([hidden])) .membership-member-actions,
+.membership-actions-menu {
+  position: relative;
+  z-index: var(--z-card-actions);
+}
+
+.membership-more-menu {
+  z-index: var(--z-dropdown) !important;
+}
+
+@media (max-width: 700px) {
+  .publication-review {
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .publication-review-intro {
+    grid-template-columns: 42px minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .publication-review-intro-icon,
+  .publication-review-empty-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .publication-review-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .publication-review-summary > div {
+    padding: 10px;
+  }
+
+  .publication-review-summary small {
+    font-size: .62rem;
+  }
+
+  .publication-review-summary strong {
+    font-size: 1.05rem;
+  }
+
+  .publication-review-field {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .publication-review-values {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .publication-review-value-arrow {
+    transform: rotate(90deg);
+    justify-self: start;
+  }
+
+  .publication-review-footer {
+    bottom: -14px;
+    margin: 0 -14px -14px;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .publication-review-footer .btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}

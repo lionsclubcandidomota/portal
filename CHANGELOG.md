@@ -1,0 +1,82 @@
+# Changelog
+
+## 6.34.0 — Backup e integridade do estado privado
+
+- Cria backups versionados no Cloudflare R2 antes de cada substituição do estado privado e após cada publicação confirmada.
+- Mantém automaticamente as 20 versões privadas mais recentes.
+- Bloqueia gravações que removeriam de uma só vez todos os registros financeiros, anexos e a credencial derivada da Diretoria.
+- Adiciona checksum SHA-256 ao estado principal e aos backups do R2.
+- Inclui restauração remota com controle de revisão e backup de segurança criado antes da operação.
+- Verifica se todos os anexos referenciados pelas movimentações existem no bucket.
+- Identifica referências inválidas, duplicadas e objetos de comprovantes sem vínculo atual.
+- Integra o diagnóstico e a linha do tempo remota à Central de Recuperação.
+- Permite à Diretoria consultar a integridade e os backups, mantendo a restauração exclusiva do Administrador.
+- Adiciona testes de contrato e integração para os endpoints de continuidade operacional.
+
+## 6.33.0 — Modularização da composição principal
+
+- Reduz `portal-app.js` de 492 para 312 linhas, mantendo-o como raiz de composição.
+- Separa Tesouraria, Administração, Publicação e Navegação em inicializadores independentes.
+- Move a montagem das dependências das páginas para um módulo dedicado.
+- Mantém o estado, o runtime e as transições entre funcionalidades coordenados por contratos explícitos.
+- Adiciona portões arquiteturais para limitar o bootstrap a 340 linhas e cada feature a 140 linhas.
+- Atualiza os testes de interface para validar os módulos responsáveis, em vez de depender da localização anterior do código.
+- Preserva o comportamento da interface, dos dados privados e dos anexos no R2.
+
+## 6.32.0 — Consolidação da cascata CSS
+
+- Remove 825 declarações que já eram substituídas posteriormente pelo mesmo seletor e contexto.
+- Elimina 196 blocos CSS vazios ou integralmente superados sem alterar a aparência final.
+- Reduz o bundle de 339.999 para aproximadamente 320 KB.
+- Reduz seletores redefinidos de 329 para 254 e regras de sobrescrita de 487 para 325.
+- Adiciona auditoria para bloquear declarações já substituídas entre regras equivalentes.
+- Aperta os orçamentos máximos de tamanho e sobrescritas para impedir novo acúmulo.
+- Valida equivalência da cascata e comparação visual em desktop, tablet e celular.
+
+## 6.31.1 — Correção dos portões de CI
+
+- Remove novamente os dados financeiros e a credencial derivada da Diretoria do JSON público.
+- Preserva aniversariantes, agenda, reuniões e avisos no arquivo público sanitizado.
+- Adiciona `wrangler.ci.toml` com nomes válidos exclusivamente para o bundle `--dry-run`.
+- Mantém `wrangler.toml.example` como modelo de configuração para implantação manual.
+- Faz a validação do Worker executar também `node --check` antes do bundle.
+- Inclui a configuração de CI no pacote do Worker e adiciona teste para impedir placeholders inválidos.
+
+## 6.31.0 — Integração contínua no GitHub
+
+- Adiciona workflow de qualidade para pushes, pull requests e execução manual.
+- Executa testes, auditorias, manifesto e validação de arquivos gerados no GitHub Actions.
+- Instala as dependências bloqueadas e valida o bundle do Cloudflare Worker sem publicar.
+- Adiciona workflow manual ou por tag para gerar os três ZIPs e os comprovantes de integridade.
+- Mantém permissões somente de leitura e não utiliza segredos de produção.
+- Inclui os workflows no pacote de código-fonte e os mantém fora do pacote público.
+- Exclui caches locais do Wrangler do Git e dos artefatos.
+- Adiciona testes de contrato específicos para a configuração de CI.
+
+## 6.30.0 — Pipeline de release reproduzível
+
+- Adiciona `npm run release:build` para gerar todos os pacotes em uma pasta `dist` limpa.
+- Separa o artefato do site, o Worker Cloudflare e o código-fonte completo.
+- Gera manifestos e hashes SHA-256 verificáveis para os artefatos.
+- Torna os ZIPs determinísticos: o mesmo código gera os mesmos hashes em execuções consecutivas.
+- Bloqueia `wrangler.toml`, `.env*`, `.dev.vars*`, `node_modules` e diretórios temporários.
+- Remove a cópia financeira legada de `data/dados.json` e impede seu retorno nos portões de segurança.
+- Exclui `data/modelo.json` do pacote público de implantação.
+- Inclui os testes e a validação do CSS no comando principal `npm run check`.
+- Corrige a sincronização de cache para detectar versões indevidas como `6.29.0.1`.
+- Remove versões estáveis codificadas diretamente nos scripts de auditoria.
+
+## 6.29.0 — Separação dos dados privados
+
+- Separa o estado público do estado financeiro e administrativo.
+- Adiciona armazenamento privado versionado no Cloudflare R2 por meio do Worker.
+- Move a validação da senha da Diretoria para o estado privado após a migração.
+- Adiciona controle otimista de concorrência para evitar sobrescritas entre sessões.
+- Adiciona limitação temporária de tentativas de criação de sessão no Worker.
+- Mantém dados privados somente no `sessionStorage`; o `localStorage` recebe uma cópia pública sanitizada.
+- Remove arquivos CSS legados e duplicados do pacote.
+- Restaura os documentos e o iniciador de homologação exigidos pelo contrato de release.
+
+## 6.28.0
+
+- Consolidação do dashboard administrativo, tesouraria, anexos privados e portões de qualidade.
