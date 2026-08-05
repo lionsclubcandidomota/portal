@@ -46,10 +46,10 @@ function applyMutualFilters(root, treasury, controls) {
     if (show) visible += 1;
   });
 
-  root.querySelectorAll('[data-mutual-month-section]').forEach(section => {
+  root.querySelectorAll('[data-mutual-event-section]').forEach(section => {
     const monthVisible = [...section.querySelectorAll('.mutual-charge-card')]
       .filter(card => !card.hidden).length;
-    const emptyState = section.querySelector('.mutual-month-empty');
+    const emptyState = section.querySelector('.mutual-event-empty');
     if (emptyState) {
       emptyState.hidden = monthVisible > 0 || !section.querySelector('.mutual-charge-card');
     }
@@ -80,6 +80,7 @@ function applyMutualFilters(root, treasury, controls) {
 export function bindMutualSection({ root, treasury, helpers, mutualModel, rerender }) {
   const {
     openMutualGroupsManager,
+    openMutualEvent,
     openMutualPayment,
     toast
   } = helpers;
@@ -119,6 +120,8 @@ export function bindMutualSection({ root, treasury, helpers, mutualModel, rerend
   });
   root.querySelector('#manageMutualGroups')
     ?.addEventListener('click', openMutualGroupsManager);
+  root.querySelector('#createMutualEvent')
+    ?.addEventListener('click', () => openMutualEvent(treasury.mutualGroup === 'all' ? '' : treasury.mutualGroup));
 
   root.querySelectorAll('[data-mutual-group-toggle]').forEach(button => {
     button.addEventListener('click', () => {
@@ -150,7 +153,7 @@ export function bindMutualSection({ root, treasury, helpers, mutualModel, rerend
   root.querySelector('#mutualPaymentButton')?.addEventListener('click', () => {
     const selected = selectedMutualItems(root);
     if (!selected.length) {
-      toast('Selecione ao menos uma mútua em aberto.');
+      toast('Selecione ao menos uma cobrança de mútua em aberto.');
       return;
     }
     openMutualPayment(selected);

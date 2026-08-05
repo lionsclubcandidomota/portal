@@ -7,7 +7,7 @@ import {
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
-import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.34.2';
+import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.35.0';
 
 
 function attachmentIcon(type = '') {
@@ -55,14 +55,15 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
     const membership = treasury.isMembershipEntry(item);
     const mutual = treasury.isMutualEntry(item);
     const mutualGroup = mutual ? treasury.mutualGroupFor(item.mutualGroupId) : null;
-    const mutualMonth = mutual ? treasury.mutualReferenceMonth(item) : '';
+    const mutualEvent = mutual ? treasury.mutualEventFor(item.mutualGroupId, item.mutualEventId) : null;
+    const mutualDate = mutual ? (item.mutualEventDate || mutualEvent?.deathDate || treasury.mutualEventDate(item)) : '';
     const coveredMonthText = treasury.coveredMonths(item)
       .map(treasury.monthLabel)
       .join(', ');
     const secondaryText = membership
       ? `Mensalidade · ${coveredMonthText || 'referência não informada'}`
       : mutual
-        ? `Mútua · ${mutualGroup?.name || 'grupo não informado'} · ${treasury.monthLabel(mutualMonth)}`
+        ? `Mútua · ${mutualGroup?.name || 'grupo não informado'} · Falecimento de ${item.mutualDeceasedName || mutualEvent?.deceasedName || 'associado não informado'} · ${formatDate(mutualDate)}`
         : (item.notes || 'Sem observações adicionais');
     const movementLabel = item.entry ? 'Entrada financeira' : 'Saída financeira';
     const attachmentCount = Array.isArray(item.attachments) ? item.attachments.length : 0;
@@ -100,7 +101,7 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${treasury.accountTypeIcon(account?.type)}</span><div><small>Conta</small><strong>${escapeHtml(account?.name || 'Conta principal')}</strong></div></div>
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">🏷️</span><div><small>Categoria</small><strong>${escapeHtml(item.category)}</strong></div></div>
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${item.entry ? '↗' : '↘'}</span><div><small>Tipo</small><strong>${item.entry ? 'Entrada' : 'Saída'}</strong></div></div>
-          ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">👥</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🗓️</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🤲</span><div><small>Grupo / competência</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
+          ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">👥</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🗓️</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🤲</span><div><small>Grupo / evento</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · Falecimento de ${escapeHtml(item.mutualDeceasedName || mutualEvent?.deceasedName || 'associado não informado')} · ${escapeHtml(formatDate(mutualDate))}</strong></div></div>` : ''}` : ''}
         </div>
         ${treasuryAttachmentGallery(item)}
         <div class="treasury-expanded-footer">

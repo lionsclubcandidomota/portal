@@ -1,5 +1,5 @@
-import { bootstrapPortal } from './modules/portal-app.js?v=6.34.2';
-import { enableHomologationReload } from './core/homologation-reload.js?v=6.34.2';
+import { bootstrapPortal } from './modules/portal-app.js?v=6.35.0';
+import { enableHomologationReload } from './core/homologation-reload.js?v=6.35.0';
 
 function bindStaticImageFallbacks() {
   const sidebarLogo = document.getElementById('sidebarLogo');

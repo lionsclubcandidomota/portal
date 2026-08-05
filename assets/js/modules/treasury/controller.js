@@ -19,11 +19,15 @@ import {
   memberStatusLabel,
   monthLabel,
   monthRange,
-  mutualAmountForMonth,
   mutualChargeKey,
-  mutualMemberIdsForMonth,
+  mutualEventDate as getMutualEventDate,
+  mutualEventFor as getMutualEventFor,
+  mutualEventMemberIds,
+  mutualGroupIsActive,
+  mutualMemberIdsForDate,
   mutualMemberIsIncluded,
   mutualReferenceMonth as getMutualReferenceMonth,
+  normalizeDateReference,
   normalizeMonthReference,
   normalizeMutualGroup,
   normalizeTreasurySection,
@@ -80,6 +84,7 @@ export function createTreasuryController({
     const date = todayStart();
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   };
+  const mutualEventDate = item => getMutualEventDate(item, parseLocalDate);
   const mutualReferenceMonth = item => getMutualReferenceMonth(item, parseLocalDate);
   const status = createStatusHelpers({ parseDate: parseLocalDate, todayStart });
 
@@ -148,57 +153,77 @@ export function createTreasuryController({
   const familyGroupForMember = memberId => familyGroups()
     .find(group => Array.isArray(group.memberIds) && group.memberIds.includes(memberId)) || null;
 
+  const todayReference = () => {
+    const date = todayStart();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
   const mutualGroups = () => {
     const current = state();
     if (!Array.isArray(current.mutualGroups)) current.mutualGroups = [];
-    current.mutualGroups = current.mutualGroups.map(group => normalizeMutualGroup(group, currentMonth()));
+    current.mutualGroups = current.mutualGroups.map(group => normalizeMutualGroup(group, todayReference()));
     return current.mutualGroups;
   };
 
   const mutualGroupFor = groupId => mutualGroups()
     .find(item => String(item?.id) === String(groupId || '')) || null;
 
-  const mutualChargeFor = (groupId, memberId, month = '') => {
+  const mutualEventsForGroup = groupId => {
     const group = mutualGroupFor(groupId);
-    if (!group) return null;
-    const reference = normalizeMonthReference(month);
-    if (reference && !mutualMemberIsIncluded(group, memberId, reference)) return null;
-    const amount = mutualAmountForMonth(group, reference || currentMonth());
+    return group ? [...group.events] : [];
+  };
+
+  const mutualEventFor = (groupId, eventId) => {
+    const group = mutualGroupFor(groupId);
+    return group ? getMutualEventFor(group, eventId) : null;
+  };
+
+  const mutualChargeFor = (groupId, eventId, memberId) => {
+    const group = mutualGroupFor(groupId);
+    const event = group ? getMutualEventFor(group, eventId) : null;
+    const normalizedMemberId = String(memberId || '');
+    if (!group || !event || !mutualEventMemberIds(event).includes(normalizedMemberId)) return null;
+    const amount = Math.max(0, Number(event.amountPerParticipant || 0));
     if (!(amount > 0)) return null;
     return {
       group,
-      memberId: String(memberId || ''),
-      month: reference,
+      event,
+      memberId: normalizedMemberId,
       amount,
-      key: mutualChargeKey(group.id, memberId, reference)
+      key: mutualChargeKey(group.id, event.id, normalizedMemberId)
     };
   };
 
-  const mutualMembersForMonth = (groupId, month) => {
+  const mutualMembersForDate = (groupId, date) => {
     const group = mutualGroupFor(groupId);
     if (!group) return [];
-    const ids = mutualMemberIdsForMonth(group, month);
+    const ids = mutualMemberIdsForDate(group, date);
     return ids
       .map(id => state().birthdays.find(member => String(member.id) === String(id)))
       .filter(Boolean);
   };
 
-  const mutualPaymentsFor = (groupId, memberId, month = '') => {
-    const reference = normalizeMonthReference(month);
-    return state().treasury.filter(item => (
-      isMutualEntry(item)
-      && !status.isProgrammed(item)
-      && String(item.mutualGroupId || '') === String(groupId || '')
-      && String(item.mutualMemberId || item.memberId || '') === String(memberId || '')
-      && (!reference || mutualReferenceMonth(item) === reference)
-    ));
+  const mutualMembersForEvent = (groupId, eventId) => {
+    const event = mutualEventFor(groupId, eventId);
+    if (!event) return [];
+    return mutualEventMemberIds(event)
+      .map(id => state().birthdays.find(member => String(member.id) === String(id)))
+      .filter(Boolean);
   };
 
-  const mutualIsPaid = (groupId, memberId, month = '') => mutualPaymentsFor(groupId, memberId, month).length > 0;
+  const mutualPaymentsFor = (groupId, eventId, memberId = '') => state().treasury.filter(item => (
+    isMutualEntry(item)
+    && !status.isProgrammed(item)
+    && String(item.mutualGroupId || '') === String(groupId || '')
+    && String(item.mutualEventId || '') === String(eventId || '')
+    && (!memberId || String(item.mutualMemberId || item.memberId || '') === String(memberId || ''))
+  ));
+
+  const mutualIsPaid = (groupId, eventId, memberId) => mutualPaymentsFor(groupId, eventId, memberId).length > 0;
 
   const mutualPaymentConflicts = keys => (keys || []).flatMap(key => {
-    const [groupId, memberId, month] = String(key || '').split('::');
-    return mutualIsPaid(groupId, memberId, month) ? [{ key, groupId, memberId, month }] : [];
+    const [groupId, eventId, memberId] = String(key || '').split('::');
+    return mutualIsPaid(groupId, eventId, memberId) ? [{ key, groupId, eventId, memberId }] : [];
   });
 
   const toggleMutualSelection = (key, selected) => {
@@ -364,19 +389,19 @@ export function createTreasuryController({
     },
     get mutualStart() { return mutualStart; },
     set mutualStart(value) {
-      mutualStart = normalizeMonthReference(value);
-      if (!mutualEnd || (mutualStart && mutualEnd < mutualStart)) mutualEnd = mutualStart;
+      mutualStart = normalizeDateReference(value);
+      if (mutualEnd && mutualStart && mutualEnd < mutualStart) mutualEnd = mutualStart;
     },
     get mutualEnd() { return mutualEnd; },
     set mutualEnd(value) {
-      const normalized = normalizeMonthReference(value);
+      const normalized = normalizeDateReference(value);
       mutualEnd = normalized && mutualStart && normalized < mutualStart ? mutualStart : normalized;
     },
-    get mutualMonth() { return mutualStart; },
+    get mutualMonth() { return mutualStart ? mutualStart.slice(0, 7) : ''; },
     set mutualMonth(value) {
       const normalized = normalizeMonthReference(value);
-      mutualStart = normalized;
-      mutualEnd = normalized;
+      mutualStart = normalized ? `${normalized}-01` : '';
+      mutualEnd = normalized ? `${normalized}-31` : '';
     },
     get mutualStatus() { return mutualStatus; },
     set mutualStatus(value) { mutualStatus = String(value || 'pending'); },
@@ -408,9 +433,13 @@ export function createTreasuryController({
     mutualGroups,
     mutualGroupFor,
     mutualChargeFor,
-    mutualMembersForMonth,
-    mutualAmountForMonth,
+    mutualEventsForGroup,
+    mutualEventFor,
+    mutualMembersForDate,
+    mutualMembersForEvent,
+    mutualGroupIsActive,
     mutualMemberIsIncluded,
+    mutualEventDate,
     mutualReferenceMonth,
     mutualChargeKey,
     mutualPaymentsFor,

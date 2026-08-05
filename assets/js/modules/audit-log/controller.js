@@ -1,4 +1,4 @@
-import { buildPublicationReview } from '../publication-review.js?v=6.34.2';
+import { buildPublicationReview } from '../publication-review.js?v=6.35.0';
 import {
   auditLogSummary,
   closeAuditBatch,
@@ -10,9 +10,9 @@ import {
   linkAuditPublication,
   normalizeAuditActor,
   pendingAuditBatchId
-} from './domain.js?v=6.34.2';
-import { createAuditLogStore } from './storage.js?v=6.34.2';
-import { auditLogHtml } from './view.js?v=6.34.2';
+} from './domain.js?v=6.35.0';
+import { createAuditLogStore } from './storage.js?v=6.35.0';
+import { auditLogHtml } from './view.js?v=6.35.0';
 
 export function createAuditLogController({
   storage = globalThis.localStorage,

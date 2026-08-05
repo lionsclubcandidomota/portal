@@ -114,6 +114,7 @@ export function createPortalViewRendererOptions({
       openFamilyGroupsManager: treasuryAdministration.openFamilyGroupsManager,
       openMembershipPayment: treasuryAdministration.openMembershipPayment,
       openMutualGroupsManager: treasuryAdministration.openMutualGroupsManager,
+      openMutualEvent: treasuryAdministration.openMutualEvent,
       openMutualPayment: treasuryAdministration.openMutualPayment,
       shareMembershipCharge: treasuryAdministration.shareMembershipCharge
     }

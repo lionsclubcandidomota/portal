@@ -58,17 +58,20 @@ export function renderDashboard(state, helpers) {
   );
   const mutualGroups = adminUnlocked ? treasury.mutualGroups() : [];
   const mutualCharges = adminUnlocked
-    ? mutualGroups.flatMap(group => treasury.mutualMembersForMonth(group.id, currentMembershipMonth).map(member => {
-        const payments = treasury.mutualPaymentsFor(group.id, member.id, currentMembershipMonth);
-        const payment = [...payments].sort((first, second) => String(second.paymentDate || second.date || '')
-          .localeCompare(String(first.paymentDate || first.date || '')))[0] || null;
-        return {
-          group,
-          member,
-          expected: Number(treasury.mutualAmountForMonth(group, currentMembershipMonth) || 0),
-          payment
-        };
-      }))
+    ? mutualGroups.flatMap(group => (Array.isArray(group.events) ? group.events : []).flatMap(event => (
+        treasury.mutualMembersForEvent(group.id, event.id).map(member => {
+          const payments = treasury.mutualPaymentsFor(group.id, event.id, member.id);
+          const payment = [...payments].sort((first, second) => String(second.paymentDate || second.date || '')
+            .localeCompare(String(first.paymentDate || first.date || '')))[0] || null;
+          return {
+            group,
+            event,
+            member,
+            expected: Number(event.amountPerParticipant || 0),
+            payment
+          };
+        })
+      )))
     : [];
   const mutualPaidCharges = mutualCharges.filter(charge => charge.payment);
   const mutualExpectedTotal = mutualCharges.reduce((sum, charge) => sum + charge.expected, 0);
@@ -76,9 +79,11 @@ export function renderDashboard(state, helpers) {
     (sum, charge) => sum + Number(charge.payment?.entry || charge.expected || 0),
     0
   );
-  const mutualActiveGroupCount = mutualGroups.filter(group =>
-    treasury.mutualMembersForMonth(group.id, currentMembershipMonth).length > 0
-  ).length;
+  const mutualActiveGroupCount = mutualGroups.filter(group => !group.closedDate).length;
+  const mutualEventCount = mutualGroups.reduce(
+    (sum, group) => sum + (Array.isArray(group.events) ? group.events.filter(event => !event.cancelledAt).length : 0),
+    0
+  );
   const overdueMovements = adminUnlocked
     ? state.treasury.filter(item => treasury.isOverdue(item)).length
     : 0;
@@ -169,17 +174,17 @@ export function renderDashboard(state, helpers) {
       </article>
       <article class="card col-3 dashboard-summary-card dashboard-mutual-card">
         <div class="card-header">
-          <div><h3>🤲 Mútuas</h3><div class="card-subtitle">${escapeHtml(treasury.monthLabel(currentMembershipMonth))}</div></div>
+          <div><h3>🤲 Mútuas</h3><div class="card-subtitle">Cobranças por falecimento</div></div>
           <button class="btn btn-ghost btn-sm" type="button" data-open-mutuals>Ver controle</button>
         </div>
         <div class="dashboard-membership-summary dashboard-mutual-summary">
           <div><small>Grupos ativos</small><strong>${mutualActiveGroupCount}</strong></div>
-          <div class="is-paid"><small>Pagas</small><strong>${mutualPaidCharges.length}</strong></div>
+          <div><small>Eventos</small><strong>${mutualEventCount}</strong></div>
           <div class="is-pending"><small>Pendentes</small><strong>${Math.max(0, mutualCharges.length - mutualPaidCharges.length)}</strong></div>
           <div class="is-total"><small>Total recebido</small><strong class="sensitive-money">${money.format(mutualReceivedTotal)}</strong></div>
         </div>
         <div class="dashboard-membership-progress dashboard-mutual-progress" role="progressbar" aria-label="Mútuas pagas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${mutualCharges.length ? Math.round((mutualPaidCharges.length / mutualCharges.length) * 100) : 0}" title="Previsto: ${money.format(mutualExpectedTotal)}"><span style="width:${mutualCharges.length ? Math.min(100, (mutualPaidCharges.length / mutualCharges.length) * 100) : 0}%"></span></div>
-        <div class="dashboard-summary-foot"><span>${mutualPaidCharges.length}/${mutualCharges.length}</span> cobranças pagas</div>
+        <div class="dashboard-summary-foot"><span>${mutualPaidCharges.length}/${mutualCharges.length}</span> cobranças de eventos pagas</div>
       </article>` : ''}
       <article class="card ${adminUnlocked ? 'col-7' : 'col-12'} dashboard-feed-card dashboard-agenda-card">
         <div class="card-header">

@@ -1,10 +1,9 @@
-import { memberIsActive, memberStatusLabel } from '../../core/portal-members.js?v=6.34.2';
+import { memberIsActive, memberStatusLabel } from '../../core/portal-members.js?v=6.35.0';
 import { dateFromInput, periodLabel } from '../admin-dashboard/domain.js';
 import {
   isMutualEntry,
-  mutualAmountForMonth,
-  mutualMemberIsIncluded,
-  mutualReferenceMonth,
+  mutualChargeKey,
+  mutualEventMemberIds,
   normalizeMutualGroup
 } from '../treasury/domain.js';
 
@@ -254,58 +253,41 @@ function buildMembershipReport(state, bounds, now) {
 }
 
 
-function mutualReportMonths(state, bounds = {}, now = new Date()) {
-  const safeBounds = validBounds(bounds);
-  if (safeBounds.start || safeBounds.end) {
-    const fallback = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const start = safeBounds.start ? safeBounds.start.slice(0, 7) : (safeBounds.end ? safeBounds.end.slice(0, 7) : fallback);
-    const end = safeBounds.end ? safeBounds.end.slice(0, 7) : start;
-    return monthRange(start, end);
-  }
-
-  const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const groupStarts = safeArray(state?.mutualGroups)
-    .map(group => normalizeMutualGroup(group, current).startedMonth)
-    .filter(value => /^\d{4}-\d{2}$/.test(value));
-  const paymentReferences = safeArray(state?.treasury)
-    .filter(item => isMutualEntry(item))
-    .map(item => mutualReferenceMonth(item, dateFromInput))
-    .filter(value => /^\d{4}-\d{2}$/.test(value));
-  const references = [...groupStarts, ...paymentReferences, current].sort();
-  return monthRange(references[0] || current, references.at(-1) || current);
-}
-
 function latestMutualPayment(items = []) {
   return [...items].sort((first, second) => String(second?.paymentDate || second?.date || '')
     .localeCompare(String(first?.paymentDate || first?.date || '')))[0] || null;
 }
 
-function buildMutualReport(state, bounds, now) {
-  const months = mutualReportMonths(state, bounds, now);
+function buildMutualReport(state, bounds) {
+  const safeBounds = validBounds(bounds);
   const members = new Map(safeArray(state?.birthdays).map(member => [String(member.id), member]));
   const payments = safeArray(state?.treasury).filter(item => isMutualEntry(item));
   const groups = safeArray(state?.mutualGroups)
-    .map(group => normalizeMutualGroup(group, months[0] || ''))
+    .map(group => normalizeMutualGroup(group))
     .filter(group => group.id)
     .sort((first, second) => String(first.name || '').localeCompare(String(second.name || ''), 'pt-BR'));
 
-  const charges = groups.flatMap(group => months.flatMap(month => {
-    if (group.startedMonth && month < group.startedMonth) return [];
-    const memberIds = [...new Set(group.memberships
-      .map(membership => String(membership.memberId || ''))
-      .filter(memberId => memberId && mutualMemberIsIncluded(group, memberId, month)))];
+  const events = groups.flatMap(group => safeArray(group.events)
+    .filter(event => !event.cancelledAt && dateInsideBounds(event.deathDate, safeBounds))
+    .map(event => ({ group, event })));
 
-    return memberIds.map(memberId => {
-      const member = members.get(memberId) || { id: memberId, name: 'Associado não encontrado', memberNumber: '' };
-      const matchingPayments = payments.filter(item => (
-        String(item.mutualGroupId || '') === String(group.id)
-        && String(item.mutualMemberId || item.memberId || '') === memberId
-        && mutualReferenceMonth(item, dateFromInput) === month
-      ));
-      const payment = latestMutualPayment(matchingPayments);
-      const expected = mutualAmountForMonth(group, month);
-      return { group, month, member, payment, expected };
-    });
+  const charges = events.flatMap(({ group, event }) => mutualEventMemberIds(event).map(memberId => {
+    const member = members.get(memberId) || { id: memberId, name: 'Associado não encontrado', memberNumber: '' };
+    const key = mutualChargeKey(group.id, event.id, memberId);
+    const matchingPayments = payments.filter(item => (
+      String(item.mutualGroupId || '') === String(group.id)
+      && String(item.mutualEventId || '') === String(event.id)
+      && String(item.mutualMemberId || item.memberId || '') === String(memberId)
+    ));
+    const payment = latestMutualPayment(matchingPayments);
+    return {
+      group,
+      event,
+      member,
+      key,
+      payment,
+      expected: Math.max(0, Number(event.amountPerParticipant || 0))
+    };
   }));
 
   const paid = charges.filter(item => item.payment);
@@ -315,11 +297,12 @@ function buildMutualReport(state, bounds, now) {
   return {
     key: 'mutuals',
     title: REPORT_TYPES.mutuals.label,
-    description: `Cobranças mensais de mútuas de ${months.length ? months.map(monthLabel).join(' a ') : 'período sem competências'}.`,
-    columns: ['Grupo', 'Competência', 'Associado', 'Número', 'Valor previsto', 'Situação', 'Data da baixa', 'Conta', 'Valor recebido'],
+    description: `Cobranças de mútuas geradas por ${events.length} evento(s) de falecimento${safeBounds.start || safeBounds.end ? ` no período ${periodLabel(safeBounds)}` : ''}.`,
+    columns: ['Grupo', 'Falecimento', 'Data', 'Participante', 'Número', 'Valor previsto', 'Situação', 'Data da baixa', 'Conta', 'Valor recebido'],
     rows: charges.map(item => [
       item.group.name || '—',
-      monthLabel(item.month),
+      item.event.deceasedName || '—',
+      formatDate(item.event.deathDate),
       item.member.name || '—',
       item.member.memberNumber || '—',
       money.format(Number(item.expected || 0)),
@@ -330,7 +313,7 @@ function buildMutualReport(state, bounds, now) {
     ]),
     summary: [
       { label: 'Grupos', value: String(groups.length) },
-      { label: 'Competências', value: String(months.length) },
+      { label: 'Eventos de falecimento', value: String(events.length) },
       { label: 'Cobranças', value: String(charges.length) },
       { label: 'Pagas', value: String(paid.length) },
       { label: 'Em aberto', value: String(Math.max(0, charges.length - paid.length)) },
@@ -443,7 +426,7 @@ export function buildReport(type, state, {
   const builders = {
     movements: () => buildMovementReport(state, bounds),
     memberships: () => buildMembershipReport(state, bounds, now),
-    mutuals: () => buildMutualReport(state, bounds, now),
+    mutuals: () => buildMutualReport(state, bounds),
     birthdays: () => buildBirthdayReport(state, bounds),
     agenda: () => buildAgendaReport(state, bounds),
     notices: () => buildNoticeReport(state, bounds)
