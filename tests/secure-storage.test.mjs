@@ -55,7 +55,7 @@ test('perfil seguro e referências R2 não expõem URL pública permanente', () 
   assert.equal(legacyTreasuryAttachmentPath(state.treasury[0].attachments[0]), '');
 });
 
-test('esquema v10 preserva metadados R2 e migra anexos públicos antigos', () => {
+test('esquema v11 preserva metadados R2 e migra anexos públicos antigos', () => {
   const migrated = migratePortalPayload({
     schemaVersion: 9,
     version: 9,
@@ -78,11 +78,12 @@ test('esquema v10 preserva metadados R2 e migra anexos públicos antigos', () =>
       }]
     }
   });
-  assert.equal(migrated.schemaVersion, 10);
+  assert.equal(migrated.schemaVersion, 11);
   assert.equal(migrated.state.treasury[0].attachments[0].storage, 'r2');
   assert.equal(migrated.state.treasury[0].attachments[0].url, undefined);
   assert.equal(migrated.state.treasury[0].attachments[1].url, './public/treasury/mov-1/legacy.pdf');
   assert.match(migrated.migrations.join(' '), /v9→v10/);
+  assert.match(migrated.migrations.join(' '), /v10→v11/);
 });
 
 test('Worker usa binding R2, segredo de sessão e autorização por perfil', async () => {

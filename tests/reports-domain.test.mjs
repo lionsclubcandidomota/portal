@@ -78,16 +78,22 @@ test('monta faixa mensal e CSV compatível com Excel', () => {
 });
 
 
-test('gera relatório de mútuas com cobranças, baixas e exportação', () => {
+test('gera relatório de mútuas por evento de falecimento, baixas e exportação', () => {
   const mutualState = {
     ...state,
     mutualGroups: [{
       id: 'mu1',
       name: 'Grupo Solidário',
-      monthlyAmount: 15,
-      startedMonth: '2026-07',
-      memberships: [{ id: 'mum1', memberId: 'm1', joinedMonth: '2026-07', endedMonth: '' }],
-      amountHistory: [{ fromMonth: '2026-07', amount: 15 }]
+      createdDate: '2026-07-01',
+      closedDate: '',
+      memberships: [{ id: 'mum1', memberId: 'm1', joinedDate: '2026-07-01', endedDate: '' }],
+      events: [{
+        id: 'e1',
+        deceasedName: 'João do Distrito',
+        deathDate: '2026-07-20',
+        amountPerParticipant: 15,
+        participantIds: ['m1']
+      }]
     }],
     treasury: [
       ...state.treasury,
@@ -96,7 +102,7 @@ test('gera relatório de mútuas com cobranças, baixas e exportação', () => {
         date: '2026-07-31',
         paymentDate: '2026-07-31',
         category: 'Mútuas',
-        description: 'Mútua - Grupo Solidário - Ana',
+        description: 'Mútua - Falecimento de João do Distrito - Ana',
         entry: 15,
         exit: 0,
         accountId: 'acc',
@@ -104,21 +110,23 @@ test('gera relatório de mútuas com cobranças, baixas e exportação', () => {
         memberId: 'm1',
         memberIds: ['m1'],
         mutualGroupId: 'mu1',
+        mutualEventId: 'e1',
+        mutualEventDate: '2026-07-20',
+        mutualDeceasedName: 'João do Distrito',
         mutualMemberId: 'm1',
-        mutualChargeKey: 'mu1::m1::2026-07',
-        mutualReferenceMonth: '2026-07'
+        mutualChargeKey: 'mu1::e1::m1'
       }
     ]
   };
 
   const report = buildReport('mutuals', mutualState, options);
   assert.equal(report.rows.length, 1);
-  assert.deepEqual(report.rows[0].slice(0, 4), ['Grupo Solidário', 'julho de 2026', 'Ana', '10']);
-  assert.equal(report.rows[0][5], 'Paga');
-  assert.equal(report.rows[0][7], 'Conta principal');
+  assert.deepEqual(report.rows[0].slice(0, 5), ['Grupo Solidário', 'João do Distrito', '20/07/2026', 'Ana', '10']);
+  assert.equal(report.rows[0][6], 'Paga');
+  assert.equal(report.rows[0][8], 'Conta principal');
   assert.equal(report.summary.find(item => item.label === 'Total recebido').value, 'R$ 15,00');
 
   const csv = reportCsv(report);
-  assert.match(csv, /"Grupo";"Competência";"Associado"/);
-  assert.match(csv, /"Grupo Solidário";"julho de 2026";"Ana"/);
+  assert.match(csv, /"Grupo";"Falecimento";"Data";"Participante"/);
+  assert.match(csv, /"Grupo Solidário";"João do Distrito";"20\/07\/2026";"Ana"/);
 });

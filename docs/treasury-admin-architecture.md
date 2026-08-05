@@ -1,4 +1,4 @@
-# Arquitetura Administrativa da Tesouraria — v6.15.0
+# Arquitetura Administrativa da Tesouraria — v6.35.0
 
 A fachada `assets/js/modules/treasury-admin.js` compõe os fluxos administrativos e mantém o acesso centralizado usado por `portal-app.js` e pela visualização da Tesouraria.
 
@@ -9,7 +9,8 @@ A fachada `assets/js/modules/treasury-admin.js` compõe os fluxos administrativo
 - `treasury-admin/member-selector.js`: componente reutilizável de seleção de associados.
 - `treasury-admin/family-groups.js`: cadastro e manutenção de grupos familiares.
 - `treasury-admin/membership-payments.js`: baixa de mensalidades individuais e familiares.
-- `treasury-admin/mutual-groups.js`: cadastro dos grupos mensais, valor, participantes e histórico de vigência.
+- `treasury-admin/mutual-groups.js`: cadastro de grupos ativos, participantes e encerramento opcional com motivo.
+- `treasury-admin/mutual-events.js`: registro de falecimentos e geração única das cobranças para os participantes do evento.
 - `treasury-admin/mutual-payments.js`: baixa individual ou em lote por competência e geração dos movimentos de conta.
 - `treasury-admin/sharing.js`: compartilhamento e cópia de mensagens de cobrança de mensalidades.
 - `treasury-admin/accounts.js`: cadastro, ativação e exclusão de contas.
@@ -27,6 +28,7 @@ portal-app.js
         ├── membership-payments.js
         │   └── domain.js
         ├── mutual-groups.js
+        ├── mutual-events.js
         ├── mutual-payments.js
         ├── sharing.js
         │   └── domain.js
@@ -42,6 +44,7 @@ memberSelectorCard
 openFamilyGroupsManager
 openMembershipPayment
 openMutualGroupsManager
+openMutualEvent
 openMutualPayment
 openTreasuryAccountsManager
 shareMembershipCharge
@@ -51,15 +54,16 @@ openTreasuryEntryForm
 
 ## Garantias do fluxo de mútuas
 
-- O grupo possui um único valor mensal, cobrado integralmente de cada participante.
-- A seleção utiliza checkboxes vinculados a rótulos, leitura por `FormData` e atualização imediata do contador.
-- Adicionar ou remover participantes não apaga períodos anteriores.
-- A saída é efetiva para as competências posteriores ao mês registrado.
-- Alterações de valor criam um item em `amountHistory` e não reescrevem pagamentos existentes.
-- A baixa exige grupo e competência únicos, conta ativa e data manual.
-- Cada associado selecionado gera uma movimentação financeira própria.
-- A confirmação apresenta grupo, competência, associados, quantidade, total e data antes da gravação.
-- A chave mensal impede duplicidade de pagamento.
+- Criar ou editar um grupo não gera cobrança.
+- O grupo nasce ativo e sem data de baixa.
+- A baixa do grupo exige simultaneamente data e motivo.
+- Um evento de falecimento é o único gatilho para gerar cobranças.
+- Cada evento possui data, associado falecido, valor por participante e vencimento opcional.
+- A lista de participantes é congelada no momento do evento.
+- Entradas ou saídas posteriores no grupo não alteram eventos anteriores.
+- Cada participante selecionado gera uma movimentação financeira própria na baixa.
+- A chave `grupo::evento::participante` impede pagamentos duplicados.
+- Não existe competência mensal, histórico de valor mensal ou recorrência automática.
 
 ## Regras de manutenção
 

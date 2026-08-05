@@ -87,3 +87,15 @@ Concluída na versão 6.34.0:
 ## Encerramento
 
 As seis etapas principais foram concluídas. O Portal passa a possuir fronteira pública/privada, pipeline reproduzível, integração contínua, CSS consolidado, composição modular e continuidade operacional do estado financeiro.
+
+
+## Ajuste funcional pós-refatoração — Mútuas por evento
+
+Concluído na versão 6.35.0:
+
+- remoção da recorrência mensal de mútuas;
+- grupos ativos sem baixa inicial;
+- encerramento condicionado a data e motivo;
+- eventos de falecimento como único gatilho de cobrança;
+- participantes congelados por evento;
+- pagamentos, dashboard e relatórios vinculados ao evento.

@@ -2,8 +2,8 @@
   "exportedAt": "2026-08-04T18:30:36.215Z",
   "audience": "example",
   "app": "Lions Clube de Cândido Mota Dashboard",
-  "schemaVersion": 10,
-  "version": 10,
+  "schemaVersion": 11,
+  "version": 11,
   "data": {
     "settings": {
       "clubName": "Lions Clube de Cândido Mota",

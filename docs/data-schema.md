@@ -1,14 +1,14 @@
-# Esquema de dados do Portal — v10
+# Esquema de dados do Portal — v11
 
-O esquema v10, a partir do Portal 6.29.0, separa todo o domínio financeiro do conteúdo público. Com o armazenamento seguro ativado, movimentações, contas, grupos, valores de mensalidade, perfil completo da Diretoria e anexos ficam em um bucket Cloudflare R2 privado. O JSON publicado contém somente os módulos destinados aos visitantes e metadados públicos de acesso.
+O esquema v11, a partir do Portal 6.35.0, separa todo o domínio financeiro do conteúdo público. Com o armazenamento seguro ativado, movimentações, contas, grupos, valores de mensalidade, perfil completo da Diretoria e anexos ficam em um bucket Cloudflare R2 privado. O JSON publicado contém somente os módulos destinados aos visitantes e metadados públicos de acesso.
 
 A distinção entre Associados, Mutuários e registros inativos permanece inalterada.
 
 ```json
 {
   "app": "Lions Clube de Cândido Mota Dashboard",
-  "schemaVersion": 10,
-  "version": 10,
+  "schemaVersion": 11,
+  "version": 11,
   "data": {
     "settings": {
       "secureStorage": {
@@ -97,27 +97,12 @@ O campo legado `active` é mantido por compatibilidade. Ele é `false` somente p
 
 ## Regras das Mútuas
 
-- O grupo define um valor mensal integral por participante.
-- Associados ativos e Mutuários podem ser vinculados aos grupos.
-- Cada participante gera uma cobrança individual por competência.
-- Remoções interrompem competências futuras e preservam o histórico.
-- Pagamentos são registrados como entradas individuais na Tesouraria.
-
-## Migração
-
-- Arquivos v9 recebem `settings.secureStorage` desativado por padrão.
-- Anexos públicos existentes são preservados até a configuração e a primeira publicação no R2.
-- Cadastros antigos com `active: false` são migrados para `status: "Inativo"`.
-- Cadastros antigos sem situação são migrados para `status: "Ativo"`.
-- Valores Mutuário, Mutuária ou Mútua são normalizados para `status: "Mútua"`.
-- Backups dos esquemas anteriores continuam aceitos e são migrados antes do uso.
-- Arquivos com esquema superior ao v10 são bloqueados para evitar perda de dados.
-
-
-## Fronteira pública e privada — Portal 6.29.0
-
-A separação é implementada em `assets/js/core/portal-data-boundary.js`. A publicação grava o estado privado pelo endpoint autenticado `/api/private-state` e envia ao GitHub apenas a projeção pública. O Worker controla revisões para bloquear sobrescritas concorrentes. Consulte `docs/private-data-migration.md`.
-
-## Envelope privado versionado
-
-O estado privado do R2 usa um envelope interno com `version`, `revision`, `updatedAt`, `checksum` e `state`. Backups versionados repetem o mesmo envelope e adicionam metadados de auditoria no objeto R2. Esses campos não fazem parte do JSON público nem alteram o schema de conteúdo do Portal.
+- Grupos não possuem mensalidade fixa.
+- O grupo é criado ativo, com `closedDate` vazio.
+- `closedDate` e `closureReason` só são preenchidos quando houver encerramento real.
+- A coleção `events` do grupo registra cada falecimento.
+- Cada evento possui `deathDate`, `deceasedName`, `amountPerParticipant` e uma lista congelada em `participantIds`.
+- As cobranças existem somente para participantes de um evento registrado.
+- Pagamentos usam `mutualGroupId`, `mutualEventId`, `mutualMemberId` e `mutualChargeKey`.
+- A chave de cobrança segue `grupo::evento::participante`.
+- A migração v10→v11 remove a recorrência mensal legada e não cria eventos retroativos.

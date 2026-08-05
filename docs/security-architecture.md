@@ -69,7 +69,7 @@ Nesta versão, a Configuração aceita URLs HTTPS em `*.workers.dev` e endereço
 
 ## Verificação automática
 
-`npm run audit:security` verifica arquivos de dados, metatags de segurança e padrões que poderiam persistir tokens no navegador. `tests/private-data-boundary.test.mjs` valida a projeção pública, a recomposição autenticada e a separação entre armazenamento permanente e sessão. `tests/secure-storage.test.mjs` verifica o binding privado, a ausência de credenciais R2 no frontend, as permissões do Worker e o esquema v10.
+`npm run audit:security` verifica arquivos de dados, metatags de segurança e padrões que poderiam persistir tokens no navegador. `tests/private-data-boundary.test.mjs` valida a projeção pública, a recomposição autenticada e a separação entre armazenamento permanente e sessão. `tests/secure-storage.test.mjs` verifica o binding privado, a ausência de credenciais R2 no frontend, as permissões do Worker e o esquema v11.
 
 ## Backups privados e integridade
 

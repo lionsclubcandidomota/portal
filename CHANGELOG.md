@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.35.0 — Mútuas orientadas por eventos de falecimento
+
+- Remove a geração automática de cobranças mensais para grupos de mutuários.
+- Mantém grupos ativos sem data de baixa na criação.
+- Exige data e motivo somente quando o grupo for efetivamente encerrado.
+- Adiciona o fluxo “Registrar falecimento”, que cria um evento único e congela os participantes daquele momento.
+- Gera uma cobrança por participante somente para o evento registrado, com valor próprio e vencimento opcional.
+- Vincula pagamentos por grupo, evento e participante, eliminando a dependência de competências mensais.
+- Atualiza dashboard, relatórios, movimentações, filtros e textos da interface para o modelo por evento.
+- Migra o esquema para v11 e remove configurações mensais legadas sem criar cobranças retroativas.
+- Adiciona testes de regressão para grupos sem recorrência, eventos, baixa e preservação do histórico.
+
 ## 6.34.2 — Manifesto sincronizado nas publicações do Portal
 
 - Atualiza `release-manifest.json` no mesmo commit que altera `data/dados.json`.

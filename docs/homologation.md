@@ -1,4 +1,4 @@
-# Homologação — v6.34.2
+# Homologação — v6.35.0
 
 ## Fluxos prioritários do Portal
 
@@ -7,8 +7,11 @@
 3. Confirmar as situações Ativo, Mútua e Inativo no cadastro.
 4. Usar o filtro Mutuários e confirmar que somente esses registros são exibidos.
 5. Abrir Mensalidades e confirmar que o Mutuário não aparece.
-6. Abrir Mútuas e confirmar que o Mutuário pode ser selecionado.
-7. Clicar em Sair e confirmar o retorno ao Dashboard em modo visitante, sem erro no console.
+6. Criar um grupo de Mútuas e confirmar que ele nasce ativo, sem data de baixa e sem cobranças automáticas.
+7. Registrar um falecimento e confirmar que uma cobrança única é criada para cada participante ativo na data do evento.
+8. Baixar uma cobrança e confirmar que o lançamento fica vinculado ao grupo, ao falecimento e ao participante, sem competência mensal.
+9. Encerrar um grupo apenas após informar data e motivo de baixa.
+10. Clicar em Sair e confirmar o retorno ao Dashboard em modo visitante, sem erro no console.
 
 ## Homologação do Cloudflare R2
 
@@ -51,16 +54,16 @@ Execute esta seção somente depois de publicar o Worker e salvar sua URL em Con
 Antes da homologação funcional, publique o Worker atualizado e execute a migração descrita em `docs/private-data-migration.md`.
 
 
-## Pipeline de release — versão 6.34.2
+## Pipeline de release — versão 6.35.0
 
 1. Execute `npm run release:build`.
 2. Confirme que a pasta `dist` contém os três ZIPs e `checksums.sha256`.
 3. Execute `npm run release:dist:verify` e confirme a validação dos artefatos.
-4. Publique somente o conteúdo de `portal-site-v6.34.2.zip` no GitHub Pages.
+4. Publique somente o conteúdo de `portal-site-v6.35.0.zip` no GitHub Pages.
 5. Atualize o Worker primeiro com o pacote `cloudflare-worker-v1.2.0.zip` quando houver alteração no Worker.
 
 
-## GitHub Actions — versão 6.34.2
+## GitHub Actions — versão 6.35.0
 
 1. Envie a pasta `.github/workflows` ao repositório.
 2. Na aba **Actions**, confirme a execução de **Qualidade do Portal**.
