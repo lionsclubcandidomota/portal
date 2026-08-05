@@ -10,7 +10,7 @@
     "css": 28,
     "tests": 47,
     "memberImages": 28,
-    "totalBytes": 7762134
+    "totalBytes": 7762158
   },
   "files": [
     {
@@ -730,8 +730,8 @@
     },
     {
       "path": "data/dados.json",
-      "bytes": 27733,
-      "sha256": "9cf20273cd042216f6d47a80b3f7241b623fae0d64b5a5e7e236ee11479b8501"
+      "bytes": 27757,
+      "sha256": "86f31d3fcad96c1e251c3b1a48587c8c8342e14adcba4e7d9bb55c0547078a22"
     },
     {
       "path": "data/modelo.json",
@@ -1363,5 +1363,6 @@
       "bytes": 3219,
       "sha256": "437608963cb4b5df0afa8f7e95e6e717ebb8868c1128848494360d8d94737bd5"
     }
-  ]
+  ],
+  "runtimeUpdatedAt": "2026-08-05T21:33:30.892Z"
 }
