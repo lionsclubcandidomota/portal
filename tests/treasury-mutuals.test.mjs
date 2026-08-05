@@ -160,6 +160,21 @@ test('evento de falecimento gera uma cobrança única para cada participante con
   assert.ok(model.charges.every(item => item.event.id === 'e1' && item.amount === 15));
 });
 
+test('participantes repetidos no estado são deduplicados no grupo e nas cobranças', () => {
+  const { state, treasury } = setup();
+  state.mutualGroups[0].memberships.push({
+    id: 'mship-duplicada',
+    memberId: 'm1',
+    joinedDate: '2026-06-01',
+    endedDate: ''
+  });
+  state.mutualGroups[0].events[0].participantIds = ['m1', 'm1', 'm2', 'm2'];
+
+  const model = buildMutualViewModel(state, treasury);
+  assert.deepEqual(model.groupSections[0].members.map(item => item.member.id), ['m1', 'm2']);
+  assert.deepEqual(model.charges.map(item => item.member.id), ['m1', 'm2']);
+});
+
 test('alterações futuras no grupo não reescrevem participantes de eventos anteriores', () => {
   const { state, treasury } = setup();
   treasury.mutualStart = '2026-08-01';
@@ -223,13 +238,38 @@ test('interface explica cobrança por falecimento e não oferece recorrência me
   assert.match(html, /Registrar falecimento/);
   assert.match(html, /Data inicial/);
   assert.match(html, /type="date"/);
-  assert.match(html, /Falecimento de João do Distrito/);
+  assert.match(html, /João do Distrito/);
   assert.match(html, /data-mutual-key="mu1::e1::m2"/);
-  assert.match(html, /Participantes atuais/);
+  assert.match(html, /data-mutual-group-view="charges"/);
+  assert.match(html, /data-mutual-group-view="participants"/);
+  assert.match(html, /data-mutual-group-panel="charges" role="tabpanel"/);
+  assert.match(html, /data-mutual-group-panel="participants" role="tabpanel" hidden/);
   assert.match(html, /data-mutual-group-member="m1"/);
-  assert.match(html, /Associados e mutuários vinculados ao grupo/);
+  assert.match(html, /Composição atual do grupo/);
+  assert.match(html, /mutual-charge-row/);
+  assert.doesNotMatch(html, /membership-family-chip/);
   assert.equal(buildMutualViewModel(state, treasury).groupSections[0].members.length, 2);
   assert.doesNotMatch(html, /Controle mensal de mútuas|Valor mensal por participante|competência/i);
+});
+
+test('grupo sem evento abre participantes e grupo com cobrança separa as duas visualizações', () => {
+  const { state, treasury } = setup();
+  state.mutualGroups[0].events = [];
+  const emptyEventModel = buildMutualViewModel(state, treasury);
+  assert.equal(emptyEventModel.groupSections[0].view, 'participants');
+
+  state.mutualGroups[0].events = [{
+    id: 'e4',
+    deceasedName: 'Evento novo',
+    deathDate: '2026-07-20',
+    amountPerParticipant: 10,
+    participantIds: ['m1', 'm2']
+  }];
+  const eventModel = buildMutualViewModel(state, treasury);
+  assert.equal(eventModel.groupSections[0].view, 'charges');
+
+  treasury.setMutualGroupView('mu1', 'participants');
+  assert.equal(buildMutualViewModel(state, treasury).groupSections[0].view, 'participants');
 });
 
 test('filtro Todos reúne eventos dos grupos no período e inicia accordions recolhidos', () => {
@@ -258,6 +298,9 @@ test('controlador preserva intervalo por data e estado individual dos accordions
   assert.equal(treasury.isMutualGroupExpanded('mu1'), true);
   treasury.collapseMutualGroups();
   assert.equal(treasury.isMutualGroupExpanded('mu1'), false);
+  assert.equal(treasury.mutualGroupView('mu1', true), 'charges');
+  treasury.setMutualGroupView('mu1', 'participants');
+  assert.equal(treasury.mutualGroupView('mu1', true), 'participants');
 });
 
 test('registro de falecimento cria evento único e congela participantes', async () => {
@@ -268,8 +311,10 @@ test('registro de falecimento cria evento único e congela participantes', async
   assert.match(source, /Falecimento de associado do distrito/);
   assert.match(source, /amountPerParticipant/);
   assert.match(source, /participantIds: participants\.map/);
+  assert.match(source, /mutual-event-workspace/);
   assert.match(source, /mutual-event-participant-list/);
   assert.match(source, /mutual-event-participant/);
+  assert.match(source, /setMutualGroupView\(group\.id, 'charges'\)/);
   assert.match(source, /group\.events\.push/);
   assert.match(source, /não cria recorrência/i);
 });
@@ -287,6 +332,9 @@ test('baixa gera movimento individual vinculado ao evento, sem competência mens
   assert.match(source, /mutualDeceasedName: item\.event\.deceasedName/);
   assert.doesNotMatch(source, /mutualReferenceMonth|coveredMonths|Pagamento mensal/);
   assert.match(source, /category: 'Mútuas'/);
+  assert.match(source, /groupChargesByEvent/);
+  assert.match(source, /mutual-payment-event-group/);
+  assert.match(source, /setMutualGroupView\(item\.group\.id, 'charges'\)/);
 });
 
 test('gestão do grupo cria ativo sem baixa e exige motivo para encerramento', async () => {
@@ -316,9 +364,14 @@ test('estilos cobrem grupos, eventos, baixa e movimentos de mútuas', async () =
     '.mutual-group-accordion',
     '.mutual-member-option',
     '.mutual-payment-hero',
+    '.mutual-event-workspace',
     '.mutual-event-participant',
+    '.mutual-group-view-tabs',
+    '.mutual-event-card',
+    '.mutual-charge-row',
     '.mutual-group-members',
     '.mutual-group-member-card',
+    '.mutual-payment-event-group',
     '.treasury-record-card.is-mutual'
   ]) {
     const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

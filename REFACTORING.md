@@ -108,3 +108,16 @@ Concluído na versão 6.35.0:
 - identificação de associado ou mutuário e contagem do grupo;
 - testes de regressão para estrutura, estilos e comportamento do modal.
 
+## Evolução posterior — UX das Mútuas
+
+Concluída na versão 6.36.0:
+
+- separação visual entre composição atual do grupo e cobranças históricas;
+- abas por grupo para impedir a exibição simultânea das mesmas pessoas;
+- eventos de falecimento em cartões expansíveis;
+- linhas compactas de cobrança sem contexto repetido;
+- seleção em lote por evento;
+- modais de geração e baixa organizados em duas áreas;
+- persistência da visualização ativa após gerar ou baixar cobranças;
+- testes de deduplicação e contratos de interface.
+

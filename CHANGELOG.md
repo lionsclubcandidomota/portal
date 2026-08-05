@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.36.0 — Fluxo de Mútuas orientado por contexto
+
+- Separa a composição do grupo das cobranças por falecimento em abas próprias, impedindo a repetição simultânea dos mesmos associados na tela.
+- Abre a aba Participantes enquanto o grupo não possui eventos e direciona para Cobranças após gerar um falecimento.
+- Agrupa cobranças por evento em cartões expansíveis, com totais, situação e seleção de pendências no contexto correto.
+- Substitui os cartões financeiros repetitivos por linhas compactas, removendo grupo e data do falecimento de cada participante quando essas informações já aparecem no cabeçalho do evento.
+- Reorganiza o modal de registro de falecimento em dados do evento e participantes, com resumo previsível antes da geração.
+- Agrupa a baixa por falecimento e mostra o contexto apenas uma vez, reduzindo repetição no modal de recebimento.
+- Preserva a aba e o grupo ativos após gerar cobranças ou registrar baixas.
+- Adiciona testes para deduplicação, alternância entre Participantes e Cobranças e agrupamento da baixa.
+- Ajusta o orçamento CSS para 336 KB, mantendo zero declarações superadas e os demais limites de qualidade.
+
 ## 6.35.1 — Correção visual e participantes dos grupos de Mútuas
 
 - Corrige o grid da lista de participantes no formulário “Registrar falecimento e gerar cobrança”.

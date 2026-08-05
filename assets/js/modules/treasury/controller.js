@@ -72,6 +72,7 @@ export function createTreasuryController({
   let mutualStatus = 'pending';
   const mutualSelectedCharges = new Set();
   const expandedMutualGroups = new Set();
+  const mutualGroupViews = new Map();
   let chartToken = null;
   const collapsedCharts = new Set(['finance', 'cash-flow', 'category', 'account']);
 
@@ -246,6 +247,19 @@ export function createTreasuryController({
   };
   const toggleMutualGroup = groupId => setMutualGroupExpanded(groupId, !isMutualGroupExpanded(groupId));
   const collapseMutualGroups = () => expandedMutualGroups.clear();
+  const mutualGroupView = (groupId, hasEvents = true) => {
+    const key = String(groupId || '');
+    const stored = mutualGroupViews.get(key);
+    return stored === 'participants' || stored === 'charges'
+      ? stored
+      : (hasEvents ? 'charges' : 'participants');
+  };
+  const setMutualGroupView = (groupId, view) => {
+    const key = String(groupId || '');
+    const normalizedView = view === 'participants' ? 'participants' : 'charges';
+    if (key) mutualGroupViews.set(key, normalizedView);
+    return normalizedView;
+  };
 
   const paymentsFor = (memberId, month) => state().treasury.filter(item =>
     isMembershipEntry(item)
@@ -343,6 +357,7 @@ export function createTreasuryController({
     mutualStatus = 'pending';
     mutualSelectedCharges.clear();
     expandedMutualGroups.clear();
+    mutualGroupViews.clear();
     chartToken = null;
     collapsedCharts.clear();
     ['finance', 'cash-flow', 'category', 'account'].forEach(chartId => collapsedCharts.add(chartId));
@@ -451,6 +466,8 @@ export function createTreasuryController({
     setMutualGroupExpanded,
     toggleMutualGroup,
     collapseMutualGroups,
+    mutualGroupView,
+    setMutualGroupView,
     parseCurrencyInput,
     currencyInputValue,
     coveredMonths,

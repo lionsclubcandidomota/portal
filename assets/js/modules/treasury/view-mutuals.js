@@ -24,11 +24,18 @@ function updateMutualSelectionUi(root, treasury) {
   const paymentButton = root.querySelector('#mutualPaymentButton');
   const clearButton = root.querySelector('#mutualClearSelection');
   const bar = root.querySelector('#mutualSelectionBar');
+  const guidance = bar?.querySelector('p');
   if (count) count.textContent = String(selectedKeys.length);
   if (totalNode) totalNode.textContent = money.format(total);
   if (paymentButton) paymentButton.disabled = selectedKeys.length === 0;
   if (clearButton) clearButton.disabled = selectedKeys.length === 0;
   bar?.classList.toggle('has-selection', selectedKeys.length > 0);
+  bar?.classList.toggle('is-empty', selectedKeys.length === 0);
+  if (guidance) {
+    guidance.textContent = selectedKeys.length
+      ? 'Revise a seleção antes de registrar os recebimentos.'
+      : 'Selecione cobranças em aberto dentro de um evento.';
+  }
 }
 
 function applyMutualFilters(root, treasury, controls) {
@@ -47,12 +54,15 @@ function applyMutualFilters(root, treasury, controls) {
   });
 
   root.querySelectorAll('[data-mutual-event-section]').forEach(section => {
-    const monthVisible = [...section.querySelectorAll('.mutual-charge-card')]
+    const eventVisible = [...section.querySelectorAll('.mutual-charge-card')]
       .filter(card => !card.hidden).length;
+    const visibleCount = section.querySelector('.mutual-event-visible-count');
+    if (visibleCount) visibleCount.textContent = String(eventVisible);
     const emptyState = section.querySelector('.mutual-event-empty');
     if (emptyState) {
-      emptyState.hidden = monthVisible > 0 || !section.querySelector('.mutual-charge-card');
+      emptyState.hidden = eventVisible > 0 || !section.querySelector('.mutual-charge-card');
     }
+    section.classList.toggle('has-no-filter-results', eventVisible === 0);
   });
 
   root.querySelectorAll('[data-mutual-group-section]').forEach(section => {
@@ -134,6 +144,33 @@ export function bindMutualSection({ root, treasury, helpers, mutualModel, rerend
       section?.classList.toggle('is-expanded', opening);
       section?.classList.toggle('is-collapsed', !opening);
       if (content) content.hidden = !opening;
+    });
+  });
+
+
+  root.querySelectorAll('[data-mutual-group-view]').forEach(button => {
+    button.addEventListener('click', () => {
+      const groupId = button.dataset.mutualGroupId;
+      const view = button.dataset.mutualGroupView === 'participants' ? 'participants' : 'charges';
+      const section = button.closest('[data-mutual-group-section]');
+      treasury.setMutualGroupView(groupId, view);
+      section?.querySelectorAll('[data-mutual-group-view]').forEach(tab => {
+        const active = tab.dataset.mutualGroupView === view;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', String(active));
+      });
+      section?.querySelectorAll('[data-mutual-group-panel]').forEach(panel => {
+        panel.hidden = panel.dataset.mutualGroupPanel !== view;
+      });
+    });
+  });
+
+  root.querySelectorAll('[data-mutual-select-event]').forEach(button => {
+    button.addEventListener('click', () => {
+      const eventSection = button.closest('[data-mutual-event-section]');
+      eventSection?.querySelectorAll('.mutual-charge-card:not([hidden]) .mutual-charge-checkbox')
+        .forEach(input => { input.checked = true; });
+      updateMutualSelectionUi(root, treasury);
     });
   });
 

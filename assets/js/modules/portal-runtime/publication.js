@@ -1,7 +1,7 @@
-import { cloneState } from '../../core/portal-state.js?v=6.35.1';
-import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.35.1';
-import { buildPublicationMessage } from './domain.js?v=6.35.1';
-import { ACCESS_CAPABILITIES, ACCESS_ROLES, roleHasCapability } from './authorization.js?v=6.35.1';
+import { cloneState } from '../../core/portal-state.js?v=6.36.0';
+import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.36.0';
+import { buildPublicationMessage } from './domain.js?v=6.36.0';
+import { ACCESS_CAPABILITIES, ACCESS_ROLES, roleHasCapability } from './authorization.js?v=6.36.0';
 
 export function createPublicationActions(context) {
   const { dependencies, services, model, environment } = context;

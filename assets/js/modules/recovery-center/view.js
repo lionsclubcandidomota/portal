@@ -1,4 +1,4 @@
-import { RECOVERY_AREAS, SNAPSHOT_REASON_LABELS } from './domain.js?v=6.35.1';
+import { RECOVERY_AREAS, SNAPSHOT_REASON_LABELS } from './domain.js?v=6.36.0';
 
 function escapeHtml(value) {
   return String(value ?? '')

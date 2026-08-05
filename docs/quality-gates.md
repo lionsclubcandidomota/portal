@@ -17,7 +17,7 @@ O comando executa os testes automatizados, valida o bundle CSS, confere versões
 - Até 360 regras de sobrescrita.
 - Zero fontes e zero bytes em `assets/css/legacy`.
 - Até 36.000 bytes por fonte CSS.
-- Até 330.000 bytes no bundle CSS.
+- Até 336.000 bytes no bundle CSS.
 - Até 520 linhas por módulo de interface.
 - `portal-app.js` abaixo de 340 linhas.
 - `entity-forms.js` abaixo de 380 linhas.

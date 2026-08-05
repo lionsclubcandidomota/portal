@@ -1,5 +1,5 @@
-import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.35.1';
-import { createTreasuryAdminController } from '../treasury-admin.js?v=6.35.1';
+import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.36.0';
+import { createTreasuryAdminController } from '../treasury-admin.js?v=6.36.0';
 
 export function createTreasuryFeature({
   getState,

@@ -1,11 +1,11 @@
-import { buildPublicationReview } from '../publication-review.js?v=6.35.1';
+import { buildPublicationReview } from '../publication-review.js?v=6.36.0';
 import {
   cloneState,
   normalizeTreasuryStatuses,
   sanitizePortalState
-} from '../../core/portal-state.js?v=6.35.1';
-import { createRuntimeMetadataStore } from './storage.js?v=6.35.1';
-import { ACCESS_ROLES } from './authorization.js?v=6.35.1';
+} from '../../core/portal-state.js?v=6.36.0';
+import { createRuntimeMetadataStore } from './storage.js?v=6.36.0';
+import { ACCESS_ROLES } from './authorization.js?v=6.36.0';
 
 const REQUIRED_DEPENDENCIES = [
   'getState',
