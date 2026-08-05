@@ -1,5 +1,15 @@
 # Changelog
 
+## 6.35.1 — Correção visual e participantes dos grupos de Mútuas
+
+- Corrige o grid da lista de participantes no formulário “Registrar falecimento e gerar cobrança”.
+- Cria estilos próprios para a prévia dos participantes, sem reutilizar a coluna de checkbox da tela de baixa.
+- Reinicia a rolagem do modal a cada abertura para que formulários longos sempre comecem pelo topo.
+- Amplia o modal de falecimento em telas maiores e mantém cabeçalho, conteúdo rolável e ações responsivas.
+- Exibe os associados e mutuários ativos ao expandir cada grupo de Mútuas, mesmo quando ainda não há falecimentos registrados.
+- Mostra quantidade, nome, número do associado e tipo de participante dentro do grupo.
+- Adiciona testes de regressão para o modal, o CSS e a lista de participantes do acordeão.
+
 ## 6.35.0 — Mútuas orientadas por eventos de falecimento
 
 - Remove a geração automática de cobranças mensais para grupos de mutuários.

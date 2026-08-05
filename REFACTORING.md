@@ -99,3 +99,12 @@ Concluído na versão 6.35.0:
 - eventos de falecimento como único gatilho de cobrança;
 - participantes congelados por evento;
 - pagamentos, dashboard e relatórios vinculados ao evento.
+
+### Correção 6.35.1
+
+- formulário de falecimento com grade própria para participantes e rolagem reiniciada ao abrir;
+- modal responsivo com ações acessíveis durante a rolagem;
+- participantes ativos novamente visíveis dentro do grupo de Mútuas expandido;
+- identificação de associado ou mutuário e contagem do grupo;
+- testes de regressão para estrutura, estilos e comportamento do modal.
+

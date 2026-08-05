@@ -1,4 +1,4 @@
-import { memberIsActive as isActiveMember, memberStatusKey, memberStatusLabel } from '../core/portal-members.js?v=6.35.0';
+import { memberIsActive as isActiveMember, memberStatusKey, memberStatusLabel } from '../core/portal-members.js?v=6.35.1';
 
 export function createBirthdaysController() {
   let monthFilter = 'all';

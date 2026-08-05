@@ -14,8 +14,8 @@ import {
 import { createFinancePrivacyController } from './finance-privacy.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createAuditLogController } from './audit-log.js?v=6.35.0';
-import { createRecoveryCenterController } from './recovery-center.js?v=6.35.0';
+import { createAuditLogController } from './audit-log.js?v=6.35.1';
+import { createRecoveryCenterController } from './recovery-center.js?v=6.35.1';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
@@ -36,15 +36,15 @@ import {
   getAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.35.0';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.35.0';
-import { getPortalElements } from './portal-elements.js?v=6.35.0';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.35.0';
-import { createTreasuryFeature } from './portal-composition/treasury-feature.js?v=6.35.0';
-import { createAdministrationFeature } from './portal-composition/administration-feature.js?v=6.35.0';
-import { createPublicationFeature } from './portal-composition/publication-feature.js?v=6.35.0';
-import { createNavigationFeature } from './portal-composition/navigation-feature.js?v=6.35.0';
-import { createPortalViewRendererOptions } from './portal-composition/view-dependencies.js?v=6.35.0';
+} from './appointments.js?v=6.35.1';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.35.1';
+import { getPortalElements } from './portal-elements.js?v=6.35.1';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.35.1';
+import { createTreasuryFeature } from './portal-composition/treasury-feature.js?v=6.35.1';
+import { createAdministrationFeature } from './portal-composition/administration-feature.js?v=6.35.1';
+import { createPublicationFeature } from './portal-composition/publication-feature.js?v=6.35.1';
+import { createNavigationFeature } from './portal-composition/navigation-feature.js?v=6.35.1';
+import { createPortalViewRendererOptions } from './portal-composition/view-dependencies.js?v=6.35.1';
 
 export function bootstrapPortal() {
   let state = loadState();

@@ -1,20 +1,17 @@
-# Release 6.35.0
+# Release 6.35.1
 
-Esta versão altera o funcionamento das Mútuas para refletir a regra real do distrito: **não existe mensalidade fixa nem recorrência automática**.
+Esta versão corrige a interface de Mútuas introduzida na 6.35.0.
 
-## Nova regra
+## Correções
 
-1. O Administrador cria um grupo de mutuários ativo, sem data de baixa.
-2. Participantes podem entrar ou sair do grupo sem gerar cobranças.
-3. Quando ocorre o falecimento de um associado do distrito, o Administrador registra um evento.
-4. O evento congela os participantes ativos naquela data e gera uma cobrança única para cada um.
-5. A baixa financeira permanece individual e vinculada ao evento.
-6. O grupo só recebe data de baixa quando houver encerramento real, acompanhado de motivo obrigatório.
-
-## Migração
-
-O esquema passa para v11. Grupos antigos preservam nome, participantes, data de criação e observações, mas os campos `monthlyAmount`, `startedMonth` e `amountHistory` deixam de gerar cobranças. Nenhum evento retroativo é criado automaticamente.
+- O modal **Registrar falecimento e gerar cobrança** passa a usar um layout próprio para os participantes.
+- Avatar, nome, número e situação deixam de ocupar colunas incorretas.
+- O modal abre sempre no topo, mesmo quando outro formulário havia sido fechado após rolagem.
+- Em telas maiores, o formulário possui mais espaço e uma área de conteúdo rolável.
+- Em telas menores, a lista e os campos passam para uma coluna sem sobreposição.
+- Ao expandir um grupo na tela de Mútuas, os participantes ativos voltam a ser exibidos antes dos eventos de falecimento.
+- Grupos sem eventos continuam mostrando seus associados e mutuários cadastrados.
 
 ## Publicação
 
-Atualize o repositório com `portal-main-v6.35.0.zip` ou publique apenas o site com `portal-site-v6.35.0.zip`. O Cloudflare Worker permanece na versão 1.2.0 e não precisa ser republicado.
+Atualize o repositório com `portal-main-v6.35.1.zip` ou publique apenas o site com `portal-site-v6.35.1.zip`. O Cloudflare Worker permanece na versão 1.2.0 e não precisa ser republicado.

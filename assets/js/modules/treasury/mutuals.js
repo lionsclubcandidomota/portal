@@ -27,6 +27,21 @@ function eventInsideRange(event, start, end) {
   return true;
 }
 
+function activeGroupMembers(state, treasury, group) {
+  const ids = [...new Set((Array.isArray(group?.memberships) ? group.memberships : [])
+    .filter(membership => !membership?.endedDate)
+    .map(membership => String(membership?.memberId || ''))
+    .filter(Boolean))];
+  return ids
+    .map(id => state.birthdays.find(member => String(member?.id || '') === id))
+    .filter(Boolean)
+    .sort((first, second) => first.name.localeCompare(second.name, 'pt-BR'))
+    .map(member => ({
+      member,
+      type: treasury.memberIsMutual(member) ? 'Mutuário' : 'Associado'
+    }));
+}
+
 export function buildMutualViewModel(state, treasury) {
   const groups = [...treasury.mutualGroups()]
     .sort((first, second) => String(first.name || '').localeCompare(String(second.name || ''), 'pt-BR'));
@@ -46,6 +61,7 @@ export function buildMutualViewModel(state, treasury) {
   const allGroupsMode = groupFilter === 'all';
 
   const groupSections = selectedGroups.map(group => {
+    const members = activeGroupMembers(state, treasury, group);
     const eventSections = [...(Array.isArray(group.events) ? group.events : [])]
       .filter(event => !event.cancelledAt && eventInsideRange(event, selectedStart, selectedEnd))
       .sort((first, second) => String(second.deathDate || '').localeCompare(String(first.deathDate || '')))
@@ -97,6 +113,7 @@ export function buildMutualViewModel(state, treasury) {
       group,
       active: !group.closedDate,
       expanded: allGroupsMode ? treasury.isMutualGroupExpanded(group.id) : true,
+      members,
       eventSections,
       charges,
       visibleCharges,
@@ -171,17 +188,28 @@ function renderEventSection(section, adminUnlocked, avatar, empty) {
   </section>`;
 }
 
+function renderGroupMembers(section, avatar, empty) {
+  const content = section.members.length
+    ? section.members.map(({ member, type }) => `<article class="mutual-group-member-card" data-mutual-group-member="${escapeHtml(member.id)}">${avatar(member)}<span class="mutual-group-member-copy"><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small></span><span class="mutual-group-member-type">${escapeHtml(type)}</span></article>`).join('')
+    : empty('👥', 'Nenhum participante ativo vinculado a este grupo.');
+  return `<section class="mutual-group-members" aria-label="Participantes atuais de ${escapeHtml(section.group.name)}">
+    <div class="mutual-group-members-heading"><div><small>Participantes atuais</small><strong>Associados e mutuários vinculados ao grupo</strong></div><span>${section.members.length} participante(s)</span></div>
+    <div class="mutual-group-member-grid">${content}</div>
+  </section>`;
+}
+
 function renderGroupAccordion(section, allGroupsMode, adminUnlocked, avatar, empty) {
   const { group } = section;
   const contentId = `mutual-group-content-${String(group.id).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   return `<article class="mutual-group-accordion ${section.expanded ? 'is-expanded' : 'is-collapsed'}" data-mutual-group-section="${escapeHtml(group.id)}">
     <button class="mutual-group-accordion-toggle" type="button" data-mutual-group-toggle="${escapeHtml(group.id)}" aria-expanded="${section.expanded}" aria-controls="${escapeHtml(contentId)}">
       <span class="mutual-group-accordion-icon" aria-hidden="true">🤲</span>
-      <span class="mutual-group-accordion-copy"><small>Grupo de mutuários · ${section.active ? 'Ativo' : 'Baixado'}</small><strong>${escapeHtml(group.name)}</strong><span>${section.eventSections.length} evento(s) no período · criado em ${escapeHtml(formatDate(group.createdDate))}</span></span>
+      <span class="mutual-group-accordion-copy"><small>Grupo de mutuários · ${section.active ? 'Ativo' : 'Baixado'}</small><strong>${escapeHtml(group.name)}</strong><span>${section.members.length} participante(s) · ${section.eventSections.length} evento(s) no período · criado em ${escapeHtml(formatDate(group.createdDate))}</span></span>
       <span class="mutual-group-accordion-metrics"><span><small>Cobranças</small><strong>${section.charges.length}</strong></span><span><small>Em aberto</small><strong>${section.pendingCharges.length}</strong></span><span><small>Previsto</small><strong class="sensitive-money">${money.format(section.expectedTotal)}</strong></span></span>
       <span class="mutual-group-accordion-chevron" aria-hidden="true"></span>
     </button>
     <div class="mutual-group-accordion-content" id="${escapeHtml(contentId)}" ${section.expanded ? '' : 'hidden'}>
+      ${renderGroupMembers(section, avatar, empty)}
       <div class="mutual-group-period-summary"><span><strong>${section.visibleCharges.length}</strong> resultado(s) com os filtros atuais</span>${allGroupsMode ? '<small>Expanda somente os grupos que deseja analisar.</small>' : '<small>As cobranças são organizadas por evento de falecimento.</small>'}</div>
       ${section.eventSections.length ? section.eventSections.map(eventSection => renderEventSection(eventSection, adminUnlocked, avatar, empty)).join('') : empty('🕊️', 'Nenhum falecimento registrado para este grupo no período selecionado.')}
       <div class="membership-filter-empty mutual-group-empty" ${section.visibleCharges.length || !section.charges.length ? 'hidden' : ''}>🔎 Nenhuma cobrança deste grupo corresponde aos filtros selecionados.</div>

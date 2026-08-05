@@ -225,6 +225,10 @@ test('interface explica cobrança por falecimento e não oferece recorrência me
   assert.match(html, /type="date"/);
   assert.match(html, /Falecimento de João do Distrito/);
   assert.match(html, /data-mutual-key="mu1::e1::m2"/);
+  assert.match(html, /Participantes atuais/);
+  assert.match(html, /data-mutual-group-member="m1"/);
+  assert.match(html, /Associados e mutuários vinculados ao grupo/);
+  assert.equal(buildMutualViewModel(state, treasury).groupSections[0].members.length, 2);
   assert.doesNotMatch(html, /Controle mensal de mútuas|Valor mensal por participante|competência/i);
 });
 
@@ -264,6 +268,8 @@ test('registro de falecimento cria evento único e congela participantes', async
   assert.match(source, /Falecimento de associado do distrito/);
   assert.match(source, /amountPerParticipant/);
   assert.match(source, /participantIds: participants\.map/);
+  assert.match(source, /mutual-event-participant-list/);
+  assert.match(source, /mutual-event-participant/);
   assert.match(source, /group\.events\.push/);
   assert.match(source, /não cria recorrência/i);
 });
@@ -310,6 +316,9 @@ test('estilos cobrem grupos, eventos, baixa e movimentos de mútuas', async () =
     '.mutual-group-accordion',
     '.mutual-member-option',
     '.mutual-payment-hero',
+    '.mutual-event-participant',
+    '.mutual-group-members',
+    '.mutual-group-member-card',
     '.treasury-record-card.is-mutual'
   ]) {
     const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

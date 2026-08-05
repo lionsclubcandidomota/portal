@@ -45,7 +45,7 @@ export function createMutualEventManager(context) {
         </div>
       </section>
       <section class="admin-form-section"><div class="admin-form-section-heading"><span>👥</span><div><h3>Participantes que receberão a cobrança</h3><p>A lista é congelada no evento. Entradas ou saídas futuras no grupo não alteram esta cobrança.</p></div></div>
-        <div id="mutualEventParticipants" class="mutual-payment-charge-list"></div>
+        <div id="mutualEventParticipants" class="mutual-event-participant-list"></div>
         <div class="mutual-payment-total"><div><small>Participantes incluídos</small><strong id="mutualEventParticipantCount">0</strong></div><div><small>Total previsto</small><strong class="sensitive-money" id="mutualEventTotal">${money.format(0)}</strong></div></div>
       </section>
       <div class="operation-readiness" id="mutualEventReadiness" role="status" aria-live="polite"><span aria-hidden="true">○</span><strong>Preencha os dados do falecimento e confirme os participantes.</strong></div>
@@ -69,7 +69,7 @@ export function createMutualEventManager(context) {
       const deathDate = String(deathDateInput.value || '');
       participants = deathDate ? treasury.mutualMembersForDate(groupId, deathDate) : [];
       participantsRoot.innerHTML = participants.length
-        ? participants.map(member => `<article class="mutual-payment-charge">${avatar(member)}<span class="mutual-payment-charge-copy"><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small></span><span class="membership-state-pill">Incluído</span></article>`).join('')
+        ? participants.map(member => `<article class="mutual-event-participant">${avatar(member)}<span class="mutual-event-participant-copy"><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small></span><span class="membership-state-pill"><i aria-hidden="true"></i>Incluído</span></article>`).join('')
         : '<div class="member-picker-empty">Nenhum participante ativo no grupo para esta data.</div>';
       updateSummary();
     };

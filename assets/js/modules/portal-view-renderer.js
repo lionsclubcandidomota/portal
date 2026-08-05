@@ -1,4 +1,4 @@
-import { renderTreasury } from './treasury.js?v=6.35.0';
+import { renderTreasury } from './treasury.js?v=6.35.1';
 import { renderAgenda } from './agenda.js';
 import { renderDashboard } from './dashboard.js';
 import { renderNotices } from './notices.js';

@@ -178,6 +178,16 @@ test('baixa de Mútuas exibe somente um controle visual de seleção por associa
   assert.doesNotMatch(css, /grid-template-columns:20px 24px 40px minmax\(0,1fr\) auto/);
 });
 
+
+test('modal reinicia a rolagem ao abrir formulários longos', async () => {
+  const modal = await source('assets/js/modules/modal.js');
+
+  assert.match(modal, /modal\.querySelector\('\.modal-card'\)/);
+  assert.match(modal, /scrollContainer\.scrollTop = 0/);
+  assert.match(modal, /modalBody\.scrollTop = 0/);
+  assert.match(modal, /requestAnimationFrame/);
+});
+
 test('menu Configurações e sua rota ficam exclusivos do perfil Administrador', async () => {
   const [html, navigation, authorization, baseCss] = await Promise.all([
     source('index.html'),
