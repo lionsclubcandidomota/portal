@@ -263,16 +263,11 @@ export function createBirthdayArtworkController({
       const blob = await createArtwork(person);
       const fileName = shareFileName(person);
       const file = new File([blob], fileName, { type: 'image/png' });
-      const text = `Feliz aniversário, ${person.name}! 🎉 Uma homenagem do Lions Clube de Cândido Mota.`;
       const canShareFile = navigator.share
         && (!navigator.canShare || navigator.canShare({ files: [file] }));
 
       if (canShareFile) {
-        await navigator.share({
-          title: `Feliz aniversário, ${person.name}!`,
-          text,
-          files: [file]
-        });
+        await navigator.share({ files: [file] });
       } else {
         downloadArtwork(blob, fileName);
         toast('A arte foi baixada e está pronta para compartilhar.');

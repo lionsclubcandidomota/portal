@@ -1,4 +1,4 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../../core/portal-members.js?v=6.36.1';
+import { MEMBER_STATUS, memberStatusLabel } from '../../core/portal-members.js?v=6.36.2';
 import { escapeHtml, toInputDate } from '../../utils.js';
 import { markdownEditor } from '../markdown.js';
 

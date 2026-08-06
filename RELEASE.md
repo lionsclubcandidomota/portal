@@ -1,26 +1,15 @@
-# Release 6.36.1
+# Release 6.36.2
 
-Esta versão completa o resumo financeiro da tela **Tesouraria → Movimentações** para os lançamentos programados.
+Esta versão ajusta o botão **Desejar parabéns** para compartilhar somente a imagem gerada pelo Portal.
 
-## Movimentações programadas
+## Compartilhamento
 
-Ao selecionar o filtro **Programados**, o painel passa a apresentar:
+O compartilhamento nativo recebe apenas o arquivo PNG. Não são mais enviados título ou mensagem de texto automática.
 
-- entradas programadas;
-- saídas programadas;
-- resultado programado;
-- quantidade de registros exibidos.
-
-Os valores são identificados como previsão e não alteram o saldo atual até que o lançamento seja realizado.
-
-## Organização dos filtros
-
-- **Programados** exibe somente a seção de lançamentos programados.
-- **Realizados** exibe somente a seção de lançamentos realizados.
-- **Todos**, **Entradas** e **Saídas** mantêm a separação entre programados e realizados.
+Quando o navegador não oferece compartilhamento de arquivos, a imagem continua sendo baixada para compartilhamento manual.
 
 ## Publicação
 
-Atualize o repositório com `portal-main-v6.36.1.zip` ou publique apenas o site com `portal-site-v6.36.1.zip`.
+Atualize o repositório com `portal-main-v6.36.2.zip` ou publique apenas o site com `portal-site-v6.36.2.zip`.
 
 O Cloudflare Worker permanece na versão 1.2.0 e não precisa ser republicado.

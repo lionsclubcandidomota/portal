@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.36.2 — Compartilhamento de aniversário somente com a imagem
+
+- Remove o título e a mensagem automática enviados junto à arte de aniversário.
+- Mantém no compartilhamento apenas o arquivo PNG gerado pelo Portal.
+- Preserva o download da imagem como alternativa quando o navegador não suporta compartilhamento de arquivos.
+- Adiciona teste de regressão para impedir o retorno de texto ou título no compartilhamento.
+
 ## 6.36.1 — Resumo financeiro dos lançamentos programados
 
 - Exibe entradas, saídas e resultado previsto ao selecionar o filtro Programados em Movimentações.

@@ -1,9 +1,9 @@
-import { adminLoginHtml } from './view.js?v=6.36.1';
+import { adminLoginHtml } from './view.js?v=6.36.2';
 import {
   bindSecretVisibility,
   createLoginFormState,
   resetSecretField
-} from './login-form-state.js?v=6.36.1';
+} from './login-form-state.js?v=6.36.2';
 
 function bindProfileTabs(tabs, loginState) {
   tabs.forEach((tab, index) => {

@@ -121,3 +121,9 @@ Concluída na versão 6.36.0:
 - persistência da visualização ativa após gerar ou baixar cobranças;
 - testes de deduplicação e contratos de interface.
 
+## Ajuste 6.36.2 — Compartilhamento de aniversário
+
+- compartilhamento da homenagem restrito ao arquivo PNG;
+- remoção de título e mensagem automática do Web Share API;
+- teste de regressão para garantir payload contendo somente `files`.
+

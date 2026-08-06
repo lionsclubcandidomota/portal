@@ -1,11 +1,11 @@
-import { createSeedState, cloneState } from '../../core/portal-state.js?v=6.36.1';
+import { createSeedState, cloneState } from '../../core/portal-state.js?v=6.36.2';
 import {
   mergePortalStates,
   remotePayloadVersion,
   selectCachedState,
   shouldAcceptStartupPayload
-} from './domain.js?v=6.36.1';
-import { INITIAL_REMOTE_TIMEOUT } from './constants.js?v=6.36.1';
+} from './domain.js?v=6.36.2';
+import { INITIAL_REMOTE_TIMEOUT } from './constants.js?v=6.36.2';
 
 export function createBootstrapAction(context, remoteSync) {
   const { dependencies, services, environment, model } = context;
