@@ -1,4 +1,4 @@
-import { accessSnapshot, canAccessView } from './portal-runtime/authorization.js?v=6.36.0';
+import { accessSnapshot, canAccessView } from './portal-runtime/authorization.js?v=6.36.1';
 
 const DEFAULT_TITLES = {
   dashboard: 'Dashboard',

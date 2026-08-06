@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.36.1 — Resumo financeiro dos lançamentos programados
+
+- Exibe entradas, saídas e resultado previsto ao selecionar o filtro Programados em Movimentações.
+- Mantém os valores programados separados do resultado realizado e informa que ainda não afetam o saldo atual.
+- Oculta a seção de realizados durante o filtro Programados e a seção de programados durante o filtro Realizados.
+- Adiciona destaque visual próprio para o resultado previsto.
+- Inclui testes para garantir a soma correta de valores realizados e programados.
+
 ## 6.36.0 — Fluxo de Mútuas orientado por contexto
 
 - Separa a composição do grupo das cobranças por falecimento em abas próprias, impedindo a repetição simultânea dos mesmos associados na tela.

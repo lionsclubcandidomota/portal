@@ -7,8 +7,23 @@ import {
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
-import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.36.0';
+import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.36.1';
 
+
+export function movementValueSummary(items = [], isProgrammed = () => false, mode = 'realized') {
+  const scheduled = mode === 'scheduled';
+  const summarized = (Array.isArray(items) ? items : [])
+    .filter(item => Boolean(isProgrammed(item)) === scheduled);
+  const entries = summarized.reduce((sum, item) => sum + Number(item?.entry || 0), 0);
+  const exits = summarized.reduce((sum, item) => sum + Number(item?.exit || 0), 0);
+  return {
+    scheduled,
+    entries,
+    exits,
+    result: entries - exits,
+    count: summarized.length
+  };
+}
 
 function attachmentIcon(type = '') {
   const normalized = String(type).toLowerCase();
@@ -183,15 +198,32 @@ export function bindTreasuryMovementLists({ root, state, periodItems, treasury, 
       entries: searchMatched.filter(item => Number(item.entry || 0) > 0).length,
       exits: searchMatched.filter(item => Number(item.exit || 0) > 0).length
     };
-    const realizedEntries = filtered
-      .filter(item => !treasury.isProgrammed(item))
-      .reduce((sum, item) => sum + Number(item.entry || 0), 0);
-    const realizedExits = filtered
-      .filter(item => !treasury.isProgrammed(item))
-      .reduce((sum, item) => sum + Number(item.exit || 0), 0);
+    const scheduledSummary = movementFilter === 'scheduled';
+    const summary = movementValueSummary(
+      filtered,
+      item => treasury.isProgrammed(item),
+      scheduledSummary ? 'scheduled' : 'realized'
+    );
+    const summaryEntries = summary.entries;
+    const summaryExits = summary.exits;
+    const summaryResult = summary.result;
+    const summaryModeLabel = scheduledSummary ? 'programado' : 'realizado';
+    const summaryEntriesLabel = scheduledSummary ? 'Entradas programadas' : 'Entradas realizadas';
+    const summaryExitsLabel = scheduledSummary ? 'Saídas programadas' : 'Saídas realizadas';
+    const summaryDescription = scheduledSummary
+      ? 'Os valores abaixo são previsões e ainda não alteram o saldo atual.'
+      : 'Use os filtros rápidos para localizar lançamentos e conferir valores realizados.';
+    const showScheduledSection = movementFilter !== 'completed';
+    const showCompletedSection = movementFilter !== 'scheduled';
     const filterButton = (key, label) => `<button type="button" class="treasury-movement-filter ${movementFilter === key ? 'is-active' : ''}" data-movement-filter="${key}" aria-pressed="${String(movementFilter === key)}"><span>${label}</span><strong>${counts[key]}</strong></button>`;
+    const scheduledSection = showScheduledSection
+      ? `<section class="timeline-section">${timelineHeading('🗓️', 'Lançamentos programados', 'Receitas e despesas agendadas que ainda não impactam o saldo atual.', scheduled.length)}${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</section>`
+      : '';
+    const completedSection = showCompletedSection
+      ? `<section class="timeline-section is-history">${timelineHeading('🧾', 'Lançamentos realizados', 'Somente movimentações recebidas, pagas ou realizadas.', completed.length, true)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`
+      : '';
 
-    lists.innerHTML = `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Histórico financeiro</span><h3>Movimentações do período</h3><p>Use os filtros rápidos para localizar lançamentos e conferir valores realizados.</p></div><div class="treasury-movement-balance ${realizedEntries - realizedExits >= 0 ? 'is-positive' : 'is-negative'}"><small>Resultado exibido</small><strong class="sensitive-money">${money.format(realizedEntries - realizedExits)}</strong></div></div><div class="treasury-movement-stats"><span><small>Entradas realizadas</small><strong class="sensitive-money">${money.format(realizedEntries)}</strong></span><span><small>Saídas realizadas</small><strong class="sensitive-money">${money.format(realizedExits)}</strong></span><span><small>Registros exibidos</small><strong>${filtered.length}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section><section class="timeline-section">${timelineHeading('🗓️', 'Lançamentos programados', 'Receitas e despesas agendadas que ainda não impactam o saldo atual.', scheduled.length)}${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</section><section class="timeline-section is-history">${timelineHeading('🧾', 'Lançamentos realizados', 'Somente movimentações recebidas, pagas ou realizadas.', completed.length, true)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
+    lists.innerHTML = `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Histórico financeiro</span><h3>Movimentações do período</h3><p>${summaryDescription}</p></div><div class="treasury-movement-balance ${summaryResult >= 0 ? 'is-positive' : 'is-negative'} ${scheduledSummary ? 'is-scheduled' : ''}"><small>Resultado ${summaryModeLabel}</small><strong class="sensitive-money">${money.format(summaryResult)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summaryEntriesLabel}</small><strong class="sensitive-money">${money.format(summaryEntries)}</strong></span><span><small>${summaryExitsLabel}</small><strong class="sensitive-money">${money.format(summaryExits)}</strong></span><span><small>Registros exibidos</small><strong>${filtered.length}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section>${scheduledSection}${completedSection}`;
 
     bindRowActions();
 
