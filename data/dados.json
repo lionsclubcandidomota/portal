@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-06T23:28:04.735Z",
-  "deploymentId": "1786058884735-e30b8130-5ca7-4a69-ab4e-8a511e36abac",
+  "updatedAt": "2026-08-06T23:35:59.169Z",
+  "deploymentId": "1786059359169-0ddbe273-a338-4676-9ec4-a27759c83b34",
   "audience": "public",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 11,
@@ -453,6 +453,17 @@
         "onlineUrl": "",
         "description": "📅 No dia 11 de agosto (terça-feira), teremos o treinamento de Métricas e Portal Lions, que será conduzido pela PMJF Karina Casanova Lima.\n\n📊 Este treinamento é de extrema importância para os(as) Secretários(as) dos Clubes, mas é aberto e recomendado a TODOS os associados, independentemente de exercerem cargos. Conhecer as métricas e utilizar corretamente o Portal Lions fortalece a gestão do Clube e contribui para o sucesso de nossas ações! 🤝\n\n📌 Organizem-se em seus Clubes e incentivem a participação de todos!\n\n🏆 Lembramos que os treinamentos são critérios obrigatórios para a conquista do Prêmio Excelência de Clube de Lions Internacional.\n\n🎖️ E tem mais: o Distrito premiará os Clubes que participarem de todos os treinamentos do Ano Leonístico 2026/2027!\n\n💙 Contamos com a presença e o comprometimento de todos para realizarmos um excelente trabalho neste AL 2026/2027.\n\n🙌 Sua participação faz a diferença! Esperamos vocês! 🦁",
         "status": "Confirmado"
+      },
+      {
+        "id": "e_msi5kvtm_qu7n5d",
+        "name": "💙 APAEXONADOS 2026",
+        "date": "2026-09-13",
+        "time": "12:00",
+        "locationType": "physical",
+        "location": "Apae de Cândido Mota",
+        "onlineUrl": "",
+        "description": "💙 **2ª edição do nosso APAEXONADOS** 💙",
+        "status": "Em planejamento"
       }
     ],
     "meetings": [
@@ -483,6 +494,17 @@
         "onlineUrl": "",
         "theme": "Prestação de contas do evento 🐷 Porco no Rolete",
         "notes": "🤝 Vamos nos reunir para a prestação de contas do evento **Porco no Rolete**, incluindo o recebimento dos convites e o alinhamento dos demais assuntos relacionados.\n💛Contamos com a presença de todos!",
+        "status": "Em andamento"
+      },
+      {
+        "id": "m_msi5mb8j_e4blhg",
+        "date": "2026-08-11",
+        "time": "20:00",
+        "locationType": "physical",
+        "location": "Sede Apae de Cândido Mota",
+        "onlineUrl": "",
+        "theme": "🦁 Reunião de Alinhamento",
+        "notes": "No dia 13 de setembro acontece a **2ª edição do nosso APAEXONADOS**!\n\n📋 Para alinharmos todos os detalhes e organizarmos esse grande evento, teremos uma reunião na próxima terça-feira, dia 11 de agosto, na sede. 🏢\n\n🤝 Contamos com a presença de todos! Juntos vamos fazer mais uma edição inesquecível! 💙✨",
         "status": "Em andamento"
       }
     ],
