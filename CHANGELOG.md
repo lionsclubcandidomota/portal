@@ -1,5 +1,21 @@
 # Changelog
 
+## 6.47.0 — Portal integral no Cloudflare D1
+
+- Cria a migração `0010_public_portal_d1.sql` e eleva o esquema D1 para a versão 9.
+- Migra configurações públicas, associados, agenda, reuniões, avisos e histórico de publicações para tabelas normalizadas no D1.
+- Move logo e fotos públicas dinâmicas para o R2 e mantém no D1 somente metadados e referências.
+- Remove `data/dados.json`, `public/members/` e `public/treasury/` dos artefatos publicados.
+- GitHub Pages passa a hospedar somente HTML, CSS, JavaScript e recursos fixos da aplicação.
+- Substitui a publicação por commit pela gravação autenticada e transacional em `/api/publication`.
+- Elimina a dependência de `GITHUB_TOKEN`; permanecem `SESSION_SECRET` e `ADMIN_BOOTSTRAP_KEY`.
+- Adiciona importação única do conteúdo 6.46.0 por `PUBLIC_DATA_URL`, com cópia das mídias para o R2 antes da retirada do JSON estático.
+- Inclui o módulo `public` nas revisões automáticas e aumenta o intervalo normal para 60 segundos.
+- Otimiza a leitura pública com ETag: revisões inalteradas retornam `304` após consultar somente metadados, sem percorrer as tabelas públicas.
+- Remove novas mídias do R2 automaticamente quando o lote correspondente no D1 falha.
+- Atualiza o Worker para 1.13.0 e o `/health` passa a informar `structuredDataSource: cloudflare-d1`.
+- Amplia a suíte para 293 testes, incluindo importação legada, fronteira pública, ETag/304 e rollback R2/D1.
+
 ## 6.46.0 — Sincronização automática por módulo no D1
 
 - Cria a migração `0009_module_revisions.sql` e eleva o esquema D1 para a versão 8.

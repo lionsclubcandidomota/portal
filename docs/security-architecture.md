@@ -1,98 +1,55 @@
-# Segurança e endurecimento operacional — v6.39.0
+# Segurança e fronteiras de dados — v6.47.0
 
-## Fronteiras de dados
-
-O Portal mantém quatro fronteiras independentes:
+## Fronteiras
 
 ```text
-GitHub Pages  → interface e conteúdo público
-Cloudflare D1 → dados privados estruturados, usuários e sessões
-Cloudflare R2 → comprovantes, documentos, backups e espelho de contingência
-Worker        → autenticação, autorização, regras de negócio e publicação pública
+Hospedagem estática → código da interface e recursos fixos
+Cloudflare D1       → todos os dados estruturados públicos e privados
+Cloudflare R2       → mídias, anexos e backups
+Cloudflare Worker   → única porta de acesso ao D1 e ao R2
 ```
 
-O JSON público não contém movimentações, contas, grupos financeiros, credenciais, hashes de senha, identificadores de sessão ou referências privadas de anexos.
+O navegador não recebe credenciais do D1 ou do R2. Todas as gravações passam pelo Worker e por uma sessão autorizada.
 
-## Autenticação administrativa
+## Autenticação
 
-O Administrador usa usuário e senha. A senha é derivada no Worker com PBKDF2-HMAC-SHA-256, salt individual e 150.000 iterações. O D1 armazena somente:
+O Administrador usa usuário e senha. O D1 mantém somente a derivação PBKDF2, salt, iterações, estado da conta, bloqueios e datas de acesso. O token opaco de sessão fica em memória no navegador e somente seu hash é persistido.
 
-- hash derivado;
-- salt;
-- quantidade de iterações;
-- situação da conta;
-- tentativas malsucedidas e bloqueio;
-- datas de criação, alteração e último acesso.
+A criação do primeiro Administrador exige `ADMIN_BOOTSTRAP_KEY`. O Worker aplica limite de tentativas e revoga sessões após logout, troca de senha ou desativação da conta.
 
-A senha original não é gravada no D1, R2, GitHub, auditoria ou armazenamento do navegador.
+## Dados públicos
 
-A criação do primeiro usuário exige `ADMIN_BOOTSTRAP_KEY`, segredo de pelo menos 24 caracteres configurado no Worker. O endpoint de bootstrap deixa de aceitar novos cadastros assim que um Administrador existe.
+`GET /api/public/state` é anônimo, mas devolve somente a projeção pública validada. O Worker bloqueia coleções financeiras, hashes, tokens e campos privados antes de qualquer publicação.
 
-## Sessões
+A rota usa revisão e ETag. Uma revalidação sem mudanças retorna `304` lendo apenas metadados do D1.
 
-Após o login, o Worker gera um token opaco aleatório de 32 bytes. O navegador mantém esse token somente em memória. O D1 armazena apenas seu hash SHA-256, com usuário, perfil, expiração, revogação, endereço de origem e agente do navegador.
+## Dados privados
 
-- expiração padrão: 30 minutos, limitada a no máximo 8 horas;
-- bloqueio de interface após inatividade;
-- revogação no logout;
-- revogação das demais sessões após troca de senha;
-- revogação de todas as sessões quando a conta é desativada.
+Rotas financeiras, operacionais, de backup e de administração exigem sessão. O D1 utiliza revisões e mutações idempotentes para reduzir sobrescritas concorrentes. Anexos privados são entregues por tickets HMAC de curta duração.
 
-Cinco falhas consecutivas bloqueiam temporariamente o usuário por 15 minutos. O Worker também aplica limite de tentativas por origem antes de consultar o banco.
+## Mídias e R2
 
-## Publicação pública
+Mídias públicas são servidas pelo Worker com cache e ETag. Anexos financeiros permanecem privados e usam `Cache-Control: private, no-store`. O bucket não precisa de domínio público.
 
-O frontend não contém mais funções para autenticação ou gravação direta com token GitHub. O segredo `GITHUB_TOKEN` existe apenas no Worker.
+## Segredos
 
-O endpoint `/api/publication`:
-
-1. exige sessão de Administrador;
-2. bloqueia coleções ou campos privados;
-3. verifica conflito pela revisão do arquivo público;
-4. valida caminhos, formatos e limites de mídias;
-5. atualiza `data/dados.json`, mídias e `release-manifest.json` no mesmo commit;
-6. atualiza a branch sem `force`.
-
-## D1 e R2
-
-O binding `PORTAL_DB` e o binding `ATTACHMENTS` existem somente no Worker. O navegador nunca recebe credenciais diretas do D1 ou R2.
-
-O D1 mantém o snapshot privado canônico e projeções relacionais. O R2 mantém anexos, backups versionados e espelho de contingência. Gravações privadas usam revisão otimista para impedir sobrescritas concorrentes e criam pontos de recuperação antes de operações críticas.
-
-## Diretoria
-
-A Diretoria continua usando senha própria e recebe sessão somente leitura. O Worker remove do payload devolvido os dados de derivação da credencial da Diretoria. Esse perfil pode consultar relatórios e documentos autorizados, mas não pode alterar dados, publicar conteúdo ou administrar usuários.
-
-## Segredos do Worker
-
-Devem ser cadastrados como Worker Secrets:
+Obrigatórios no Worker:
 
 - `SESSION_SECRET`;
-- `GITHUB_TOKEN`;
 - `ADMIN_BOOTSTRAP_KEY`.
 
-Eles não devem aparecer em `wrangler.toml`, código-fonte, logs, backups ou arquivos do Portal. `LEGACY_GITHUB_LOGIN_ENABLED` permanece `false` no uso normal.
+`GITHUB_TOKEN` não é necessário. `PUBLIC_DATA_URL` é uma variável temporária usada somente para importar o conteúdo público da versão anterior.
 
-## Auditoria
+## Políticas do navegador
 
-A tabela `portal_auth_audit` registra, sem senhas ou tokens:
+O Portal mantém CSP, `no-referrer`, Permissions Policy, validação de origem e `connect-src` restrito ao Worker. O código-fonte não contém token permanente nem chave de banco ou armazenamento.
 
-- bootstrap;
-- login bem-sucedido ou negado;
-- bloqueio;
-- logout;
-- criação e atualização de usuário;
-- redefinição e troca de senha.
+## Testes de segurança
 
-A auditoria operacional do Portal continua associando alterações privadas e publicações aos respectivos usuários.
-
-## Navegador e anexos
-
-O HTML mantém Content Security Policy, `no-referrer`, Permissions Policy e `connect-src` limitado. Anexos são acessados por tickets HMAC de curta duração e respostas com cache privado. O bucket R2 permanece sem exposição pública direta.
-
-## Verificação automática
-
-- `npm run audit:security`: verifica dados públicos, CSP e padrões de persistência de segredos.
-- `tests/d1-admin-auth.test.mjs`: executa as migrações em SQLite real e valida bootstrap, PBKDF2, sessão opaca e revogação.
-- `tests/github-schema.test.mjs`: confirma que o navegador não publica com token e que o Worker mantém a fronteira pública.
-- `tests/private-data-boundary.test.mjs`: valida a projeção pública e a recomposição privada.
+- fronteira pública/privada;
+- autenticação e revogação no D1;
+- conflito de revisão;
+- rollback de mídia quando o lote falha;
+- ausência de `data/dados.json` no release;
+- ausência de `api.github.com` e credenciais no navegador;
+- validação de CSP e caminhos de mídia.

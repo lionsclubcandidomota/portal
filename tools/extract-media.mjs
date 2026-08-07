@@ -11,7 +11,7 @@ import { preparePortalMediaForPublication } from '../assets/js/core/portal-media
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const targets = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ['data/dados.json', 'data/modelo.json'];
+  : ['data/modelo.json'];
 
 let totalAssets = 0;
 for (const relativePath of targets) {

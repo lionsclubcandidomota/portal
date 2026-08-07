@@ -170,7 +170,7 @@ test('login administrativo continua disponível quando o segredo de publicação
 
   assert.equal(fixture.context.model.adminUnlocked, true);
   assert.equal(session.authorization.canPush, false);
-  assert.match(session.authorization.warning, /GITHUB_TOKEN/);
+  assert.match(session.authorization.warning, /módulo público do D1/i);
 });
 
 test('credenciais administrativas inválidas não liberam o painel', async () => {
@@ -223,7 +223,7 @@ test('payload remoto preserva edição local e atualiza apenas a base sincroniza
 });
 
 
-test('publicação envia o estado, zera pendências e confirma a propagação', async () => {
+test('publicação grava o estado no D1 e zera as pendências', async () => {
   const fixture = setup({
     dependencies: {
       getCurrentView: () => 'admin',
@@ -232,6 +232,7 @@ test('publicação envia o estado, zera pendências e confirma a propagação', 
     services: {
       publishPublicPortalState: async (_privateState, state, options) => ({
         sha: `${options.expectedDataSha}-novo`,
+        revision: 'pub-3',
         commitSha: 'commit-1',
         commitUrl: 'https://example.invalid/commit-1',
         committedAt: '2026-07-30T20:00:00.000Z',
@@ -255,10 +256,10 @@ test('publicação envia o estado, zera pendências e confirma a propagação', 
   await Promise.resolve();
 
   assert.equal(fixture.context.model.pendingChanges, 0);
-  assert.equal(fixture.context.model.githubFileSha, 'sha-novo');
-  assert.equal(fixture.context.model.lastRemoteVersion, 'deploy-3');
+  assert.equal(fixture.context.model.githubFileSha, 'pub-3');
+  assert.equal(fixture.context.model.lastRemoteVersion, 'pub-3');
   assert.equal(fixture.context.model.awaitingPublicDeploymentId, '');
-  assert.equal(fixture.context.model.latestCommitInfo.sha, 'commit-1');
+  assert.equal(fixture.context.model.latestCommitInfo.sha, 'pub-3');
   assert.ok(fixture.calls.some(call => Array.isArray(call) && call[0] === 'status' && call[1] === 'published'));
 });
 
@@ -314,7 +315,8 @@ test('publicação converte foto incorporada e atualiza o estado somente após o
           mediaCount: options.mediaAssets.length
         };
       },
-      waitForPagesDeployment: async () => ({ publishedAt: '2026-07-30T20:01:00.000Z' })
+      waitForPagesDeployment: async () => ({ publishedAt: '2026-07-30T20:01:00.000Z' }),
+      loadPublicGitHubPayload: async () => ({ state: publishedState, revision: 'pub-media' })
     }
   });
   grantAdminAccess(fixture);
@@ -393,7 +395,7 @@ test('publicação vincula e confirma o lote de auditoria', async () => {
   assert.equal(auditCalls[0][0], 'link');
   assert.equal(auditCalls[0][1], 'batch-1');
   assert.equal(auditCalls[0][2].commitSha, 'commit-audit');
-  assert.deepEqual(auditCalls[1], ['confirm', 'deploy-audit', '2026-07-30T21:01:00.000Z']);
+  assert.deepEqual(auditCalls[1], ['confirm', 'deploy-audit', '2026-07-30T21:00:00.000Z']);
 });
 
 test('importação cria ponto automático antes de substituir o estado', async () => {
@@ -420,7 +422,7 @@ test('importação cria ponto automático antes de substituir o estado', async (
   assert.equal(fixture.getState().settings.clubName, 'Importado');
 });
 
-test('publicação cria ponto de segurança antes do envio ao GitHub', async () => {
+test('publicação cria ponto de segurança antes da gravação no D1', async () => {
   const order = [];
   const fixture = setup({
     dependencies: {

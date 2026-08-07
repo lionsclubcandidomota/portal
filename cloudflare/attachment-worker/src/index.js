@@ -32,7 +32,6 @@ import {
   changeOwnPassword,
   createAdministratorUser,
   createDirectorSession,
-  createLegacyAdministratorSession,
   getAuthenticationStatus,
   listAdministratorUsers,
   requireAuthenticationSession as requireSession,
@@ -41,11 +40,15 @@ import {
   updateAdministratorUser
 } from './auth.js';
 import {
-  publicationStatus,
-  publishPortalPublicState
-} from './github-publication.js';
+  getD1PublicStatus,
+  handlePublicMedia,
+  migrateLegacyPublicStateToD1,
+  publicPublicationStatus,
+  readD1PublicState,
+  writeD1PublicState
+} from './d1-public.js';
 
-const WORKER_VERSION = '1.12.0';
+const WORKER_VERSION = '1.13.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -98,6 +101,21 @@ function errorResponse(error, status = 400, headers = {}) {
   return json({ error: message }, status, headers);
 }
 
+function publicJson(data, request, revision = '', headers = {}) {
+  const etag = revision ? `"${String(revision).replaceAll('\"', '')}"` : '';
+  const responseHeaders = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'public, max-age=30, stale-while-revalidate=120',
+    'X-Content-Type-Options': 'nosniff',
+    ...headers
+  };
+  if (etag) responseHeaders.ETag = etag;
+  if (etag && request.headers.get('If-None-Match') === etag) {
+    return new Response(null, { status: 304, headers: responseHeaders });
+  }
+  return new Response(JSON.stringify(data), { status: 200, headers: responseHeaders });
+}
+
 function normalizeOriginList(value) {
   return String(value || '')
     .split(',')
@@ -120,7 +138,8 @@ function corsHeaders(request, env) {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Authorization,Content-Type',
+    'Access-Control-Allow-Headers': 'Authorization,Content-Type,If-None-Match',
+    'Access-Control-Expose-Headers': 'ETag',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin'
   };
@@ -212,30 +231,6 @@ async function verifySignedPayload(token, secret) {
   const payload = JSON.parse(base64UrlDecodeText(body));
   if (Number(payload.exp || 0) <= Math.floor(Date.now() / 1000)) throw new Error('Autorização expirada.');
   return payload;
-}
-
-async function validateAdminCredential(token, env) {
-  const safeToken = String(token || '').trim();
-  if (!safeToken || /\s/.test(safeToken)) throw new Error('Token administrativo inválido.');
-  const owner = encodeURIComponent(env.GITHUB_OWNER || '');
-  const repo = encodeURIComponent(env.GITHUB_REPO || '');
-  const headers = {
-    Accept: 'application/vnd.github+json',
-    Authorization: `Bearer ${safeToken}`,
-    'X-GitHub-Api-Version': '2022-11-28',
-    'User-Agent': 'Lions-Portal-R2-Worker'
-  };
-  const [repositoryResponse, userResponse] = await Promise.all([
-    fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers }),
-    fetch('https://api.github.com/user', { headers })
-  ]);
-  if (!repositoryResponse.ok) throw new Error('O token não possui acesso ao repositório configurado.');
-  const repository = await repositoryResponse.json();
-  if (repository.archived || repository.disabled || repository.permissions?.push !== true) {
-    throw new Error('O token precisa possuir permissão de escrita no repositório do Portal.');
-  }
-  const user = userResponse.ok ? await userResponse.json() : null;
-  return String(user?.login || user?.name || 'administrador');
 }
 
 function hexToBytes(value) {
@@ -671,15 +666,12 @@ async function handleD1Rollback(request, env, session) {
 }
 
 async function publishedDirectorProfile(env) {
-  if (!env.PUBLIC_DATA_URL) return null;
-  const response = await fetch(`${env.PUBLIC_DATA_URL}${String(env.PUBLIC_DATA_URL).includes('?') ? '&' : '?'}ts=${Date.now()}`, {
-    headers: { Accept: 'application/json' },
-    cf: { cacheTtl: 0, cacheEverything: false }
-  });
-  if (!response.ok) return null;
-  const payload = await response.json();
-  const state = payload?.data && typeof payload.data === 'object' ? payload.data : payload;
-  return state?.settings?.accessProfiles?.director || null;
+  try {
+    const record = await readD1PublicState(env, 'https://portal-public.local/');
+    return record?.envelope?.data?.settings?.accessProfiles?.director || null;
+  } catch {
+    return null;
+  }
 }
 
 async function directorProfileForAuthentication(env) {
@@ -738,13 +730,23 @@ async function handleSession(request, env) {
   const role = String(body.role || '').toLowerCase();
   if (role === 'admin') {
     if (body.username || body.password) {
-      return authenticateAdministrator(request, env, body);
+      const session = await authenticateAdministrator(request, env, body);
+      try {
+        const publicStatus = await getD1PublicStatus(env);
+        if (publicStatus.initialized && !publicStatus.active && env.PUBLIC_DATA_URL) {
+          session.publicMigration = await migrateLegacyPublicStateToD1(env, {
+            sub: session.user?.username || 'administrador'
+          });
+        }
+      } catch (error) {
+        session.publicMigration = {
+          migrated: false,
+          warning: error instanceof Error ? error.message : String(error)
+        };
+      }
+      return session;
     }
-    if (String(env.LEGACY_GITHUB_LOGIN_ENABLED || '').toLowerCase() !== 'true') {
-      throw new Error('O acesso administrativo por token foi desativado. Use usuário e senha.');
-    }
-    const subject = await validateAdminCredential(body.credential, env);
-    return createLegacyAdministratorSession(request, env, subject);
+    throw new Error('Use usuário e senha para acessar o painel administrativo.');
   }
   if (role === 'director') {
     const subject = await validateDirectorCredential(body.credential, env);
@@ -1497,6 +1499,7 @@ export default {
       if (url.pathname === '/health' && request.method === 'GET') {
         const storage = await privateStorageBackend(env);
         const authentication = await getAuthenticationStatus(env);
+        const publicData = await getD1PublicStatus(env);
         return json({
           status: 'ok',
           storage: 'cloudflare-r2+d1',
@@ -1505,7 +1508,7 @@ export default {
           directorPbkdf2Iterations: DIRECTOR_PASSWORD_ITERATIONS,
           administratorPbkdf2Iterations: AUTH_PASSWORD_ITERATIONS,
           authentication,
-          publicPublication: { available: Boolean(env.GITHUB_TOKEN), via: 'worker-secret' },
+          publicPublication: { available: publicData.initialized, via: 'cloudflare-d1' },
           privateState: storage.backend,
           d1: {
             available: storage.d1.available,
@@ -1543,12 +1546,49 @@ export default {
           },
           automaticSync: {
             available: storage.d1.schemaVersion >= 8 && storage.d1.moduleRevisionSync,
-            intervalSeconds: 45,
+            intervalSeconds: 60,
             refreshOnFocus: true,
-            moduleRevisions: true
+            moduleRevisions: true,
+            lightweightRevisionCheck: true
           },
+          publicData: {
+            source: publicData.active ? 'd1' : 'pending-migration',
+            active: publicData.active,
+            revision: publicData.revision || '',
+            updatedAt: publicData.updatedAt || '',
+            counts: publicData.counts || {},
+            media: 'cloudflare-r2'
+          },
+          structuredDataSource: storage.d1.schemaVersion >= 9 && publicData.active ? 'cloudflare-d1' : 'transition',
           snapshotPolicy: storage.d1.schemaVersion >= 5 ? 'recovery-only' : 'operational-fallback'
         }, 200, cors);
+      }
+
+      if (url.pathname === '/api/public/state' && request.method === 'GET') {
+        const record = await readD1PublicState(env, request.url, {
+          ifNoneMatch: request.headers.get('If-None-Match') || ''
+        });
+        if (!record.found) {
+          return json({ error: 'O conteúdo público ainda não foi migrado para o D1.' }, 503, cors);
+        }
+        if (record.notModified) {
+          return new Response(null, {
+            status: 304,
+            headers: {
+              'Cache-Control': 'public, max-age=30, stale-while-revalidate=120',
+              'X-Content-Type-Options': 'nosniff',
+              ETag: record.etag,
+              ...cors
+            }
+          });
+        }
+        return publicJson(record.envelope, request, record.status.revision, cors);
+      }
+
+      if (url.pathname === '/api/public/media' && request.method === 'GET') {
+        const response = await handlePublicMedia(request, env);
+        for (const [name, value] of Object.entries(cors)) response.headers.set(name, value);
+        return response;
       }
 
       if (url.pathname === '/api/attachments/object' && request.method === 'GET') {
@@ -1613,13 +1653,13 @@ export default {
 
       if (url.pathname === '/api/publication/status' && request.method === 'GET') {
         await requireSession(request, env, ['admin']);
-        return json(await publicationStatus(env), 200, cors);
+        return json(await publicPublicationStatus(env), 200, cors);
       }
 
       if (url.pathname === '/api/publication' && request.method === 'POST') {
         const session = await requireSession(request, env, ['admin']);
         const body = await request.json().catch(() => ({}));
-        return json(await publishPortalPublicState(env, body, session), 200, cors);
+        return json(await writeD1PublicState(env, body, session), 200, cors);
       }
 
       if (url.pathname === '/api/storage/status' && request.method === 'GET') {
@@ -1736,6 +1776,11 @@ export default {
           throw new Response('O diretório relacional de associados ainda não está disponível.', { status: 503 });
         }
         return json(await syncMemberDirectory(env, { force: true }), 200, cors);
+      }
+
+      if (url.pathname === '/api/storage/migrate-public-d1' && request.method === 'POST') {
+        const session = await requireSession(request, env, ['admin']);
+        return json(await migrateLegacyPublicStateToD1(env, session), 200, cors);
       }
 
       if (url.pathname === '/api/storage/migrate-d1' && request.method === 'POST') {

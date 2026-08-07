@@ -89,6 +89,8 @@ Quando a Central de Recuperação cria um backup, restaura uma versão ou retorn
 O endpoint de status informa `relationalSource`, `snapshotStale` e `snapshotUpdatedAt`, permitindo distinguir o banco operacional do último snapshot materializado.
 
 
-## Diretório de associados e recuperação — versão 6.44.0
+## Conteúdo público e recuperação — versão 6.47.0
 
-`portal_members` é uma projeção reconstruível do conteúdo público. Ela não substitui o cadastro público nem entra como fonte exclusiva de recuperação. Após restauração ou publicação pública, o Worker pode reconstruí-la pelo `PUBLIC_DATA_URL` ou pela rota administrativa de sincronização.
+`portal_members` e as demais tabelas públicas são a fonte oficial do conteúdo estruturado. O histórico de publicações mantém as revisões recentes, enquanto as mídias ficam no R2. `PUBLIC_DATA_URL` é usada somente na importação inicial da versão 6.46.0 e não participa da operação normal.
+
+Backups integrais podem materializar os módulos públicos e privados diretamente das tabelas do D1, preservando o R2 como segunda camada de continuidade.

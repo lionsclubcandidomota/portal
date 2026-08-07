@@ -325,7 +325,7 @@ for (const exportName of schemaExports) {
   }
 }
 
-for (const relativePath of ['data/dados.json', 'data/modelo.json']) {
+for (const relativePath of ['data/modelo.json']) {
   const payload = JSON.parse(await readFile(path.join(projectRoot, relativePath), 'utf8'));
   if (payload.schemaVersion !== schemaModule.CURRENT_SCHEMA_VERSION) {
     console.error(`${relativePath} deve usar schemaVersion ${schemaModule.CURRENT_SCHEMA_VERSION}.`);
@@ -342,7 +342,18 @@ for (const relativePath of ['data/dados.json', 'data/modelo.json']) {
     process.exit(1);
   }
 }
-console.log(`Esquema de dados v${schemaModule.CURRENT_SCHEMA_VERSION} e arquivos JSON validados.`);
+console.log(`Esquema de dados v${schemaModule.CURRENT_SCHEMA_VERSION} e modelo de importação validados.`);
+
+for (const relativePath of ['data/dados.json', 'public/members', 'public/treasury']) {
+  try {
+    await stat(path.join(projectRoot, relativePath));
+    console.error(`${relativePath} não deve permanecer no site após a migração integral para D1/R2.`);
+    process.exit(1);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+console.log('Dados operacionais e mídias dinâmicas removidos do artefato estático.');
 
 const mediaModulePath = path.join(projectRoot, 'assets', 'js', 'core', 'portal-media.js');
 const mediaModule = await import(`${pathToFileURL(mediaModulePath).href}?validate=${Date.now()}`);
@@ -359,7 +370,7 @@ for (const exportName of [
 }
 
 let referencedMediaCount = 0;
-for (const relativePath of ['data/dados.json', 'data/modelo.json']) {
+for (const relativePath of ['data/modelo.json']) {
   const source = await readFile(path.join(projectRoot, relativePath), 'utf8');
   if (source.includes('data:image/')) {
     console.error(`${relativePath} ainda contém imagem Base64 incorporada.`);
