@@ -109,7 +109,14 @@ export function bindAdminLogin({
       if (status?.bootstrapRequired) setBootstrapVisible(true);
     })
     .catch(error => {
-      renderAuthenticationStatus(authStatus, { available: false });
+      const message = String(error?.message || '');
+      const publicMigrationPending = /conteúdo público|migrad[oa].*D1|public.*D1/i.test(message);
+      if (publicMigrationPending) {
+        authStatus.className = 'admin-security-note admin-auth-status is-warning';
+        authStatus.innerHTML = '<span aria-hidden="true">!</span><div><strong>Banco D1 aguardando carga inicial</strong><small>O Worker está conectado. Conclua a importação do conteúdo público para liberar todos os dados.</small></div>';
+      } else {
+        renderAuthenticationStatus(authStatus, { available: false });
+      }
       console.warn('Não foi possível consultar a autenticação:', error);
     });
 

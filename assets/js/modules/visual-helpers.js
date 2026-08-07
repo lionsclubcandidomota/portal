@@ -1,5 +1,17 @@
 import { escapeHtml } from '../utils.js';
 
+const PUBLIC_MEDIA_WORKER_URL = 'https://lions-portal-anexos.lionsclubcandidomota.workers.dev';
+
+function publicMediaSource(value) {
+  const reference = String(value || '').trim();
+  if (!reference) return '';
+  const match = reference.match(/^(?:\.\/)?(public\/[a-z0-9][a-z0-9/_-]*\.[a-z0-9]{1,10})$/i);
+  if (!match) return reference;
+  const url = new URL('/api/public/media', PUBLIC_MEDIA_WORKER_URL);
+  url.searchParams.set('key', match[1]);
+  return url.href;
+}
+
 export function empty(icon, text) {
   return `<div class="empty"><div class="empty-icon">${icon}</div><div>${text}</div></div>`;
 }
@@ -9,9 +21,11 @@ export function kpi(icon, label, value, view = '') {
 }
 
 export function avatar(person) {
-  return person.photo
-    ? `<img class="avatar" src="${person.photo}" alt="Foto de ${escapeHtml(person.name)}">`
-    : `<div class="avatar">${escapeHtml(person.name.charAt(0).toUpperCase())}</div>`;
+  const name = String(person?.name || 'Associado');
+  const photo = publicMediaSource(person?.photo);
+  return photo
+    ? `<img class="avatar" src="${escapeHtml(photo)}" alt="Foto de ${escapeHtml(name)}">`
+    : `<div class="avatar">${escapeHtml(name.charAt(0).toUpperCase())}</div>`;
 }
 
 export function statusBadge(status) {

@@ -10,7 +10,7 @@
     "css": 28,
     "tests": 58,
     "memberImages": 0,
-    "totalBytes": 5841309
+    "totalBytes": 5842403
   },
   "files": [
     {
@@ -225,8 +225,8 @@
     },
     {
       "path": "assets/js/modules/admin-dashboard/login-controller.js",
-      "bytes": 8259,
-      "sha256": "b07119eca22dd839babc5407c41f288a7083af91a06f1e07bca5a1b25f7d7f13"
+      "bytes": 8798,
+      "sha256": "b322bcbadd562763647e6c5fd20ee0581c456b8971236e7a5dd4a9afc5085a1b"
     },
     {
       "path": "assets/js/modules/admin-dashboard/login-form-state.js",
@@ -725,8 +725,8 @@
     },
     {
       "path": "assets/js/modules/visual-helpers.js",
-      "bytes": 1164,
-      "sha256": "859b208c68fea43db25668b102c51865c075f9e74634696e60bf10cbad7c536e"
+      "bytes": 1719,
+      "sha256": "b143461bca0cee8498ee6f3630ec732207a89f62c359086dc0b349f1f4a9d47e"
     },
     {
       "path": "assets/js/public-data.js",
