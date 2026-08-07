@@ -127,3 +127,15 @@ Concluída na versão 6.36.0:
 - remoção de título e mensagem automática do Web Share API;
 - teste de regressão para garantir payload contendo somente `files`.
 
+
+
+## Evolução D1 — Leituras gerenciais otimizadas
+
+Concluída na versão 6.42.0:
+
+- agregações financeiras do Dashboard executadas em SQL;
+- relatórios privados carregados por recortes específicos do D1;
+- índices compostos restritos às consultas reais;
+- fallback local sem interrupção do fluxo;
+- implantação compatível entre os esquemas 3 e 4;
+- preparação para remover o snapshot do fluxo operacional na etapa seguinte.

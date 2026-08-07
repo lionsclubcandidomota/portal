@@ -208,3 +208,22 @@ Aplique `0004_group_granular_writes.sql` e publique o Worker 1.7.0. Alterações
 O `/health` deve informar `privateAutosave: "granular-treasury-groups"`, `schemaVersion: 3`, `granularWrites.treasury: true` e `granularWrites.groups: true`. A sincronização completa continua disponível para alterações mistas e como fallback de contingência.
 
 Consulte `docs/d1-granular-groups.md` para detalhes de implantação, concorrência e homologação.
+
+## Leituras otimizadas — versão 6.42.0
+
+Publique primeiro o Worker 1.8.0 e depois aplique `0005_analytics_read_models.sql`. O Worker mantém as operações existentes enquanto o banco ainda estiver no esquema 3; os endpoints de analytics são ativados somente no esquema 4.
+
+O `/health` deve informar:
+
+```json
+{
+  "workerVersion": "1.8.0",
+  "d1": { "schemaVersion": 4, "active": true },
+  "optimizedReads": {
+    "dashboard": true,
+    "reports": true
+  }
+}
+```
+
+O Dashboard Administrativo consulta as somatórias financeiras no D1. Movimentações, Mensalidades e Mútuas usam recortes SQL na Central de Relatórios. O snapshot permanece como contingência e para compatibilidade das telas operacionais nesta etapa.

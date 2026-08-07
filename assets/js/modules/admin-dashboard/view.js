@@ -64,6 +64,11 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
   const dashboardTitle = directorMode ? 'Dashboard Diretoria' : 'Dashboard Administrativo';
   const sessionLabel = directorMode ? 'Diretoria · somente leitura' : 'Portal conectado';
   const customHidden = model.customPeriodVisible ? '' : 'hidden';
+  const treasuryEntryCount = Number.isFinite(Number(treasury.entryCount)) ? Number(treasury.entryCount) : treasury.entries.length;
+  const treasuryExitCount = Number.isFinite(Number(treasury.exitCount)) ? Number(treasury.exitCount) : treasury.exits.length;
+  const treasurySource = treasury.dataSource === 'd1'
+    ? `<span class="admin-data-source is-d1" title="Consulta SQL concluída em ${Math.max(0, Number(treasury.queryDurationMs || 0))} ms">D1 · consulta otimizada</span>`
+    : '<span class="admin-data-source">Dados locais</span>'; 
 
   return `
     <section class="admin-command-header admin-dashboard-header">
@@ -92,11 +97,11 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
 
     <section class="admin-insight-grid">
       <article class="admin-insight-card admin-treasury-insight">
-        <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">💰</span><div><span class="admin-insight-eyebrow">Tesouraria</span><h3>Movimentações do período</h3></div></div><div class="admin-insight-heading-actions">${financePrivacyButton}<div class="admin-insight-total"><strong>${treasury.total}</strong><small>total</small></div></div></div>
+        <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">💰</span><div><span class="admin-insight-eyebrow">Tesouraria</span><h3>Movimentações do período</h3>${treasurySource}</div></div><div class="admin-insight-heading-actions">${financePrivacyButton}<div class="admin-insight-total"><strong>${treasury.total}</strong><small>total</small></div></div></div>
         <div class="admin-balance-highlight ${treasury.balance < 0 ? 'is-negative' : ''}"><small>Saldo do período</small><strong class="sensitive-money">${currency.format(treasury.balance)}</strong><span>Entradas − saídas</span></div>
         <div class="admin-money-chart">
-          ${moneyBar('Entradas', treasury.entries.length, treasury.entriesValue, 'entry', treasury.maxValue)}
-          ${moneyBar('Saídas', treasury.exits.length, treasury.exitsValue, 'exit', treasury.maxValue)}
+          ${moneyBar('Entradas', treasuryEntryCount, treasury.entriesValue, 'entry', treasury.maxValue)}
+          ${moneyBar('Saídas', treasuryExitCount, treasury.exitsValue, 'exit', treasury.maxValue)}
         </div>
         <div class="admin-insight-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="treasury" type="button">＋ Novo lançamento</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="treasury" type="button">Abrir tesouraria</button></div>
       </article>
@@ -122,7 +127,7 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
     </section>
 
     <section class="card admin-report-center" aria-labelledby="adminReportTitle">
-      <div class="admin-report-heading"><span class="admin-card-icon" aria-hidden="true">📄</span><div><span class="admin-insight-eyebrow">Documentos gerenciais</span><h3 id="adminReportTitle">Central de relatórios</h3><p>Gere documentos usando o período selecionado acima. A visualização de impressão também permite salvar em PDF.</p></div></div>
+      <div class="admin-report-heading"><span class="admin-card-icon" aria-hidden="true">📄</span><div><span class="admin-insight-eyebrow">Documentos gerenciais</span><h3 id="adminReportTitle">Central de relatórios</h3><p>Gere documentos usando o período selecionado acima. Relatórios financeiros consultam somente o recorte necessário no D1; a visualização de impressão também permite salvar em PDF.</p></div></div>
       <div class="admin-report-controls">
         <label class="admin-report-type"><span>Tipo de relatório</span><select id="adminReportType">
           <option value="movements">Movimentações financeiras</option>

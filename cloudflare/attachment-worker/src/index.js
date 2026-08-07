@@ -9,6 +9,10 @@ import {
   writeD1PrivateState
 } from './d1-storage.js';
 import {
+  queryD1DashboardAnalytics,
+  queryD1ReportState
+} from './d1-analytics.js';
+import {
   AUTH_PASSWORD_ITERATIONS,
   authenticateAdministrator,
   bootstrapAdministrator,
@@ -28,7 +32,7 @@ import {
   publishPortalPublicState
 } from './github-publication.js';
 
-const WORKER_VERSION = '1.7.0';
+const WORKER_VERSION = '1.8.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -539,6 +543,7 @@ async function handleStorageStatus(env) {
       updatedAt: d1.updatedAt,
       migratedAt: d1.migratedAt || '',
       counts: d1.counts || {},
+      analyticsReadModels: Boolean(d1.analyticsReadModels),
       error: d1.error || ''
     },
     r2: r2 ? {
@@ -1388,7 +1393,8 @@ export default {
           privateBackupRetention: MAX_PRIVATE_BACKUPS,
           attachmentIntegrity: 'available',
           privateAutosave: 'granular-treasury-groups',
-          granularWrites: { treasury: storage.d1.schemaVersion >= 2, groups: storage.d1.schemaVersion >= 3, snapshotFallback: true }
+          granularWrites: { treasury: storage.d1.schemaVersion >= 2, groups: storage.d1.schemaVersion >= 3, snapshotFallback: true },
+          optimizedReads: { dashboard: storage.d1.schemaVersion >= 4, reports: storage.d1.schemaVersion >= 4 }
         }, 200, cors);
       }
 
@@ -1466,6 +1472,30 @@ export default {
       if (url.pathname === '/api/storage/status' && request.method === 'GET') {
         await requireSession(request, env, ['admin', 'director']);
         return json(await handleStorageStatus(env), 200, cors);
+      }
+
+      if (url.pathname === '/api/analytics/dashboard' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 4 || !storage.analyticsReadModels) {
+          throw new Response('As leituras otimizadas do D1 ainda não estão disponíveis.', { status: 503 });
+        }
+        return json(await queryD1DashboardAnalytics(env, {
+          start: url.searchParams.get('start') || '',
+          end: url.searchParams.get('end') || ''
+        }), 200, cors);
+      }
+
+      if (url.pathname === '/api/analytics/report' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 4 || !storage.analyticsReadModels) {
+          throw new Response('As leituras otimizadas do D1 ainda não estão disponíveis.', { status: 503 });
+        }
+        return json(await queryD1ReportState(env, url.searchParams.get('type') || '', {
+          start: url.searchParams.get('start') || '',
+          end: url.searchParams.get('end') || ''
+        }), 200, cors);
       }
 
       if (url.pathname === '/api/storage/migrate-d1' && request.method === 'POST') {

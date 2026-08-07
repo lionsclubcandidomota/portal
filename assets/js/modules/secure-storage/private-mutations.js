@@ -1,5 +1,5 @@
-import { createPrivatePortalState } from '../../core/portal-data-boundary.js?v=6.41.0';
-import { statesAreEquivalent } from '../../core/portal-state.js?v=6.41.0';
+import { createPrivatePortalState } from '../../core/portal-data-boundary.js?v=6.42.0';
+import { statesAreEquivalent } from '../../core/portal-state.js?v=6.42.0';
 import {
   getSecureStoragePrivateRevision,
   readSecureStorageJson as readJson,
@@ -7,7 +7,7 @@ import {
   secureStorageApiUrl as apiUrl,
   secureStorageJsonHeaders as jsonHeaders,
   setSecureStoragePrivateRevision
-} from './session-store.js?v=6.41.0';
+} from './session-store.js?v=6.42.0';
 
 const MAX_GRANULAR_TREASURY_CHANGES = 60;
 const MAX_GRANULAR_GROUP_CHANGES = 40;

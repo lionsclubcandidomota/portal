@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.7.0
+# Cloudflare Worker do Portal Lions — v1.8.0
 
 O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
@@ -73,6 +73,7 @@ Migrações atuais:
 - `0002_admin_auth.sql`: usuários, sessões e auditoria de autenticação;
 - `0003_treasury_granular_writes.sql`: mutações idempotentes da Tesouraria e esquema D1 2.
 - `0004_group_granular_writes.sql`: grupos familiares, Mútuas e esquema D1 3.
+- `0005_analytics_read_models.sql`: índices de leitura, analytics e esquema D1 4.
 
 ## Implantação
 
@@ -153,6 +154,8 @@ O Worker usa `GITHUB_TOKEN`, valida a fronteira pública e cria um único commit
 - `GET/PUT /api/private-state`
 - `PUT /api/private-state/treasury` para movimentações e anexos granulares
 - `PUT /api/private-state/groups` para grupos familiares, Mútuas, vínculos e eventos
+- `GET /api/analytics/dashboard` para agregações financeiras por período
+- `GET /api/analytics/report` para recortes de Movimentações, Mensalidades e Mútuas
 - rotas de backups, integridade, migração D1 e anexos
 
 ### Diretoria
@@ -210,6 +213,40 @@ O `/health` informa:
     "treasury": true,
     "groups": true,
     "snapshotFallback": true
+  }
+}
+```
+
+
+## Otimização v1.8.0
+
+O Worker adiciona consultas autenticadas de leitura para o Dashboard e os relatórios privados. A migração `0005_analytics_read_models.sql` cria apenas os índices necessários e ativa `analytics_read_models`.
+
+Implantação recomendada:
+
+```bash
+npm ci
+npx wrangler deploy --config wrangler.toml
+npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
+```
+
+O Worker 1.8.0 mantém gravações nos esquemas 3 e 4 para permitir essa ordem sem interrupção. As rotas de analytics respondem somente depois da migração para o esquema 4.
+
+Health esperado:
+
+```json
+{
+  "workerVersion": "1.8.0",
+  "privateAutosave": "granular-treasury-groups",
+  "d1": { "schemaVersion": 4, "active": true },
+  "granularWrites": {
+    "treasury": true,
+    "groups": true,
+    "snapshotFallback": true
+  },
+  "optimizedReads": {
+    "dashboard": true,
+    "reports": true
   }
 }
 ```

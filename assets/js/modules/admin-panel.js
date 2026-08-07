@@ -1,6 +1,6 @@
-import { ADMIN_PERIOD_STORAGE, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.41.0';
-import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.41.0';
-import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.41.0';
+import { ADMIN_PERIOD_STORAGE, applyD1TreasuryAnalytics, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.42.0';
+import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.42.0';
+import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.42.0';
 export function createAdminPanelController({
   root,
   getState,
@@ -21,6 +21,7 @@ export function createAdminPanelController({
   auditLog,
   recoveryCenter,
   reports,
+  loadDashboardAnalytics = null,
   toast
 }) {
   if (!root) throw new TypeError('createAdminPanelController requer root.');
@@ -33,6 +34,8 @@ export function createAdminPanelController({
   let periodPreset = sessionStorage.getItem(ADMIN_PERIOD_STORAGE.preset) || 'current-month';
   let customStart = sessionStorage.getItem(ADMIN_PERIOD_STORAGE.start) || '';
   let customEnd = sessionStorage.getItem(ADMIN_PERIOD_STORAGE.end) || '';
+  let analyticsRequest = 0;
+  const analyticsCache = new Map();
   const storePeriod = () => {
     sessionStorage.setItem(ADMIN_PERIOD_STORAGE.preset, periodPreset);
     sessionStorage.setItem(ADMIN_PERIOD_STORAGE.start, customStart);
@@ -54,6 +57,13 @@ export function createAdminPanelController({
       customStart,
       customEnd
     });
+    const treasuryRecords = Array.isArray(state?.treasury) ? state.treasury : [];
+    const treasurySignature = treasuryRecords.reduce((signature, item) => (
+      signature + Number(item?.entry || 0) - Number(item?.exit || 0) + String(item?.status || '').length
+    ), treasuryRecords.length);
+    const analyticsKey = `${model.bounds.start}|${model.bounds.end}|${treasurySignature}`;
+    const cachedAnalytics = analyticsCache.get(analyticsKey);
+    if (cachedAnalytics) applyD1TreasuryAnalytics(model, cachedAnalytics);
     const writeAllowed = canWrite();
     const accessRole = getAccessRole();
     root.innerHTML = adminDashboardHtml(model, {
@@ -123,6 +133,17 @@ export function createAdminPanelController({
       periodPreset: model.periodPreset,
       periodText: model.selectedPeriodLabel
     });
+    if (!cachedAnalytics && typeof loadDashboardAnalytics === 'function') {
+      const request = ++analyticsRequest;
+      Promise.resolve(loadDashboardAnalytics(state, model.bounds)).then(analytics => {
+        if (request !== analyticsRequest || !isAdminUnlocked()) return;
+        analyticsCache.set(analyticsKey, analytics);
+        while (analyticsCache.size > 8) analyticsCache.delete(analyticsCache.keys().next().value);
+        renderPanel();
+      }).catch(() => {
+        // O dashboard local continua disponível quando a consulta otimizada estiver indisponível.
+      });
+    }
   };
   const render = () => {
     if (!isAdminUnlocked()) renderLogin();

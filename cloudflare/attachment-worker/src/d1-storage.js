@@ -1,4 +1,5 @@
-export const D1_SCHEMA_VERSION = 3;
+export const D1_SCHEMA_VERSION = 4;
+export const D1_MIN_OPERATIONAL_SCHEMA_VERSION = 3;
 
 const encoder = new TextEncoder();
 const D1_JSON_BATCH_BYTES = 512 * 1024;
@@ -14,6 +15,14 @@ const KNOWN_STATE_KEYS = new Set([
   'mutualGroups',
   'treasury'
 ]);
+
+
+function assertSupportedOperationalSchema(status) {
+  const version = Number(status?.schemaVersion || 0);
+  if (version < D1_MIN_OPERATIONAL_SCHEMA_VERSION || version > D1_SCHEMA_VERSION) {
+    throw new Error(`O esquema D1 está na versão ${version}; o Worker aceita operações entre as versões ${D1_MIN_OPERATIONAL_SCHEMA_VERSION} e ${D1_SCHEMA_VERSION}.`);
+  }
+}
 
 function objectValue(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
@@ -229,6 +238,7 @@ export async function getD1StorageStatus(env) {
       (SELECT value FROM portal_meta WHERE key = 'checksum') AS checksum,
       (SELECT value FROM portal_meta WHERE key = 'treasury_granular_writes') AS treasury_granular_writes,
       (SELECT value FROM portal_meta WHERE key = 'groups_granular_writes') AS groups_granular_writes,
+      (SELECT value FROM portal_meta WHERE key = 'analytics_read_models') AS analytics_read_models,
       (SELECT COUNT(*) FROM treasury_movements) AS treasury,
       (SELECT COUNT(*) FROM treasury_accounts) AS accounts,
       (SELECT COUNT(*) FROM family_groups) AS family_groups,
@@ -246,6 +256,7 @@ export async function getD1StorageStatus(env) {
       checksum: text(row?.checksum),
       granularTreasury: text(row?.treasury_granular_writes) === '1',
       granularGroups: text(row?.groups_granular_writes) === '1',
+      analyticsReadModels: text(row?.analytics_read_models) === '1',
       counts: {
         treasury: Number(row?.treasury || 0),
         accounts: Number(row?.accounts || 0),
@@ -266,6 +277,7 @@ export async function getD1StorageStatus(env) {
       counts: {},
       granularTreasury: false,
       granularGroups: false,
+      analyticsReadModels: false,
       error: /no such table/i.test(message) ? '' : message
     };
   }
@@ -342,9 +354,7 @@ export async function writeD1PrivateState(env, state, {
   if (!hasD1Binding(env)) throw new Error('O binding PORTAL_DB não está configurado no Worker.');
   const status = storageStatus || await getD1StorageStatus(env);
   if (!status.initialized) throw new Error('O banco D1 ainda não recebeu as migrações SQL do Portal.');
-  if (status.schemaVersion !== D1_SCHEMA_VERSION) {
-    throw new Error(`O esquema D1 está na versão ${status.schemaVersion}; o Worker requer a versão ${D1_SCHEMA_VERSION}.`);
-  }
+  assertSupportedOperationalSchema(status);
 
   const db = env.PORTAL_DB;
   const model = decomposePrivateState(state);
@@ -528,9 +538,7 @@ export async function applyD1TreasuryMutation(env, {
   if (!hasD1Binding(env)) throw new Error('O binding PORTAL_DB não está configurado no Worker.');
   const status = storageStatus || await getD1StorageStatus(env);
   if (!status.initialized || !status.active) throw new Error('O banco D1 ainda não está ativo para gravações granulares.');
-  if (status.schemaVersion !== D1_SCHEMA_VERSION) {
-    throw new Error(`O esquema D1 está na versão ${status.schemaVersion}; o Worker requer a versão ${D1_SCHEMA_VERSION}.`);
-  }
+  assertSupportedOperationalSchema(status);
 
   const normalizedMutationId = text(mutationId).trim();
   if (!/^[a-z0-9_-]{8,120}$/i.test(normalizedMutationId)) {
@@ -689,9 +697,7 @@ export async function applyD1GroupsMutation(env, {
   if (!hasD1Binding(env)) throw new Error('O binding PORTAL_DB não está configurado no Worker.');
   const status = storageStatus || await getD1StorageStatus(env);
   if (!status.initialized || !status.active) throw new Error('O banco D1 ainda não está ativo para gravações granulares.');
-  if (status.schemaVersion !== D1_SCHEMA_VERSION) {
-    throw new Error(`O esquema D1 está na versão ${status.schemaVersion}; o Worker requer a versão ${D1_SCHEMA_VERSION}.`);
-  }
+  assertSupportedOperationalSchema(status);
 
   const normalizedMutationId = text(mutationId).trim();
   if (!/^[a-z0-9_-]{8,120}$/i.test(normalizedMutationId)) {

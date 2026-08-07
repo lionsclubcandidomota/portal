@@ -1,4 +1,4 @@
-import { memberIsMutual } from '../../core/portal-members.js?v=6.41.0';
+import { memberIsMutual } from '../../core/portal-members.js?v=6.42.0';
 
 export const ADMIN_PERIOD_STORAGE = Object.freeze({
   preset: 'lions.admin.dashboard.period',
@@ -198,6 +198,30 @@ export function summarizeTreasury(items) {
     balance: entriesValue - exitsValue,
     maxValue: Math.max(entriesValue, exitsValue)
   };
+}
+
+
+export function applyD1TreasuryAnalytics(model, analytics) {
+  const source = analytics?.treasury;
+  if (!model || !source || analytics?.source !== 'd1') return model;
+  const entriesValue = Number(source.entriesValue || 0);
+  const exitsValue = Number(source.exitsValue || 0);
+  model.treasury = {
+    ...model.treasury,
+    total: Math.max(0, Number(source.total || 0)),
+    entryCount: Math.max(0, Number(source.entryCount || 0)),
+    exitCount: Math.max(0, Number(source.exitCount || 0)),
+    entriesValue,
+    exitsValue,
+    balance: Number.isFinite(Number(source.balance)) ? Number(source.balance) : entriesValue - exitsValue,
+    maxValue: Math.max(0, Number(source.maxValue || 0), entriesValue, exitsValue),
+    programmed: source.programmed && typeof source.programmed === 'object' ? { ...source.programmed } : null,
+    realized: source.realized && typeof source.realized === 'object' ? { ...source.realized } : null,
+    dataSource: 'd1',
+    queryDurationMs: Math.max(0, Number(analytics.queryDurationMs || 0)),
+    revision: String(analytics.revision || '')
+  };
+  return model;
 }
 
 export function createAdminDashboardModel(state, {

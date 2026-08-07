@@ -1,4 +1,4 @@
-# Homologação — v6.41.0
+# Homologação — v6.42.0
 
 ## Fluxos prioritários do Portal
 
@@ -134,3 +134,17 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 8. Abra o painel do D1 e confirme que as linhas gravadas cresceram apenas de forma compatível com os grupos e vínculos alterados.
 9. Crie uma movimentação e confirme que o endpoint granular da Tesouraria continua funcionando.
 10. Confirme que nenhuma alteração privada cria pendência em **Publicar conteúdo público**.
+
+
+## Leituras SQL do Dashboard e relatórios — versão 6.42.0
+
+1. Publique o Worker 1.8.0 ainda com o esquema D1 3 e confirme que login, salvamento e anexos continuam funcionando.
+2. Aplique `0005_analytics_read_models.sql`.
+3. Confirme no `/health` `schemaVersion: 4` e `optimizedReads.dashboard/reports: true`.
+4. Publique o Portal 6.42.0.
+5. Abra o Dashboard Administrativo e confirme o selo **D1 · consulta otimizada** no card da Tesouraria.
+6. Alterne entre mês atual, mês anterior, trimestre, ano e período personalizado; confira os totais com a tela de Movimentações.
+7. Gere o relatório de Movimentações e confirme que somente o período selecionado aparece.
+8. Gere Mensalidades e Mútuas em PDF e CSV e confira nomes, valores, baixas e totais.
+9. Interrompa temporariamente a rede e confirme que o Dashboard e os relatórios continuam pelo fallback local.
+10. No painel D1, confirme aumento de linhas lidas compatível com as consultas, sem aumento de linhas gravadas causado apenas pela visualização.

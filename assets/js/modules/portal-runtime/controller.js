@@ -2,8 +2,8 @@ import { loadState, saveState } from '../../storage.js';
 import {
   loadPublicGitHubPayload,
   waitForPagesDeployment
-} from '../../github.js?v=6.41.0';
-import { createPortalRuntimeContext } from './context.js?v=6.41.0';
+} from '../../github.js?v=6.42.0';
+import { createPortalRuntimeContext } from './context.js?v=6.42.0';
 import {
   bootstrapAdministrator,
   clearSecureStorageSession,
@@ -30,27 +30,27 @@ import {
   savePrivateGroupsMutation,
   savePrivateTreasuryMutation,
   secureStorageProfileFromState
-} from '../secure-storage/client.js?v=6.41.0';
+} from '../secure-storage/client.js?v=6.42.0';
 import {
   createPrivatePortalState,
   createPublicPortalState,
   hasPrivatePortalData,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.41.0';
-import { createPersistenceActions } from './persistence.js?v=6.41.0';
-import { createPrivateSyncActions } from './private-sync.js?v=6.41.0';
-import { createAdminSessionActions } from './session.js?v=6.41.0';
-import { createPublicationActions } from './publication.js?v=6.41.0';
-import { createRemoteSyncActions } from './remote-sync.js?v=6.41.0';
-import { createBootstrapAction } from './bootstrap.js?v=6.41.0';
-import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.41.0';
-import { createAccessProfileActions } from './access-profile.js?v=6.41.0';
+} from '../../core/portal-data-boundary.js?v=6.42.0';
+import { createPersistenceActions } from './persistence.js?v=6.42.0';
+import { createPrivateSyncActions } from './private-sync.js?v=6.42.0';
+import { createAdminSessionActions } from './session.js?v=6.42.0';
+import { createPublicationActions } from './publication.js?v=6.42.0';
+import { createRemoteSyncActions } from './remote-sync.js?v=6.42.0';
+import { createBootstrapAction } from './bootstrap.js?v=6.42.0';
+import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.42.0';
+import { createAccessProfileActions } from './access-profile.js?v=6.42.0';
 import {
   ACCESS_CAPABILITIES,
   accessSnapshot,
   canAccessView,
   roleHasCapability
-} from './authorization.js?v=6.41.0';
+} from './authorization.js?v=6.42.0';
 
 export function createPortalRuntimeController(dependencies) {
   const services = {

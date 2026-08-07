@@ -1,7 +1,7 @@
 import {
   createPrivatePortalState,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.41.0';
+} from '../../core/portal-data-boundary.js?v=6.42.0';
 import {
   getSecureStoragePrivateRevision,
   readSecureStorageJson as readJson,
@@ -10,7 +10,7 @@ import {
   secureStorageJsonHeaders as jsonHeaders,
   secureStorageProfileFromState,
   setSecureStoragePrivateRevision
-} from './session-store.js?v=6.41.0';
+} from './session-store.js?v=6.42.0';
 
 export {
   clearSecureStorageSession,
@@ -18,7 +18,7 @@ export {
   normalizeSecureStorageWorkerUrl,
   secureStorageProfileFromState,
   secureStorageSessionSnapshot
-} from './session-store.js?v=6.41.0';
+} from './session-store.js?v=6.42.0';
 export {
   bootstrapAdministrator,
   changeAdministratorPassword,
@@ -31,13 +31,17 @@ export {
   resetAdministratorPassword,
   testSecureStorageConnection,
   updateAdministratorUser
-} from './auth-client.js?v=6.41.0';
+} from './auth-client.js?v=6.42.0';
 export {
   createGroupsPrivateMutation,
   createTreasuryPrivateMutation,
   savePrivateGroupsMutation,
   savePrivateTreasuryMutation
-} from './private-mutations.js?v=6.41.0';
+} from './private-mutations.js?v=6.42.0';
+export {
+  loadD1DashboardAnalytics,
+  loadD1ReportState
+} from './analytics-client.js?v=6.42.0';
 
 const R2_STORAGE_KIND = 'r2';
 const LEGACY_PUBLIC_ATTACHMENT = /^\.\/public\/treasury\/[a-z0-9/_-]+\.[a-z0-9]+(?:\?[^\s]*)?$/i;

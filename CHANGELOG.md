@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.42.0 — Dashboard e relatórios com leituras SQL no D1
+
+- Cria a migração `0005_analytics_read_models.sql` e eleva o esquema D1 para a versão 4.
+- Adiciona índices compostos para período, categoria, status, valores e vínculos de Mútuas.
+- Cria `GET /api/analytics/dashboard` com somatórias de entradas, saídas, saldo, realizados e programados por período.
+- Cria `GET /api/analytics/report` para recortes privados de Movimentações, Mensalidades e Mútuas.
+- Dashboard Administrativo passa a identificar quando os valores foram calculados diretamente no D1.
+- Relatórios privados carregam somente as coleções necessárias e mantêm Aniversariantes, Agenda e Avisos no fluxo público local.
+- Mantém fallback automático para os cálculos locais quando o endpoint otimizado estiver indisponível.
+- Worker 1.8.0 aceita temporariamente o esquema operacional 3 durante a implantação e habilita analytics após a migração 0005.
+- `/health` passa a informar `optimizedReads.dashboard` e `optimizedReads.reports`.
+- Adiciona testes reais em SQLite para agregações, filtros por período, recortes de relatórios e cliente autenticado.
+
 ## 6.41.0 — Gravação granular de grupos familiares e Mútuas no D1
 
 - Cria a migração `0004_group_granular_writes.sql` e eleva o esquema operacional do D1 para a versão 3.

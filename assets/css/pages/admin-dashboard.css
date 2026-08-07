@@ -7,3 +7,5 @@
 .admin-login-form[hidden]{display:none!important;}
 
 .admin-people-counts{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;}.admin-people-count{display:flex;align-items:baseline;gap:5px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);}.admin-people-count strong{font-size:1rem;}.admin-people-count small{color:var(--muted);font-size:.68rem;font-weight:800;text-transform:uppercase;}.admin-people-count.is-mutual strong{color:#6b48a5;}
+
+.admin-data-source{display:inline-flex;margin-top:5px;padding:3px 7px;border:1px solid var(--border);border-radius:999px;color:var(--muted);font-size:.62rem;font-weight:800;text-transform:uppercase}.admin-data-source.is-d1{border-color:#b9d8ef;background:#edf7fd;color:#12608f}

@@ -1,5 +1,5 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.41.0';
-import { ACCESS_ROLES } from './authorization.js?v=6.41.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.42.0';
+import { ACCESS_ROLES } from './authorization.js?v=6.42.0';
 
 function attachmentIdentity(attachment = {}, index = 0) {
   return String(attachment.id || attachment.name || `index:${index}`);

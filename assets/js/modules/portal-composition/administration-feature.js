@@ -1,10 +1,11 @@
 import { exportState } from '../../storage.js';
-import { createEntityFormsController } from '../entity-forms.js?v=6.41.0';
-import { createAdminPanelController } from '../admin-panel.js?v=6.41.0';
-import { createReportsController } from '../reports/controller.js?v=6.41.0';
+import { createEntityFormsController } from '../entity-forms.js?v=6.42.0';
+import { createAdminPanelController } from '../admin-panel.js?v=6.42.0';
+import { createReportsController } from '../reports/controller.js?v=6.42.0';
 import { createSettingsController } from '../settings.js';
 import { createBirthdaysController, createBirthdayActions } from '../birthdays.js';
 import { createBirthdayArtworkController } from '../birthday-artwork.js';
+import { loadD1DashboardAnalytics, loadD1ReportState } from '../secure-storage/client.js?v=6.42.0';
 
 export function createAdministrationFeature({
   getState,
@@ -43,7 +44,7 @@ export function createAdministrationFeature({
     selectImage: target => getFileInputs()?.requestImage(target)
   });
 
-  const reports = createReportsController({ getState, toast });
+  const reports = createReportsController({ getState, toast, loadReportState: loadD1ReportState });
   const adminPanel = createAdminPanelController({
     root,
     getState,
@@ -64,6 +65,7 @@ export function createAdministrationFeature({
     auditLog,
     recoveryCenter,
     reports,
+    loadDashboardAnalytics: loadD1DashboardAnalytics,
     toast
   });
 
