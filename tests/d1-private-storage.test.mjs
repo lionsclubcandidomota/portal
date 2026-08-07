@@ -6,6 +6,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   D1_SCHEMA_VERSION,
+  applyD1GroupsMutation,
   applyD1TreasuryMutation,
   composePrivateState,
   decomposePrivateState,
@@ -117,7 +118,7 @@ test('adaptador D1 preserva o estado privado e cria coleções relacionais', () 
     futurePrivateField: { enabled: true }
   };
   const model = decomposePrivateState(original);
-  assert.equal(D1_SCHEMA_VERSION, 2);
+  assert.equal(D1_SCHEMA_VERSION, 3);
   assert.equal(model.treasury.length, 1);
   assert.equal(model.treasury[0].attachments.length, 1);
   assert.equal(model.familyGroups[0].members.length, 2);
@@ -150,6 +151,10 @@ test('migração SQL cria tabelas, vínculos e índices do Portal', async () => 
   assert.match(granularMigration, /CREATE TABLE IF NOT EXISTS portal_mutations/);
   assert.match(granularMigration, /treasury_granular_writes/);
   assert.match(granularMigration, /schema_version', '2'/);
+  const groupsMigration = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0004_group_granular_writes.sql'), 'utf8');
+  assert.match(groupsMigration, /groups_granular_writes/);
+  assert.match(groupsMigration, /idx_mutual_events_date/);
+  assert.match(groupsMigration, /schema_version', '3'/);
 });
 
 test('gravação D1 é transacional, compacta e preserva o snapshot exato', async () => {
@@ -157,6 +162,7 @@ test('gravação D1 é transacional, compacta e preserva o snapshot exato', asyn
   const database = new DatabaseSync(':memory:');
   database.exec(migration);
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8'));
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0004_group_granular_writes.sql'), 'utf8'));
   const env = { PORTAL_DB: new SQLiteD1Database(database) };
   const privateState = {
     version: 11,
@@ -199,6 +205,7 @@ test('movimentação e anexos são atualizados granularmente sem reconstruir as 
   const database = new DatabaseSync(':memory:');
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0001_portal_private_state.sql'), 'utf8'));
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8'));
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0004_group_granular_writes.sql'), 'utf8'));
   const env = { PORTAL_DB: new SQLiteD1Database(database) };
   const initial = {
     version: 11,
@@ -280,6 +287,91 @@ test('movimentação e anexos são atualizados granularmente sem reconstruir as 
     }),
     error => error?.code === 'REVISION_CONFLICT'
   );
+  database.close();
+});
+
+
+
+test('grupos familiares e de Mútuas são atualizados granularmente sem regravar movimentações', async () => {
+  const database = new DatabaseSync(':memory:');
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0001_portal_private_state.sql'), 'utf8'));
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8'));
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0004_group_granular_writes.sql'), 'utf8'));
+  const env = { PORTAL_DB: new SQLiteD1Database(database) };
+  const initial = {
+    version: 11, settings: {},
+    treasuryAccounts: [{ id: 'acc-1', name: 'Conta', active: true }],
+    treasuryCategories: ['Mútuas'],
+    familyGroups: [{ id: 'fam-1', name: 'Família A', memberIds: ['m-1'], primaryMemberId: 'm-1' }],
+    mutualGroups: [{
+      id: 'mut-1', name: 'Mútua 658', createdDate: '2026-08-01', closedDate: '',
+      memberships: [{ id: 'mum-1', memberId: 'm-1', joinedDate: '2026-08-01', endedDate: '' }],
+      events: []
+    }],
+    treasury: [{ id: 'mov-1', date: '2026-08-01', accountId: 'acc-1', category: 'Mútuas', status: 'Realizado', entry: 15, exit: 0, attachments: [] }]
+  };
+  await writeD1PrivateState(env, initial, {
+    revision: 'groups-revision-1', updatedAt: '2026-08-07T10:00:00.000Z',
+    updatedBy: 'teste', checksum: 'groups-checksum-1', activate: true,
+    storageStatus: await getD1StorageStatus(env)
+  });
+
+  const nextState = structuredClone(initial);
+  nextState.familyGroups[0].name = 'Família Atualizada';
+  nextState.familyGroups[0].memberIds.push('m-2');
+  nextState.mutualGroups[0].memberships.push({ id: 'mum-2', memberId: 'm-2', joinedDate: '2026-08-07', endedDate: '' });
+  nextState.mutualGroups[0].events.push({
+    id: 'mue-1', deceasedName: 'Associado do Distrito', deathDate: '2026-08-07',
+    dueDate: '2026-08-20', amountPerParticipant: 20, participantIds: ['m-1', 'm-2']
+  });
+
+  const saved = await applyD1GroupsMutation(env, {
+    mutationId: 'groups-test-0001', expectedRevision: 'groups-revision-1',
+    revision: 'groups-revision-2', updatedAt: '2026-08-07T10:05:00.000Z',
+    updatedBy: 'administrador', checksum: 'groups-checksum-2', nextState,
+    familyGroups: { upserts: [{ group: nextState.familyGroups[0], sortOrder: 0 }], deletes: [] },
+    mutualGroups: { upserts: [{ group: nextState.mutualGroups[0], sortOrder: 0 }], deletes: [] },
+    storageStatus: await getD1StorageStatus(env)
+  });
+
+  assert.equal(saved.mode, 'granular-groups');
+  assert.equal(saved.changes.familyMembers, 2);
+  assert.equal(saved.changes.mutualEvents, 1);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM treasury_movements').get().total, 1);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM family_group_members').get().total, 2);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM mutual_memberships').get().total, 2);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM mutual_events').get().total, 1);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM mutual_event_participants').get().total, 2);
+  const restored = await readD1PrivateState(env, { storageStatus: await getD1StorageStatus(env) });
+  assert.deepEqual(restored.state, nextState);
+
+  const repeated = await applyD1GroupsMutation(env, {
+    mutationId: 'groups-test-0001', expectedRevision: 'groups-revision-1',
+    revision: 'groups-revision-2', nextState,
+    familyGroups: { upserts: [{ group: nextState.familyGroups[0], sortOrder: 0 }] },
+    mutualGroups: { upserts: [{ group: nextState.mutualGroups[0], sortOrder: 0 }] }
+  });
+  assert.equal(repeated.idempotent, true);
+
+  const deletedState = structuredClone(nextState);
+  deletedState.familyGroups = [];
+  deletedState.mutualGroups = [];
+  const deleted = await applyD1GroupsMutation(env, {
+    mutationId: 'groups-test-0002', expectedRevision: 'groups-revision-2',
+    revision: 'groups-revision-3', updatedAt: '2026-08-07T10:10:00.000Z',
+    updatedBy: 'administrador', checksum: 'groups-checksum-3', nextState: deletedState,
+    familyGroups: { upserts: [], deletes: ['fam-1'] },
+    mutualGroups: { upserts: [], deletes: ['mut-1'] },
+    storageStatus: await getD1StorageStatus(env)
+  });
+  assert.equal(deleted.changes.familyDeleted, 1);
+  assert.equal(deleted.changes.mutualDeleted, 1);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM family_groups').get().total, 0);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM mutual_groups').get().total, 0);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM mutual_events').get().total, 0);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM treasury_movements').get().total, 1);
+  const restoredAfterDelete = await readD1PrivateState(env, { storageStatus: await getD1StorageStatus(env) });
+  assert.deepEqual(restoredAfterDelete.state, deletedState);
   database.close();
 });
 
@@ -366,6 +458,8 @@ test('Worker expõe rotas de migração, status e rollback do D1', async () => {
   assert.match(worker, /\/api\/storage\/status/);
   assert.match(worker, /\/api\/storage\/migrate-d1/);
   assert.match(worker, /\/api\/storage\/rollback-r2/);
+  assert.match(worker, /\/api\/private-state\/groups/);
+  assert.match(worker, /handlePrivateGroupsMutation/);
   assert.match(worker, /privateState: storage\.backend/);
   assert.match(config, /\[\[d1_databases\]\]/);
   assert.match(config, /binding = "PORTAL_DB"/);

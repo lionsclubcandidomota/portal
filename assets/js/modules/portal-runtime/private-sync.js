@@ -1,5 +1,5 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.40.0';
-import { ACCESS_ROLES } from './authorization.js?v=6.40.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.41.0';
+import { ACCESS_ROLES } from './authorization.js?v=6.41.0';
 
 function attachmentIdentity(attachment = {}, index = 0) {
   return String(attachment.id || attachment.name || `index:${index}`);
@@ -89,11 +89,11 @@ export function createPrivateSyncActions(context) {
     }
   };
 
-  const mutationIdFor = generation => {
+  const mutationIdFor = (generation, scope = 'private') => {
     if (!mutationIds.has(generation)) {
       const random = globalThis.crypto?.randomUUID?.()
         || `mut-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
-      mutationIds.set(generation, `treasury-${String(random).replace(/[^a-z0-9_-]/gi, '-')}`);
+      mutationIds.set(generation, `${scope}-${String(random).replace(/[^a-z0-9_-]/gi, '-')}`);
     }
     return mutationIds.get(generation);
   };
@@ -110,16 +110,21 @@ export function createPrivateSyncActions(context) {
     const removedKeys = [...previousKeys].filter(key => !nextKeys.has(key));
 
     try {
-      const granularMutation = services.createTreasuryPrivateMutation?.(baseline, securePublication.state);
-      const useGranularTreasury = Boolean(
-        granularMutation
-        && services.savePrivateTreasuryMutation
-      );
-      const result = useGranularTreasury
-        ? await services.savePrivateTreasuryMutation(
+      const treasuryMutation = services.createTreasuryPrivateMutation?.(baseline, securePublication.state);
+      const groupsMutation = treasuryMutation
+        ? null
+        : services.createGroupsPrivateMutation?.(baseline, securePublication.state);
+      const granularMutation = treasuryMutation || groupsMutation;
+      const granularSave = granularMutation?.scope === 'treasury'
+        ? services.savePrivateTreasuryMutation
+        : granularMutation?.scope === 'groups'
+          ? services.savePrivateGroupsMutation
+          : null;
+      const result = granularMutation && granularSave
+        ? await granularSave(
           securePublication.state,
           granularMutation,
-          { mutationId: mutationIdFor(targetGeneration) }
+          { mutationId: mutationIdFor(targetGeneration, granularMutation.scope) }
         )
         : await services.savePrivatePortalState?.(securePublication.state);
       const current = context.currentState();

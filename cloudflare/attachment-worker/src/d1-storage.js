@@ -1,4 +1,4 @@
-export const D1_SCHEMA_VERSION = 2;
+export const D1_SCHEMA_VERSION = 3;
 
 const encoder = new TextEncoder();
 const D1_JSON_BATCH_BYTES = 512 * 1024;
@@ -58,6 +58,70 @@ export function hasD1Binding(env) {
 
 
 
+
+function familyGroupRecord(item, sortOrder = 0) {
+  const group = objectValue(item);
+  const groupId = text(group.id || `family-${sortOrder}`);
+  return {
+    id: groupId,
+    sortOrder: Math.max(0, Number(sortOrder || 0)),
+    name: text(group.name),
+    primaryMemberId: text(group.primaryMemberId),
+    payload: JSON.stringify(group),
+    members: uniqueStrings(group.memberIds).map((memberId, memberSortOrder) => ({
+      groupId,
+      memberId,
+      sortOrder: memberSortOrder
+    }))
+  };
+}
+
+function mutualGroupRecord(item, sortOrder = 0) {
+  const group = objectValue(item);
+  const groupId = text(group.id || `mutual-${sortOrder}`);
+  const memberships = arrayValue(group.memberships).map((membershipValue, membershipSortOrder) => {
+    const membership = objectValue(membershipValue);
+    return {
+      id: text(membership.id || `${groupId}-membership-${membershipSortOrder}`),
+      groupId,
+      sortOrder: membershipSortOrder,
+      memberId: text(membership.memberId),
+      joinedDate: text(membership.joinedDate || membership.joinedMonth),
+      endedDate: text(membership.endedDate || membership.endedMonth),
+      payload: JSON.stringify(membership)
+    };
+  });
+  const events = arrayValue(group.events).map((eventValue, eventSortOrder) => {
+    const event = objectValue(eventValue);
+    const eventId = text(event.id || `${groupId}-event-${eventSortOrder}`);
+    return {
+      id: eventId,
+      groupId,
+      sortOrder: eventSortOrder,
+      deceasedName: text(event.deceasedName),
+      deathDate: text(event.deathDate),
+      dueDate: text(event.dueDate),
+      amountPerParticipant: numeric(event.amountPerParticipant),
+      payload: JSON.stringify(event),
+      participants: uniqueStrings(event.participantIds).map((memberId, participantSortOrder) => ({
+        eventId,
+        memberId,
+        sortOrder: participantSortOrder
+      }))
+    };
+  });
+  return {
+    id: groupId,
+    sortOrder: Math.max(0, Number(sortOrder || 0)),
+    name: text(group.name),
+    createdDate: text(group.createdDate || group.startedMonth),
+    closedDate: text(group.closedDate),
+    payload: JSON.stringify(group),
+    memberships,
+    events
+  };
+}
+
 function treasuryMovementRecord(item, sortOrder = 0) {
   const movement = objectValue(item);
   const movementId = text(movement.id || `movement-${sortOrder}`);
@@ -103,61 +167,8 @@ export function decomposePrivateState(state) {
     payload: JSON.stringify(objectValue(item))
   }));
   const categories = uniqueStrings(source.treasuryCategories).map((name, sortOrder) => ({ name, sortOrder }));
-  const familyGroups = arrayValue(source.familyGroups).map((item, sortOrder) => {
-    const group = objectValue(item);
-    return {
-      id: text(group.id || `family-${sortOrder}`),
-      sortOrder,
-      name: text(group.name),
-      primaryMemberId: text(group.primaryMemberId),
-      payload: JSON.stringify(group),
-      members: uniqueStrings(group.memberIds).map((memberId, memberSortOrder) => ({ memberId, sortOrder: memberSortOrder }))
-    };
-  });
-  const mutualGroups = arrayValue(source.mutualGroups).map((item, sortOrder) => {
-    const group = objectValue(item);
-    const groupId = text(group.id || `mutual-${sortOrder}`);
-    const memberships = arrayValue(group.memberships).map((membershipValue, membershipSortOrder) => {
-      const membership = objectValue(membershipValue);
-      return {
-        id: text(membership.id || `${groupId}-membership-${membershipSortOrder}`),
-        groupId,
-        sortOrder: membershipSortOrder,
-        memberId: text(membership.memberId),
-        joinedDate: text(membership.joinedDate || membership.joinedMonth),
-        endedDate: text(membership.endedDate || membership.endedMonth),
-        payload: JSON.stringify(membership)
-      };
-    });
-    const events = arrayValue(group.events).map((eventValue, eventSortOrder) => {
-      const event = objectValue(eventValue);
-      const eventId = text(event.id || `${groupId}-event-${eventSortOrder}`);
-      return {
-        id: eventId,
-        groupId,
-        sortOrder: eventSortOrder,
-        deceasedName: text(event.deceasedName),
-        deathDate: text(event.deathDate),
-        dueDate: text(event.dueDate),
-        amountPerParticipant: numeric(event.amountPerParticipant),
-        payload: JSON.stringify(event),
-        participants: uniqueStrings(event.participantIds).map((memberId, participantSortOrder) => ({
-          memberId,
-          sortOrder: participantSortOrder
-        }))
-      };
-    });
-    return {
-      id: groupId,
-      sortOrder,
-      name: text(group.name),
-      createdDate: text(group.createdDate || group.startedMonth),
-      closedDate: text(group.closedDate),
-      payload: JSON.stringify(group),
-      memberships,
-      events
-    };
-  });
+  const familyGroups = arrayValue(source.familyGroups).map((item, sortOrder) => familyGroupRecord(item, sortOrder));
+  const mutualGroups = arrayValue(source.mutualGroups).map((item, sortOrder) => mutualGroupRecord(item, sortOrder));
   const treasury = arrayValue(source.treasury).map((item, sortOrder) => treasuryMovementRecord(item, sortOrder));
   const extras = Object.entries(source)
     .filter(([key]) => !KNOWN_STATE_KEYS.has(key))
@@ -217,6 +228,7 @@ export async function getD1StorageStatus(env) {
       (SELECT value FROM portal_meta WHERE key = 'updated_by') AS updated_by,
       (SELECT value FROM portal_meta WHERE key = 'checksum') AS checksum,
       (SELECT value FROM portal_meta WHERE key = 'treasury_granular_writes') AS treasury_granular_writes,
+      (SELECT value FROM portal_meta WHERE key = 'groups_granular_writes') AS groups_granular_writes,
       (SELECT COUNT(*) FROM treasury_movements) AS treasury,
       (SELECT COUNT(*) FROM treasury_accounts) AS accounts,
       (SELECT COUNT(*) FROM family_groups) AS family_groups,
@@ -233,6 +245,7 @@ export async function getD1StorageStatus(env) {
       updatedBy: text(row?.updated_by),
       checksum: text(row?.checksum),
       granularTreasury: text(row?.treasury_granular_writes) === '1',
+      granularGroups: text(row?.groups_granular_writes) === '1',
       counts: {
         treasury: Number(row?.treasury || 0),
         accounts: Number(row?.accounts || 0),
@@ -252,6 +265,7 @@ export async function getD1StorageStatus(env) {
       updatedAt: '',
       counts: {},
       granularTreasury: false,
+      granularGroups: false,
       error: /no such table/i.test(message) ? '' : message
     };
   }
@@ -628,6 +642,210 @@ export async function applyD1TreasuryMutation(env, {
     db.prepare(`INSERT INTO portal_mutations
       (mutation_id, scope, expected_revision, applied_revision, response_json, actor, created_at)
       SELECT ?, 'treasury', ?, ?, ?, ?, ?
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(normalizedMutationId, text(expectedRevision), guardRevision, JSON.stringify(response), text(updatedBy), text(updatedAt), guardRevision),
+    db.prepare(`DELETE FROM portal_mutations
+      WHERE mutation_id IN (
+        SELECT mutation_id FROM portal_mutations ORDER BY created_at DESC LIMIT -1 OFFSET 250
+      ) AND EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(guardRevision)
+  ];
+
+  await db.batch(statements);
+  const applied = await readD1Mutation(env, normalizedMutationId);
+  if (!applied || applied.revision !== guardRevision) {
+    const conflict = new Error('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.');
+    conflict.code = 'REVISION_CONFLICT';
+    throw conflict;
+  }
+  return { ...applied, idempotent: false, statements: statements.length };
+}
+
+function normalizeGroupUpserts(values, valueKey, recordFactory) {
+  const rows = arrayValue(values).map((item, index) => {
+    const source = objectValue(item);
+    return recordFactory(source[valueKey] || source, Number(source.sortOrder ?? index));
+  });
+  const ids = new Set();
+  for (const row of rows) {
+    if (!row.id || ids.has(row.id)) throw new Error('A alteração contém grupos repetidos ou sem identificador.');
+    ids.add(row.id);
+  }
+  return rows;
+}
+
+export async function applyD1GroupsMutation(env, {
+  mutationId,
+  expectedRevision,
+  revision,
+  updatedAt,
+  updatedBy,
+  checksum,
+  nextState,
+  familyGroups = {},
+  mutualGroups = {},
+  storageStatus = null
+} = {}) {
+  if (!hasD1Binding(env)) throw new Error('O binding PORTAL_DB não está configurado no Worker.');
+  const status = storageStatus || await getD1StorageStatus(env);
+  if (!status.initialized || !status.active) throw new Error('O banco D1 ainda não está ativo para gravações granulares.');
+  if (status.schemaVersion !== D1_SCHEMA_VERSION) {
+    throw new Error(`O esquema D1 está na versão ${status.schemaVersion}; o Worker requer a versão ${D1_SCHEMA_VERSION}.`);
+  }
+
+  const normalizedMutationId = text(mutationId).trim();
+  if (!/^[a-z0-9_-]{8,120}$/i.test(normalizedMutationId)) {
+    throw new Error('O identificador da alteração granular é inválido.');
+  }
+  const previousResult = await readD1Mutation(env, normalizedMutationId);
+  if (previousResult) return { ...previousResult, idempotent: true };
+  if (!nextState || typeof nextState !== 'object' || Array.isArray(nextState)) {
+    throw new Error('O estado resultante da alteração granular é inválido.');
+  }
+
+  const familyDeletes = uniqueStrings(familyGroups?.deletes);
+  const mutualDeletes = uniqueStrings(mutualGroups?.deletes);
+  const familyRows = normalizeGroupUpserts(familyGroups?.upserts, 'group', familyGroupRecord);
+  const mutualRows = normalizeGroupUpserts(mutualGroups?.upserts, 'group', mutualGroupRecord);
+  const totalChanges = familyDeletes.length + mutualDeletes.length + familyRows.length + mutualRows.length;
+  if (!totalChanges || totalChanges > 40) {
+    throw new Error('A alteração granular de grupos está vazia ou excede o limite permitido.');
+  }
+
+  const familyUpsertIds = familyRows.map(row => row.id);
+  const mutualUpsertIds = mutualRows.map(row => row.id);
+  if (familyDeletes.some(id => familyUpsertIds.includes(id)) || mutualDeletes.some(id => mutualUpsertIds.includes(id))) {
+    throw new Error('O mesmo grupo não pode ser atualizado e excluído na mesma operação.');
+  }
+
+  const familyMembers = familyRows.flatMap(row => row.members);
+  const mutualMemberships = mutualRows.flatMap(row => row.memberships);
+  const mutualEvents = mutualRows.flatMap(row => row.events);
+  const mutualParticipants = mutualEvents.flatMap(event => event.participants);
+  const familyPayloadRows = familyRows.map(({ members, ...row }) => ({ ...row, updatedAt: text(updatedAt) }));
+  const mutualPayloadRows = mutualRows.map(({ memberships, events, ...row }) => ({ ...row, updatedAt: text(updatedAt) }));
+  const mutualEventRows = mutualEvents.map(({ participants, ...row }) => row);
+  const guardRevision = text(revision);
+  const response = {
+    saved: true,
+    mode: 'granular-groups',
+    backend: 'd1',
+    revision: guardRevision,
+    updatedAt: text(updatedAt),
+    checksum: text(checksum),
+    mutationId: normalizedMutationId,
+    changes: {
+      familyUpserted: familyRows.length,
+      familyDeleted: familyDeletes.length,
+      familyMembers: familyMembers.length,
+      mutualUpserted: mutualRows.length,
+      mutualDeleted: mutualDeletes.length,
+      mutualMemberships: mutualMemberships.length,
+      mutualEvents: mutualEvents.length,
+      mutualParticipants: mutualParticipants.length
+    }
+  };
+
+  const db = env.PORTAL_DB;
+  const statements = [
+    db.prepare(`UPDATE portal_meta SET value = ?
+      WHERE key = 'revision' AND value = ?`).bind(guardRevision, text(expectedRevision)),
+    db.prepare(`DELETE FROM family_groups
+      WHERE id IN (SELECT value FROM json_each(?))
+        AND EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(familyDeletes), guardRevision),
+    db.prepare(`INSERT INTO family_groups
+      (id, sort_order, name, primary_member_id, payload, updated_at)
+      SELECT json_extract(value, '$.id'), json_extract(value, '$.sortOrder'),
+        json_extract(value, '$.name'), json_extract(value, '$.primaryMemberId'),
+        json_extract(value, '$.payload'), json_extract(value, '$.updatedAt')
+      FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)
+      ON CONFLICT(id) DO UPDATE SET
+        sort_order = excluded.sort_order,
+        name = excluded.name,
+        primary_member_id = excluded.primary_member_id,
+        payload = excluded.payload,
+        updated_at = excluded.updated_at`)
+      .bind(JSON.stringify(familyPayloadRows), guardRevision),
+    db.prepare(`DELETE FROM family_group_members
+      WHERE group_id IN (SELECT value FROM json_each(?))
+        AND EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(familyUpsertIds), guardRevision),
+    db.prepare(`INSERT INTO family_group_members (group_id, member_id, sort_order)
+      SELECT json_extract(value, '$.groupId'), json_extract(value, '$.memberId'),
+        json_extract(value, '$.sortOrder') FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(familyMembers), guardRevision),
+    db.prepare(`DELETE FROM mutual_groups
+      WHERE id IN (SELECT value FROM json_each(?))
+        AND EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(mutualDeletes), guardRevision),
+    db.prepare(`INSERT INTO mutual_groups
+      (id, sort_order, name, created_date, closed_date, payload, updated_at)
+      SELECT json_extract(value, '$.id'), json_extract(value, '$.sortOrder'),
+        json_extract(value, '$.name'), json_extract(value, '$.createdDate'),
+        json_extract(value, '$.closedDate'), json_extract(value, '$.payload'),
+        json_extract(value, '$.updatedAt') FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)
+      ON CONFLICT(id) DO UPDATE SET
+        sort_order = excluded.sort_order,
+        name = excluded.name,
+        created_date = excluded.created_date,
+        closed_date = excluded.closed_date,
+        payload = excluded.payload,
+        updated_at = excluded.updated_at`)
+      .bind(JSON.stringify(mutualPayloadRows), guardRevision),
+    db.prepare(`DELETE FROM mutual_events
+      WHERE group_id IN (SELECT value FROM json_each(?))
+        AND EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(mutualUpsertIds), guardRevision),
+    db.prepare(`DELETE FROM mutual_memberships
+      WHERE group_id IN (SELECT value FROM json_each(?))
+        AND EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(mutualUpsertIds), guardRevision),
+    db.prepare(`INSERT INTO mutual_memberships
+      (id, group_id, sort_order, member_id, joined_date, ended_date, payload)
+      SELECT json_extract(value, '$.id'), json_extract(value, '$.groupId'),
+        json_extract(value, '$.sortOrder'), json_extract(value, '$.memberId'),
+        json_extract(value, '$.joinedDate'), json_extract(value, '$.endedDate'),
+        json_extract(value, '$.payload') FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(mutualMemberships), guardRevision),
+    db.prepare(`INSERT INTO mutual_events
+      (id, group_id, sort_order, deceased_name, death_date, due_date, amount_per_participant, payload)
+      SELECT json_extract(value, '$.id'), json_extract(value, '$.groupId'),
+        json_extract(value, '$.sortOrder'), json_extract(value, '$.deceasedName'),
+        json_extract(value, '$.deathDate'), json_extract(value, '$.dueDate'),
+        json_extract(value, '$.amountPerParticipant'), json_extract(value, '$.payload')
+      FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(mutualEventRows), guardRevision),
+    db.prepare(`INSERT INTO mutual_event_participants (event_id, member_id, sort_order)
+      SELECT json_extract(value, '$.eventId'), json_extract(value, '$.memberId'),
+        json_extract(value, '$.sortOrder') FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(mutualParticipants), guardRevision),
+    db.prepare(`INSERT INTO portal_state_snapshot (id, payload, updated_at)
+      SELECT 1, ?, ?
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)
+      ON CONFLICT(id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at`)
+      .bind(JSON.stringify(nextState), text(updatedAt), guardRevision),
+    db.prepare(`INSERT INTO portal_meta (key, value)
+      SELECT json_extract(value, '$.key'), json_extract(value, '$.value')
+      FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+      .bind(JSON.stringify([
+        { key: 'updated_at', value: text(updatedAt) },
+        { key: 'updated_by', value: text(updatedBy) },
+        { key: 'checksum', value: text(checksum) },
+        { key: 'last_granular_mutation_at', value: text(updatedAt) },
+        { key: 'groups_granular_writes', value: '1' }
+      ]), guardRevision),
+    db.prepare(`INSERT INTO portal_mutations
+      (mutation_id, scope, expected_revision, applied_revision, response_json, actor, created_at)
+      SELECT ?, 'groups', ?, ?, ?, ?, ?
       WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
       .bind(normalizedMutationId, text(expectedRevision), guardRevision, JSON.stringify(response), text(updatedBy), text(updatedAt), guardRevision),
     db.prepare(`DELETE FROM portal_mutations

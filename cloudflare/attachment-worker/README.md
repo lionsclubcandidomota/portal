@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.6.0
+# Cloudflare Worker do Portal Lions — v1.7.0
 
 O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
@@ -72,6 +72,7 @@ Migrações atuais:
 - `0001_portal_private_state.sql`: estado privado e projeções relacionais;
 - `0002_admin_auth.sql`: usuários, sessões e auditoria de autenticação;
 - `0003_treasury_granular_writes.sql`: mutações idempotentes da Tesouraria e esquema D1 2.
+- `0004_group_granular_writes.sql`: grupos familiares, Mútuas e esquema D1 3.
 
 ## Implantação
 
@@ -151,6 +152,7 @@ O Worker usa `GITHUB_TOKEN`, valida a fronteira pública e cria um único commit
 - `POST /api/publication`
 - `GET/PUT /api/private-state`
 - `PUT /api/private-state/treasury` para movimentações e anexos granulares
+- `PUT /api/private-state/groups` para grupos familiares, Mútuas, vínculos e eventos
 - rotas de backups, integridade, migração D1 e anexos
 
 ### Diretoria
@@ -166,7 +168,7 @@ Antes do primeiro usuário:
 
 ```json
 {
-  "workerVersion": "1.6.0",
+  "workerVersion": "1.7.0",
   "privateState": "d1",
   "authentication": {
     "available": true,
@@ -191,3 +193,23 @@ Depois do primeiro usuário, `bootstrapRequired` muda para `false` e `passwordLo
 ## Otimização v1.6.0
 
 O endpoint `PUT /api/private-state/treasury` grava somente as movimentações e os anexos alterados. Cada solicitação usa revisão otimista e `mutationId` idempotente. O endpoint completo permanece como fallback para alterações nas demais coleções.
+
+
+## Otimização v1.7.0
+
+O endpoint `PUT /api/private-state/groups` grava somente os grupos familiares e de Mútuas alterados. Vínculos, eventos de falecimento e participantes congelados são atualizados no mesmo lote transacional. Movimentações, anexos, contas, categorias e grupos não afetados permanecem intactos.
+
+O `/health` informa:
+
+```json
+{
+  "workerVersion": "1.7.0",
+  "privateAutosave": "granular-treasury-groups",
+  "d1": { "schemaVersion": 3, "active": true },
+  "granularWrites": {
+    "treasury": true,
+    "groups": true,
+    "snapshotFallback": true
+  }
+}
+```

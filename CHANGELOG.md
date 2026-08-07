@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.41.0 — Gravação granular de grupos familiares e Mútuas no D1
+
+- Cria a migração `0004_group_granular_writes.sql` e eleva o esquema operacional do D1 para a versão 3.
+- Adiciona o endpoint autenticado `PUT /api/private-state/groups` para grupos familiares e grupos de Mútuas.
+- Atualiza somente os grupos alterados e suas tabelas dependentes, sem reconstruir movimentações, anexos, contas, categorias ou grupos não afetados.
+- Trata cada grupo de Mútuas como unidade transacional, incluindo vínculos, eventos de falecimento e participantes congelados.
+- Mantém grupos familiares e seus participantes sincronizados por `UPSERT` e exclusões em cascata controladas.
+- Adiciona índices para ordenação de grupos, vínculos ativos, eventos por data e participantes por evento.
+- Preserva revisão otimista, idempotência, histórico limitado de mutações, snapshot no D1 e espelho de contingência no R2.
+- Mantém sincronização completa como fallback para alterações mistas, identificadores inválidos ou mais de 40 grupos na mesma operação.
+- Atualiza o Worker para 1.7.0 e o `/health` passa a informar `privateAutosave: granular-treasury-groups` e `granularWrites.groups: true`.
+- Adiciona testes reais em SQLite para grupos familiares, vínculos de Mútuas, eventos, participantes, idempotência e preservação das movimentações.
+
 ## 6.40.0 — Gravação granular de movimentações e anexos no D1
 
 - Cria a migração `0003_treasury_granular_writes.sql` e eleva o esquema operacional do D1 para a versão 2.

@@ -1,4 +1,4 @@
-import { createDialogFocusManager } from './dialog-focus.js?v=6.40.0';
+import { createDialogFocusManager } from './dialog-focus.js?v=6.41.0';
 
 function buttonClass(tone, fallback = 'btn-danger') {
   if (tone === 'primary') return 'btn-primary';

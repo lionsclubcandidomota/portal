@@ -1,5 +1,6 @@
 import {
   D1_SCHEMA_VERSION,
+  applyD1GroupsMutation,
   applyD1TreasuryMutation,
   deactivateD1PrivateState,
   getD1StorageStatus,
@@ -27,7 +28,7 @@ import {
   publishPortalPublicState
 } from './github-publication.js';
 
-const WORKER_VERSION = '1.6.0';
+const WORKER_VERSION = '1.7.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -816,6 +817,172 @@ function treasuryMutationState(currentState, body) {
   return { nextState, upserts: normalizedUpserts, deletes };
 }
 
+
+function groupCollectionMutation(currentValues, payload, label) {
+  const current = Array.isArray(currentValues) ? currentValues : [];
+  const upserts = Array.isArray(payload?.upserts) ? payload.upserts : [];
+  const deletes = [...new Set((Array.isArray(payload?.deletes) ? payload.deletes : [])
+    .map(value => String(value || '').trim())
+    .filter(Boolean))];
+  const positions = new Map();
+  const values = new Map();
+  current.forEach((value, index) => {
+    const id = String(value?.id || '').trim();
+    if (!SAFE_IDENTIFIER.test(id) || values.has(id)) {
+      throw new Error(`O estado atual contém ${label} sem identificador único.`);
+    }
+    values.set(id, value);
+    positions.set(id, index);
+  });
+
+  const deleteSet = new Set(deletes);
+  const normalizedUpserts = [];
+  for (const [index, itemValue] of upserts.entries()) {
+    const item = itemValue && typeof itemValue === 'object' ? itemValue : {};
+    const group = item.group && typeof item.group === 'object' ? item.group : item;
+    const id = String(group?.id || '').trim();
+    if (!SAFE_IDENTIFIER.test(id)) throw new Error(`Um ${label} da alteração possui identificador inválido.`);
+    if (deleteSet.has(id)) throw new Error(`O mesmo ${label} não pode ser atualizado e excluído na mesma operação.`);
+    if (normalizedUpserts.some(entry => entry.group.id === id)) {
+      throw new Error(`A alteração contém o mesmo ${label} mais de uma vez.`);
+    }
+    const sortOrder = Number.isInteger(Number(item.sortOrder))
+      ? Math.max(0, Number(item.sortOrder))
+      : (positions.has(id) ? positions.get(id) : current.length + index);
+    const cleanGroup = JSON.parse(JSON.stringify(group));
+    cleanGroup.id = id;
+    normalizedUpserts.push({ group: cleanGroup, sortOrder });
+    values.set(id, cleanGroup);
+    positions.set(id, sortOrder);
+  }
+
+  deletes.forEach(id => {
+    if (!SAFE_IDENTIFIER.test(id)) throw new Error(`Um ${label} para exclusão possui identificador inválido.`);
+    values.delete(id);
+    positions.delete(id);
+  });
+
+  const nextValues = [...values.entries()]
+    .sort((first, second) => {
+      const positionDifference = Number(positions.get(first[0]) || 0) - Number(positions.get(second[0]) || 0);
+      return positionDifference || first[0].localeCompare(second[0]);
+    })
+    .map(([, value]) => value);
+  return { nextValues, upserts: normalizedUpserts, deletes };
+}
+
+function validateMutualGroupIdentifiers(groups) {
+  const membershipIds = new Set();
+  const eventIds = new Set();
+  for (const group of Array.isArray(groups) ? groups : []) {
+    for (const membership of Array.isArray(group?.memberships) ? group.memberships : []) {
+      const id = String(membership?.id || '').trim();
+      if (!SAFE_IDENTIFIER.test(id) || membershipIds.has(id)) {
+        throw new Error('Os vínculos dos grupos de Mútuas precisam possuir identificadores únicos.');
+      }
+      membershipIds.add(id);
+    }
+    for (const event of Array.isArray(group?.events) ? group.events : []) {
+      const id = String(event?.id || '').trim();
+      if (!SAFE_IDENTIFIER.test(id) || eventIds.has(id)) {
+        throw new Error('Os eventos de Mútuas precisam possuir identificadores únicos.');
+      }
+      eventIds.add(id);
+    }
+  }
+}
+
+function groupsMutationState(currentState, body) {
+  const nextState = JSON.parse(JSON.stringify(currentState || {}));
+  const family = groupCollectionMutation(nextState.familyGroups, body?.familyGroups, 'grupo familiar');
+  const mutual = groupCollectionMutation(nextState.mutualGroups, body?.mutualGroups, 'grupo de Mútua');
+  const changes = family.upserts.length + family.deletes.length + mutual.upserts.length + mutual.deletes.length;
+  if (!changes || changes > 40) {
+    throw new Response('A alteração granular de grupos está vazia ou excede o limite permitido.', { status: 413 });
+  }
+  nextState.familyGroups = family.nextValues;
+  nextState.mutualGroups = mutual.nextValues;
+  validateMutualGroupIdentifiers(nextState.mutualGroups);
+  return {
+    nextState,
+    familyGroups: { upserts: family.upserts, deletes: family.deletes },
+    mutualGroups: { upserts: mutual.upserts, deletes: mutual.deletes }
+  };
+}
+
+async function handlePrivateGroupsMutation(request, env, session) {
+  const contentLength = Number(request.headers.get('Content-Length') || 0);
+  if (contentLength > MAX_PRIVATE_STATE_BYTES) {
+    throw new Response('A alteração granular excede o limite permitido.', { status: 413 });
+  }
+  const body = await request.json().catch(() => ({}));
+  const mutationId = String(body.mutationId || '').trim();
+  if (!/^[a-z0-9_-]{8,120}$/i.test(mutationId)) {
+    throw new Error('O identificador da alteração granular é inválido.');
+  }
+
+  const storage = await privateStorageBackend(env);
+  if (storage.backend !== 'd1' || !storage.d1.active) {
+    throw new Response('As gravações granulares exigem que o D1 esteja ativo.', { status: 409 });
+  }
+  if (storage.d1.schemaVersion !== D1_SCHEMA_VERSION) {
+    throw new Response(`Aplique as migrações do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
+  }
+
+  const previous = await readD1Mutation(env, mutationId);
+  if (previous) return { ...previous, idempotent: true };
+
+  const current = await readPrivateStateRecord(env, storage);
+  if (!current) throw new Response('O estado privado atual não foi encontrado.', { status: 404 });
+  const expectedRevision = String(body.expectedRevision || '');
+  if (!expectedRevision || expectedRevision !== current.revision) {
+    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.', { status: 409 });
+  }
+
+  const mutation = groupsMutationState(current.state, body);
+  const revision = crypto.randomUUID();
+  const updatedAt = new Date().toISOString();
+  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
+  const envelope = await privateStateEnvelope(mutation.nextState, { revision, updatedAt });
+  envelope.revision = revision;
+  envelope.updatedAt = updatedAt;
+
+  let applied;
+  try {
+    applied = await applyD1GroupsMutation(env, {
+      mutationId,
+      expectedRevision,
+      revision,
+      updatedAt,
+      updatedBy,
+      checksum: envelope.checksum,
+      nextState: mutation.nextState,
+      familyGroups: mutation.familyGroups,
+      mutualGroups: mutation.mutualGroups,
+      storageStatus: storage.d1
+    });
+  } catch (error) {
+    if (error?.code === 'REVISION_CONFLICT') {
+      throw new Response(error.message, { status: 409 });
+    }
+    throw error;
+  }
+
+  let mirrorWarning = '';
+  try {
+    await writeR2CurrentMirror(env, envelope, {
+      updatedBy,
+      reason: 'granular-d1-mirror',
+      label: 'Espelho após alteração granular de grupos'
+    });
+  } catch (error) {
+    mirrorWarning = `A alteração foi salva no D1, mas o espelho no R2 não pôde ser atualizado: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(mirrorWarning);
+  }
+
+  return { ...applied, summary: envelope.summary, mirrorWarning };
+}
+
 async function handlePrivateTreasuryMutation(request, env, session) {
   const contentLength = Number(request.headers.get('Content-Length') || 0);
   if (contentLength > MAX_PRIVATE_STATE_BYTES) {
@@ -1220,8 +1387,8 @@ export default {
           privateBackups: 'versioned-r2',
           privateBackupRetention: MAX_PRIVATE_BACKUPS,
           attachmentIntegrity: 'available',
-          privateAutosave: 'granular-treasury',
-          granularWrites: { treasury: storage.d1.schemaVersion >= 2, snapshotFallback: true }
+          privateAutosave: 'granular-treasury-groups',
+          granularWrites: { treasury: storage.d1.schemaVersion >= 2, groups: storage.d1.schemaVersion >= 3, snapshotFallback: true }
         }, 200, cors);
       }
 
@@ -1324,6 +1491,11 @@ export default {
       if (url.pathname === '/api/private-state/treasury' && request.method === 'PUT') {
         const session = await requireSession(request, env, ['admin']);
         return json(await handlePrivateTreasuryMutation(request, env, session), 200, cors);
+      }
+
+      if (url.pathname === '/api/private-state/groups' && request.method === 'PUT') {
+        const session = await requireSession(request, env, ['admin']);
+        return json(await handlePrivateGroupsMutation(request, env, session), 200, cors);
       }
 
       if (url.pathname === '/api/private-state/backups' && request.method === 'GET') {

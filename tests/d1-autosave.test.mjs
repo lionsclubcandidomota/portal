@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import { createPortalRuntimeContext } from '../assets/js/modules/portal-runtime/context.js';
 import { createPersistenceActions } from '../assets/js/modules/portal-runtime/persistence.js';
 import { createPrivateSyncActions } from '../assets/js/modules/portal-runtime/private-sync.js';
-import { createTreasuryPrivateMutation } from '../assets/js/modules/secure-storage/private-mutations.js';
+import {
+  createGroupsPrivateMutation,
+  createTreasuryPrivateMutation
+} from '../assets/js/modules/secure-storage/private-mutations.js';
 import {
   createPrivatePortalState,
   createPublicPortalState,
@@ -235,6 +238,64 @@ test('fila privada prefere endpoint granular quando somente a Tesouraria mudou',
   assert.equal(result.ok, true);
   assert.equal(result.mode, 'granular-treasury');
   assert.equal(granularWrites, 1);
+  assert.equal(fullWrites, 0);
+});
+
+
+
+test('diferença exclusiva de grupos gera mutação granular por grupo alterado', () => {
+  const previous = baseState();
+  previous.familyGroups.push({ id: 'fam-1', name: 'Família', memberIds: ['m-1'], primaryMemberId: 'm-1' });
+  previous.mutualGroups.push({ id: 'mut-1', name: 'Mútua', memberships: [], events: [] });
+  const next = clone(previous);
+  next.familyGroups[0].memberIds.push('m-2');
+  next.mutualGroups[0].events.push({ id: 'mue-1', deceasedName: 'Associado', deathDate: '2026-08-07', participantIds: ['m-1'] });
+
+  const mutation = createGroupsPrivateMutation(previous, next);
+  assert.equal(mutation.scope, 'groups');
+  assert.equal(mutation.familyGroups.upserts.length, 1);
+  assert.equal(mutation.mutualGroups.upserts.length, 1);
+  assert.equal(mutation.changes, 2);
+
+  next.treasury.push({ id: 'mov-1', entry: 10, exit: 0 });
+  assert.equal(createGroupsPrivateMutation(previous, next), null);
+});
+
+test('fila privada usa endpoint granular para grupos familiares e Mútuas', async () => {
+  let groupWrites = 0;
+  let fullWrites = 0;
+  const initial = baseState();
+  initial.mutualGroups.push({ id: 'mut-1', name: 'Mútua', memberships: [], events: [] });
+  const fixture = setup(initial, {
+    hasActiveSecureStorageSession: () => true,
+    collectSecureTreasuryObjectKeys: () => new Set(),
+    prepareSecureTreasuryAttachmentsForPublication: async state => ({
+      state: clone(state), convertedCount: 0, deletedPublicPaths: [], uploadedObjectKeys: []
+    }),
+    createTreasuryPrivateMutation,
+    createGroupsPrivateMutation,
+    savePrivateGroupsMutation: async (_state, mutation, options) => {
+      groupWrites += 1;
+      assert.equal(mutation.mutualGroups.upserts.length, 1);
+      assert.match(options.mutationId, /^groups-/);
+      return { revision: 'rev-groups', backend: 'd1', mode: 'granular-groups' };
+    },
+    savePrivatePortalState: async () => {
+      fullWrites += 1;
+      return { revision: 'rev-full', backend: 'd1' };
+    },
+    deleteSecureTreasuryObjects: async () => ({ deleted: 0 })
+  });
+  fixture.getState().mutualGroups[0].events.push({
+    id: 'mue-1', deceasedName: 'Associado', deathDate: '2026-08-07', participantIds: []
+  });
+  const privateSync = createPrivateSyncActions(fixture.context);
+  privateSync.schedule({ message: 'Registrar evento.' });
+  const result = await privateSync.flush();
+
+  assert.equal(result.ok, true);
+  assert.equal(result.mode, 'granular-groups');
+  assert.equal(groupWrites, 1);
   assert.equal(fullWrites, 0);
 });
 

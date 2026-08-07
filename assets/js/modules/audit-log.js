@@ -1,1 +1,1 @@
-export { createAuditLogController } from './audit-log/controller.js?v=6.40.0';
+export { createAuditLogController } from './audit-log/controller.js?v=6.41.0';

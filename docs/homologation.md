@@ -1,4 +1,4 @@
-# Homologação — v6.40.0
+# Homologação — v6.41.0
 
 ## Fluxos prioritários do Portal
 
@@ -120,3 +120,17 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 5. Salve uma movimentação privada e confirme o D1.
 6. Publique um aviso público e confirme que o Worker usa o segredo sem solicitar token.
 7. Saia e confirme que a sessão anterior não pode mais acessar as rotas privadas.
+
+
+## Gravação granular de grupos — versão 6.41.0
+
+1. Aplique `0004_group_granular_writes.sql` e publique o Worker 1.7.0 antes do Portal.
+2. Confirme no `/health` `schemaVersion: 3`, `privateAutosave: "granular-treasury-groups"` e `granularWrites.groups: true`.
+3. Crie um grupo familiar, aguarde **Banco sincronizado**, recarregue a página e confirme nome, titular e participantes.
+4. Edite somente um grupo familiar e confirme que movimentações e Mútuas permanecem inalteradas.
+5. Crie ou edite um grupo de Mútuas, altere participantes e confirme persistência após recarregar.
+6. Registre um falecimento e confirme que o evento e a lista congelada de participantes reaparecem após recarregar.
+7. Tente repetir a mesma solicitação em uma simulação de falha de rede e confirme ausência de grupos ou eventos duplicados.
+8. Abra o painel do D1 e confirme que as linhas gravadas cresceram apenas de forma compatível com os grupos e vínculos alterados.
+9. Crie uma movimentação e confirme que o endpoint granular da Tesouraria continua funcionando.
+10. Confirme que nenhuma alteração privada cria pendência em **Publicar conteúdo público**.

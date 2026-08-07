@@ -36,4 +36,4 @@ Uma edição comum utiliza um lote fixo de nove comandos SQL, independentemente 
 
 ## Fallback
 
-A sincronização completa continua disponível quando outras coleções privadas mudam, quando existem identificadores inválidos/repetidos ou quando a operação supera 60 registros.
+A sincronização completa continua disponível quando contas, categorias, configurações ou múltiplos domínios privados mudam na mesma operação, quando existem identificadores inválidos/repetidos ou quando a operação supera 60 registros. Grupos familiares e Mútuas possuem rota granular própria a partir da versão 6.41.0.

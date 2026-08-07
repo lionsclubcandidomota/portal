@@ -1,5 +1,5 @@
-import { createPrivatePortalState } from '../../core/portal-data-boundary.js?v=6.40.0';
-import { statesAreEquivalent } from '../../core/portal-state.js?v=6.40.0';
+import { createPrivatePortalState } from '../../core/portal-data-boundary.js?v=6.41.0';
+import { statesAreEquivalent } from '../../core/portal-state.js?v=6.41.0';
 import {
   getSecureStoragePrivateRevision,
   readSecureStorageJson as readJson,
@@ -7,85 +7,139 @@ import {
   secureStorageApiUrl as apiUrl,
   secureStorageJsonHeaders as jsonHeaders,
   setSecureStoragePrivateRevision
-} from './session-store.js?v=6.40.0';
+} from './session-store.js?v=6.41.0';
 
 const MAX_GRANULAR_TREASURY_CHANGES = 60;
+const MAX_GRANULAR_GROUP_CHANGES = 40;
 
 function clone(value) {
   if (typeof structuredClone === 'function') return structuredClone(value);
   return JSON.parse(JSON.stringify(value));
 }
 
-function privateWithoutTreasury(state) {
+function privateWithoutCollections(state, omittedKeys = []) {
   const privateState = createPrivatePortalState(state || {});
-  const { treasury: ignored, ...rest } = privateState;
-  return rest;
+  const omitted = new Set(omittedKeys);
+  return Object.fromEntries(Object.entries(privateState).filter(([key]) => !omitted.has(key)));
 }
 
-function movementMap(movements) {
+function collectionMap(values, valueKey) {
   const map = new Map();
-  for (const [index, movement] of (Array.isArray(movements) ? movements : []).entries()) {
-    const id = String(movement?.id || '').trim();
+  for (const [index, value] of (Array.isArray(values) ? values : []).entries()) {
+    const id = String(value?.id || '').trim();
     if (!id || map.has(id)) return null;
-    map.set(id, { movement, sortOrder: index });
+    map.set(id, { [valueKey]: value, sortOrder: index });
   }
   return map;
 }
 
-export function createTreasuryPrivateMutation(previousState, nextState) {
-  if (!statesAreEquivalent(privateWithoutTreasury(previousState), privateWithoutTreasury(nextState))) {
-    return null;
-  }
-
-  const previousPrivate = createPrivatePortalState(previousState || {});
-  const nextPrivate = createPrivatePortalState(nextState || {});
-  const previous = movementMap(previousPrivate.treasury);
-  const next = movementMap(nextPrivate.treasury);
+function collectionDelta(previousValues, nextValues, valueKey) {
+  const previous = collectionMap(previousValues, valueKey);
+  const next = collectionMap(nextValues, valueKey);
   if (!previous || !next) return null;
 
   const deletes = [...previous.keys()].filter(id => !next.has(id));
   const upserts = [];
   for (const [id, entry] of next.entries()) {
     const before = previous.get(id);
-    if (!before || !statesAreEquivalent(before.movement, entry.movement)) {
-      upserts.push({ movement: clone(entry.movement), sortOrder: entry.sortOrder });
+    if (!before || !statesAreEquivalent(before[valueKey], entry[valueKey])) {
+      upserts.push({ [valueKey]: clone(entry[valueKey]), sortOrder: entry.sortOrder });
     }
   }
+  return { upserts, deletes, changes: upserts.length + deletes.length };
+}
 
-  if (!upserts.length && !deletes.length) return null;
-  if (upserts.length + deletes.length > MAX_GRANULAR_TREASURY_CHANGES) return null;
+export function createTreasuryPrivateMutation(previousState, nextState) {
+  if (!statesAreEquivalent(
+    privateWithoutCollections(previousState, ['treasury']),
+    privateWithoutCollections(nextState, ['treasury'])
+  )) return null;
+
+  const previousPrivate = createPrivatePortalState(previousState || {});
+  const nextPrivate = createPrivatePortalState(nextState || {});
+  const delta = collectionDelta(previousPrivate.treasury, nextPrivate.treasury, 'movement');
+  if (!delta || !delta.changes || delta.changes > MAX_GRANULAR_TREASURY_CHANGES) return null;
+  return { scope: 'treasury', ...delta };
+}
+
+export function createGroupsPrivateMutation(previousState, nextState) {
+  if (!statesAreEquivalent(
+    privateWithoutCollections(previousState, ['familyGroups', 'mutualGroups']),
+    privateWithoutCollections(nextState, ['familyGroups', 'mutualGroups'])
+  )) return null;
+
+  const previousPrivate = createPrivatePortalState(previousState || {});
+  const nextPrivate = createPrivatePortalState(nextState || {});
+  const familyGroups = collectionDelta(previousPrivate.familyGroups, nextPrivate.familyGroups, 'group');
+  const mutualGroups = collectionDelta(previousPrivate.mutualGroups, nextPrivate.mutualGroups, 'group');
+  if (!familyGroups || !mutualGroups) return null;
+  const changes = familyGroups.changes + mutualGroups.changes;
+  if (!changes || changes > MAX_GRANULAR_GROUP_CHANGES) return null;
   return {
-    scope: 'treasury',
-    upserts,
-    deletes,
-    changes: upserts.length + deletes.length
+    scope: 'groups',
+    familyGroups,
+    mutualGroups,
+    changes
   };
 }
 
-export async function savePrivateTreasuryMutation(state, mutation, { mutationId = '' } = {}) {
+async function savePrivateMutation(state, mutation, {
+  mutationId = '',
+  endpoint,
+  fallbackMode,
+  errorMessage,
+  body
+} = {}) {
   const { profile, token } = requireSession(state, ['admin']);
   const expectedRevision = getSecureStoragePrivateRevision();
   if (!expectedRevision) throw new Error('A revisão privada ainda não foi carregada para a gravação granular.');
-  const response = await fetch(apiUrl(profile.workerUrl, '/api/private-state/treasury'), {
+  const response = await fetch(apiUrl(profile.workerUrl, endpoint), {
     method: 'PUT',
     headers: jsonHeaders(token),
-    body: JSON.stringify({
-      mutationId,
-      expectedRevision,
-      upserts: Array.isArray(mutation?.upserts) ? mutation.upserts : [],
-      deletes: Array.isArray(mutation?.deletes) ? mutation.deletes : []
-    }),
+    body: JSON.stringify({ mutationId, expectedRevision, ...body(mutation) }),
     cache: 'no-store'
   });
-  const payload = await readJson(response, 'Não foi possível salvar as movimentações no D1');
+  const payload = await readJson(response, errorMessage);
   setSecureStoragePrivateRevision(payload.revision || '');
   return {
     saved: true,
-    mode: String(payload.mode || 'granular-treasury'),
+    mode: String(payload.mode || fallbackMode),
     revision: getSecureStoragePrivateRevision(),
     updatedAt: String(payload.updatedAt || ''),
     backend: String(payload.backend || ''),
     mutationId: String(payload.mutationId || mutationId),
     changes: payload.changes && typeof payload.changes === 'object' ? payload.changes : {}
   };
+}
+
+export function savePrivateTreasuryMutation(state, mutation, options = {}) {
+  return savePrivateMutation(state, mutation, {
+    ...options,
+    endpoint: '/api/private-state/treasury',
+    fallbackMode: 'granular-treasury',
+    errorMessage: 'Não foi possível salvar as movimentações no D1',
+    body: value => ({
+      upserts: Array.isArray(value?.upserts) ? value.upserts : [],
+      deletes: Array.isArray(value?.deletes) ? value.deletes : []
+    })
+  });
+}
+
+export function savePrivateGroupsMutation(state, mutation, options = {}) {
+  return savePrivateMutation(state, mutation, {
+    ...options,
+    endpoint: '/api/private-state/groups',
+    fallbackMode: 'granular-groups',
+    errorMessage: 'Não foi possível salvar os grupos no D1',
+    body: value => ({
+      familyGroups: {
+        upserts: Array.isArray(value?.familyGroups?.upserts) ? value.familyGroups.upserts : [],
+        deletes: Array.isArray(value?.familyGroups?.deletes) ? value.familyGroups.deletes : []
+      },
+      mutualGroups: {
+        upserts: Array.isArray(value?.mutualGroups?.upserts) ? value.mutualGroups.upserts : [],
+        deletes: Array.isArray(value?.mutualGroups?.deletes) ? value.mutualGroups.deletes : []
+      }
+    })
+  });
 }

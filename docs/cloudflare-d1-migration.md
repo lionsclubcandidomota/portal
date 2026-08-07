@@ -17,7 +17,7 @@ A migração não altera o JSON público do GitHub Pages e não expõe dados fin
 Portal no GitHub Pages
         │ sessão autenticada
         ▼
-Cloudflare Worker 1.6.0
+Cloudflare Worker 1.7.0
         ├── D1: dados privados estruturados
         └── R2: anexos, backups e espelho de contingência
 ```
@@ -199,3 +199,12 @@ Consulte `docs/admin-authentication-d1.md` para o procedimento completo.
 Aplique `0003_treasury_granular_writes.sql` e publique o Worker 1.6.0. Alterações exclusivas em movimentações e anexos passam a usar `PUT /api/private-state/treasury`, com revisão otimista e idempotência. As demais coleções continuam usando `PUT /api/private-state` até suas respectivas etapas de migração.
 
 O `/health` deve informar `privateAutosave: "granular-treasury"`, `schemaVersion: 2` e `granularWrites.treasury: true`.
+
+
+## Gravação granular de grupos — versão 6.41.0
+
+Aplique `0004_group_granular_writes.sql` e publique o Worker 1.7.0. Alterações exclusivas em grupos familiares e grupos de Mútuas passam a usar `PUT /api/private-state/groups`. Cada grupo de Mútuas é atualizado junto com seus vínculos, eventos e participantes no mesmo lote transacional.
+
+O `/health` deve informar `privateAutosave: "granular-treasury-groups"`, `schemaVersion: 3`, `granularWrites.treasury: true` e `granularWrites.groups: true`. A sincronização completa continua disponível para alterações mistas e como fallback de contingência.
+
+Consulte `docs/d1-granular-groups.md` para detalhes de implantação, concorrência e homologação.
