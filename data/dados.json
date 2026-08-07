@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-07T18:17:46.385Z",
-  "deploymentId": "1786126666385-eee5146e-cf5e-46ef-965b-aad107bca4db",
+  "updatedAt": "2026-08-07T18:29:04.062Z",
+  "deploymentId": "1786127344062-86d020a2-54a0-4782-a57c-9ca6d95a06a7",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 9,
   "version": 9,
@@ -2178,6 +2178,39 @@
         "onlineUrl": "",
         "description": "**🦁 É SÁBADO, 08 DE AGOSTO – DIA \"D\" LIONS! 🦁**\n\n**Todo segundo sábado de cada mês é o nosso Dia \"D\" Lions!**\n\nConvido todos os companheiros e companheiras a vestirem, com muito orgulho, a camiseta, o colete, o jaleco, o boné ou qualquer peça que represente o Lions, demonstrando o nosso ORGULHO DE SER LEÃO! 🦁💙💛\n\n🚗🚎✈️ Vai viajar? Não se esqueça de levar sua camiseta do Lions!\n\nVamos vestir as cores do Lions para ir ao mercado, à feira, ao shopping, ao trabalho, durante nossas atividades de serviços leonísticos ou em qualquer outro lugar. Quanto mais visível estivermos, mais divulgaremos a nossa missão de servir.\n\n📸 Não se esqueçam de tirar uma foto e publicar em suas redes sociais (Facebook, Instagram, TikTok, YouTube, WhatsApp e outras), utilizando as hashtags:\n\n#DiaDLions #DiaDLionsDLB1\n\n**Vamos mostrar a força do nosso movimento e o orgulho de fazer parte desta grande família leonística! 🤗🦁🦁🦁**",
         "status": "Confirmado"
+      },
+      {
+        "id": "e_msja1l7l_gjgjn6",
+        "name": "💻 Treinamento de Tecnologia da Informação (TI)",
+        "date": "2026-08-10",
+        "time": "19:30",
+        "locationType": "physical",
+        "location": "Online - O link ficara disponível no dia",
+        "onlineUrl": "",
+        "description": "📅 No dia 10 de agosto (segunda-feira), teremos o treinamento de Tecnologia da Informação (TI), que será conduzido pelo CL João Augusto Batista de Paula (LC Cândido Mota).\n\n💻 Este treinamento é de extrema importância para os(as) Assessores(as) de Marketing dos Clubes, mas é aberto e recomendado a TODOS os associados, independentemente de exercerem cargos. Quanto maior a participação, mais fortalecemos o trabalho dos nossos Clubes! 🤝\n\n📌 Organizem-se em seus Clubes e incentivem a participação de todos!\n\n🏆 Lembramos que os treinamentos são critérios obrigatórios para a conquista do Prêmio Excelência de Clube de Lions Internacional.\n\n🎖️ E tem mais: o Distrito premiará os Clubes que participarem de todos os treinamentos do Ano Leonístico 2026/2027!\n\n💙 Contamos com a presença e o comprometimento de todos para fazermos um excelente trabalho neste AL 2026/2027.\n\n🙌 Sua participação é fundamental! Esperamos vocês! 🦁",
+        "status": "Confirmado"
+      },
+      {
+        "id": "e_msja259t_ohl7yt",
+        "name": "📊 Treinamento de Métricas e Portal Lions",
+        "date": "2026-08-11",
+        "time": "19:30",
+        "locationType": "physical",
+        "location": "Online - O link ficara disponível no dia",
+        "onlineUrl": "",
+        "description": "📅 No dia 11 de agosto (terça-feira), teremos o treinamento de Métricas e Portal Lions, que será conduzido pela PMJF Karina Casanova Lima.\n\n📊 Este treinamento é de extrema importância para os(as) Secretários(as) dos Clubes, mas é aberto e recomendado a TODOS os associados, independentemente de exercerem cargos. Conhecer as métricas e utilizar corretamente o Portal Lions fortalece a gestão do Clube e contribui para o sucesso de nossas ações! 🤝\n\n📌 Organizem-se em seus Clubes e incentivem a participação de todos!\n\n🏆 Lembramos que os treinamentos são critérios obrigatórios para a conquista do Prêmio Excelência de Clube de Lions Internacional.\n\n🎖️ E tem mais: o Distrito premiará os Clubes que participarem de todos os treinamentos do Ano Leonístico 2026/2027!\n\n💙 Contamos com a presença e o comprometimento de todos para realizarmos um excelente trabalho neste AL 2026/2027.\n\n🙌 Sua participação faz a diferença! Esperamos vocês! 🦁",
+        "status": "Confirmado"
+      },
+      {
+        "id": "e_msja3kcp_qeqaax",
+        "name": "💙 APAEXONADOS 2026",
+        "date": "2026-09-13",
+        "time": "12:00",
+        "locationType": "physical",
+        "location": "Apae de Cândido Mota",
+        "onlineUrl": "",
+        "description": "**2ª edição do nosso APAEXONADOS**",
+        "status": "Em planejamento"
       }
     ],
     "meetings": [
@@ -2208,6 +2241,17 @@
         "onlineUrl": "",
         "theme": "Prestação de contas do evento 🐷 Porco no Rolete",
         "notes": "🤝 Vamos nos reunir para a prestação de contas do evento **Porco no Rolete**, incluindo o recebimento dos convites e o alinhamento dos demais assuntos relacionados.\n💛Contamos com a presença de todos!",
+        "status": "Em andamento"
+      },
+      {
+        "id": "m_msja2zmc_0bsuvy",
+        "date": "2026-08-11",
+        "time": "20:00",
+        "locationType": "physical",
+        "location": "Sede da Apae de Cândido Mota",
+        "onlineUrl": "",
+        "theme": "🦁 Reunião de Alinhamento",
+        "notes": "🎉 No dia 13 de setembro acontece a 2ª edição do nosso APAEXONADOS!\n\n📋 Para alinharmos todos os detalhes e organizarmos esse grande evento, teremos uma reunião na próxima terça-feira, dia 11 de agosto, na sede. 🏢\n\n🤝 Contamos com a presença de todos! Juntos vamos fazer mais uma edição inesquecível! 💙✨",
         "status": "Em andamento"
       }
     ],
