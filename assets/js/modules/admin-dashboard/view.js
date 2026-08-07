@@ -73,7 +73,7 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
   return `
     <section class="admin-command-header admin-dashboard-header">
       <div><span class="admin-eyebrow">Visão gerencial</span><h2>${dashboardTitle}</h2><p>Acompanhe os principais indicadores do clube e identifique rapidamente o que exige atenção.</p>${directorMode ? '<div class="notice medium"><strong>👁️ Acesso somente leitura</strong><p>Consultas, filtros, relatórios e exportações estão liberados. Alterações permanecem bloqueadas.</p></div>' : ''}</div>
-      <div class="admin-session-box"><span class="admin-session-dot"></span><div><strong>${sessionLabel}</strong><small>lionsclubcandidomota.github.io/portal</small></div><button class="btn btn-ghost btn-sm" id="logoutInlineBtn" type="button">Sair</button></div>
+      <div class="admin-session-box"><span class="admin-session-dot"></span><div><strong>${sessionLabel}</strong><small>Cloudflare D1 · dados operacionais</small></div><button class="btn btn-ghost btn-sm" id="logoutInlineBtn" type="button">Sair</button></div>
     </section>
 
     <section class="admin-period-panel" aria-label="Filtro de período do dashboard">

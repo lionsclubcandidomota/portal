@@ -1,7 +1,7 @@
-import { cloneState } from '../../core/portal-state.js?v=6.46.0';
-import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.46.0';
-import { buildPublicationMessage } from './domain.js?v=6.46.0';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.46.0';
+import { cloneState } from '../../core/portal-state.js?v=6.47.0';
+import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.47.0';
+import { buildPublicationMessage } from './domain.js?v=6.47.0';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.47.0';
 
 export function createPublicationActions(context, privateSync = null) {
   const { dependencies, services, model } = context;
@@ -126,7 +126,7 @@ export function createPublicationActions(context, privateSync = null) {
         }
       );
 
-      model.githubFileSha = result.sha;
+      model.githubFileSha = String(result.revision || result.sha || '');
       model.lastSyncInfo = result;
       model.pendingChanges = 0;
       model.pendingAuditBatchId = '';
@@ -134,55 +134,58 @@ export function createPublicationActions(context, privateSync = null) {
       model.pendingDeletedPublicPaths.clear();
       dependencies.auditLog?.linkPublication?.(auditBatchId, { ...result, message });
 
+      let publishedPublicState = publication.state;
+      try {
+        const confirmed = await services.loadPublicGitHubPayload?.();
+        if (confirmed?.state) publishedPublicState = confirmed.state;
+      } catch (error) {
+        console.warn('A revisão foi gravada no D1, mas a confirmação de leitura será repetida na próxima sincronização.', error);
+      }
+
       const privateState = services.createPrivatePortalState?.(context.currentState()) || {};
-      const mergedState = services.mergePublicAndPrivatePortalState?.(publication.state, privateState)
-        || publication.state;
+      const mergedState = services.mergePublicAndPrivatePortalState?.(publishedPublicState, privateState)
+        || publishedPublicState;
       context.replaceCurrentState(mergedState);
       services.saveState(context.currentState());
       context.storeSyncedState(context.currentState());
       context.storeSyncMeta();
 
-      context.setRemoteVersion(result.deploymentId);
-      context.setAwaitingDeployment(result.deploymentId);
+      const revision = String(result.revision || result.deploymentId || result.sha || '');
+      if (revision) context.setRemoteVersion(revision);
+      context.setAwaitingDeployment('');
 
       model.latestCommitInfo = {
-        sha: result.commitSha || '',
-        url: result.commitUrl || '',
-        date: result.committedAt || '',
-        message
+        sha: revision,
+        url: '',
+        date: result.publishedAt || result.committedAt || '',
+        message,
+        source: 'd1'
       };
 
       const uploadedFileCount = Number(result.mediaCount || 0);
       const uploadSummary = uploadedFileCount > 0
-        ? `Conteúdo público enviado com ${uploadedFileCount} arquivo(s); atualizando visitantes`
-        : 'Conteúdo público enviado; atualizando visitantes';
-      context.publishStatus('publishing', uploadSummary);
-      dependencies.toast?.({ type: 'info', title: 'Publicação enviada', message: uploadSummary });
+        ? `Conteúdo público gravado no D1 com ${uploadedFileCount} mídia(s) armazenada(s) no R2.`
+        : 'Conteúdo público gravado e disponibilizado pelo D1.';
+      model.lastSyncInfo = {
+        ...model.lastSyncInfo,
+        publishedAt: result.publishedAt || result.committedAt || new Date().toISOString(),
+        source: 'd1'
+      };
+      dependencies.auditLog?.confirmPublication?.(revision, model.lastSyncInfo.publishedAt);
+      context.storeSyncMeta();
+      context.publishStatus('published');
+      dependencies.toast?.({
+        type: 'success',
+        title: 'Portal público atualizado',
+        message: uploadSummary
+      });
       if (dependencies.getCurrentView?.() === 'admin') dependencies.renderAdmin?.();
-
-      services.waitForPagesDeployment(result.deploymentId, {
-        timeout: 120000,
-        interval: 4000
-      })
-        .then(publicationResult => {
-          model.lastSyncInfo = { ...model.lastSyncInfo, ...publicationResult };
-          context.setAwaitingDeployment('');
-          dependencies.auditLog?.confirmPublication?.(result.deploymentId, publicationResult.publishedAt);
-          context.storeSyncMeta();
-          context.publishStatus('published');
-          dependencies.toast?.({ type: 'success', title: 'Portal público sincronizado', message: 'As alterações públicas já estão disponíveis para os visitantes.' });
-          if (dependencies.getCurrentView?.() === 'admin') dependencies.renderAdmin?.();
-        })
-        .catch(() => {
-          context.publishStatus('publishing', 'Envio concluído; propagação pública em andamento');
-          if (dependencies.getCurrentView?.() === 'admin') dependencies.renderAdmin?.();
-        });
 
       return { ok: true, reason: 'published', result };
     } catch (error) {
       console.error(error);
       context.publishStatus('error');
-      dependencies.toast?.(error?.message || 'Falha ao sincronizar o conteúdo público com o GitHub.');
+      dependencies.toast?.(error?.message || 'Falha ao gravar o conteúdo público no banco de dados.');
       return { ok: false, reason: 'error', error };
     }
   };

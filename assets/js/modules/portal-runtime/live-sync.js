@@ -1,14 +1,15 @@
-import { cloneState } from '../../core/portal-state.js?v=6.46.0';
-import { accessSnapshot } from './authorization.js?v=6.46.0';
+import { cloneState } from '../../core/portal-state.js?v=6.47.0';
+import { accessSnapshot } from './authorization.js?v=6.47.0';
 
-const DEFAULT_INTERVAL_MS = 45_000;
+const DEFAULT_INTERVAL_MS = 60_000;
 const MODULE_NAMES = Object.freeze([
   'reference',
   'groups',
   'treasury',
   'memberships',
   'mutuals',
-  'member-directory'
+  'member-directory',
+  'public'
 ]);
 
 function moduleRevision(payload, module) {
@@ -53,6 +54,20 @@ export function createLiveSyncActions(context, privateSync = null) {
   };
 
   const applyModules = async (modules, revisions) => {
+    if (modules.includes('public')) {
+      const payload = await services.loadPublicGitHubPayload?.();
+      if (payload?.state) {
+        const privateState = services.createPrivatePortalState?.(context.currentState()) || {};
+        const merged = services.mergePublicAndPrivatePortalState?.(payload.state, privateState) || payload.state;
+        context.replaceCurrentState(merged);
+        services.saveState(merged);
+        context.storeSyncedState(merged);
+        if (payload.revision || payload.deploymentId) {
+          context.setRemoteVersion(payload.revision || payload.deploymentId);
+        }
+      }
+    }
+
     let patch = {};
     if (modules.includes('reference')) {
       const reference = await services.loadD1ReferenceModule?.(context.currentState());
@@ -72,11 +87,11 @@ export function createLiveSyncActions(context, privateSync = null) {
     }
 
     dependencies.invalidateOperationalReads?.(modules);
-    if (modules.includes('reference')) dependencies.applySettings?.();
+    if (modules.includes('reference') || modules.includes('public')) dependencies.applySettings?.();
 
     const currentView = dependencies.getCurrentView?.();
     const shouldRender = ['admin', 'settings', 'treasury'].includes(String(currentView || ''))
-      || modules.some(module => ['treasury', 'memberships', 'mutuals'].includes(module));
+      || modules.some(module => ['treasury', 'memberships', 'mutuals', 'public'].includes(module));
     if (shouldRender) dependencies.renderCurrentView?.();
 
     lastAppliedAt = String(revisions?.updatedAt || new Date().toISOString());

@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { collectSourceFiles } from './release-files.mjs';
 import { buildFileManifest, comparableManifest } from './release-manifest-lib.mjs';
@@ -9,7 +9,7 @@ const outputPath = path.join(projectRoot, 'release-manifest.json');
 
 async function buildManifest() {
   const packageJson = JSON.parse(await readFile(path.join(projectRoot, 'package.json'), 'utf8'));
-  const portalData = JSON.parse(await readFile(path.join(projectRoot, 'data', 'dados.json'), 'utf8'));
+  const schemaModule = await import(`${pathToFileURL(path.join(projectRoot, 'assets/js/core/portal-schema.js')).href}?manifest=${Date.now()}`);
   const files = await collectSourceFiles(projectRoot, { includeManifest: false });
 
   return buildFileManifest({
@@ -18,7 +18,7 @@ async function buildManifest() {
     application: packageJson.name,
     artifactType: 'source',
     version: packageJson.version,
-    schemaVersion: portalData.schemaVersion,
+    schemaVersion: schemaModule.CURRENT_SCHEMA_VERSION,
     generatedAt: packageJson.releaseTimestamp
   });
 }

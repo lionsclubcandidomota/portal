@@ -1,8 +1,8 @@
 const STATUS_LABELS = {
   offline: 'Somente local',
   pending: 'Alterações públicas pendentes',
-  syncing: 'Criando commit…',
-  publishing: 'Publicando no site…',
+  syncing: 'Gravando no banco…',
+  publishing: 'Atualizando portal…',
   published: 'Disponível no site',
   synced: 'Sincronizado',
   error: 'Falha na sincronização'
@@ -148,7 +148,7 @@ export function createPublishCenterController({
     } else if (status === 'syncing') {
       percent = 35;
       title.textContent = 'Salvando alterações';
-      detail.textContent = 'Criando a atualização no GitHub…';
+      detail.textContent = 'Gravando a nova revisão pública no Cloudflare D1…';
       if (statusIcon) statusIcon.textContent = '↻';
     } else if (status === 'publishing') {
       percent = 88;
@@ -211,7 +211,7 @@ export function createPublishCenterController({
     if (sendButton) {
       sendButton.disabled = !githubToken || pendingChanges === 0 || isBusy;
       sendButton.textContent = status === 'syncing'
-        ? 'Salvando…'
+        ? 'Gravando…'
         : status === 'publishing'
           ? 'Publicando…'
           : 'Publicar conteúdo público';

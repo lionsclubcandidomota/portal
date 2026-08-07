@@ -1,7 +1,7 @@
 const STATUS_LABELS = Object.freeze({
   pending: 'Pendente',
   saved: 'Salva no banco',
-  published: 'Enviada ao GitHub',
+  published: 'Gravada no D1',
   confirmed: 'Publicada no portal',
   discarded: 'Descartada',
   replaced: 'Substituída'
@@ -47,17 +47,13 @@ function renderBatch(batch) {
   const actorLabel = batch.actor.login && batch.actor.login !== batch.actor.name
     ? `${batch.actor.name} (@${batch.actor.login})`
     : batch.actor.name;
-  const commitLink = batch.publication?.commitUrl
-    ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(batch.publication.commitUrl)}" target="_blank" rel="noopener noreferrer">Ver commit</a>`
-    : '';
   const outcome = batch.outcome?.reason ? `<p class="audit-batch-outcome">${escapeHtml(batch.outcome.reason)}</p>` : '';
 
   return `<article class="audit-batch is-${escapeHtml(batch.status)}">
     <header class="audit-batch-header"><div class="audit-actor"><span>${escapeHtml(initials(batch.actor))}</span><div><strong>${escapeHtml(actorLabel)}</strong><small>${formatDate(batch.createdAt)}</small></div></div><span class="audit-status is-${escapeHtml(batch.status)}">${escapeHtml(STATUS_LABELS[batch.status] || batch.status)}</span></header>
-    <div class="audit-batch-summary"><div><strong>${batch.operations}</strong><small>operações</small></div><div><strong>${batch.changes}</strong><small>registros alterados</small></div>${batch.publication?.commitSha ? `<div><strong>${escapeHtml(batch.publication.commitSha.slice(0, 7))}</strong><small>commit</small></div>` : ''}</div>
+    <div class="audit-batch-summary"><div><strong>${batch.operations}</strong><small>operações</small></div><div><strong>${batch.changes}</strong><small>registros alterados</small></div>${batch.publication?.revision ? `<div><strong>${escapeHtml(batch.publication.revision.slice(0, 12))}</strong><small>revisão D1</small></div>` : ''}</div>
     ${outcome}
     <div class="audit-operations">${batch.entries.map(renderOperation).join('')}</div>
-    ${commitLink ? `<footer class="audit-batch-footer">${commitLink}</footer>` : ''}
   </article>`;
 }
 

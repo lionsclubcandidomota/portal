@@ -122,7 +122,7 @@ test('adaptador D1 preserva o estado privado e cria coleções relacionais', () 
     futurePrivateField: { enabled: true }
   };
   const model = decomposePrivateState(original);
-  assert.equal(D1_SCHEMA_VERSION, 8);
+  assert.equal(D1_SCHEMA_VERSION, 9);
   assert.equal(model.treasury.length, 1);
   assert.equal(model.treasury[0].attachments.length, 1);
   assert.equal(model.familyGroups[0].members.length, 2);

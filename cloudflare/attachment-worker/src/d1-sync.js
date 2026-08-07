@@ -4,7 +4,8 @@ export const D1_SYNC_MODULES = Object.freeze([
   'treasury',
   'memberships',
   'mutuals',
-  'member-directory'
+  'member-directory',
+  'public'
 ]);
 
 const MODULE_SET = new Set(D1_SYNC_MODULES);
@@ -44,7 +45,9 @@ export async function readD1ModuleRevisions(env) {
     throw new Error('O binding PORTAL_DB não está configurado no Worker.');
   }
   const db = env.PORTAL_DB;
-  const result = await db.prepare(`SELECT module, revision, updated_at, updated_by
+  const result = await db.prepare(`SELECT module, revision, updated_at, updated_by,
+      (SELECT value FROM portal_meta WHERE key = 'revision') AS state_revision,
+      (SELECT value FROM portal_meta WHERE key = 'updated_at') AS state_updated_at
     FROM portal_module_revisions ORDER BY module`).all();
   const rows = Array.isArray(result?.results) ? result.results : [];
   const modules = Object.fromEntries(D1_SYNC_MODULES.map(module => [module, {
@@ -61,12 +64,10 @@ export async function readD1ModuleRevisions(env) {
       updatedBy: text(row.updated_by)
     };
   });
-  const meta = await db.prepare(`SELECT
-    (SELECT value FROM portal_meta WHERE key = 'revision') AS revision,
-    (SELECT value FROM portal_meta WHERE key = 'updated_at') AS updated_at`).first();
+  const first = rows[0] || {};
   return {
-    revision: text(meta?.revision),
-    updatedAt: text(meta?.updated_at),
+    revision: text(first.state_revision),
+    updatedAt: text(first.state_updated_at),
     generatedAt: new Date().toISOString(),
     modules
   };

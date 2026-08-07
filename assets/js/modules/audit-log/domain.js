@@ -100,6 +100,7 @@ export function normalizeAuditEntry(entry = {}) {
     status,
     review: sanitizeAuditReview(entry.review),
     publication: entry.publication ? {
+      revision: text(entry.publication.revision || entry.publication.sha || entry.publication.commitSha || '', 180),
       commitSha: text(entry.publication.commitSha || '', 80),
       commitUrl: /^https:\/\//i.test(String(entry.publication.commitUrl || '')) ? String(entry.publication.commitUrl) : '',
       committedAt: entry.publication.committedAt || '',
@@ -139,6 +140,7 @@ export function linkAuditPublication(entries, batchId, publication = {}) {
     ...entry,
     status: 'published',
     publication: {
+      revision: publication.revision || publication.sha || publication.deploymentId || publication.commitSha || '',
       commitSha: publication.commitSha || '',
       commitUrl: publication.commitUrl || '',
       committedAt: publication.committedAt || new Date().toISOString(),

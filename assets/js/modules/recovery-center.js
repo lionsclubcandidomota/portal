@@ -1,1 +1,1 @@
-export { createRecoveryCenterController } from './recovery-center/controller.js?v=6.46.0';
+export { createRecoveryCenterController } from './recovery-center/controller.js?v=6.47.0';

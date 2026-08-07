@@ -33,8 +33,10 @@ test('layout de release separa site, Worker e código-fonte', async () => {
   assert.ok(siteFiles.includes('index.html'));
   assert.ok(siteFiles.includes('assets/css/app.css'));
   assert.ok(siteFiles.includes('assets/js/app.js'));
-  assert.ok(siteFiles.includes('data/dados.json'));
+  assert.equal(siteFiles.includes('data/dados.json'), false);
   assert.equal(siteFiles.includes('data/modelo.json'), false);
+  assert.equal(siteFiles.some(file => file.startsWith('public/members/')), false);
+  assert.equal(siteFiles.some(file => file.startsWith('public/treasury/')), false);
   assert.equal(siteFiles.some(file => file.startsWith('tests/')), false);
   assert.equal(siteFiles.some(file => file.startsWith('tools/')), false);
   assert.ok(workerFiles.includes('src/index.js'));

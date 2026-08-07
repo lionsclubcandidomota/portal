@@ -165,7 +165,7 @@ function prepareTreasuryAttachments(entry, assetsByPath) {
 /**
  * Converte imagens e anexos Data URL ainda presentes no estado em arquivos
  * publicáveis. O estado original não é alterado. As referências só devem
- * substituir o estado corrente depois que o commit remoto for confirmado.
+ * substituir o estado corrente depois que a revisão do D1 for confirmada.
  */
 export function preparePortalMediaForPublication(state) {
   const preparedState = cloneValue(state || {});

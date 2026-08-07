@@ -1,6 +1,6 @@
-import { migratePortalPayload } from '../../core/portal-schema.js?v=6.46.0';
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.46.0';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.46.0';
+import { migratePortalPayload } from '../../core/portal-schema.js?v=6.47.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.47.0';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.47.0';
 
 export function createPersistenceActions(context, privateSync = null) {
   const { dependencies, services, model } = context;
@@ -63,7 +63,7 @@ export function createPersistenceActions(context, privateSync = null) {
       dependencies.toast?.({
         type: 'warning',
         title: 'Salvamento privado pendente',
-        message: 'Configure e ative o armazenamento privado para gravar os dados sem publicar no GitHub.'
+        message: 'Configure e ative o D1 para gravar os dados privados sem alterar o conteúdo público.'
       });
     }
 

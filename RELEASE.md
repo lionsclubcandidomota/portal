@@ -1,71 +1,117 @@
-# Release 6.46.0
+# Release 6.47.0
 
 Data: 07/08/2026
 
 ## Escopo
 
-- Portal 6.46.0: sincronização automática e atualização seletiva dos módulos privados.
-- Worker 1.12.0: revisões por módulo e endpoints leves de referência e grupos.
-- D1 esquema 8: tabela `portal_module_revisions` e sinalização `module_revision_sync`.
+- Portal 6.47.0: todos os dados estruturados são lidos e gravados pelo Cloudflare D1.
+- Worker 1.13.0: API pública D1, publicação transacional, migração automática do conteúdo anterior e mídias públicas no R2.
+- D1 esquema 9: tabelas públicas, histórico de publicações e revisão do módulo público.
+- R2: mídias públicas, anexos privados e backups.
+- Hospedagem estática: somente a interface.
 
 ## Ordem obrigatória de implantação
 
-1. Extrair o Worker 1.12.0.
-2. Copiar o `wrangler.toml` já configurado da versão anterior.
-3. Executar:
+### 1. Manter a versão 6.46.0 publicada
 
-   ```bash
-   npm ci
-   npx wrangler deploy --config wrangler.toml
-   ```
+Não remova ainda `data/dados.json`, o logo ou as fotos antigas. Eles serão a fonte da importação inicial.
 
-4. Aplicar a migração:
+### 2. Preparar o Worker 1.13.0
 
-   ```bash
-   npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
-   ```
+Copie o `wrangler.toml` da versão anterior e mantenha os bindings `PORTAL_DB` e `ATTACHMENTS`.
 
-5. Confirmar a aplicação de `0009_module_revisions.sql`.
-6. Conferir o `/health` com Worker 1.12.0 e esquema D1 8.
-7. Publicar o Portal 6.46.0 no GitHub Pages.
+Adicione temporariamente:
 
-O Worker pode ser publicado antes da migração. Enquanto o esquema 8 ainda não estiver ativo, as rotas anteriores continuam operando e a sincronização automática fica apenas indisponível.
+```toml
+PUBLIC_DATA_URL = "https://lionsclubcandidomota.github.io/portal/data/dados.json"
+```
 
-## Resultado esperado no `/health`
+### 3. Publicar o Worker
+
+```bash
+npm ci
+npx wrangler deploy --config wrangler.toml
+```
+
+### 4. Aplicar a migração
+
+```bash
+npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
+```
+
+Confirme `0010_public_portal_d1.sql`.
+
+### 5. Importar o conteúdo público
+
+Faça logout e login novamente como Administrador. O Worker detecta o D1 público vazio e importa automaticamente o JSON e as mídias da versão 6.46.0.
+
+Como alternativa administrativa, a rota autenticada abaixo executa a mesma importação:
+
+```text
+POST /api/storage/migrate-public-d1
+```
+
+### 6. Conferir o `/health`
 
 ```json
 {
-  "workerVersion": "1.12.0",
-  "privateState": "d1",
+  "workerVersion": "1.13.0",
   "d1": {
     "active": true,
-    "schemaVersion": 8,
-    "requiredSchemaVersion": 8
+    "schemaVersion": 9,
+    "requiredSchemaVersion": 9
   },
   "automaticSync": {
     "available": true,
-    "intervalSeconds": 45,
-    "refreshOnFocus": true,
-    "moduleRevisions": true
+    "intervalSeconds": 60,
+    "lightweightRevisionCheck": true
   },
+  "publicData": {
+    "source": "d1",
+    "active": true,
+    "media": "cloudflare-r2"
+  },
+  "structuredDataSource": "cloudflare-d1",
   "snapshotPolicy": "recovery-only"
 }
 ```
 
-## Testes recomendados
+Contagens esperadas do conjunto atual:
 
-1. Abra o Portal em dois navegadores ou computadores.
-2. No primeiro, registre uma movimentação e aguarde **Banco sincronizado**.
-3. No segundo, mantenha a tela de Movimentações aberta e aguarde até 45 segundos, ou retorne para a aba.
-4. Confirme que os dados são consultados novamente sem `F5`.
-5. Altere uma categoria ou conta e confirme a atualização automática na outra sessão.
-6. Edite um grupo familiar ou de Mútua e confira a atualização seletiva.
-7. Mantenha um formulário aberto e confirme que a sincronização é adiada até o fechamento.
-8. Teste o botão manual de atualização como contingência.
+```text
+32 associados
+12 eventos
+3 reuniões
+2 avisos
+```
+
+### 7. Publicar o Portal 6.47.0
+
+Somente depois da conferência, publique `portal-site-v6.47.0.zip`. Esse pacote não contém o JSON operacional nem as fotos dinâmicas antigas.
+
+### 8. Encerrar a transição
+
+Depois da homologação:
+
+- remova `PUBLIC_DATA_URL` do Worker;
+- remova `GITHUB_TOKEN`, caso ainda esteja cadastrado;
+- mantenha os pacotes 6.46.0 e 1.12.0 durante a janela de rollback.
+
+## Testes essenciais
+
+1. Abrir o Portal como visitante e validar associados, agenda, reuniões e avisos.
+2. Abrir algumas fotos de associados.
+3. Entrar como Administrador e alterar um aviso.
+4. Publicar e conferir a nova revisão no D1.
+5. Abrir uma segunda sessão e validar atualização sem F5 em até 60 segundos.
+6. Testar Movimentações, Mensalidades, Mútuas, relatórios e anexos.
+7. Criar um backup manual e executar o diagnóstico de integridade.
+8. Confirmar que o site publicado não contém `data/dados.json`, `public/members` ou `public/treasury`.
 
 ## Segurança
 
-- As rotas exigem sessão autenticada.
-- Nenhuma senha, token ou conteúdo de anexo é retornado nas revisões.
-- Atualizações são adiadas quando há dados locais não confirmados.
-- O snapshot permanece reservado para backup e recuperação.
+- O navegador não acessa diretamente D1 ou R2.
+- O payload público bloqueia coleções privadas e credenciais.
+- Mídias novas são removidas do R2 quando a transação pública falha.
+- Revalidações públicas usam ETag e resposta 304.
+- `GITHUB_TOKEN` não é necessário.

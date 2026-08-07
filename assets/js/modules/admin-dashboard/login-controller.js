@@ -1,9 +1,9 @@
-import { adminLoginHtml } from './view.js?v=6.46.0';
+import { adminLoginHtml } from './view.js?v=6.47.0';
 import {
   bindSecretVisibility,
   createLoginFormState,
   resetSecretField
-} from './login-form-state.js?v=6.46.0';
+} from './login-form-state.js?v=6.47.0';
 
 function bindProfileTabs(tabs, loginState) {
   tabs.forEach((tab, index) => {
@@ -47,7 +47,7 @@ function renderAuthenticationStatus(node, status) {
     return;
   }
   node.className = 'admin-security-note admin-auth-status is-ready';
-  node.innerHTML = `<span aria-hidden="true">✓</span><div><strong>Autenticação pelo D1 disponível</strong><small>${status.publicationAvailable ? 'Publicação pública configurada no Worker.' : 'Login disponível; configure GITHUB_TOKEN para publicar conteúdo público.'}</small></div>`;
+  node.innerHTML = `<span aria-hidden="true">✓</span><div><strong>Autenticação pelo D1 disponível</strong><small>${status.publicationAvailable ? 'Publicação pública pelo D1 disponível.' : 'Login disponível; aplique a migração do conteúdo público no D1.'}</small></div>`;
 }
 
 export function bindAdminLogin({
