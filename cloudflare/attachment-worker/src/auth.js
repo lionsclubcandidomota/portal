@@ -1,5 +1,6 @@
 const PASSWORD_CONTEXT = 'lions-portal-admin-password-v1';
-const PASSWORD_ITERATIONS = 150000;
+const PASSWORD_ITERATIONS = 100000;
+const PASSWORD_MAX_SUPPORTED_ITERATIONS = 100000;
 const PASSWORD_MIN_LENGTH = 10;
 const PASSWORD_MAX_LENGTH = 128;
 const SESSION_MAX_SECONDS = 8 * 60 * 60;
@@ -90,6 +91,13 @@ async function timingSafeTextEqual(first, second) {
 }
 
 async function passwordHash(password, saltHex, iterations = PASSWORD_ITERATIONS) {
+  const requestedIterations = Number(iterations || PASSWORD_ITERATIONS);
+  if (!Number.isInteger(requestedIterations) || requestedIterations < 1) {
+    throw new Error('Quantidade de iterações da senha inválida.');
+  }
+  if (requestedIterations > PASSWORD_MAX_SUPPORTED_ITERATIONS) {
+    throw new Error(`O hash da senha usa ${requestedIterations} iterações, acima do limite compatível de ${PASSWORD_MAX_SUPPORTED_ITERATIONS}.`);
+  }
   const saltBytes = hexToBytes(saltHex);
   if (!saltBytes || saltBytes.length < 16) throw new Error('Salt de senha inválido.');
   const material = await crypto.subtle.importKey(
@@ -107,7 +115,7 @@ async function passwordHash(password, saltHex, iterations = PASSWORD_ITERATIONS)
     name: 'PBKDF2',
     hash: 'SHA-256',
     salt: combinedSalt,
-    iterations: Number(iterations || PASSWORD_ITERATIONS)
+    iterations: requestedIterations
   }, material, 256);
   return bytesToHex(new Uint8Array(bits));
 }

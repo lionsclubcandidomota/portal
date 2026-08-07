@@ -1,4 +1,4 @@
-import { publicationReviewHtml } from './publication-review.js?v=6.39.0';
+import { publicationReviewHtml } from './publication-review.js?v=6.39.1';
 
 export function createPublicationReviewController({ modalController, runtime }) {
   const open = () => {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.39.1 — Correção do acesso temporário aos anexos
+
+- restaura o cálculo de validade dos tickets temporários de anexos no Worker;
+- corrige os botões **Visualizar** e **Baixar** para arquivos armazenados no R2;
+- limita a validade entre 60 e 900 segundos, com padrão de 300 segundos;
+- inclui teste de regressão para impedir nova remoção da função `downloadTtl`.
+
 ## 6.39.0 — Autenticação administrativa por usuário e senha no D1
 
 - Substitui a entrada administrativa por token GitHub por login com usuário e senha validados pelo Cloudflare Worker.

@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.5.0
+# Cloudflare Worker do Portal Lions — v1.5.1
 
 O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
@@ -164,7 +164,7 @@ Antes do primeiro usuário:
 
 ```json
 {
-  "workerVersion": "1.5.0",
+  "workerVersion": "1.5.1",
   "privateState": "d1",
   "authentication": {
     "available": true,
@@ -177,3 +177,10 @@ Antes do primeiro usuário:
 ```
 
 Depois do primeiro usuário, `bootstrapRequired` muda para `false` e `passwordLogin` para `true`.
+
+## Correção v1.5.1
+
+- Ajusta o PBKDF2 para 100.000 iterações, limite aceito pelo runtime do Worker usado na implantação.
+- Mantém salt individual, contexto de domínio, derivação SHA-256 e comparação resistente a tempo.
+- Não exige nova migração D1 e não altera usuários já persistidos pela versão compatível.
+

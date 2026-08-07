@@ -1,14 +1,14 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.39.0';
-import { RESTRICTED_VIEWS } from './constants.js?v=6.39.0';
-import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.39.0';
-import { createAdminSessionGuard } from './session-guard.js?v=6.39.0';
-import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.39.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.39.1';
+import { RESTRICTED_VIEWS } from './constants.js?v=6.39.1';
+import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.39.1';
+import { createAdminSessionGuard } from './session-guard.js?v=6.39.1';
+import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.39.1';
 import {
   ACCESS_ROLES,
   accessSnapshot,
   applyAccessRole,
   clearAccessRole
-} from './authorization.js?v=6.39.0';
+} from './authorization.js?v=6.39.1';
 
 function isLocalHomologation(environment) {
   const location = environment?.window?.location;

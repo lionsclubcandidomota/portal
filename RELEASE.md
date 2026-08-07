@@ -1,4 +1,4 @@
-# Release 6.39.0
+# Release 6.39.1
 
 Esta etapa introduz **autenticação administrativa por usuário e senha no Cloudflare D1** e retira o token do GitHub do navegador.
 
@@ -39,3 +39,8 @@ npx wrangler secret put ADMIN_BOOTSTRAP_KEY
 - O acesso administrativo por token antigo fica desabilitado com `LEGACY_GITHUB_LOGIN_ENABLED = "false"`.
 
 Guia detalhado: `docs/admin-authentication-d1.md`.
+
+
+## Correção 6.39.1
+
+O Worker 1.5.2 restaura a emissão de URLs temporárias para visualizar e baixar anexos do R2. Não há migração D1 adicional.

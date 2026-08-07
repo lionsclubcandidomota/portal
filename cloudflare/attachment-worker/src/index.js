@@ -25,7 +25,7 @@ import {
   publishPortalPublicState
 } from './github-publication.js';
 
-const WORKER_VERSION = '1.5.0';
+const WORKER_VERSION = '1.5.2';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -109,6 +109,13 @@ function corsHeaders(request, env) {
 function requireAllowedOrigin(request, env) {
   const origin = request.headers.get('Origin') || '';
   if (!originAllowed(origin, env)) throw new Response('Origem não autorizada.', { status: 403 });
+}
+
+
+function downloadTtl(env) {
+  const configured = Number(env.DOWNLOAD_TTL_SECONDS || 300);
+  if (!Number.isFinite(configured)) return 300;
+  return Math.min(15 * 60, Math.max(60, Math.floor(configured)));
 }
 
 

@@ -1,6 +1,6 @@
-import { createNavigationController } from '../navigation.js?v=6.39.0';
+import { createNavigationController } from '../navigation.js?v=6.39.1';
 import { createUiShellController } from '../ui-shell.js';
-import { createReadOnlyGuard } from '../read-only-guard.js?v=6.39.0';
+import { createReadOnlyGuard } from '../read-only-guard.js?v=6.39.1';
 
 export function createNavigationFeature({
   elements,
