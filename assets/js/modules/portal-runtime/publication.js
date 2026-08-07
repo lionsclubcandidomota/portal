@@ -1,7 +1,7 @@
-import { cloneState } from '../../core/portal-state.js?v=6.28.0';
-import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.28.0';
-import { buildPublicationMessage } from './domain.js?v=6.28.0';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.28.0';
+import { cloneState } from '../../core/portal-state.js?v=6.36.0';
+import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.36.0';
+import { buildPublicationMessage } from './domain.js?v=6.36.0';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.36.0';
 
 export function createPublicationActions(context) {
   const { dependencies, services, model } = context;
@@ -104,6 +104,10 @@ export function createPublicationActions(context) {
       const state = context.sanitizeCurrentState();
       services.saveState(state);
       const publication = preparePortalMediaForPublication(state);
+      if (publication.assets.some(asset => asset.kind === 'member-photo')) {
+        const { createMemberPhotoThumbnailAssets } = await import('../../core/portal-media-thumbnails.js?v=6.36.0');
+        publication.assets.push(...await createMemberPhotoThumbnailAssets(publication.assets));
+      }
       const result = await services.saveGitHubState(
         model.githubToken,
         publication.state,

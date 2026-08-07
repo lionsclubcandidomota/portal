@@ -1,4 +1,5 @@
-import { memberIsActive as isActiveMember, memberStatusKey, memberStatusLabel } from '../core/portal-members.js?v=6.28.0';
+import { renderHtmlIfChanged } from './visual-helpers.js?v=6.36.0';
+import { memberIsActive as isActiveMember, memberStatusKey, memberStatusLabel } from '../core/portal-members.js?v=6.36.0';
 
 export function createBirthdaysController() {
   let monthFilter = 'all';
@@ -234,7 +235,7 @@ export function renderBirthdays(state, helpers) {
 
   root.innerHTML = `<section class="birthday-filter-card card"><div class="birthday-filter-copy"><span>🎂</span><div><strong>Buscar aniversários</strong><small>${visitorSearchCopy}. Use os filtros para refinar a lista.</small></div></div><div class="birthday-filter-controls"><div class="search"><input id="searchInput" placeholder="${visitorSearchPlaceholder}" aria-label="Pesquisar aniversariantes"></div><select id="birthdayMonth" aria-label="Filtrar por mês"><option value="all">Todos os meses</option>${months.map((month,index)=>`<option value="${index}" ${birthdays.monthFilter===String(index)?'selected':''}>${month}</option>`).join('')}</select><select id="birthdayPeriod" aria-label="Filtrar por período"><option value="all" ${birthdays.periodFilter==='all'?'selected':''}>Todo o período</option><option value="30" ${birthdays.periodFilter==='30'?'selected':''}>Próximos 30 dias</option><option value="60" ${birthdays.periodFilter==='60'?'selected':''}>Próximos 60 dias</option><option value="90" ${birthdays.periodFilter==='90'?'selected':''}>Próximos 90 dias</option></select>${adminUnlocked ? `<select id="birthdayActive" aria-label="Filtrar por situação"><option value="active" ${birthdays.activeFilter==='active'?'selected':''}>Associados ativos</option><option value="mutual" ${birthdays.activeFilter==='mutual'?'selected':''}>Mutuários</option><option value="inactive" ${birthdays.activeFilter==='inactive'?'selected':''}>Associados inativos</option><option value="all" ${birthdays.activeFilter==='all'?'selected':''}>Todos</option></select>` : ''}<button class="btn btn-primary admin-only write-only" data-new="birthday" type="button">＋ Adicionar pessoa</button></div></section><div class="birthday-filter-summary" id="birthdayFilterSummary"></div><div class="card birthdays-desktop-table"><div class="table-wrap"><table><thead><tr>${memberNumberHeader}<th>Pessoa</th><th>Aniversário</th><th>Próxima data</th><th>Ações</th></tr></thead><tbody id="birthdaysBody"></tbody></table></div></div><div class="birthdays-mobile-list" id="birthdaysCards"></div>`;
 
-  const search = document.getElementById('searchInput');
+  const search = root.querySelector('#searchInput');
 
   const draw = () => {
     const q = search?.value || '';
@@ -257,61 +258,63 @@ export function renderBirthdays(state, helpers) {
           nextBirthdayDate(b.birthDate)
       );
 
-    document.getElementById('birthdaysBody').innerHTML =
-      filtered.length
-        ? birthdayRows(filtered, {
-            daysUntil,
-            nextBirthdayDate,
-            birthdayStatus,
-            birthdayDisplayDate,
-            parseLocalDate,
-            memberIsActive,
-            avatar,
-            escapeHtml,
-            birthdayActions,
-            showMemberStatus: adminUnlocked,
-            showMemberNumber: adminUnlocked
-          })
-        : `<tr><td colspan="${emptyColspan}">${empty('🎂', 'Nenhum registro encontrado.')}</td></tr>`;
+    const rowsHtml = filtered.length
+      ? birthdayRows(filtered, {
+          daysUntil,
+          nextBirthdayDate,
+          birthdayStatus,
+          birthdayDisplayDate,
+          parseLocalDate,
+          memberIsActive,
+          avatar,
+          escapeHtml,
+          birthdayActions,
+          showMemberStatus: adminUnlocked,
+          showMemberNumber: adminUnlocked
+        })
+      : `<tr><td colspan="${emptyColspan}">${empty('🎂', 'Nenhum registro encontrado.')}</td></tr>`;
+    const cardsHtml = birthdayCards(filtered, {
+      daysUntil,
+      nextBirthdayDate,
+      birthdayStatus,
+      birthdayDisplayDate,
+      parseLocalDate,
+      memberIsActive,
+      avatar,
+      escapeHtml,
+      birthdayActions,
+      empty,
+      showMemberStatus: adminUnlocked,
+      showMemberNumber: adminUnlocked
+    });
 
-    document.getElementById('birthdaysCards').innerHTML =
-      birthdayCards(filtered, {
-        daysUntil,
-        nextBirthdayDate,
-        birthdayStatus,
-        birthdayDisplayDate,
-        parseLocalDate,
-        memberIsActive,
-        avatar,
-        escapeHtml,
-        birthdayActions,
-        empty,
-        showMemberStatus: adminUnlocked,
-        showMemberNumber: adminUnlocked
-      });
+    const rowsChanged = renderHtmlIfChanged(root.querySelector('#birthdaysBody'), rowsHtml);
+    const cardsChanged = renderHtmlIfChanged(root.querySelector('#birthdaysCards'), cardsHtml);
 
     const totalAvailable = adminUnlocked
       ? state.birthdays.length
       : state.birthdays.filter(isActiveMember).length;
-    document.getElementById('birthdayFilterSummary').innerHTML =
-      `Exibindo <strong>${filtered.length}</strong> de ${totalAvailable} aniversariante(s).`;
+    renderHtmlIfChanged(
+      root.querySelector('#birthdayFilterSummary'),
+      `Exibindo <strong>${filtered.length}</strong> de ${totalAvailable} aniversariante(s).`
+    );
 
-    bindRowActions();
+    if (rowsChanged || cardsChanged) bindRowActions();
   };
 
   search.oninput = draw;
 
-  document.getElementById('birthdayMonth').onchange = e => {
+  root.querySelector('#birthdayMonth').onchange = e => {
     birthdays.monthFilter = e.target.value;
     draw();
   };
 
-  document.getElementById('birthdayPeriod').onchange = e => {
+  root.querySelector('#birthdayPeriod').onchange = e => {
     birthdays.periodFilter = e.target.value;
     draw();
   };
 
-  const activeFilter = document.getElementById('birthdayActive');
+  const activeFilter = root.querySelector('#birthdayActive');
   if (activeFilter) {
     activeFilter.onchange = e => {
       birthdays.activeFilter = e.target.value;

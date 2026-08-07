@@ -8,12 +8,12 @@ const cssRoot = path.join(projectRoot, 'assets', 'css');
 const budget = Object.freeze({
   maxSources: 28,
   maxExactDuplicateRules: 0,
-  maxRepeatedContextSelectors: 460,
-  maxOverrideRules: 690,
+  maxRepeatedContextSelectors: 400,
+  maxOverrideRules: 580,
   maxLegacySources: 0,
   maxLegacyBytes: 0,
   maxSourceBytes: 40_000,
-  maxBundleBytes: 390_000
+  maxBundleBytes: 365_000
 });
 
 function stripComments(source) {

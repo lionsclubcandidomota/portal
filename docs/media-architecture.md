@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Retirar imagens e documentos Base64 do arquivo principal de dados sem perder compatibilidade com cadastros, movimentações e backups antigos.
+Retirar imagens e documentos Base64 do arquivo principal de dados, manter os originais necessários e servir versões menores nas listas.
 
 ## Estrutura
 
@@ -11,69 +11,77 @@ public/
 ├── branding/
 │   └── club-logo-<hash>.<ext>
 ├── members/
-│   └── <id-do-associado>-<hash>.<ext>
+│   ├── <id-do-associado>-<hash>.<ext>
+│   └── thumbs/
+│       ├── <id-do-associado>-<hash>-96.webp
+│       └── <id-do-associado>-<hash>-192.webp
 └── treasury/
     └── <id-da-movimentacao>/
         └── <id-do-anexo>-<hash>.<ext>
 ```
 
-O JSON guarda somente referências públicas:
+O JSON guarda somente a referência da foto original:
 
 ```json
 {
-  "photo": "./public/members/b_123-0abc123.jpg",
-  "attachments": [
-    {
-      "name": "comprovante.pdf",
-      "url": "./public/treasury/t_123/att_123-0abc123.pdf"
-    }
-  ]
+  "photo": "./public/members/b_123-0abc123.jpg"
 }
 ```
 
-O hash é derivado do conteúdo. Uma nova versão recebe outro caminho, evitando reutilização indevida do cache.
+As referências das miniaturas são derivadas do caminho original. Não existe duplicação de campos no JSON.
 
-## Fluxo de edição
+## Exibição das fotos
 
-1. A imagem ou documento selecionado é validado antes de entrar no cadastro.
-2. Imagens compatíveis são redimensionadas e recomprimidas no navegador; PDFs e documentos são preservados.
-3. O arquivo permanece como Data URL enquanto a alteração estiver pendente.
-4. A revisão da publicação resume os nomes dos anexos sem expor o conteúdo Base64.
-5. Ao publicar, `preparePortalMediaForPublication()` cria os ativos e uma cópia do estado com referências externas.
-6. O GitHub recebe anexos, imagens e JSON em um único commit.
-7. Somente após o commit ser confirmado o estado local troca o Base64 pelo caminho público.
+Os avatares usam:
 
-Se a publicação falhar, o estado local mantém os arquivos incorporados e o usuário pode tentar novamente sem selecioná-los outra vez.
+- `src` com o original como fallback;
+- `srcset` com 96 e 192 px;
+- `sizes="40px"`;
+- `loading="lazy"`;
+- `decoding="async"`;
+- prioridade baixa de rede.
 
-## Limites operacionais
+A arte de aniversário continua usando o original.
+
+## Fluxo de edição e publicação
+
+1. A imagem selecionada é validada e otimizada no navegador.
+2. O arquivo permanece como Data URL enquanto a alteração estiver pendente.
+3. Ao publicar, `preparePortalMediaForPublication()` cria o ativo original.
+4. `createMemberPhotoThumbnailAssets()` gera as versões WebP de 96 e 192 px.
+5. O GitHub recebe original, miniaturas e JSON no mesmo commit.
+6. Somente depois da confirmação o estado local troca o Base64 pelo caminho público.
+
+Se a publicação falhar, o estado local mantém a imagem incorporada e o usuário pode tentar novamente.
+
+## Fallback
+
+Quando uma miniatura não existe, o Portal remove o `srcset` e tenta a referência original. Esse comportamento preserva fotos antigas durante atualizações graduais.
+
+## Auditoria
+
+Execute:
+
+```bash
+npm run audit:media
+```
+
+Para exigir cobertura completa de todas as fotos:
+
+```bash
+npm run audit:media:required
+```
+
+A auditoria confere os arquivos referenciados, as duas miniaturas, os limites de tamanho e o template WebP da arte de aniversário.
+
+## Limites operacionais dos anexos
 
 - até 5 anexos por movimentação;
 - até 5 MB no arquivo originalmente selecionado;
 - até 1,25 MB por anexo depois do processamento;
 - até 3,2 MB armazenados por movimentação;
-- imagens limitadas a 1.800 px no maior lado e alvo aproximado de 900 KB.
-
-Esses limites protegem o armazenamento local utilizado antes da publicação. Caso o navegador não consiga persistir o estado, a movimentação é revertida e o usuário recebe uma mensagem clara.
+- imagens de anexos limitadas a 1.800 px no maior lado e alvo aproximado de 900 KB.
 
 ## Publicação atômica
 
-`assets/js/github.js` usa a API Git do GitHub:
-
-1. verifica se `data/dados.json` ainda possui o SHA esperado;
-2. lê o commit e a árvore atuais da branch;
-3. cria blobs para anexos, imagens e JSON;
-4. cria uma nova árvore baseada na árvore atual;
-5. cria um único commit;
-6. atualiza a referência da branch sem `force`.
-
-Assim, o JSON nunca é publicado apontando para um arquivo ausente.
-
-## Migração dos arquivos oficiais
-
-Execute:
-
-```bash
-npm run migrate:media
-```
-
-O comando é idempotente: extrai Data URLs presentes em `data/dados.json` e `data/modelo.json`, grava os arquivos correspondentes e atualiza o envelope para o esquema atual.
+`assets/js/github.js` verifica o SHA atual, cria os blobs, monta uma única árvore, cria o commit e atualiza a branch sem `force`. O JSON nunca é publicado apontando para um arquivo preparado em outro commit.

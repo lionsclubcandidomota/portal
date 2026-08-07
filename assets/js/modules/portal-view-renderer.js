@@ -1,8 +1,21 @@
-import { renderTreasury } from './treasury.js?v=6.28.0';
-import { renderAgenda } from './agenda.js';
 import { renderDashboard } from './dashboard.js';
 import { renderNotices } from './notices.js';
 import { renderBirthdays } from './birthdays.js';
+
+function loadingView(title, description) {
+  return `<section class="card feature-loading" role="status" aria-live="polite">
+    <span class="feature-loading-spinner" aria-hidden="true"></span>
+    <div><strong>${title}</strong><small>${description}</small></div>
+  </section>`;
+}
+
+function loadErrorView() {
+  return `<section class="card empty-state" role="alert">
+    <div class="empty-icon" aria-hidden="true">⚠️</div>
+    <h2>Não foi possível carregar esta tela</h2>
+    <p>Atualize a página e tente novamente.</p>
+  </section>`;
+}
 
 export function createPortalViewRenderer(options) {
   const {
@@ -10,7 +23,7 @@ export function createPortalViewRenderer(options) {
     getRuntime,
     getNavigation,
     root,
-    treasury,
+    loadTreasuryController,
     birthdays,
     agenda,
     dashboardDependencies,
@@ -25,6 +38,45 @@ export function createPortalViewRenderer(options) {
   if (typeof getState !== 'function' || typeof getRuntime !== 'function' || typeof getNavigation !== 'function') {
     throw new TypeError('createPortalViewRenderer requer os provedores de estado, runtime e navegação.');
   }
+
+  let agendaRenderer = null;
+  let agendaPromise = null;
+  let treasuryFeature = null;
+  let treasuryPromise = null;
+
+  const loadAgendaRenderer = () => {
+    if (!agendaPromise) {
+      agendaPromise = import('./agenda.js?v=6.36.0')
+        .then(module => {
+          agendaRenderer = module.renderAgenda;
+          return agendaRenderer;
+        })
+        .catch(error => {
+          agendaPromise = null;
+          throw error;
+        });
+    }
+    return agendaPromise;
+  };
+
+  const loadTreasuryFeature = () => {
+    if (treasuryFeature) return Promise.resolve(treasuryFeature);
+    if (!treasuryPromise) {
+      treasuryPromise = Promise.all([
+        loadTreasuryController(),
+        import('./treasury/view.js?v=6.36.0')
+      ])
+        .then(([treasury, module]) => {
+          treasuryFeature = Object.freeze({ treasury, renderer: module.renderTreasury });
+          return treasuryFeature;
+        })
+        .catch(error => {
+          treasuryPromise = null;
+          throw error;
+        });
+    }
+    return treasuryPromise;
+  };
 
   function renderDashboardView() {
     const runtime = getRuntime();
@@ -47,12 +99,29 @@ export function createPortalViewRenderer(options) {
     });
   }
 
-  function renderAgendaView() {
-    renderAgenda(agenda, {
+  function runAgendaRenderer(renderer) {
+    renderer(agenda, {
       root,
       ...agendaDependencies,
       isAdminUnlocked: getRuntime().isWriteAllowed
     });
+  }
+
+  function renderAgendaView() {
+    if (agendaRenderer) {
+      runAgendaRenderer(agendaRenderer);
+      return undefined;
+    }
+
+    root.innerHTML = loadingView('Carregando agenda', 'Preparando compromissos e calendário…');
+    return loadAgendaRenderer()
+      .then(renderer => {
+        if (getNavigation().currentView === 'agenda') runAgendaRenderer(renderer);
+      })
+      .catch(error => {
+        console.error('Falha ao carregar a Agenda.', error);
+        if (getNavigation().currentView === 'agenda') root.innerHTML = loadErrorView();
+      });
   }
 
   function renderNoticesView() {
@@ -63,13 +132,30 @@ export function createPortalViewRenderer(options) {
     });
   }
 
-  function renderTreasuryView() {
-    renderTreasury(getState(), treasury, {
+  function runTreasuryRenderer(feature) {
+    feature.renderer(getState(), feature.treasury, {
       root,
       adminUnlocked: getRuntime().canWrite,
       ...treasuryDependencies,
       isTreasuryView: () => getNavigation().currentView === 'treasury'
     });
+  }
+
+  function renderTreasuryView() {
+    if (treasuryFeature) {
+      runTreasuryRenderer(treasuryFeature);
+      return undefined;
+    }
+
+    root.innerHTML = loadingView('Carregando Tesouraria', 'Preparando saldos, cobranças e movimentações…');
+    return loadTreasuryFeature()
+      .then(feature => {
+        if (getNavigation().currentView === 'treasury') runTreasuryRenderer(feature);
+      })
+      .catch(error => {
+        console.error('Falha ao carregar a Tesouraria.', error);
+        if (getNavigation().currentView === 'treasury') root.innerHTML = loadErrorView();
+      });
   }
 
   function render(view = getNavigation().currentView) {
@@ -82,10 +168,17 @@ export function createPortalViewRenderer(options) {
       admin: renderAdmin,
       settings: renderSettings
     };
-    renderers[view]?.();
+    return renderers[view]?.();
+  }
+
+  function preload(view) {
+    if (view === 'agenda') return loadAgendaRenderer();
+    if (view === 'treasury') return loadTreasuryFeature();
+    return Promise.resolve();
   }
 
   return Object.freeze({
+    preload,
     render,
     renderAgenda: renderAgendaView,
     renderBirthdays: renderBirthdaysView,
@@ -94,4 +187,3 @@ export function createPortalViewRenderer(options) {
     renderTreasury: renderTreasuryView
   });
 }
-

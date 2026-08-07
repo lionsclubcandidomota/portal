@@ -1,15 +1,27 @@
-import { bootstrapPortal } from './modules/portal-app.js?v=6.28.0.1';
-import { enableHomologationReload } from './core/homologation-reload.js?v=6.28.0';
+import { bootstrapPortal } from './modules/portal-app.js?v=6.36.0';
+import { enableHomologationReload } from './core/homologation-reload.js?v=6.36.0';
 
 function bindStaticImageFallbacks() {
   const sidebarLogo = document.getElementById('sidebarLogo');
   const fallbackLogo = document.getElementById('fallbackLogo');
-  if (!sidebarLogo || !fallbackLogo) return;
+  if (sidebarLogo && fallbackLogo) {
+    sidebarLogo.addEventListener('error', () => {
+      sidebarLogo.hidden = true;
+      fallbackLogo.style.display = 'grid';
+    });
+  }
 
-  sidebarLogo.addEventListener('error', () => {
-    sidebarLogo.hidden = true;
-    fallbackLogo.style.display = 'grid';
-  });
+  document.addEventListener('error', event => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement)) return;
+    const fallback = image.dataset.photoFallback;
+    if (!fallback || image.dataset.photoFallbackUsed === 'true') return;
+
+    image.dataset.photoFallbackUsed = 'true';
+    image.removeAttribute('srcset');
+    image.removeAttribute('sizes');
+    image.src = fallback;
+  }, true);
 }
 
 async function startPortal() {

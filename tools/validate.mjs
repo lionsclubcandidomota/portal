@@ -63,21 +63,20 @@ if (missingImports.length) {
 }
 console.log('Grafo de imports locais validado.');
 
-const treasuryFacadePath = path.join(projectRoot, 'assets', 'js', 'modules', 'treasury.js');
-const treasuryFacadeSource = await readFile(treasuryFacadePath, 'utf8');
-const treasuryModule = await import(`${pathToFileURL(treasuryFacadePath).href}?validate=${Date.now()}`);
-const treasuryExports = ['createTreasuryController', 'destroyTreasuryCharts', 'renderTreasury'];
-for (const exportName of treasuryExports) {
-  if (typeof treasuryModule[exportName] !== 'function') {
-    console.error(`Export público ausente na fachada da Tesouraria: ${exportName}.`);
+const treasuryContracts = [
+  ['assets/js/modules/treasury/controller.js', 'createTreasuryController'],
+  ['assets/js/modules/treasury/charts.js', 'destroyTreasuryCharts'],
+  ['assets/js/modules/treasury/view.js', 'renderTreasury']
+];
+for (const [relativePath, exportName] of treasuryContracts) {
+  const absolutePath = path.join(projectRoot, relativePath);
+  const module = await import(`${pathToFileURL(absolutePath).href}?validate=${Date.now()}`);
+  if (typeof module[exportName] !== 'function') {
+    console.error(`Export público ausente em ${relativePath}: ${exportName}.`);
     process.exit(1);
   }
 }
-if (treasuryFacadeSource.split(/\r?\n/).filter(Boolean).length > 10) {
-  console.error('assets/js/modules/treasury.js deve permanecer como uma fachada enxuta.');
-  process.exit(1);
-}
-console.log('Arquitetura modular da Tesouraria validada.');
+console.log('Contratos diretos da arquitetura modular da Tesouraria validados.');
 
 const treasuryViewPath = path.join(projectRoot, 'assets', 'js', 'modules', 'treasury', 'view.js');
 const treasuryViewSource = await readFile(treasuryViewPath, 'utf8');
@@ -372,7 +371,6 @@ if (typeof portalAppModule.bootstrapPortal !== 'function') {
 console.log('Composição principal do portal importada com sucesso.');
 
 run(process.execPath, ['tools/build-css.mjs', '--check']);
-run(process.execPath, ['--test', 'tests/*.test.mjs']);
 
 const indexPath = path.join(projectRoot, 'index.html');
 const index = await readFile(indexPath, 'utf8');

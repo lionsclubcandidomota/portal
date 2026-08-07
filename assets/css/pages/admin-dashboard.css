@@ -7,3 +7,6 @@
 .admin-login-form[hidden]{display:none!important}
 
 .admin-people-counts{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}.admin-people-count{display:flex;align-items:baseline;gap:5px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}.admin-people-count strong{font-size:1rem}.admin-people-count small{color:var(--muted);font-size:.68rem;font-weight:800;text-transform:uppercase}.admin-people-count.is-mutual strong{color:#6b48a5}
+
+/* Iconografia administrativa consistente — etapa 6 */
+.admin-login-icon .ui-icon{width:28px;height:28px}.admin-access-option .ui-icon{width:19px;height:19px}.admin-period-icon .ui-icon{width:21px;height:21px}.admin-module-icon .ui-icon,.admin-card-icon .ui-icon{width:22px;height:22px}.admin-backup-action>span .ui-icon{width:22px;height:22px}.notice.medium strong>.ui-icon{width:17px;height:17px;vertical-align:-3px;margin-right:5px}

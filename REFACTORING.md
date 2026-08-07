@@ -1,19 +1,93 @@
-# Registro técnico — 6.28.0
+# Registro técnico — 6.36.0
 
-## Resumo dinâmico da Tesouraria
+## Objetivo desta etapa
 
-`treasury/movements.js` agora expõe `summarizeMovementFilter()`. A função usa a lista já filtrada para calcular entradas, saídas, resultado e quantidade. No filtro geral, o saldo mantém a regra histórica de considerar somente realizados; em Programados, os valores previstos são calculados exclusivamente a partir dos lançamentos programados.
+A v6.36.0 executa a **Etapa 8 — estabilização final** e encerra a refatoração incremental do Portal. O objetivo foi remover código comprovadamente sem uso, tornar o processo de atualização mais seguro e transformar as regras arquiteturais em verificações automáticas.
 
-## Agenda responsiva do Dashboard
+## Código removido com evidência
 
-O item de compromisso deixou de usar um `small` contendo blocos internos e passou a ter estrutura semântica própria: ícone, conteúdo, detalhes e tipo. A grade usa áreas nomeadas e muda para duas linhas em telas estreitas, evitando sobreposição de título, local, link e badge.
+Uma análise do grafo completo, iniciada em `assets/js/app.js`, identificou dois arquivos que não eram alcançados por imports estáticos nem dinâmicos:
 
-## Clean UI
+- `assets/js/modules/treasury.js`: fachada antiga que duplicava exports dos módulos efetivamente usados;
+- `assets/js/modules/treasury-admin/categories.js`: gerenciador antigo substituído pelo fluxo integrado ao formulário de lançamento.
 
-A camada `components/clean-ui.css` é carregada ao final do bundle e consolida o redesign sem remover seletores ou fluxos legados. Ela redefine tokens, shell, cards, formulários, tabelas, dashboard, tesouraria, agenda, administração, modais e breakpoints.
+Os dois arquivos foram removidos. A validação da Tesouraria agora consulta diretamente os contratos de `controller.js`, `view.js` e `charts.js`.
 
-## Compatibilidade
+## Auditoria do grafo de módulos
 
-- Esquema de dados permanece 10.
-- Não há migração de conteúdo.
-- Regras de Mútuas da série 6.27.x permanecem inalteradas.
+O novo comando:
+
+```bash
+npm run audit:modules
+```
+
+percorre todos os módulos de `assets/js`, resolve imports relativos com ou sem parâmetro de versão e reprova a entrega quando encontra:
+
+- arquivo JavaScript não alcançável pela aplicação;
+- import relativo para arquivo inexistente;
+- dependência circular no grafo de execução.
+
+A auditoria integra o comando `npm run quality` e, consequentemente, todos os portões de release.
+
+## Backup antes da atualização
+
+O comando:
+
+```bash
+npm run backup:local
+```
+
+cria uma cópia de:
+
+- `data/dados.json`;
+- `data/modelo.json`.
+
+Cada backup recebe data, versão do Portal, tamanho e SHA-256 dos arquivos. Os backups ficam em `.portal-backups`, fora do Git, com retenção automática das 10 cópias mais recentes.
+
+O backup é executado antes de `data:migrate` no fluxo oficial de finalização.
+
+## Pipeline consolidado
+
+O comando oficial passou a ser:
+
+```bash
+npm run release:prepare
+```
+
+Ele executa, nesta ordem:
+
+1. backup local;
+2. migração idempotente dos dados;
+3. geração do CSS;
+4. testes e auditorias de qualidade;
+5. geração do manifesto;
+6. auditoria e verificação final do release.
+
+A auditoria visual permanece separada: use `npm run audit:visual` durante a revisão e `npm run audit:visual:required` na estação oficial de homologação. Ela não faz parte do finalizador automático para evitar que uma instalação local de navegador incompatível bloqueie a atualização.
+
+O arquivo `FINALIZAR-ATUALIZACAO.bat` chama somente esse pipeline, evitando repetições e reduzindo o tempo de validação.
+
+## Segurança dos dados
+
+- esquema permanece na versão 10;
+- nenhuma regra da Tesouraria foi alterada;
+- nenhuma regra de mensalidades ou Mútuas foi alterada;
+- nenhuma integração com Cloudflare foi adicionada;
+- o pacote de atualização não inclui `data` nem `public`;
+- `data/dados.json` e `data/modelo.json` permanecem preservados durante a sobreposição do pacote.
+
+## Resultado acumulado da refatoração
+
+Entre as versões 6.29.0 e 6.36.0, o projeto passou a contar com:
+
+- CSS sem camada legacy;
+- carregamento sob demanda dos módulos pesados;
+- redução superior a 50% no JavaScript inicial;
+- mídia responsiva e template de aniversário otimizado;
+- renderização incremental das listas e gráficos;
+- ícones SVG locais e consistentes;
+- homologação visual em cinco telas e cinco resoluções;
+- auditorias de desempenho, mídia, segurança, acessibilidade, CSS, módulos e release;
+- backup automático antes de atualizações.
+
+**Etapas pendentes: nenhuma.**

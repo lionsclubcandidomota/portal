@@ -96,7 +96,7 @@ function canvasToPngBlob(canvas) {
 
 export async function createBirthdayArtwork(
   person,
-  { templateUrl = './assets/templates/birthday-template.png' } = {}
+  { templateUrl = './assets/templates/birthday-template.webp' } = {}
 ) {
   const template = await loadCanvasImage(templateUrl);
   const canvas = document.createElement('canvas');

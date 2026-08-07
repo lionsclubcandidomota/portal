@@ -1,4 +1,4 @@
-import { accessSnapshot, canAccessView } from './portal-runtime/authorization.js?v=6.28.0';
+import { accessSnapshot, canAccessView } from './portal-runtime/authorization.js?v=6.36.0';
 
 const DEFAULT_TITLES = {
   dashboard: 'Início',
@@ -38,6 +38,7 @@ export function createNavigationController({
   getAccessPolicy = () => accessSnapshot({ accessRole: getAccessRole() }),
   renderView,
   destroyViewResources,
+  preloadView,
   refreshGlobalControls,
   setTreasurySection,
   logoutAdmin,
@@ -104,7 +105,7 @@ export function createNavigationController({
     const settingsNav = document.getElementById('settingsNav');
     const adminNav = document.getElementById('adminAccessNav');
     const adminLabel = adminNav?.querySelector('.nav-label');
-    const adminIcon = adminNav?.querySelector('span:first-child');
+    const adminIcon = adminNav?.querySelector('.nav-icon use');
     const treasuryNav = document.querySelectorAll('[data-view="treasury"]');
     const treasuryMobileNav = document.querySelector('[data-mobile-view="treasury"]');
     const portalRefreshButton = document.getElementById('portalRefreshButton');
@@ -126,7 +127,7 @@ export function createNavigationController({
     if (adminLabel) adminLabel.textContent = access.authenticated
       ? (directorMode ? 'Área da Diretoria' : 'Área administrativa')
       : 'Área administrativa';
-    if (adminIcon) adminIcon.textContent = directorMode ? '👁️' : access.authenticated ? '🛠️' : '🔐';
+    if (adminIcon) adminIcon.setAttribute('href', `./assets/icons/ui-icons.svg#${directorMode ? 'eye' : access.authenticated ? 'tools' : 'lock'}`);
     if (modeChip) modeChip.textContent = directorMode
       ? 'Diretoria · leitura'
       : access.authenticated ? 'Administrador' : 'Visitante';
@@ -183,6 +184,14 @@ export function createNavigationController({
     bound = true;
 
     mainNav?.addEventListener('click', handleMainNavigation);
+    mainNav?.addEventListener('pointerover', event => {
+      const button = event.target.closest('[data-view]');
+      if (button) preloadView?.(button.dataset.view);
+    });
+    mainNav?.addEventListener('focusin', event => {
+      const button = event.target.closest('[data-view]');
+      if (button) preloadView?.(button.dataset.view);
+    });
 
     if (menuButton) {
       menuButton.addEventListener('click', () => {
@@ -206,6 +215,7 @@ export function createNavigationController({
 
     document.querySelectorAll('[data-mobile-view]').forEach(button => {
       button.addEventListener('click', () => navigateToView(button.dataset.mobileView));
+      button.addEventListener('pointerdown', () => preloadView?.(button.dataset.mobileView), { passive: true });
     });
     mobileMoreButton?.addEventListener('click', openSidebar);
 

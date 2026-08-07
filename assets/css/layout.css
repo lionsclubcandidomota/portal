@@ -20,7 +20,7 @@
   background: rgba(255,255,255,.98);
   box-shadow: 0 10px 24px rgba(0,0,0,.18);
 }
-.brand strong { font-size: .98rem; letter-spacing: -.01em; }
+
 .brand small { display: block; margin-top: 4px; color: rgba(255,255,255,.68); font-size: .75rem; }
 .nav-section-label {
   margin: 22px 12px 8px;
@@ -30,7 +30,7 @@
   letter-spacing: .14em;
   text-transform: uppercase;
 }
-.nav-list { gap: 5px; margin-top: 0; }
+
 .nav-item {
   position: relative;
   min-height: 48px;
@@ -64,18 +64,17 @@
   backdrop-filter: blur(22px) saturate(150%);
   border-bottom: 1px solid rgba(201,213,227,.78);
 }
-.topbar-title h1 { font-size: clamp(1.35rem,2.2vw,2rem); letter-spacing: -.035em; }
-.topbar-title p { margin-top: 3px; font-size: .88rem; }
+
 .topbar-date { display: inline-block; margin-top: 4px; color: #8a96a8; font-size: .75rem; }
 .mode-chip, .clock {
   border: 1px solid var(--border);
   background: rgba(246,248,251,.9);
   box-shadow: var(--shadow-xs);
 }
-.mode-chip { border-radius: 999px; }
+
 .clock { border-radius: 13px; font-variant-numeric: tabular-nums; }
 .content-area, .admin-syncbar { width: min(100%, var(--content-max)); margin-inline: auto; }
-.content-area { padding: clamp(18px,2.5vw,34px); }
+
 .admin-syncbar {
   margin-top: 18px;
   border: 1px solid #f1cf7a;

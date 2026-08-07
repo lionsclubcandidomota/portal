@@ -131,7 +131,7 @@ test('Dashboard administrativo resume Mútuas em cards compactos e responsivos',
   assert.match(dashboard, /dashboard-main-grid/);
   assert.match(dashboard, /is-admin-compact/);
   assert.match(dashboard, /dashboard-mutual-card/);
-  assert.match(dashboard, /mutualPaidCharges/);
+  assert.match(dashboard, /mutualPaidCount/);
   assert.match(dashboard, /data-open-mutuals/);
   assert.match(css, /\.dashboard-main-grid\.is-admin-compact/);
   assert.match(css, /\.dashboard-mutual-progress>span/);

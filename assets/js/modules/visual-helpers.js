@@ -1,4 +1,26 @@
+import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.36.0';
 import { escapeHtml } from '../utils.js';
+
+
+const renderedHtml = new WeakMap();
+
+export function renderHtmlIfChanged(element, html) {
+  if (!element) return false;
+
+  const nextHtml = String(html ?? '');
+  if (renderedHtml.get(element) === nextHtml) return false;
+
+  element.innerHTML = nextHtml;
+  renderedHtml.set(element, nextHtml);
+  return true;
+}
+
+
+export function uiIcon(name, className = '') {
+  const iconName = /^[a-z0-9-]+$/.test(String(name || '')) ? String(name) : 'warning';
+  const classes = ['ui-icon', String(className || '').trim()].filter(Boolean).join(' ');
+  return `<svg class="${classes}" aria-hidden="true" focusable="false"><use href="./assets/icons/ui-icons.svg#${iconName}"></use></svg>`;
+}
 
 export function empty(icon, text) {
   return `<div class="empty"><div class="empty-icon">${icon}</div><div>${text}</div></div>`;
@@ -9,9 +31,14 @@ export function kpi(icon, label, value, view = '') {
 }
 
 export function avatar(person) {
-  return person.photo
-    ? `<img class="avatar" src="${person.photo}" alt="Foto de ${escapeHtml(person.name)}">`
-    : `<div class="avatar">${escapeHtml(person.name.charAt(0).toUpperCase())}</div>`;
+  if (!person.photo) return `<div class="avatar">${escapeHtml(person.name.charAt(0).toUpperCase())}</div>`;
+
+  const photo = String(person.photo);
+  const sourceSet = memberPhotoSourceSet(photo);
+  const responsive = sourceSet
+    ? ` srcset="${escapeHtml(sourceSet)}" sizes="40px" data-photo-fallback="${escapeHtml(photo)}"`
+    : '';
+  return `<img class="avatar" src="${escapeHtml(photo)}"${responsive} alt="Foto de ${escapeHtml(person.name)}" width="40" height="40" loading="lazy" decoding="async" fetchpriority="low">`;
 }
 
 export function statusBadge(status) {

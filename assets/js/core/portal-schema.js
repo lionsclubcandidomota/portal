@@ -1,5 +1,5 @@
-import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.28.0';
-import { normalizeMemberRecord } from './portal-members.js?v=6.28.0';
+import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.36.0';
+import { normalizeMemberRecord } from './portal-members.js?v=6.36.0';
 
 export const PORTAL_APP_ID = 'Lions Clube de Cândido Mota Dashboard';
 export const CURRENT_SCHEMA_VERSION = 10;
@@ -206,7 +206,7 @@ export function createDefaultPortalState() {
   return {
     settings: {
       clubName: 'Lions Clube de Cândido Mota',
-      logo: './public/logo.png',
+      logo: './public/logo-ui.webp',
       primaryColor: '#00529B',
       accentColor: '#F2C100',
       membershipMonthlyFee: 0,

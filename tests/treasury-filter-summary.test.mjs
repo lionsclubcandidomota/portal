@@ -53,7 +53,7 @@ test('compromisso do Dashboard usa estrutura responsiva sem bloco dentro de smal
     locationType: 'virtual',
     onlineUrl: 'https://meet.google.com/abc-defg-hij'
   });
-  const css = await readFile(path.join(projectRoot, 'assets/css/components/clean-ui.css'), 'utf8');
+  const css = await readFile(path.join(projectRoot, 'assets/css/components/modern-interface.css'), 'utf8');
 
   assert.match(html, /appointment-home-content/);
   assert.match(html, /appointment-home-details/);

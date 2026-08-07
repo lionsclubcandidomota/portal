@@ -1,14 +1,14 @@
 import { escapeHtml } from '../utils.js';
-import { directorProfileFromState, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.28.0';
-
-const DEFAULT_LOGO = './public/logo.png';
-const DEFAULT_PRIMARY_COLOR = '#00529B';
-const DEFAULT_ACCENT_COLOR = '#F2C100';
-const DEFAULT_CLUB_NAME = 'Lions Clube de Cândido Mota';
-
-function settingsFrom(state) {
-  return state?.settings || {};
-}
+import {
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_CLUB_NAME,
+  DEFAULT_LOGO,
+  DEFAULT_PRIMARY_COLOR,
+  applyPortalAppearance,
+  resolveDisplayLogo,
+  settingsFrom
+} from './settings-appearance.js?v=6.36.0';
+import { directorProfileFromState, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.36.0';
 
 function currencyField(name, label, value, help, currencyInputValue, disabled = false) {
   return `<div class="form-field"><label>${escapeHtml(label)}</label><div class="currency-input"><span>R$</span><input name="${escapeHtml(name)}" type="text" inputmode="decimal" value="${escapeHtml(currencyInputValue(value))}" autocomplete="off" ${disabled ? 'disabled' : ''}></div><small>${escapeHtml(help)}</small></div>`;
@@ -64,30 +64,11 @@ export function createSettingsController({
 
   const state = () => getState();
 
-  const apply = () => {
-    const settings = settingsFrom(state());
-    const clubName = String(settings.clubName || DEFAULT_CLUB_NAME).trim() || DEFAULT_CLUB_NAME;
-    const primaryColor = settings.primaryColor || DEFAULT_PRIMARY_COLOR;
-    const accentColor = settings.accentColor || DEFAULT_ACCENT_COLOR;
-
-    document.documentElement.style.setProperty('--primary', primaryColor);
-    document.documentElement.style.setProperty('--accent', accentColor);
-
-    const clubNameNode = document.getElementById('sidebarClubName');
-    if (clubNameNode) clubNameNode.textContent = clubName;
-
-    const logo = document.getElementById('sidebarLogo');
-    const fallbackLogo = document.getElementById('fallbackLogo');
-    if (logo) {
-      logo.src = settings.logo || defaultLogo;
-      logo.alt = `Logo do ${clubName}`;
-      logo.style.display = '';
-    }
-    if (fallbackLogo) fallbackLogo.style.display = 'none';
-
-    document.title = clubName;
-    updateAccessUI?.();
-  };
+  const apply = () => applyPortalAppearance({
+    state: state(),
+    updateAccessUI,
+    defaultLogo
+  });
 
   const bindCredentialVisibility = (input, button, label = 'senha') => {
     button?.addEventListener('click', () => {
@@ -125,7 +106,7 @@ export function createSettingsController({
         ${currencyField('membershipMonthlyFee', 'Mensalidade individual', settings.membershipMonthlyFee, 'Valor cobrado de um associado individual.', currencyInputValue, !writeAllowed)}
         ${currencyField('membershipFamilyPrimaryFee', 'Mensalidade familiar — titular', settings.membershipFamilyPrimaryFee, 'Valor do titular do grupo familiar.', currencyInputValue, !writeAllowed)}
         ${currencyField('membershipFamilyAdditionalFee', 'Mensalidade familiar — adicional', settings.membershipFamilyAdditionalFee, 'Valor de cada pessoa adicional.', currencyInputValue, !writeAllowed)}
-        <div class="form-field full-row"><label>Logo</label>${writeAllowed ? '<div class="toolbar-group"><button type="button" class="btn btn-ghost" id="logoUpload">Escolher imagem</button><button type="button" class="btn btn-ghost" id="logoReset">Restaurar logo</button></div>' : `<div class="list-item"><img class="avatar" src="${escapeHtml(settings.logo || defaultLogo)}" alt="Logo atual do clube"><div class="list-item-main"><strong>Logo atualmente publicada</strong><small>Visualização somente leitura</small></div></div>`}<small>${writeAllowed ? 'A imagem será ajustada automaticamente.' : 'A alteração da identidade visual é exclusiva do Administrador.'}</small></div>
+        <div class="form-field full-row"><label>Logo</label>${writeAllowed ? '<div class="toolbar-group"><button type="button" class="btn btn-ghost" id="logoUpload">Escolher imagem</button><button type="button" class="btn btn-ghost" id="logoReset">Restaurar logo</button></div>' : `<div class="list-item"><img class="avatar" src="${escapeHtml(resolveDisplayLogo(settings.logo, defaultLogo))}" alt="Logo atual do clube" width="40" height="40" loading="lazy" decoding="async"><div class="list-item-main"><strong>Logo atualmente publicada</strong><small>Visualização somente leitura</small></div></div>`}<small>${writeAllowed ? 'A imagem será ajustada automaticamente.' : 'A alteração da identidade visual é exclusiva do Administrador.'}</small></div>
         ${writeAllowed ? '<div class="form-actions full-row"><button class="btn btn-primary" type="submit">Salvar ajustes</button></div>' : ''}
       </form></div>
       ${directorProfileCard(profile, writeAllowed, legacyDirectorProfile)}

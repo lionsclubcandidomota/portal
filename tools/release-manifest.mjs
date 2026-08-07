@@ -16,11 +16,13 @@ const includedRoots = [
 ];
 const includedFiles = [
   '.editorconfig',
+  '.gitignore',
   'CHANGELOG.md',
   'REFACTORING.md',
   'RELEASE.md',
   'index.html',
   'INICIAR-HOMOLOGACAO.bat',
+  'FINALIZAR-ATUALIZACAO.bat',
   'package.json'
 ];
 
@@ -80,7 +82,8 @@ async function buildManifest() {
       javascript: extensionCount('.js') + extensionCount('.mjs'),
       css: extensionCount('.css'),
       tests: files.filter(file => file.path.startsWith('tests/')).length,
-      memberImages: files.filter(file => file.path.startsWith('public/members/')).length,
+      memberImages: files.filter(file => /^public\/members\/[^/]+$/.test(file.path)).length,
+      memberThumbnails: files.filter(file => file.path.startsWith('public/members/thumbs/')).length,
       totalBytes: files.reduce((sum, file) => sum + file.bytes, 0)
     },
     files

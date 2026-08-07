@@ -1,4 +1,5 @@
 import { escapeHtml, money, parseLocalDate } from '../../utils.js';
+import { renderHtmlIfChanged } from '../visual-helpers.js?v=6.36.0';
 
 const CHART_COLORS = Object.freeze({
   entry: '#0f766e',
@@ -435,7 +436,7 @@ export function renderTreasuryCharts({
     ? Math.abs(financialResult) / totals.entries * 100
     : 0;
 
-  financeContext.innerHTML = donutChart({
+  const financeChanged = renderHtmlIfChanged(financeContext, donutChart({
     items: [
       { label: 'Entradas', value: totals.entries, color: CHART_COLORS.entry, pattern: 'is-entry' },
       { label: 'Saídas', value: totals.exits, color: CHART_COLORS.exit, pattern: 'is-exit' }
@@ -449,13 +450,14 @@ export function renderTreasuryCharts({
       ? 'Entradas e saídas estão equilibradas.'
       : `${resultRate.toFixed(1).replace('.', ',')}% das entradas no período.`,
     insightTone: toneClass(financialResult)
-  });
+  }));
 
-  cashFlowContext.innerHTML = cashFlowChart(
-    buildCashFlowSeries(periodItems, item => treasury.isProgrammed(item))
+  const cashFlowChanged = renderHtmlIfChanged(
+    cashFlowContext,
+    cashFlowChart(buildCashFlowSeries(periodItems, item => treasury.isProgrammed(item)))
   );
 
-  categoryContext.innerHTML = categoryChart(categories);
+  const categoryChanged = renderHtmlIfChanged(categoryContext, categoryChart(categories));
 
   const positiveAccounts = accountSummaries
     .filter(account => finitePositive(account.balance) > 0)
@@ -469,7 +471,7 @@ export function renderTreasuryCharts({
     !leader || item.value > leader.value ? item : leader
   ), null);
 
-  accountContext.innerHTML = donutChart({
+  const accountChanged = renderHtmlIfChanged(accountContext, donutChart({
     items: positiveAccounts,
     centerLabel: 'Saldo total',
     centerValue: money.format(accountTotal),
@@ -482,7 +484,9 @@ export function renderTreasuryCharts({
       ? `${leadingAccount.label} · ${percentLabel(leadingAccount.value, accountTotal)} do saldo positivo.`
       : 'Nenhuma conta com saldo positivo.',
     insightTone: leadingAccount ? 'is-primary' : 'is-neutral'
-  });
+  }));
 
-  bindChartInteractions(root);
+  if (financeChanged || cashFlowChanged || categoryChanged || accountChanged) {
+    bindChartInteractions(root);
+  }
 }

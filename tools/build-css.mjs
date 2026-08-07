@@ -12,7 +12,6 @@ const packageJson = JSON.parse(await readFile(path.join(projectRoot, 'package.js
 export const CSS_SOURCES = Object.freeze([
   'foundations/application-shell.css',
   'components/interaction-foundation.css',
-  'components/structured-content.css',
   'pages/admin-operations.css',
   'pages/treasury-records.css',
   'pages/notices.css',
@@ -37,7 +36,7 @@ export const CSS_SOURCES = Object.freeze([
   'components/recovery-center.css',
   'components/membership-actions-menu.css',
   'components/native-charts.css',
-  'components/clean-ui.css'
+  'components/modern-interface.css'
 ]);
 
 export async function buildCssBundle() {

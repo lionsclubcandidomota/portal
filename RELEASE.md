@@ -1,28 +1,33 @@
-# Portal Lions 6.28.0
+# Portal Lions v6.36.0
 
-## Interface mais simples e responsiva
+## Etapa 8 — estabilização final da refatoração
 
-Esta versão moderniza toda a apresentação do Portal sem alterar os dados nem os fluxos de negócio existentes. A navegação, os cards, formulários, tabelas, modais e telas administrativas receberam uma linguagem visual mais limpa, com melhor hierarquia, contraste, espaçamento e adaptação para notebooks, tablets e celulares.
+A v6.36.0 encerra a refatoração incremental iniciada na v6.29.0. Esta entrega não altera regras de negócio nem dados do Portal. O foco é garantir que o código publicado permaneça enxuto, verificável e seguro para futuras atualizações.
 
-### Correções
+### Alterações
 
-- O filtro **Programados** da Tesouraria agora recalcula entradas, saídas, resultado e quantidade usando somente os lançamentos programados exibidos.
-- Os filtros **Realizados**, **Entradas** e **Saídas** continuam recalculando os totais conforme o conteúdo filtrado.
-- O card **Agenda** do Dashboard foi reestruturado para impedir sobreposição em larguras reduzidas.
-- Títulos longos, locais, links de reuniões e indicadores passam a quebrar linha de forma segura.
+- Remoção de dois módulos comprovadamente sem uso no grafo real da aplicação:
+  - `assets/js/modules/treasury.js`;
+  - `assets/js/modules/treasury-admin/categories.js`.
+- Nova auditoria `audit:modules`, que percorre imports estáticos e dinâmicos a partir de `assets/js/app.js`.
+- Bloqueio automático de módulos órfãos, imports locais ausentes e dependências circulares.
+- Contratos da Tesouraria validados diretamente nos módulos usados em produção, sem fachada redundante.
+- Novo backup local automático de `data/dados.json` e `data/modelo.json` antes de qualquer migração ou geração de release.
+- Retenção automática dos 10 backups locais mais recentes em `.portal-backups`.
+- Fluxo de finalização consolidado no comando `npm run release:prepare`, evitando executar os mesmos testes e auditorias várias vezes.
+- `FINALIZAR-ATUALIZACAO.bat` agora verifica a presença dos arquivos de dados, cria o backup e executa um único pipeline oficial.
+- Correção do `.gitignore`: o iniciador de homologação volta a ser publicável, enquanto backups e artefatos locais permanecem fora do Git.
+- Portões de qualidade e documentação revisados para a versão consolidada.
 
-### Redesign
+### Compatibilidade
 
-- Navegação e textos mais curtos e amigáveis.
-- Cards mais leves, bordas suaves e sombras discretas.
-- Melhor uso de espaços em branco e tipografia mais clara.
-- Filtros, botões e campos padronizados em todas as telas.
-- Dashboard e Tesouraria com menos ruído visual.
-- Modais e navegação móvel mais confortáveis.
+- esquema de dados: 10;
+- sem Cloudflare, D1 ou Worker;
+- publicação continua pelo fluxo atual do GitHub;
+- pacote de atualização não contém `data` nem `public`;
+- Tesouraria, mensalidades, Mútuas, associados, fotos e demais cadastros são preservados;
+- a regra de Mútua continua gerando cobrança somente após o registro de falecimento.
 
-## Dados
+## Refatoração concluída
 
-- Esquema: 10.
-- Nenhuma migração de banco de dados.
-- Nenhuma alteração automática em Tesouraria, Mútuas, mensalidades, associados, fotos, eventos ou avisos.
-- A atualização segura não inclui `data/dados.json` nem a pasta `public`.
+As oito etapas planejadas foram concluídas. Novas melhorias devem ser tratadas como versões evolutivas independentes, sempre preservando os portões de qualidade e o fluxo de backup estabelecidos nesta entrega.

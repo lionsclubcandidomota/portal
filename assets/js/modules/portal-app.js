@@ -1,21 +1,19 @@
 import { loadState, exportState, parseImportFile } from '../storage.js';
 import { fullDateFormat, parseLocalDate, formatDate, nextBirthdayDate, daysUntil, escapeHtml, normalize, fileToDataUrl, sumTreasury, toInputDate } from '../utils.js';
 import { createFinancePrivacyController } from './finance-privacy.js';
-import { createTreasuryController, destroyTreasuryCharts } from './treasury.js?v=6.28.0';
-import { createTreasuryAdminController } from './treasury-admin.js?v=6.28.0';
-import { createEntityFormsController } from './entity-forms.js?v=6.28.0';
-import { createAdminPanelController } from './admin-panel.js?v=6.28.0';
-import { createReportsController } from './reports/controller.js?v=6.28.0';
-import { createSettingsController } from './settings.js';
-import { createNavigationController } from './navigation.js?v=6.28.0';
+import { createLazyTreasuryController } from './lazy-treasury-controller.js?v=6.36.0';
+import { currencyInputValue, parseCurrencyInput } from './treasury/domain.js?v=6.36.0';
+import { memberIsActive } from '../core/portal-members.js?v=6.36.0';
+import { createLazySettingsController } from './lazy-settings.js?v=6.36.0';
+import { createNavigationController } from './navigation.js?v=6.36.0';
 import { createUiShellController } from './ui-shell.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createPublishCenterController } from './publish-center.js?v=6.28.0';
-import { createPortalRefreshController } from './portal-refresh.js?v=6.28.0';
-import { createAuditLogController } from './audit-log.js?v=6.28.0';
-import { createRecoveryCenterController } from './recovery-center.js?v=6.28.0';
-import { createPublicationReviewController } from './publication-review-controller.js?v=6.28.0';
+import { createPublishCenterController } from './publish-center.js?v=6.36.0';
+import { createPortalRefreshController } from './portal-refresh.js?v=6.36.0';
+import { createAuditLogController } from './audit-log.js?v=6.36.0';
+import { createRecoveryCenterController } from './recovery-center.js?v=6.36.0';
+import { createPublicationReviewController } from './publication-review-controller.js?v=6.36.0';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
@@ -28,9 +26,8 @@ import {
   birthdayRows,
   birthdayCards
 } from './birthdays.js';
-import { createBirthdayArtworkController } from './birthday-artwork.js';
 import { avatar, empty, kpi, priorityBadge, statusBadge } from './visual-helpers.js';
-import { createAgendaController } from './agenda.js';
+import { createLazyBirthdayArtworkShare } from './lazy-birthday-artwork.js?v=6.36.0';
 import {
   appointmentLocationText,
   appointmentTypeBadge,
@@ -39,15 +36,18 @@ import {
   getAppointments as buildAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.28.0';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.28.0';
-import { getPortalElements } from './portal-elements.js?v=6.28.0';
-import { createReadOnlyGuard } from './read-only-guard.js?v=6.28.0';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.28.0';
+} from './appointments.js?v=6.36.0';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.36.0';
+import { getPortalElements } from './portal-elements.js?v=6.36.0';
+import { createReadOnlyGuard } from './read-only-guard.js?v=6.36.0';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.36.0';
+import { createAgendaController } from './agenda-state.js?v=6.36.0';
+import { createLazyEntityActions } from './lazy-entity-actions.js?v=6.36.0';
+import { createLazyAdminPanelController } from './lazy-admin-panel.js?v=6.36.0';
 
 export function bootstrapPortal() {
   let state = loadState();
-  const treasury = createTreasuryController({
+  const treasuryFeature = createLazyTreasuryController({
     getState: () => state,
     parseLocalDate,
     normalize,
@@ -56,13 +56,6 @@ export function bootstrapPortal() {
     initialSection: sessionStorage.getItem('lions.treasury.section') || 'movements',
     onSectionChange: section => sessionStorage.setItem('lions.treasury.section', section)
   });
-  const {
-    parseCurrencyInput,
-    currencyInputValue,
-    memberIsActive,
-    accountSummaries: treasuryAccountSummaries,
-    accountTypeIcon
-  } = treasury;
   const financePrivacy = createFinancePrivacyController();
   const {
     root,
@@ -165,9 +158,10 @@ export function bootstrapPortal() {
     onPublish: runtime.commitPendingChanges,
     onDiscard: runtime.discardPendingChanges
   });
-  const treasuryAdmin = createTreasuryAdminController({
+  const entityActions = createLazyEntityActions({
     getState: () => state,
-    treasury,
+    loadTreasuryController: treasuryFeature.load,
+    root,
     modalController,
     confirmation,
     persist: runtime.persist,
@@ -175,33 +169,11 @@ export function bootstrapPortal() {
     renderCurrentView: render,
     closeModal,
     toast,
-    avatar,
-    empty
-  });
-  const {
-    openFamilyGroupsManager,
-    openMembershipPayment,
-    openMutualGroupsManager,
-    openMutualEventManager,
-    openMutualPayment,
-    openTreasuryAccountsManager,
-    shareMembershipCharge,
-    openTreasuryEntryForm
-  } = treasuryAdmin;
-  const entityForms = createEntityFormsController({
-    getState: () => state,
-    treasury,
-    root,
-    modalController,
-    confirmation,
-    persist: runtime.persist,
-    renderCurrentView: render,
-    closeModal,
-    toast,
     isAdminUnlocked: runtime.isWriteAllowed,
     setView,
-    openTreasuryEntryForm,
-    selectImage: target => fileInputs?.requestImage(target)
+    selectImage: target => fileInputs?.requestImage(target),
+    avatar,
+    empty
   });
   const {
     applyBirthdayPhoto,
@@ -210,40 +182,47 @@ export function bootstrapPortal() {
     ensureAdmin,
     openForm,
     pageToolbar,
-    rowActions
-  } = entityForms;
-  const reports = createReportsController({
-    getState: () => state,
-    toast
-  });
-  const adminPanel = createAdminPanelController({
+    rowActions,
+    openFamilyGroupsManager,
+    openMembershipPayment,
+    openMutualGroupsManager,
+    openMutualEventManager,
+    openMutualPayment,
+    openTreasuryAccountsManager,
+    shareMembershipCharge
+  } = entityActions;
+
+  const adminPanel = createLazyAdminPanelController({
     root,
-    getState: () => state,
-    isAdminUnlocked: runtime.isAdminUnlocked,
-    getAccessRole: () => runtime.accessRole,
-    canWrite: runtime.isWriteAllowed,
-    loginAdmin: runtime.connectAdminSession,
-    loginDirector: runtime.connectDirectorSession,
-    logout: runtime.logoutAdmin,
-    openForm,
-    setView,
-    exportState,
-    requestImport: () => fileInputs?.requestImport(),
-    refreshSyncStatus: () => publishCenter.refresh(),
-    financePrivacy,
-    auditLog,
-    recoveryCenter,
-    reports,
-    toast
+    toast,
+    createOptions: () => ({
+      root,
+      getState: () => state,
+      isAdminUnlocked: runtime.isAdminUnlocked,
+      getAccessRole: () => runtime.accessRole,
+      canWrite: runtime.isWriteAllowed,
+      loginAdmin: runtime.connectAdminSession,
+      loginDirector: runtime.connectDirectorSession,
+      logout: runtime.logoutAdmin,
+      openForm,
+      setView,
+      exportState,
+      requestImport: () => fileInputs?.requestImport(),
+      refreshSyncStatus: () => publishCenter.refresh(),
+      financePrivacy,
+      auditLog,
+      recoveryCenter,
+      toast
+    })
   });
   const birthdays = createBirthdaysController();
   const birthdayActions = createBirthdayActions(rowActions);
-  const birthdayArtwork = createBirthdayArtworkController({
+  const shareBirthdayArtwork = createLazyBirthdayArtworkShare({
     getBirthdays: () => state.birthdays,
     toast
   });
 
-  const settingsPanel = createSettingsController({
+  const settingsPanel = createLazySettingsController({
     root,
     getState: () => state,
     isAdminUnlocked: runtime.isAdminUnlocked,
@@ -258,7 +237,8 @@ export function bootstrapPortal() {
     configureDirectorProfile: runtime.configureDirectorProfile,
     removeDirectorProfile: runtime.removeDirectorProfile,
     confirmation,
-    toast
+    toast,
+    isCurrentView: () => navigation?.currentView === 'settings'
   });
   const {
     apply: applySettings,
@@ -291,7 +271,12 @@ export function bootstrapPortal() {
     getAccessRole: () => runtime.accessRole,
     getAccessPolicy: runtime.getAccessPolicy,
     renderView: render,
-    destroyViewResources: destroyTreasuryCharts,
+    destroyViewResources: () => treasuryFeature.clearCharts(),
+    preloadView: view => {
+      if (view === 'admin') return adminPanel.load();
+      if (view === 'settings') return settingsPanel.load();
+      return viewRenderer?.preload(view);
+    },
     refreshGlobalControls: () => publishCenter.refresh(),
     ensureAdmin,
     openForm,
@@ -310,7 +295,7 @@ export function bootstrapPortal() {
     confirmation,
     closeModal,
     closeSidebar,
-    shareBirthday: birthdayArtwork.share
+    shareBirthday: shareBirthdayArtwork
   });
   readOnlyGuard = createReadOnlyGuard({
     getAccessPolicy: runtime.getAccessPolicy,
@@ -347,8 +332,8 @@ export function bootstrapPortal() {
     confirmation.closeConfirmModal(false);
     navigation.closeSidebar();
     publishCenter.close({ focus: false });
-    destroyTreasuryCharts();
-    treasury.reset();
+    treasuryFeature.clearCharts();
+    treasuryFeature.reset();
     birthdays.reset();
     agenda.reset();
     navigation.setView('dashboard');
@@ -360,9 +345,9 @@ export function bootstrapPortal() {
   }
 
   function setTreasurySection(section){
-    treasury.section = section;
+    const activeSection = treasuryFeature.setSection(section);
     document.querySelectorAll('[data-treasury-section]').forEach(item => {
-      const active = item.dataset.treasurySection === section;
+      const active = item.dataset.treasurySection === activeSection;
       item.classList.toggle('is-active', active);
       if (active) item.setAttribute('aria-current', 'page');
       else item.removeAttribute('aria-current');
@@ -384,7 +369,7 @@ export function bootstrapPortal() {
   }
 
   function renderAdmin() {
-    adminPanel.render();
+    return adminPanel.render();
   }
 
 
@@ -397,20 +382,16 @@ export function bootstrapPortal() {
     getRuntime: () => runtime,
     getNavigation: () => navigation,
     root,
-    treasury,
+    loadTreasuryController: treasuryFeature.load,
     birthdays,
     agenda,
     renderAdmin,
     renderSettings,
     dashboardDependencies: {
-      memberIsActive,
       kpi,
       avatar,
       empty,
       financePrivacy,
-      treasuryAccountSummaries,
-      accountTypeIcon,
-      treasury,
       setTreasurySection,
       setView
     },

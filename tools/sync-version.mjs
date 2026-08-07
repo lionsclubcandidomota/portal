@@ -20,7 +20,8 @@ async function walk(directory, extension) {
 
 const files = [
   path.join(projectRoot, 'index.html'),
-  ...await walk(path.join(projectRoot, 'assets', 'js'), '.js')
+  ...await walk(path.join(projectRoot, 'assets', 'js'), '.js'),
+  ...await walk(path.join(projectRoot, 'tools'), '.mjs')
 ];
 const mismatches = [];
 let updates = 0;

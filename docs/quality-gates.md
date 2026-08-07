@@ -1,41 +1,83 @@
-# Portões de qualidade — v6.26.0
+# Portões de qualidade — v6.36.0
 
 ## Comando principal
 
 ```bash
-npm run check
+npm run quality
 ```
 
-O comando executa conferência de versão, lint, auditoria CSS, acessibilidade, segurança, sintaxe, imports, contratos públicos, dados, mídia e testes.
+O comando executa, uma única vez:
+
+- conferência da versão de cache;
+- lint interno;
+- testes automatizados;
+- auditoria do grafo de módulos;
+- auditorias de CSS, acessibilidade, segurança, desempenho e mídia;
+- validação de sintaxe, contratos públicos, imports e dados.
+
+`npm run check` permanece como um alias compatível para `npm run quality`.
 
 ## Orçamentos atuais
 
-- Até 27 fontes CSS no bundle modular.
-- Nenhuma regra CSS exatamente duplicada.
-- Até 321 seletores redefinidos no mesmo contexto.
-- Até 477 regras de sobrescrita.
-- Zero fontes e zero bytes em `assets/css/legacy`.
-- Até 40.000 bytes por fonte CSS.
-- Até 325.000 bytes no bundle CSS.
-- Até 520 linhas por módulo de interface.
-- `portal-app.js` abaixo de 500 linhas.
+- até 28 fontes CSS no bundle modular;
+- nenhuma regra CSS exatamente duplicada;
+- até 400 seletores redefinidos no mesmo contexto;
+- até 580 regras de sobrescrita;
+- zero fontes e zero bytes em `assets/css/legacy`;
+- até 40.000 bytes por fonte CSS;
+- até 365.000 bytes no bundle CSS;
+- até 185.000 bytes de JavaScript no grafo inicial;
+- até 60.000 bytes para o logotipo da interface;
+- até 580.000 bytes de ativos críticos não comprimidos;
+- `portal-app.js` abaixo de 500 linhas;
 - `entity-forms.js` abaixo de 380 linhas.
 
 ## Regras automáticas adicionais
 
-- Todos os botões de templates declaram `type`.
-- Eventos inline no HTML são bloqueados.
-- IDs estáticos duplicados são bloqueados.
-- Arquivos CSS modernos não carregam versão no nome.
-- `debugger`, `var` e `console.log` são bloqueados na aplicação.
-- Todos os parâmetros `?v=` correspondem ao `package.json`.
-- A pasta `assets/css/legacy` não pode existir.
-- Templates de cadastro e composição visual permanecem em módulos próprios.
+- todos os módulos de `assets/js` devem ser alcançáveis a partir de `assets/js/app.js`;
+- imports relativos não podem apontar para arquivos ausentes;
+- dependências circulares são bloqueadas;
+- todos os botões de templates declaram `type`;
+- eventos inline no HTML, IDs estáticos duplicados, `debugger`, `var` e `console.log` são bloqueados;
+- todos os parâmetros `?v=` correspondem ao `package.json`;
+- a pasta `assets/css/legacy` não pode existir;
+- recursos pesados não podem retornar ao carregamento estático inicial;
+- o template de aniversário não pode ser pré-carregado;
+- shell, Dashboard, Área administrativa e navegação financeira usam ícones SVG locais;
+- listas críticas devem usar `renderHtmlIfChanged` para evitar substituições idênticas;
+- `.feature-loading` pertence à camada de interação, não à camada visual final.
 
-## Auditoria de segurança
+## Auditorias
 
-`npm run audit:security` bloqueia campos sensíveis nos JSONs oficiais, verifica as políticas do HTML e procura persistência indevida de credenciais no navegador.
+- `npm run audit:modules`: alcançabilidade, imports ausentes e ciclos;
+- `npm run audit:css`: cascata, duplicações, fontes e peso;
+- `npm run audit:a11y`: contratos de acessibilidade estática;
+- `npm run audit:security`: campos sensíveis, políticas do HTML e credenciais;
+- `npm run audit:performance`: grafo inicial e ativos críticos;
+- `npm run audit:media`: fotos, miniaturas e template de aniversário;
+- `npm run audit:visual`: validação opcional em navegador disponível;
+- `npm run audit:visual:required`: validação visual obrigatória na estação de homologação.
+
+## Backup local
+
+```bash
+npm run backup:local
+```
+
+Cria uma cópia versionada dos dois JSONs operacionais em `.portal-backups`, com SHA-256 e retenção das 10 versões mais recentes.
 
 ## Portão de release
 
-`npm run release:check` executa todos os portões anteriores e também valida documentação, ausência de dependências externas de execução e manifesto SHA-256 do pacote.
+Para conferir um pacote já preparado:
+
+```bash
+npm run release:check
+```
+
+Para preparar uma atualização completa:
+
+```bash
+npm run release:prepare
+```
+
+`release:prepare` cria o backup, migra os dados de forma idempotente, gera o CSS, executa os portões determinísticos, produz o manifesto e verifica o pacote final. A auditoria visual deve ser executada separadamente na estação de homologação.

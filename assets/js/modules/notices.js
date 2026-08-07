@@ -6,6 +6,7 @@ import {
 } from '../utils.js';
 import { markdownToHtml } from './markdown.js';
 import { timelineHeading, todayStart } from './timeline.js';
+import { renderHtmlIfChanged } from './visual-helpers.js?v=6.36.0';
 
 export function noticeIsExpired(notice, reference = new Date()) {
   if (!notice?.endDate) return false;
@@ -81,9 +82,12 @@ export function renderNotices(state, helpers) {
 
     if (!lists) return;
 
-    lists.innerHTML = `<section class="timeline-section">${timelineHeading('📢', 'Avisos atuais', 'Comunicados disponíveis e programados.', current.length)}<div class="expandable-record-list">${noticeCards(current, 'Nenhum aviso ativo ou programado.', helpers)}</div></section>${adminUnlocked ? `<section class="timeline-section is-history">${timelineHeading('🗂️', 'Histórico', 'Avisos encerrados.', history.length, true)}<div class="expandable-record-list">${noticeCards(history, 'Nenhum aviso encerrado.', helpers)}</div></section>` : ''}`;
+    const changed = renderHtmlIfChanged(
+      lists,
+      `<section class="timeline-section">${timelineHeading('📢', 'Avisos atuais', 'Comunicados disponíveis e programados.', current.length)}<div class="expandable-record-list">${noticeCards(current, 'Nenhum aviso ativo ou programado.', helpers)}</div></section>${adminUnlocked ? `<section class="timeline-section is-history">${timelineHeading('🗂️', 'Histórico', 'Avisos encerrados.', history.length, true)}<div class="expandable-record-list">${noticeCards(history, 'Nenhum aviso encerrado.', helpers)}</div></section>` : ''}`
+    );
 
-    bindRowActions();
+    if (changed) bindRowActions();
   };
 
   bindToolbar(draw);

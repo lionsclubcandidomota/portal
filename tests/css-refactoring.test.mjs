@@ -20,7 +20,7 @@ async function doesNotExist(relativePath) {
 test('camada v3.5 foi separada por responsabilidade sem permanecer em legacy', async () => {
   const expectedSources = [
     ['components/interaction-foundation.css', '.form-validation-alert'],
-    ['components/structured-content.css', '.structured-text-toggle'],
+    ['components/interaction-foundation.css', '.structured-text-toggle'],
     ['pages/admin-operations.css', '.admin-command-header'],
     ['pages/treasury-records.css', '.treasury-card-grid'],
     ['pages/notices.css', '.notice-desktop-table'],
@@ -33,6 +33,8 @@ test('camada v3.5 foi separada por responsabilidade sem permanecer em legacy', a
   }
 
   assert.equal(await doesNotExist('legacy/v35.css'), true);
+  assert.equal(await doesNotExist('components/structured-content.css'), true);
+  assert.equal(await doesNotExist('components/clean-ui.css'), true);
   assert.equal(await doesNotExist('legacy/improvements-v5.css'), true);
 });
 
@@ -41,7 +43,6 @@ test('bundle mantém a ordem histórica das fontes migradas', async () => {
   const ordered = [
     'foundations/application-shell.css',
     'components/interaction-foundation.css',
-    'components/structured-content.css',
     'pages/admin-operations.css',
     'pages/treasury-records.css',
     'pages/notices.css',
@@ -58,6 +59,7 @@ test('bundle mantém a ordem histórica das fontes migradas', async () => {
   assert.match(build, /components\/responsive-guardrails\.css/);
   assert.match(build, /pages\/responsive-workflows\.css/);
   assert.match(build, /components\/interface-polish\.css/);
+  assert.match(build, /components\/modern-interface\.css/);
   assert.match(build, /pages\/treasury-workflows\.css/);
 });
 

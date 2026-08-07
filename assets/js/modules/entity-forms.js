@@ -1,4 +1,4 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.28.0';
+import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.36.0';
 import {
   escapeHtml,
   normalize,
@@ -90,7 +90,7 @@ export function createEntityFormsController({
     if (!preview) return false;
 
     preview.innerHTML = data
-      ? `<img src="${data}" alt="Pré-visualização da foto selecionada">`
+      ? `<img src="${data}" alt="Pré-visualização da foto selecionada" decoding="async">`
       : '<span>👤</span><small>Nenhuma foto selecionada</small>';
     if (removeButton) removeButton.hidden = !data;
     return true;

@@ -29,12 +29,43 @@ const appSources = await Promise.all(appFiles.map(async file => ({
   source: await readFile(file, 'utf8')
 })));
 
-for (const required of ['CHANGELOG.md', 'RELEASE.md', 'docs/homologation.md', 'release-manifest.json']) {
+for (const required of [
+  '.gitignore',
+  'CHANGELOG.md',
+  'REFACTORING.md',
+  'RELEASE.md',
+  'docs/homologation.md',
+  'release-manifest.json',
+  'INICIAR-HOMOLOGACAO.bat',
+  'FINALIZAR-ATUALIZACAO.bat',
+  'tools/create-local-backup.mjs',
+  'tools/module-graph-audit.mjs',
+  'tools/prepare-release.mjs'
+]) {
   try {
     await stat(path.join(projectRoot, required));
   } catch {
     failures.push(`arquivo obrigatório ausente: ${required}`);
   }
+}
+
+
+const gitignore = await readFile(path.join(projectRoot, '.gitignore'), 'utf8');
+if (!/^\.portal-backups\/$/m.test(gitignore)) failures.push('.gitignore não protege .portal-backups/');
+if (!/^artifacts\/$/m.test(gitignore)) failures.push('.gitignore não protege artifacts/');
+if (/^INICIAR-HOMOLOGACAO\.bat$/m.test(gitignore)) failures.push('INICIAR-HOMOLOGACAO.bat não pode permanecer ignorado');
+
+const finalizer = await readFile(path.join(projectRoot, 'FINALIZAR-ATUALIZACAO.bat'), 'utf8');
+if (!/call npm run release:prepare/i.test(finalizer)) failures.push('FINALIZAR-ATUALIZACAO.bat não usa o pipeline oficial release:prepare');
+if (packageJson.scripts?.['release:prepare'] !== 'node tools/prepare-release.mjs') {
+  failures.push('release:prepare deve usar tools/prepare-release.mjs');
+}
+const prepareRelease = await readFile(path.join(projectRoot, 'tools', 'prepare-release.mjs'), 'utf8');
+if (prepareRelease.indexOf('tools/create-local-backup.mjs') > prepareRelease.indexOf('tools/migrate-official-data.mjs')) {
+  failures.push('prepare-release deve criar backup antes da migração dos dados');
+}
+if (!String(packageJson.scripts?.quality || '').includes('npm run audit:modules')) {
+  failures.push('o portão quality não executa audit:modules');
 }
 
 for (const documentPath of ['CHANGELOG.md', 'RELEASE.md', 'docs/homologation.md']) {
@@ -72,8 +103,8 @@ for (const tag of targetBlankTags) {
   }
 }
 
-if (!/^6\.28\.0$/.test(packageJson.version)) {
-  failures.push(`a versão estável esperada é 6.28.0; encontrada ${packageJson.version}`);
+if (!/^\d+\.\d+\.\d+$/.test(packageJson.version)) {
+  failures.push(`a versão deve usar o formato estável x.y.z; encontrada ${packageJson.version}`);
 }
 
 if (failures.length) {

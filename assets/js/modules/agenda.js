@@ -1,52 +1,3 @@
-export function createAgendaController() {
-  let mode = 'list';
-  let filter = 'all';
-  let quickFilter = 'all';
-  let calendarCursor = new Date();
-
-  const reset = () => {
-    mode = 'list';
-    filter = 'all';
-    quickFilter = 'all';
-    calendarCursor = new Date();
-  };
-
-  return {
-    reset,
-    get mode() {
-      return mode;
-    },
-
-    set mode(value) {
-      mode = value;
-    },
-
-    get filter() {
-      return filter;
-    },
-
-    set filter(value) {
-      filter = value;
-    },
-
-    get quickFilter() {
-      return quickFilter;
-    },
-
-    set quickFilter(value) {
-      quickFilter = value;
-    },
-
-    get calendarCursor() {
-      return calendarCursor;
-    },
-
-    set calendarCursor(value) {
-      calendarCursor = value;
-    }
-  };
-}
-
 export function renderAgenda(agenda, helpers) {
   if (!helpers?.modalController || typeof helpers.modalController.open !== 'function') {
     throw new TypeError('renderAgenda requer modalController.');
@@ -71,14 +22,14 @@ export function renderAgenda(agenda, helpers) {
   const rerender = () => renderAgenda(agenda, helpers);
 
   root.innerHTML = `
-    <section class="agenda-overview" aria-label="Atalhos da agenda"><p class="agenda-overview-hint">Clique para filtrar. Clique novamente no card selecionado para mostrar toda a agenda.</p>
+    <section class="agenda-overview" aria-label="Atalhos da agenda"><p class="agenda-overview-hint">Toque em um resumo para filtrar. Toque novamente para limpar.</p>
       <button type="button" class="agenda-overview-card ${agenda.quickFilter === 'upcoming' ? 'is-active' : ''}" data-agenda-quick="upcoming" aria-pressed="${agenda.quickFilter === 'upcoming'}"><span class="agenda-overview-icon">🗓️</span><div><small>Próximos</small><strong>${upcoming.length}</strong><span>compromissos</span></div><span class="agenda-overview-arrow" aria-hidden="true">›</span></button>
       <button type="button" class="agenda-overview-card ${agenda.quickFilter === 'today' ? 'is-active' : ''}" data-agenda-quick="today" aria-pressed="${agenda.quickFilter === 'today'}"><span class="agenda-overview-icon">☀️</span><div><small>Hoje</small><strong>${todayCount}</strong><span>programados</span></div><span class="agenda-overview-arrow" aria-hidden="true">›</span></button>
       <button type="button" class="agenda-overview-card ${agenda.quickFilter === 'virtual' ? 'is-active' : ''}" data-agenda-quick="virtual" aria-pressed="${agenda.quickFilter === 'virtual'}"><span class="agenda-overview-icon">🎥</span><div><small>Virtuais</small><strong>${virtualCount}</strong><span>com acesso online</span></div><span class="agenda-overview-arrow" aria-hidden="true">›</span></button>
     </section>
     <section class="agenda-command-card">
       ${pageToolbar('Buscar na agenda...', 'Adicionar compromisso', 'appointment')}
-      <div class="toolbar agenda-toolbar"><div class="toolbar-group agenda-view-switch"><button class="btn ${agenda.mode === 'list' ? 'btn-primary' : 'btn-ghost'}" id="listMode" type="button">☷ Lista</button><button class="btn ${agenda.mode === 'calendar' ? 'btn-primary' : 'btn-ghost'}" id="calendarMode" type="button">▦ Calendário</button></div><div class="toolbar-group agenda-filters" aria-label="Filtrar agenda"><button class="btn ${agenda.filter === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="all" type="button">Todos</button><button class="btn ${agenda.filter === 'event' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="event" type="button">📅 Eventos</button><button class="btn ${agenda.filter === 'meeting' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="meeting" type="button">🤝 Reuniões</button></div></div>
+      <div class="toolbar agenda-toolbar"><div class="toolbar-group agenda-view-switch" aria-label="Modo de visualização"><button class="btn ${agenda.mode === 'list' ? 'btn-primary' : 'btn-ghost'}" id="listMode" type="button">☷ Lista</button><button class="btn ${agenda.mode === 'calendar' ? 'btn-primary' : 'btn-ghost'}" id="calendarMode" type="button">▦ Calendário</button></div><div class="toolbar-group agenda-filters" aria-label="Filtrar agenda"><button class="btn ${agenda.filter === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="all" type="button">Todos</button><button class="btn ${agenda.filter === 'event' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="event" type="button">📅 Eventos</button><button class="btn ${agenda.filter === 'meeting' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="meeting" type="button">🤝 Reuniões</button></div></div>
     </section>
     <div id="agendaContent"></div>`;
 
