@@ -1,7 +1,8 @@
-import { cloneState } from '../../core/portal-state.js?v=6.47.0';
-import { accessSnapshot } from './authorization.js?v=6.47.0';
+import { cloneState } from '../../core/portal-state.js?v=6.47.2';
+import { accessSnapshot } from './authorization.js?v=6.47.2';
 
 const DEFAULT_INTERVAL_MS = 60_000;
+const BACKOFF_INTERVALS_MS = Object.freeze([60_000, 120_000, 300_000, 600_000]);
 const MODULE_NAMES = Object.freeze([
   'reference',
   'groups',
@@ -40,6 +41,7 @@ export function createLiveSyncActions(context, privateSync = null) {
   let baseline = null;
   let started = false;
   let lastAppliedAt = '';
+  let failureCount = 0;
 
   const windowRef = environment.window;
   const documentRef = environment.document;
@@ -56,7 +58,7 @@ export function createLiveSyncActions(context, privateSync = null) {
   const applyModules = async (modules, revisions) => {
     if (modules.includes('public')) {
       const payload = await services.loadPublicGitHubPayload?.();
-      if (payload?.state) {
+      if (payload?.state && !payload.migrationPending) {
         const privateState = services.createPrivatePortalState?.(context.currentState()) || {};
         const merged = services.mergePublicAndPrivatePortalState?.(payload.state, privateState) || payload.state;
         context.replaceCurrentState(merged);
@@ -112,17 +114,21 @@ export function createLiveSyncActions(context, privateSync = null) {
       if (!revisions?.modules) return { ok: false, reason: 'unsupported' };
       if (!baseline || initialize) {
         baseline = revisions;
+        failureCount = 0;
         return { ok: true, reason: 'initialized', revision: revisions.revision };
       }
       const modules = changedModules(baseline, revisions);
       if (!modules.length) {
         baseline = revisions;
+        failureCount = 0;
         return { ok: true, reason: 'unchanged', revision: revisions.revision };
       }
       const applied = await applyModules(modules, revisions);
       baseline = revisions;
+      failureCount = 0;
       return { ok: true, reason, ...applied, revision: revisions.revision };
     } catch (error) {
+      failureCount += 1;
       console.warn('A sincronização automática do D1 foi adiada.', error);
       return { ok: false, reason: 'error', error };
     } finally {
@@ -130,27 +136,61 @@ export function createLiveSyncActions(context, privateSync = null) {
     }
   };
 
-  const onFocus = () => { void check({ reason: 'focus' }); };
+  const nextDelay = () => failureCount > 0
+    ? BACKOFF_INTERVALS_MS[Math.min(failureCount - 1, BACKOFF_INTERVALS_MS.length - 1)]
+    : DEFAULT_INTERVAL_MS;
+
+  const clearTimer = () => {
+    if (!timer) return;
+    windowRef?.clearTimeout?.(timer);
+    windowRef?.clearInterval?.(timer);
+    timer = null;
+  };
+
+  const schedule = (delay = nextDelay()) => {
+    if (!started) return;
+    clearTimer();
+    timer = windowRef?.setTimeout?.(async () => {
+      timer = null;
+      await check({ reason: 'timer' });
+      schedule();
+    }, delay) || null;
+  };
+
+  const refreshNow = async reason => {
+    if (!started || documentRef?.hidden) return;
+    await check({ reason });
+    schedule();
+  };
+
+  const onFocus = () => { void refreshNow('focus'); };
   const onVisibility = () => {
-    if (!documentRef?.hidden) void check({ reason: 'visibility' });
+    if (documentRef?.hidden) {
+      clearTimer();
+      return;
+    }
+    void refreshNow('visibility');
   };
 
   const start = () => {
     if (started) return;
     started = true;
     baseline = null;
+    failureCount = 0;
     windowRef?.addEventListener?.('focus', onFocus);
     documentRef?.addEventListener?.('visibilitychange', onVisibility);
-    timer = windowRef?.setInterval?.(() => { void check({ reason: 'timer' }); }, DEFAULT_INTERVAL_MS) || null;
-    windowRef?.setTimeout?.(() => { void check({ initialize: true, reason: 'session' }); }, 800);
+    windowRef?.setTimeout?.(async () => {
+      await check({ initialize: true, reason: 'session' });
+      schedule();
+    }, 800);
   };
 
   const stop = () => {
     if (!started) return;
     started = false;
     baseline = null;
-    if (timer) windowRef?.clearInterval?.(timer);
-    timer = null;
+    failureCount = 0;
+    clearTimer();
     windowRef?.removeEventListener?.('focus', onFocus);
     documentRef?.removeEventListener?.('visibilitychange', onVisibility);
   };
@@ -163,6 +203,8 @@ export function createLiveSyncActions(context, privateSync = null) {
 
   return {
     check,
+    currentDelay: nextDelay,
+    failureCount: () => failureCount,
     isRunning: () => running,
     lastAppliedAt: () => lastAppliedAt,
     noteLocalSave,

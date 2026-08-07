@@ -1,5 +1,5 @@
-import { migratePortalPayload } from './core/portal-schema.js?v=6.47.0';
-import { createPublicPortalState } from './core/portal-data-boundary.js?v=6.47.0';
+import { migratePortalPayload } from './core/portal-schema.js?v=6.47.2';
+import { createPublicPortalState } from './core/portal-data-boundary.js?v=6.47.2';
 
 export const PUBLIC_DATA_CONFIG = Object.freeze({
   workerUrl: 'https://lions-portal-anexos.lionsclubcandidomota.workers.dev',
@@ -33,7 +33,9 @@ function buildPublicPayload(parsed) {
     deploymentId: revision,
     revision,
     updatedAt: String(parsed?.updatedAt || ''),
-    source: 'd1'
+    source: 'd1',
+    migrationPending: parsed?.migrationPending === true,
+    migrationMessage: String(parsed?.migrationMessage || '')
   };
 }
 
@@ -44,7 +46,7 @@ function publicStateUrl(url = null) {
 function normalizePayload(parsed) {
   const migrated = migratePortalPayload(parsed);
   const data = migrated.state;
-  return createPublicPortalState({
+  const normalized = createPublicPortalState({
     ...data,
     updatedAt: migrated.metadata.updatedAt || data.updatedAt || '',
     deploymentId: migrated.metadata.deploymentId || parsed?.revision || data.deploymentId || '',
@@ -52,6 +54,18 @@ function normalizePayload(parsed) {
       ? data.birthdays.map(({ phone, email, telefone, ...birthday }) => birthday)
       : []
   });
+
+  if (parsed?.migrationPending === true) {
+    // A resposta de transição existe apenas para liberar a autenticação. Ela não
+    // pode substituir o cache local por coleções vazias enquanto o Worker tenta
+    // recuperar o conteúdo público anterior.
+    delete normalized.birthdays;
+    delete normalized.events;
+    delete normalized.meetings;
+    delete normalized.notices;
+    normalized.publicMigrationPending = true;
+  }
+  return normalized;
 }
 
 export async function loadPublicD1Payload(url = null) {

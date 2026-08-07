@@ -1,10 +1,10 @@
-import { cloneState } from '../../core/portal-state.js?v=6.47.0';
-import { remotePayloadVersion } from './domain.js?v=6.47.0';
+import { cloneState } from '../../core/portal-state.js?v=6.47.2';
+import { remotePayloadVersion } from './domain.js?v=6.47.2';
 import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   roleHasCapability
-} from './authorization.js?v=6.47.0';
+} from './authorization.js?v=6.47.2';
 
 export function createInterfaceRefreshActions(context, privateSync = null) {
   const { dependencies, services, model } = context;
@@ -32,6 +32,9 @@ export function createInterfaceRefreshActions(context, privateSync = null) {
 
     try {
       const remote = await services.loadPublicGitHubPayload();
+      if (remote?.migrationPending) {
+        throw new Error(remote.migrationMessage || 'A recuperação dos dados públicos ainda está em andamento.');
+      }
 
       const secureProfile = services.secureStorageProfileFromState?.(remote.state);
       if (secureProfile?.enabled && services.loadPrivatePortalState) {

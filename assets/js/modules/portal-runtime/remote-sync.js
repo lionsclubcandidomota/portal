@@ -1,4 +1,4 @@
-import { mergePortalStates, remotePayloadVersion, remoteRefreshInterval, shouldApplyRemotePayload } from './domain.js?v=6.47.0';
+import { mergePortalStates, remotePayloadVersion, remoteRefreshInterval, shouldApplyRemotePayload } from './domain.js?v=6.47.2';
 
 export function createRemoteSyncActions(context) {
   const { dependencies, services, environment, model } = context;

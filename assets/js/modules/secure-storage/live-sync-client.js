@@ -4,7 +4,7 @@ import {
   secureStorageApiUrl as apiUrl,
   secureStorageJsonHeaders as jsonHeaders,
   setSecureStoragePrivateRevision
-} from './session-store.js?v=6.47.0';
+} from './session-store.js?v=6.47.2';
 
 async function loadModule(state, path, errorMessage) {
   const { profile, token } = requireSession(state, ['admin', 'director']);

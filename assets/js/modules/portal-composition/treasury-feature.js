@@ -1,10 +1,10 @@
-import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.47.0';
-import { createTreasuryAdminController } from '../treasury-admin.js?v=6.47.0';
+import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.47.2';
+import { createTreasuryAdminController } from '../treasury-admin.js?v=6.47.2';
 import {
   loadD1OperationalMemberships,
   loadD1OperationalMutuals,
   loadD1OperationalTreasury
-} from '../secure-storage/client.js?v=6.47.0';
+} from '../secure-storage/client.js?v=6.47.2';
 
 export function createTreasuryFeature({
   getState,

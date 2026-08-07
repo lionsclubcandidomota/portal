@@ -1,7 +1,7 @@
 import {
   createPrivatePortalState,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.47.0';
+} from '../../core/portal-data-boundary.js?v=6.47.2';
 import {
   getSecureStoragePrivateRevision,
   readSecureStorageJson as readJson,
@@ -10,7 +10,7 @@ import {
   secureStorageJsonHeaders as jsonHeaders,
   secureStorageProfileFromState,
   setSecureStoragePrivateRevision
-} from './session-store.js?v=6.47.0';
+} from './session-store.js?v=6.47.2';
 
 export {
   clearSecureStorageSession,
@@ -18,7 +18,7 @@ export {
   normalizeSecureStorageWorkerUrl,
   secureStorageProfileFromState,
   secureStorageSessionSnapshot
-} from './session-store.js?v=6.47.0';
+} from './session-store.js?v=6.47.2';
 export {
   bootstrapAdministrator,
   changeAdministratorPassword,
@@ -31,7 +31,7 @@ export {
   resetAdministratorPassword,
   testSecureStorageConnection,
   updateAdministratorUser
-} from './auth-client.js?v=6.47.0';
+} from './auth-client.js?v=6.47.2';
 export {
   createGroupsPrivateMutation,
   createReferencePrivateMutation,
@@ -39,21 +39,21 @@ export {
   savePrivateGroupsMutation,
   savePrivateReferenceMutation,
   savePrivateTreasuryMutation
-} from './private-mutations.js?v=6.47.0';
+} from './private-mutations.js?v=6.47.2';
 export {
   loadD1DashboardAnalytics,
   loadD1ReportState
-} from './analytics-client.js?v=6.47.0';
-export { loadD1OperationalTreasury } from './operational-client.js?v=6.47.0';
+} from './analytics-client.js?v=6.47.2';
+export { loadD1OperationalTreasury } from './operational-client.js?v=6.47.2';
 export {
   loadD1OperationalMemberships,
   loadD1OperationalMutuals
-} from './operational-memberships-client.js?v=6.47.0';
+} from './operational-memberships-client.js?v=6.47.2';
 export {
   loadD1GroupsModule,
   loadD1ModuleRevisions,
   loadD1ReferenceModule
-} from './live-sync-client.js?v=6.47.0';
+} from './live-sync-client.js?v=6.47.2';
 
 const R2_STORAGE_KIND = 'r2';
 const LEGACY_PUBLIC_ATTACHMENT = /^\.\/public\/treasury\/[a-z0-9/_-]+\.[a-z0-9]+(?:\?[^\s]*)?$/i;
