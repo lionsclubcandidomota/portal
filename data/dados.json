@@ -1,6 +1,7 @@
 {
-  "updatedAt": "2026-08-04T15:02:49.013Z",
-  "deploymentId": "1785855769013-a52a5b69-8005-453f-9d39-c09b0bb99263",
+  "updatedAt": "2026-08-07T00:20:03.799Z",
+  "deploymentId": "1786062003799-e74f7a1c-7fe8-4153-96c6-cedfa31a642b",
+  "audience": "public",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 11,
   "version": 11,
