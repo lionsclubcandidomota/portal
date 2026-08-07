@@ -3,11 +3,11 @@ import { destroyTreasuryCharts } from './charts.js';
 import { buildMembershipViewModel } from './memberships.js';
 import { buildMutualViewModel } from './mutuals.js';
 import { bindTreasuryMovementLists, categorySummaries } from './movements.js';
-import { renderTreasuryShell } from './view-shell.js?v=6.36.2';
-import { bindTreasuryOverview } from './view-overview.js?v=6.36.2';
-import { bindMembershipSection } from './view-memberships.js?v=6.36.2';
-import { bindMutualSection } from './view-mutuals.js?v=6.36.2';
-import { bindTreasuryCharts } from './view-charts.js?v=6.36.2';
+import { renderTreasuryShell } from './view-shell.js?v=6.26.0';
+import { bindTreasuryOverview } from './view-overview.js?v=6.26.0';
+import { bindMembershipSection } from './view-memberships.js?v=6.26.0';
+import { bindMutualSection } from './view-mutuals.js?v=6.26.0';
+import { bindTreasuryCharts } from './view-charts.js?v=6.26.0';
 
 export function renderTreasury(state, treasury, helpers) {
   const { root, isTreasuryView } = helpers;
@@ -36,7 +36,7 @@ export function renderTreasury(state, treasury, helpers) {
   bindTreasuryOverview({ root, treasury, helpers, rerender });
   bindMembershipSection({ root, treasury, helpers, membershipModel, rerender });
   bindMutualSection({ root, treasury, helpers, mutualModel, rerender });
-  bindTreasuryMovementLists({ root, state, periodItems, treasury, helpers });
+  bindTreasuryMovementLists({ root, periodItems, treasury, helpers });
   bindTreasuryCharts({
     root,
     state,

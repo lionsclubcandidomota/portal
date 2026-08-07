@@ -16,8 +16,8 @@ function allButtonsHaveType(html) {
 
 test('versão estável usa o mesmo identificador no pacote e no cache do HTML', async () => {
   const html = await readFile(path.join(projectRoot, 'index.html'), 'utf8');
-  const versions = [...html.matchAll(/\?v=(\d+\.\d+\.\d+(?:\.\d+)*)/g)].map(match => match[1]);
-  assert.match(packageJson.version, /^\d+\.\d+\.\d+$/);
+  const versions = [...html.matchAll(/\?v=(\d+\.\d+\.\d+)/g)].map(match => match[1]);
+  assert.equal(packageJson.version, '6.26.0');
   assert.ok(versions.length > 0);
   assert.deepEqual([...new Set(versions)], [packageJson.version]);
   assert.doesNotMatch(html, /upgrade-insecure-requests/, 'a CSP não deve forçar HTTPS no servidor local de homologação');
@@ -73,7 +73,7 @@ test('dashboard administrativo mantém todos os módulos gerenciais e botões ti
 });
 
 test('documentos finais e manifesto fazem parte do pacote', async () => {
-  for (const relativePath of ['CHANGELOG.md', 'RELEASE.md', 'docs/homologation.md', 'release-manifest.json', 'tools/release-build.mjs', 'tools/release-dist-verify.mjs']) {
+  for (const relativePath of ['CHANGELOG.md', 'RELEASE.md', 'docs/homologation.md', 'release-manifest.json']) {
     const source = await readFile(path.join(projectRoot, relativePath), 'utf8');
     assert.ok(source.length > 20, `${relativePath} deve possuir conteúdo`);
   }

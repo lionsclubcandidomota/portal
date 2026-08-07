@@ -4,17 +4,14 @@ import {
   createDefaultPortalState,
   createPortalEnvelope,
   migratePortalPayload
-} from './core/portal-schema.js?v=6.36.2';
-import { createPublicPortalState } from './core/portal-data-boundary.js?v=6.36.2';
+} from './core/portal-schema.js?v=6.26.0';
 
 const STORAGE_KEY = 'lionsCandidoMota.dashboard.v1';
-const SESSION_STORAGE_KEY = 'lionsCandidoMota.dashboard.privateSession.v1';
 
 export const defaultState = createDefaultPortalState();
 
 export function loadState() {
-  const raw = globalThis.sessionStorage?.getItem?.(SESSION_STORAGE_KEY)
-    || globalThis.localStorage?.getItem?.(STORAGE_KEY);
+  const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return structuredClone(defaultState);
 
   try {
@@ -29,16 +26,14 @@ export function loadState() {
 }
 
 export function saveState(state) {
-  const savedAt = new Date().toISOString();
-  const privatePayload = createPortalEnvelope(state, { savedAt, audience: 'authenticated-session' });
-  const publicPayload = createPortalEnvelope(createPublicPortalState(state), { savedAt, audience: 'public-cache' });
-  globalThis.sessionStorage?.setItem?.(SESSION_STORAGE_KEY, JSON.stringify(privatePayload));
-  globalThis.localStorage?.setItem?.(STORAGE_KEY, JSON.stringify(publicPayload));
+  const payload = createPortalEnvelope(state, {
+    savedAt: new Date().toISOString()
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
 export function clearState() {
-  globalThis.localStorage?.removeItem?.(STORAGE_KEY);
-  globalThis.sessionStorage?.removeItem?.(SESSION_STORAGE_KEY);
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 export function exportState(state) {

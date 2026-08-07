@@ -1,72 +1,77 @@
 # Recuperação e continuidade operacional
 
-A recuperação do Portal possui duas camadas complementares.
+A Fase 9 introduz pontos de recuperação locais, diagnóstico de integridade e restauração seletiva sem alterar o esquema público do portal.
 
-## 1. Pontos locais do navegador
-
-A Central de Recuperação mantém cópias no IndexedDB, com fallback para `localStorage`. Esses pontos protegem alterações ainda não publicadas e permitem restauração seletiva de associados, agenda, Tesouraria, configurações e demais áreas.
-
-Arquivos principais:
-
-- `recovery-center/controller.js`: coordena criação, diagnóstico e restauração;
-- `recovery-center/domain.js`: checksum, resumo e integridade do snapshot;
-- `recovery-center/storage.js`: IndexedDB e fallback;
-- `recovery-center/view.js`: interface local e remota.
-
-## 2. Backups privados no Cloudflare R2
-
-O Worker 1.2.0 mantém o estado principal em:
+## Estrutura
 
 ```text
-__portal/private-state-v1.json
+assets/js/modules/
+├── recovery-center.js
+└── recovery-center/
+    ├── controller.js
+    ├── domain.js
+    ├── storage.js
+    └── view.js
 ```
 
-As versões restauráveis ficam em:
+- `domain.js`: criação, assinatura, validação, diagnóstico e mesclagem seletiva.
+- `storage.js`: persistência assíncrona em IndexedDB, com fallback reduzido em `localStorage`.
+- `controller.js`: coordenação da interface, criação, exclusão, exportação e restauração.
+- `view.js`: HTML da Central de Recuperação e da seleção de áreas.
 
-```text
-__portal/backups/private-state-v1/
-```
+## Pontos automáticos
 
-Antes de uma publicação substituir o estado principal, o Worker cria uma cópia da revisão atual. A revisão confirmada após a publicação também é armazenada. A retenção é limitada às 20 versões mais recentes.
+O runtime cria um ponto antes de operações que podem substituir ou consolidar dados:
 
-Cada envelope inclui:
+- importação de backup;
+- publicação no GitHub;
+- descarte de alterações pendentes;
+- recarga dos dados publicados;
+- restauração de outro ponto.
 
-- revisão única;
-- data e responsável;
-- checksum SHA-256;
-- quantidade de movimentações, contas e anexos;
-- motivo da criação do backup.
+A operação crítica é cancelada quando o navegador não consegue gravar a cópia de segurança. Pontos com o mesmo estado e motivo são deduplicados.
 
-## Proteção contra perda integral
+## Retenção e armazenamento
 
-Quando o estado atual possui registros privados, o Worker rejeita uma gravação cujo novo estado não contenha nenhum registro protegido. Essa regra evita que falhas de hidratação, migração ou cache substituam a Tesouraria por um objeto vazio.
+O portal mantém até 12 pontos no IndexedDB do navegador. Quando IndexedDB não está disponível, utiliza `localStorage` com retenção reduzida a quatro pontos.
 
-A revisão esperada continua obrigatória. Caso outra sessão publique primeiro, o Worker retorna conflito e exige atualização do painel.
+Cada ponto contém:
 
-## Restauração remota
+- envelope de dados no esquema atual;
+- data e motivo da criação;
+- resumo quantitativo dos módulos;
+- tamanho estimado;
+- assinatura FNV-1a determinística do estado;
+- metadados operacionais sem token ou senha de sessão.
 
-Somente o Administrador pode restaurar uma versão do R2. O fluxo é:
+Os pontos ficam somente no navegador administrativo e não são publicados no GitHub.
 
-1. confirmar a revisão atual;
-2. validar o checksum do backup selecionado;
-3. criar uma cópia de segurança do estado atual;
-4. gerar uma nova revisão para o conteúdo restaurado;
-5. atualizar o objeto principal;
-6. hidratar novamente a sessão do Portal.
+## Diagnóstico de integridade
 
-A Diretoria pode consultar a linha do tempo e o diagnóstico, mas não pode criar ou restaurar backups.
+A Central verifica:
 
-## Integridade dos comprovantes
+- estrutura e versão do esquema;
+- IDs ausentes ou duplicados;
+- vínculos de grupos familiares;
+- contas e categorias das movimentações;
+- formato das datas;
+- padrão das referências de mídia;
+- presença de credenciais legadas nas configurações públicas.
 
-O endpoint de diagnóstico percorre as referências `objectKey` presentes nas movimentações e confere cada objeto com `R2.head()`.
+Erros impedem a restauração de um ponto adulterado. Recomendações não bloqueiam o uso, mas ficam destacadas para manutenção.
 
-O relatório mostra:
+## Restauração seletiva
 
-- anexos referenciados e encontrados;
-- anexos ausentes;
-- referências inválidas;
-- referências duplicadas;
-- objetos em `treasury/` que não possuem vínculo com o estado atual;
-- quantidade de backups disponíveis.
+É possível restaurar individualmente:
 
-A Central de Recuperação apresenta esse resultado sem expor o conteúdo dos arquivos ou credenciais do bucket.
+- configurações;
+- associados;
+- contas;
+- categorias;
+- grupos familiares;
+- movimentações;
+- agenda;
+- compromissos;
+- avisos.
+
+As áreas não selecionadas permanecem intactas. A restauração entra no fluxo normal de alterações pendentes, histórico e publicação.

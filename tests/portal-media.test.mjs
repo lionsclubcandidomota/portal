@@ -74,49 +74,6 @@ test('publica anexos financeiros em diretório próprio e mantém o estado origi
   assert.equal(countEmbeddedPortalMedia(original), 1);
 });
 
-
-test('preserva anexos privados R2 durante a preparação da publicação', () => {
-  const original = {
-    settings: {},
-    birthdays: [],
-    treasury: [{
-      id: 'mov-r2',
-      description: 'Pagamento com comprovante privado',
-      attachments: [{
-        id: 'att-r2',
-        name: 'Comprovante privado.pdf',
-        type: 'application/pdf',
-        size: 84231,
-        originalSize: 91234,
-        storage: 'r2',
-        objectKey: 'treasury/mov-r2/att-r2-a1b2c3d4.pdf',
-        checksum: 'abc123',
-        uploadedAt: '2026-08-04T12:00:00.000Z'
-      }]
-    }]
-  };
-
-  const prepared = preparePortalMediaForPublication(original);
-  const attachment = prepared.state.treasury[0].attachments[0];
-
-  assert.equal(prepared.assets.length, 0);
-  assert.equal(prepared.state.treasury[0].attachments.length, 1);
-  assert.equal(attachment.storage, 'r2');
-  assert.equal(attachment.objectKey, 'treasury/mov-r2/att-r2-a1b2c3d4.pdf');
-  assert.equal(attachment.url, undefined);
-  assert.deepEqual(original.treasury[0].attachments[0], {
-    id: 'att-r2',
-    name: 'Comprovante privado.pdf',
-    type: 'application/pdf',
-    size: 84231,
-    originalSize: 91234,
-    storage: 'r2',
-    objectKey: 'treasury/mov-r2/att-r2-a1b2c3d4.pdf',
-    checksum: 'abc123',
-    uploadedAt: '2026-08-04T12:00:00.000Z'
-  });
-});
-
 test('mantém referências externas e normaliza caminhos públicos sem duplicar prefixo', () => {
   const prepared = preparePortalMediaForPublication({
     settings: { logo: 'public/logo.png' },

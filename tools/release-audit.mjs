@@ -29,17 +29,7 @@ const appSources = await Promise.all(appFiles.map(async file => ({
   source: await readFile(file, 'utf8')
 })));
 
-for (const required of [
-  'CHANGELOG.md',
-  'RELEASE.md',
-  'docs/homologation.md',
-  'release-manifest.json',
-  'tools/release-build.mjs',
-  'tools/release-dist-verify.mjs',
-  'tools/release-files.mjs',
-  'tools/release-manifest-lib.mjs',
-  'tools/zip.mjs'
-]) {
+for (const required of ['CHANGELOG.md', 'RELEASE.md', 'docs/homologation.md', 'release-manifest.json']) {
   try {
     await stat(path.join(projectRoot, required));
   } catch {
@@ -82,14 +72,8 @@ for (const tag of targetBlankTags) {
   }
 }
 
-if (!/^\d+\.\d+\.\d+$/.test(packageJson.version)) {
-  failures.push(`versão semântica inválida no package.json: ${packageJson.version}`);
-}
-if (!packageJson.scripts.check?.includes('npm test')) {
-  failures.push('o comando npm run check não executa os testes automatizados');
-}
-if (!packageJson.scripts['release:build']?.includes('release-build.mjs')) {
-  failures.push('o pipeline automatizado release:build não está configurado');
+if (!/^6\.26\.0$/.test(packageJson.version)) {
+  failures.push(`a versão estável esperada é 6.26.0; encontrada ${packageJson.version}`);
 }
 
 if (failures.length) {

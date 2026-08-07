@@ -1,9 +1,8 @@
-import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.36.2';
-import { normalizeMemberRecord } from './portal-members.js?v=6.36.2';
-import { createPublicPortalState } from './portal-data-boundary.js?v=6.36.2';
+import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.26.0';
+import { normalizeMemberRecord } from './portal-members.js?v=6.26.0';
 
 export const PORTAL_APP_ID = 'Lions Clube de Cândido Mota Dashboard';
-export const CURRENT_SCHEMA_VERSION = 11;
+export const CURRENT_SCHEMA_VERSION = 9;
 
 export const DEFAULT_TREASURY_CATEGORIES = Object.freeze([
   'Mensalidades',
@@ -58,91 +57,56 @@ function monthReference(value, fallback = '') {
   return /^\d{4}-\d{2}$/.test(normalized) ? normalized : String(fallback || '');
 }
 
-function dateReference(value, fallback = '') {
-  const normalized = String(value || '').trim().slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(normalized) ? normalized : String(fallback || '');
-}
-
-function uniqueIds(values = []) {
-  return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))];
-}
-
 function normalizeMutualGroupRecord(group) {
   const source = isPlainObject(group) ? group : {};
   const legacyCharges = Array.isArray(source.memberCharges) ? source.memberCharges : [];
-  const fallbackDate = new Date().toISOString().slice(0, 10);
-  const legacyStartedMonth = monthReference(source.startedMonth || source.referenceDate);
-  const createdDate = dateReference(
-    source.createdDate || source.startedDate,
-    legacyStartedMonth ? `${legacyStartedMonth}-01` : fallbackDate
-  );
+  const fallbackMonth = new Date().toISOString().slice(0, 7);
+  const startedMonth = monthReference(source.startedMonth || source.referenceDate, fallbackMonth);
+  const legacyAmount = legacyCharges.find(charge => Number(charge?.amount || 0) > 0)?.amount;
+  const monthlyAmount = Math.max(0, Number(source.monthlyAmount || legacyAmount || 0));
   const membershipSource = Array.isArray(source.memberships) && source.memberships.length
     ? source.memberships
     : legacyCharges.map((charge, index) => ({
       id: `mum_${source.id || 'group'}_${charge?.memberId || index}`,
       memberId: charge?.memberId,
-      joinedDate: createdDate,
-      endedDate: ''
+      joinedMonth: startedMonth,
+      endedMonth: ''
     }));
   const memberships = membershipSource
-    .map((membership, index) => {
-      const joinedMonth = monthReference(membership?.joinedMonth);
-      const endedMonth = monthReference(membership?.endedMonth);
-      return {
-        id: String(membership?.id || `mum_${source.id || 'group'}_${membership?.memberId || index}`),
-        memberId: String(membership?.memberId || '').trim(),
-        joinedDate: dateReference(membership?.joinedDate, joinedMonth ? `${joinedMonth}-01` : createdDate),
-        endedDate: dateReference(membership?.endedDate, endedMonth ? `${endedMonth}-01` : '')
-      };
-    })
-    .filter(membership => membership.memberId && membership.joinedDate);
-  const fallbackParticipants = uniqueIds(memberships.filter(item => !item.endedDate).map(item => item.memberId));
-  const events = (Array.isArray(source.events) ? source.events : [])
-    .map((event, index) => {
-      const deathDate = dateReference(event?.deathDate || event?.eventDate || event?.chargeDate);
-      return {
-        id: String(event?.id || `mue_${source.id || 'group'}_${deathDate || index}`),
-        deceasedName: String(event?.deceasedName || event?.associateName || event?.title || '').trim(),
-        deceasedMemberNumber: String(event?.deceasedMemberNumber || event?.memberNumber || '').trim(),
-        deceasedClub: String(event?.deceasedClub || event?.club || '').trim(),
-        deathDate,
-        dueDate: dateReference(event?.dueDate),
-        amountPerParticipant: Math.max(0, Number(event?.amountPerParticipant ?? event?.amount ?? 0)),
-        participantIds: uniqueIds(Array.isArray(event?.participantIds) ? event.participantIds : (event?.memberIds || fallbackParticipants)),
-        notes: String(event?.notes || '').trim(),
-        createdAt: String(event?.createdAt || ''),
-        cancelledAt: String(event?.cancelledAt || '')
-      };
-    })
-    .filter(event => event.id && event.deathDate && event.deceasedName && event.amountPerParticipant > 0)
-    .sort((first, second) => first.deathDate.localeCompare(second.deathDate));
+    .map((membership, index) => ({
+      id: String(membership?.id || `mum_${source.id || 'group'}_${membership?.memberId || index}`),
+      memberId: String(membership?.memberId || '').trim(),
+      joinedMonth: monthReference(membership?.joinedMonth, startedMonth),
+      endedMonth: monthReference(membership?.endedMonth)
+    }))
+    .filter(membership => membership.memberId && membership.joinedMonth);
+  const amountHistory = (Array.isArray(source.amountHistory) ? source.amountHistory : [])
+    .map(item => ({
+      fromMonth: monthReference(item?.fromMonth, startedMonth),
+      amount: Math.max(0, Number(item?.amount || 0))
+    }))
+    .filter(item => item.fromMonth && item.amount > 0)
+    .sort((first, second) => first.fromMonth.localeCompare(second.fromMonth));
 
-  const {
-    memberCharges: _memberCharges,
-    referenceDate: _referenceDate,
-    monthlyAmount: _monthlyAmount,
-    startedMonth: _startedMonth,
-    amountHistory: _amountHistory,
-    startedDate: _startedDate,
-    endedDate: _endedDate,
-    ...rest
-  } = source;
+  if (!amountHistory.length && monthlyAmount > 0) {
+    amountHistory.push({ fromMonth: startedMonth, amount: monthlyAmount });
+  }
+
+  const { memberCharges: _memberCharges, referenceDate: _referenceDate, ...rest } = source;
   return {
     ...rest,
     id: String(source.id || ''),
     name: String(source.name || '').trim(),
-    createdDate,
-    closedDate: dateReference(source.closedDate || source.endedDate),
-    closureReason: String(source.closureReason || source.endReason || '').trim(),
-    notes: String(source.notes || '').trim(),
+    monthlyAmount,
+    startedMonth,
     memberships,
-    events
+    amountHistory
   };
 }
 
+
 const TREASURY_ATTACHMENT_DATA_URL = /^data:(?:image\/(?:jpeg|jpg|png|webp|gif)|application\/(?:pdf|msword|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.(?:wordprocessingml\.document|spreadsheetml\.sheet)|vnd\.oasis\.opendocument\.(?:text|spreadsheet))|text\/(?:plain|csv));base64,[a-z0-9+/=\s]+$/i;
 const TREASURY_ATTACHMENT_PUBLIC_URL = /^\.\/public\/treasury\/[a-z0-9/_-]+\.[a-z0-9]+(?:\?[^\s]*)?$/i;
-const TREASURY_ATTACHMENT_R2_KEY = /^treasury\/[a-z0-9/_-]+\.[a-z0-9]+$/i;
 
 function normalizeTreasuryAttachmentRecord(attachment, index = 0) {
   const source = isPlainObject(attachment) ? attachment : {};
@@ -154,10 +118,6 @@ function normalizeTreasuryAttachmentRecord(attachment, index = 0) {
     : publicUrl.startsWith('public/treasury/') && !publicUrl.includes('..')
       ? `./${publicUrl}`
       : '';
-  const objectKey = TREASURY_ATTACHMENT_R2_KEY.test(String(source.objectKey || '').trim())
-    ? String(source.objectKey).trim()
-    : '';
-  const secure = String(source.storage || '').toLowerCase() === 'r2' && objectKey;
 
   return {
     id: String(source.id || `att_${index}`),
@@ -166,21 +126,15 @@ function normalizeTreasuryAttachmentRecord(attachment, index = 0) {
     size: Math.max(0, Number(source.size || 0)),
     originalSize: Math.max(0, Number(source.originalSize || source.size || 0)),
     optimized: Boolean(source.optimized),
-    ...(secure ? {
-      storage: 'r2',
-      objectKey,
-      checksum: String(source.checksum || '').slice(0, 128),
-      uploadedAt: String(source.uploadedAt || '')
-    } : {}),
-    ...(!secure && dataUrl ? { dataUrl } : {}),
-    ...(!secure && url ? { url } : {})
+    ...(dataUrl ? { dataUrl } : {}),
+    ...(url ? { url } : {})
   };
 }
 
 function normalizeTreasuryAttachments(value) {
   return (Array.isArray(value) ? value : [])
     .map(normalizeTreasuryAttachmentRecord)
-    .filter(attachment => attachment.dataUrl || attachment.url || attachment.objectKey)
+    .filter(attachment => attachment.dataUrl || attachment.url)
     .slice(0, 5);
 }
 
@@ -188,28 +142,21 @@ function normalizeMutualMovementRecord(item) {
   if (!isPlainObject(item)) return item;
   const attachments = normalizeTreasuryAttachments(item.attachments);
   if (!item.mutualGroupId) return { ...item, attachments };
-  const eventDate = dateReference(
-    item.mutualEventDate || item.deathDate || item.mutualReferenceDate || item.date
-  );
-  const legacyReference = monthReference(
+  const reference = monthReference(
     item.mutualReferenceMonth || item.mutualReferenceDate || item.referenceMonth || item.date
   );
   const memberId = String(item.mutualMemberId || item.memberId || '').trim();
-  const eventId = String(item.mutualEventId || (legacyReference ? `legacy-${legacyReference}` : '')).trim();
-  const key = [String(item.mutualGroupId || '').trim(), eventId, memberId]
+  const key = [String(item.mutualGroupId || '').trim(), memberId, reference]
     .filter(Boolean)
     .join('::');
   return {
     ...item,
     attachments,
     mutualMemberId: memberId,
-    mutualEventId: eventId,
-    mutualEventDate: eventDate,
-    mutualDeceasedName: String(item.mutualDeceasedName || item.deceasedName || '').trim(),
-    mutualReferenceMonth: legacyReference,
-    mutualReferenceDate: eventDate || (legacyReference ? `${legacyReference}-01` : ''),
-    referenceMonth: legacyReference || String(item.referenceMonth || ''),
-    coveredMonths: legacyReference ? [legacyReference] : (Array.isArray(item.coveredMonths) ? item.coveredMonths : []),
+    mutualReferenceMonth: reference,
+    mutualReferenceDate: reference ? `${reference}-01` : String(item.mutualReferenceDate || ''),
+    referenceMonth: reference || String(item.referenceMonth || ''),
+    coveredMonths: reference ? [reference] : (Array.isArray(item.coveredMonths) ? item.coveredMonths : []),
     mutualChargeKey: key || String(item.mutualChargeKey || '')
   };
 }
@@ -234,7 +181,6 @@ export function createDefaultPortalState() {
       membershipFamilyPrimaryFee: 0,
       membershipFamilyAdditionalFee: 0,
       accessProfiles: {},
-      secureStorage: { version: 1, enabled: false, workerUrl: '' },
       initialized: false
     },
     birthdays: [],
@@ -418,8 +364,6 @@ export function migratePortalPayload(payload) {
   if (sourceSchemaVersion < 7) migrations.push('v6→v7: mútuas passam a usar grupos mensais, competências e histórico de participantes');
   if (sourceSchemaVersion < 8) migrations.push('v7→v8: cadastros passam a distinguir Associados, Mutuários e registros inativos');
   if (sourceSchemaVersion < 9) migrations.push('v8→v9: movimentações financeiras passam a aceitar comprovantes e documentos anexos');
-  if (sourceSchemaVersion < 10) migrations.push('v9→v10: anexos financeiros passam a suportar armazenamento privado Cloudflare R2');
-  if (sourceSchemaVersion < 11) migrations.push('v10→v11: mútuas passam a gerar cobranças somente por eventos de falecimento');
 
   state = normalizePortalStateShape(state);
   assertValidPortalState(state);
@@ -443,17 +387,13 @@ export function migratePortalPayload(payload) {
 export function createPortalEnvelope(state, metadata = {}) {
   const normalized = normalizePortalStateShape(state);
   const safeMetadata = stripSensitivePortalFields(metadata);
-  const audience = String(safeMetadata.audience || '').trim().toLowerCase();
-  const envelopeState = audience === 'public' || audience === 'public-cache'
-    ? createPublicPortalState(normalized)
-    : normalized;
-  assertValidPortalState(envelopeState);
+  assertValidPortalState(normalized);
 
   return {
     ...safeMetadata,
     app: PORTAL_APP_ID,
     schemaVersion: CURRENT_SCHEMA_VERSION,
     version: CURRENT_SCHEMA_VERSION,
-    data: envelopeState
+    data: normalized
   };
 }

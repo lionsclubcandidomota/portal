@@ -66,11 +66,8 @@ test('auditoria CSS impede o retorno da camada legacy e mede sobrescritas', asyn
 
   assert.match(audit, /maxLegacyBytes:\s*0/);
   assert.match(audit, /maxLegacySources:\s*0/);
-  assert.match(audit, /maxSupersededDeclarations:\s*0/);
-  assert.match(audit, /maxRepeatedContextSelectors:\s*280/);
-  assert.match(audit, /maxOverrideRules:\s*360/);
-  assert.match(audit, /maxSourceBytes:\s*36_000/);
-  assert.match(audit, /maxBundleBytes:\s*336_000/);
+  assert.match(audit, /maxRepeatedContextSelectors/);
+  assert.match(audit, /maxOverrideRules/);
   assert.doesNotMatch(audit, /maxLegacyLines/);
   assert.doesNotMatch(audit, /maxSharedSelectors/);
 

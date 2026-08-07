@@ -1,9 +1,8 @@
 {
-  "exportedAt": "2026-08-04T18:30:36.215Z",
-  "audience": "example",
+  "exportedAt": "2026-07-28T00:00:00.000Z",
   "app": "Lions Clube de Cândido Mota Dashboard",
-  "schemaVersion": 11,
-  "version": 11,
+  "schemaVersion": 7,
+  "version": 7,
   "data": {
     "settings": {
       "clubName": "Lions Clube de Cândido Mota",
@@ -13,12 +12,6 @@
       "membershipMonthlyFee": 0,
       "membershipFamilyPrimaryFee": 0,
       "membershipFamilyAdditionalFee": 0,
-      "accessProfiles": {},
-      "secureStorage": {
-        "version": 1,
-        "enabled": false,
-        "workerUrl": ""
-      },
       "initialized": true
     },
     "birthdays": [
@@ -27,9 +20,7 @@
         "memberNumber": "1234567",
         "name": "Associado de exemplo",
         "birthDate": "1980-08-15",
-        "photo": "",
-        "status": "Ativo",
-        "active": true
+        "photo": ""
       }
     ],
     "treasuryAccounts": [

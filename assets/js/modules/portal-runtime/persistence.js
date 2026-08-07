@@ -1,6 +1,6 @@
-import { migratePortalPayload } from '../../core/portal-schema.js?v=6.36.2';
-import { cloneState } from '../../core/portal-state.js?v=6.36.2';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.36.2';
+import { migratePortalPayload } from '../../core/portal-schema.js?v=6.26.0';
+import { cloneState } from '../../core/portal-state.js?v=6.26.0';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.26.0';
 
 export function createPersistenceActions(context) {
   const { dependencies, services, model } = context;
@@ -68,26 +68,5 @@ export function createPersistenceActions(context) {
     );
   };
 
-  const applyRemotePrivateState = async (privatePayload, details = {}) => {
-    if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.WRITE_DATA)) {
-      dependencies.toast?.('O perfil Diretoria não pode restaurar backups privados.');
-      return { ok: false, reason: 'read-only' };
-    }
-    if (!privatePayload?.found || !privatePayload.state) {
-      throw new Error('O Worker não retornou um estado privado válido após a restauração.');
-    }
-    const merged = services.mergePrivatePortalState(context.currentState(), privatePayload);
-    context.replaceCurrentState(merged);
-    context.storeSyncedState(merged);
-    services.saveState(merged);
-    model.pendingChanges = 0;
-    model.pendingAuditBatchId = '';
-    context.storeSyncMeta();
-    dependencies.applySettings?.();
-    dependencies.renderCurrentView?.();
-    dependencies.toast?.(details.successMessage || 'Backup privado restaurado com sucesso.');
-    return { ok: true };
-  };
-
-  return { importState, persist, restoreState, applyRemotePrivateState };
+  return { importState, persist, restoreState };
 }

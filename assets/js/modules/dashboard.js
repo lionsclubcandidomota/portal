@@ -58,20 +58,17 @@ export function renderDashboard(state, helpers) {
   );
   const mutualGroups = adminUnlocked ? treasury.mutualGroups() : [];
   const mutualCharges = adminUnlocked
-    ? mutualGroups.flatMap(group => (Array.isArray(group.events) ? group.events : []).flatMap(event => (
-        treasury.mutualMembersForEvent(group.id, event.id).map(member => {
-          const payments = treasury.mutualPaymentsFor(group.id, event.id, member.id);
-          const payment = [...payments].sort((first, second) => String(second.paymentDate || second.date || '')
-            .localeCompare(String(first.paymentDate || first.date || '')))[0] || null;
-          return {
-            group,
-            event,
-            member,
-            expected: Number(event.amountPerParticipant || 0),
-            payment
-          };
-        })
-      )))
+    ? mutualGroups.flatMap(group => treasury.mutualMembersForMonth(group.id, currentMembershipMonth).map(member => {
+        const payments = treasury.mutualPaymentsFor(group.id, member.id, currentMembershipMonth);
+        const payment = [...payments].sort((first, second) => String(second.paymentDate || second.date || '')
+          .localeCompare(String(first.paymentDate || first.date || '')))[0] || null;
+        return {
+          group,
+          member,
+          expected: Number(treasury.mutualAmountForMonth(group, currentMembershipMonth) || 0),
+          payment
+        };
+      }))
     : [];
   const mutualPaidCharges = mutualCharges.filter(charge => charge.payment);
   const mutualExpectedTotal = mutualCharges.reduce((sum, charge) => sum + charge.expected, 0);
@@ -79,11 +76,9 @@ export function renderDashboard(state, helpers) {
     (sum, charge) => sum + Number(charge.payment?.entry || charge.expected || 0),
     0
   );
-  const mutualActiveGroupCount = mutualGroups.filter(group => !group.closedDate).length;
-  const mutualEventCount = mutualGroups.reduce(
-    (sum, group) => sum + (Array.isArray(group.events) ? group.events.filter(event => !event.cancelledAt).length : 0),
-    0
-  );
+  const mutualActiveGroupCount = mutualGroups.filter(group =>
+    treasury.mutualMembersForMonth(group.id, currentMembershipMonth).length > 0
+  ).length;
   const overdueMovements = adminUnlocked
     ? state.treasury.filter(item => treasury.isOverdue(item)).length
     : 0;
@@ -99,10 +94,10 @@ export function renderDashboard(state, helpers) {
     .filter(item => parseLocalDate(item.date) >= todayStart() && item.status !== 'Cancelado')
     .sort(compareAppointments)
     .slice(0, adminUnlocked ? 4 : 5);
-  const activeNotices = [...state.notices]
+  const notices = [...state.notices]
     .filter(notice => noticeIsActive(notice))
-    .sort((first, second) => parseLocalDate(second.date) - parseLocalDate(first.date));
-  const notices = activeNotices.slice(0, adminUnlocked ? 2 : 3);
+    .sort((first, second) => parseLocalDate(second.date) - parseLocalDate(first.date))
+    .slice(0, adminUnlocked ? 2 : 3);
   const lastUpdateValue = latestCommitInfo?.date
     || state.updatedAt
     || lastSyncInfo?.updatedAt
@@ -131,75 +126,25 @@ export function renderDashboard(state, helpers) {
     <section class="grid grid-kpis dashboard-kpis ${adminUnlocked ? 'is-admin-compact' : 'visitor-kpis'}">
       ${adminUnlocked ? kpi('💳', 'Saldo atual', money.format(finance.balance), 'treasury') : ''}
       ${kpi('🗓️', 'Próximos compromissos', nextAppointments.length, 'agenda')}
-      ${kpi('📢', 'Avisos ativos', activeNotices.length, 'notices')}
+      ${kpi('📢', 'Avisos ativos', state.notices.filter(notice => noticeIsActive(notice)).length, 'notices')}
     </section>
-    <section class="grid grid-main dashboard-main-grid ${adminUnlocked ? 'is-admin-compact is-authenticated' : 'is-visitor'}">
-      <article class="card ${adminUnlocked ? 'col-3 dashboard-summary-card dashboard-birthdays-card' : 'col-12'}">
-        <div class="card-header">
-          <div><h3>🎂 Próximos aniversariantes</h3><div class="card-subtitle">Datas mais próximas</div></div>
-          <button class="btn btn-ghost btn-sm" data-go="birthdays" type="button">Ver todos</button>
-        </div>
-        <div class="list dashboard-birthday-list">${birthdays.length ? birthdays.map(member => {
-          const status = birthdayStatus(daysUntil(member.next));
-          return `<div class="list-item dashboard-birthday-item">${avatar(member)}<div class="list-item-main"><strong>${escapeHtml(member.name)}</strong><small>${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(member.next)}</small></div><span class="birthday-status ${status.className}">${status.icon} ${status.text}</span></div>`;
-        }).join('') : empty('🎂', 'Nenhum aniversariante cadastrado.')}</div>
-        ${adminUnlocked ? `<div class="dashboard-summary-foot"><span>${birthdays.length}</span> cadastro(s) em destaque</div>` : ''}
-      </article>
-      ${adminUnlocked ? `<article class="card col-3 dashboard-summary-card dashboard-treasury-card">
-        <div class="card-header">
-          <div><h3>💰 Tesouraria</h3><div class="card-subtitle">Resumo financeiro</div></div>
-          <div class="card-header-actions">${financePrivacy.buttonHtml({ compact: true })}<button class="btn btn-ghost btn-sm" data-go="treasury" type="button">Detalhes</button></div>
-        </div>
+    <section class="grid grid-main dashboard-main-grid ${adminUnlocked ? 'is-admin-compact' : 'is-visitor'}">
+      <article class="card ${adminUnlocked ? 'col-3 dashboard-summary-card dashboard-birthdays-card' : 'col-12'}"><div class="card-header"><div><h3>🎂 Próximos aniversariantes</h3><div class="card-subtitle">Datas mais próximas</div></div><button class="btn btn-ghost btn-sm" data-go="birthdays" type="button">Ver todos</button></div>
+      <div class="list">${birthdays.length ? birthdays.map(member => {
+        const status = birthdayStatus(daysUntil(member.next));
+        return `<div class="list-item dashboard-birthday-item">${avatar(member)}<div class="list-item-main"><strong>${escapeHtml(member.name)}</strong><small>${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(member.next)}</small></div><span class="birthday-status ${status.className}">${status.icon} ${status.text}</span></div>`;
+      }).join('') : empty('🎂', 'Nenhum aniversariante cadastrado.')}</div></article>
+      ${adminUnlocked ? `<article class="card col-3 dashboard-summary-card dashboard-treasury-card"><div class="card-header"><div><h3>💰 Tesouraria</h3><div class="card-subtitle">Resumo financeiro</div></div><div class="card-header-actions">${financePrivacy.buttonHtml({ compact: true })}<button class="btn btn-ghost btn-sm" data-go="treasury" type="button">Detalhes</button></div></div>
         <div class="dashboard-finance-summary">
           <div class="is-primary"><small>Saldo atual</small><strong class="sensitive-money">${money.format(finance.balance)}</strong></div>
           <div><small>Saldo futuro</small><strong class="sensitive-money">${money.format(finance.projectedBalance)}</strong></div>
           <div class="${overdueMovements ? 'is-warning' : ''}"><small>Vencidas</small><strong>${overdueMovements}</strong></div>
           <div><small>Contas ativas</small><strong>${treasuryAccountSummaries().filter(account => account.active !== false).length}</strong></div>
         </div>
-        <div class="dashboard-summary-foot ${overdueMovements ? 'is-warning' : 'is-success'}"><span>${overdueMovements ? '!' : '✓'}</span>${overdueMovements ? `${overdueMovements} movimentação(ões) vencida(s)` : 'Nenhuma movimentação vencida'}</div>
-      </article>
-      <article class="card col-3 dashboard-summary-card dashboard-membership-card">
-        <div class="card-header">
-          <div><h3>🧾 Mensalidades</h3><div class="card-subtitle">${escapeHtml(treasury.monthLabel(currentMembershipMonth))}</div></div>
-          <button class="btn btn-ghost btn-sm" type="button" data-open-memberships>Ver controle</button>
-        </div>
-        <div class="dashboard-membership-summary">
-          <div><small>Associados ativos</small><strong>${activeMembers.length}</strong></div>
-          <div class="is-paid"><small>Em dia</small><strong>${membershipPaidIds.size}</strong></div>
-          <div class="is-pending"><small>Pendentes</small><strong>${Math.max(0, activeMembers.length - membershipPaidIds.size)}</strong></div>
-          <div class="is-total"><small>Total recebido</small><strong class="sensitive-money">${money.format(membershipTotal)}</strong></div>
-        </div>
-        <div class="dashboard-membership-progress" role="progressbar" aria-label="Mensalidades em dia" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${activeMembers.length ? Math.round((membershipPaidIds.size / activeMembers.length) * 100) : 0}"><span style="width:${activeMembers.length ? Math.min(100, (membershipPaidIds.size / activeMembers.length) * 100) : 0}%"></span></div>
-        <div class="dashboard-summary-foot"><span>${membershipPaidIds.size}/${activeMembers.length}</span> associados em dia</div>
-      </article>
-      <article class="card col-3 dashboard-summary-card dashboard-mutual-card">
-        <div class="card-header">
-          <div><h3>🤲 Mútuas</h3><div class="card-subtitle">Cobranças por falecimento</div></div>
-          <button class="btn btn-ghost btn-sm" type="button" data-open-mutuals>Ver controle</button>
-        </div>
-        <div class="dashboard-membership-summary dashboard-mutual-summary">
-          <div><small>Grupos ativos</small><strong>${mutualActiveGroupCount}</strong></div>
-          <div><small>Eventos</small><strong>${mutualEventCount}</strong></div>
-          <div class="is-pending"><small>Pendentes</small><strong>${Math.max(0, mutualCharges.length - mutualPaidCharges.length)}</strong></div>
-          <div class="is-total"><small>Total recebido</small><strong class="sensitive-money">${money.format(mutualReceivedTotal)}</strong></div>
-        </div>
-        <div class="dashboard-membership-progress dashboard-mutual-progress" role="progressbar" aria-label="Mútuas pagas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${mutualCharges.length ? Math.round((mutualPaidCharges.length / mutualCharges.length) * 100) : 0}" title="Previsto: ${money.format(mutualExpectedTotal)}"><span style="width:${mutualCharges.length ? Math.min(100, (mutualPaidCharges.length / mutualCharges.length) * 100) : 0}%"></span></div>
-        <div class="dashboard-summary-foot"><span>${mutualPaidCharges.length}/${mutualCharges.length}</span> cobranças de eventos pagas</div>
-      </article>` : ''}
-      <article class="card ${adminUnlocked ? 'col-7' : 'col-12'} dashboard-feed-card dashboard-agenda-card">
-        <div class="card-header">
-          <div><h3>🗓️ Próximos compromissos</h3><div class="card-subtitle">${nextAppointments.length} compromisso(s) futuro(s)</div></div>
-          <button class="btn btn-ghost btn-sm" data-go="agenda" type="button">Abrir agenda</button>
-        </div>
-        <div class="dashboard-appointments-grid">${nextAppointments.length ? nextAppointments.map(appointmentListItem).join('') : empty('🗓️', 'Nenhum compromisso próximo.')}</div>
-      </article>
-      <article class="card ${adminUnlocked ? 'col-5' : 'col-12'} dashboard-feed-card dashboard-notices-card">
-        <div class="card-header">
-          <div><h3>📢 Avisos importantes</h3><div class="card-subtitle">${activeNotices.length} comunicado(s) ativo(s)</div></div>
-          <button class="btn btn-ghost btn-sm" data-go="notices" type="button">Ver avisos</button>
-        </div>
-        <div class="dashboard-notices-grid">${notices.length ? notices.map(notice => `<article class="notice ${notice.priority.toLowerCase()} dashboard-notice-item"><h4>${escapeHtml(notice.title)}</h4><div class="markdown-body markdown-compact dashboard-notice-copy">${markdownToHtml(notice.text)}</div><small>${escapeHtml(noticePeriodText(notice))} · Prioridade ${escapeHtml(notice.priority)}</small></article>`).join('') : empty('📢', 'Nenhum aviso cadastrado.')}</div>
-      </article>
+      </article><article class="card col-3 dashboard-summary-card dashboard-membership-card"><div class="card-header"><div><h3>🧾 Mensalidades</h3><div class="card-subtitle">${escapeHtml(treasury.monthLabel(currentMembershipMonth))}</div></div><button class="btn btn-ghost btn-sm" type="button" data-open-memberships>Ver controle</button></div><div class="dashboard-membership-summary"><div><small>Associados ativos</small><strong>${activeMembers.length}</strong></div><div class="is-paid"><small>Em dia</small><strong>${membershipPaidIds.size}</strong></div><div class="is-pending"><small>Pendentes</small><strong>${Math.max(0, activeMembers.length - membershipPaidIds.size)}</strong></div><div class="is-total"><small>Total recebido</small><strong class="sensitive-money">${money.format(membershipTotal)}</strong></div></div><div class="dashboard-membership-progress"><span style="width:${activeMembers.length ? Math.min(100, (membershipPaidIds.size / activeMembers.length) * 100) : 0}%"></span></div></article>
+      <article class="card col-3 dashboard-summary-card dashboard-mutual-card"><div class="card-header"><div><h3>🤲 Mútuas</h3><div class="card-subtitle">${escapeHtml(treasury.monthLabel(currentMembershipMonth))}</div></div><button class="btn btn-ghost btn-sm" type="button" data-open-mutuals>Ver controle</button></div><div class="dashboard-membership-summary dashboard-mutual-summary"><div><small>Grupos ativos</small><strong>${mutualActiveGroupCount}</strong></div><div class="is-paid"><small>Pagas</small><strong>${mutualPaidCharges.length}</strong></div><div class="is-pending"><small>Pendentes</small><strong>${Math.max(0, mutualCharges.length - mutualPaidCharges.length)}</strong></div><div class="is-total"><small>Total recebido</small><strong class="sensitive-money">${money.format(mutualReceivedTotal)}</strong></div></div><div class="dashboard-membership-progress dashboard-mutual-progress" title="Previsto: ${money.format(mutualExpectedTotal)}"><span style="width:${mutualCharges.length ? Math.min(100, (mutualPaidCharges.length / mutualCharges.length) * 100) : 0}%"></span></div></article>` : ''}
+      <article class="card ${adminUnlocked ? 'col-6' : 'col-12'} dashboard-agenda-card"><div class="card-header"><div><h3>🗓️ Próximos compromissos</h3><div class="card-subtitle">Eventos e reuniões em uma única agenda</div></div><button class="btn btn-ghost btn-sm" data-go="agenda" type="button">Abrir agenda</button></div><div class="dashboard-appointments-grid">${nextAppointments.length ? nextAppointments.map(appointmentListItem).join('') : empty('🗓️', 'Nenhum compromisso próximo.')}</div></article>
+      <article class="card ${adminUnlocked ? 'col-6' : 'col-12'} dashboard-notices-card"><div class="card-header"><div><h3>📢 Avisos importantes</h3><div class="card-subtitle">Comunicados recentes</div></div><button class="btn btn-ghost btn-sm" data-go="notices" type="button">Ver avisos</button></div><div class="dashboard-notices-grid">${notices.length ? notices.map(notice => `<div class="notice ${notice.priority.toLowerCase()}"><h4>${escapeHtml(notice.title)}</h4><div class="markdown-body markdown-compact">${markdownToHtml(notice.text)}</div><small>${escapeHtml(noticePeriodText(notice))} · Prioridade ${escapeHtml(notice.priority)}</small></div>`).join('') : empty('📢', 'Nenhum aviso cadastrado.')}</div></article>
     </section>`;
 
   root.querySelectorAll('.treasury-dashboard-summary > .list-item > strong')

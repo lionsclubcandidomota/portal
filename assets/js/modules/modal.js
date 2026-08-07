@@ -1,4 +1,4 @@
-import { createDialogFocusManager } from './dialog-focus.js?v=6.36.2';
+import { createDialogFocusManager } from './dialog-focus.js?v=6.26.0';
 
 export function createModalController({
   modal,
@@ -19,15 +19,8 @@ export function createModalController({
     modalTitle.textContent = String(title || '');
     if (content !== undefined) modalBody.innerHTML = String(content ?? '');
 
-    const scrollContainer = modal.querySelector('.modal-card');
-    if (scrollContainer) scrollContainer.scrollTop = 0;
-    modalBody.scrollTop = 0;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => {
-      if (scrollContainer) scrollContainer.scrollTop = 0;
-      modalBody.scrollTop = 0;
-    });
     focusManager.activate();
     return modalBody;
   };

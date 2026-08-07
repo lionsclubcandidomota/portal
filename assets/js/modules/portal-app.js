@@ -1,31 +1,34 @@
-import { loadState, parseImportFile } from '../storage.js';
-import {
-  fullDateFormat,
-  parseLocalDate,
-  formatDate,
-  nextBirthdayDate,
-  daysUntil,
-  escapeHtml,
-  normalize,
-  fileToDataUrl,
-  sumTreasury,
-  toInputDate
-} from '../utils.js';
+import { loadState, exportState, parseImportFile } from '../storage.js';
+import { fullDateFormat, parseLocalDate, formatDate, nextBirthdayDate, daysUntil, escapeHtml, normalize, fileToDataUrl, sumTreasury, toInputDate } from '../utils.js';
 import { createFinancePrivacyController } from './finance-privacy.js';
+import { createTreasuryController, destroyTreasuryCharts } from './treasury.js?v=6.26.0';
+import { createTreasuryAdminController } from './treasury-admin.js?v=6.26.0';
+import { createEntityFormsController } from './entity-forms.js?v=6.26.0';
+import { createAdminPanelController } from './admin-panel.js?v=6.26.0';
+import { createReportsController } from './reports/controller.js?v=6.26.0';
+import { createSettingsController } from './settings.js';
+import { createNavigationController } from './navigation.js?v=6.26.0';
+import { createUiShellController } from './ui-shell.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createAuditLogController } from './audit-log.js?v=6.36.2';
-import { createRecoveryCenterController } from './recovery-center.js?v=6.36.2';
+import { createPublishCenterController } from './publish-center.js?v=6.26.0';
+import { createPortalRefreshController } from './portal-refresh.js?v=6.26.0';
+import { createAuditLogController } from './audit-log.js?v=6.26.0';
+import { createRecoveryCenterController } from './recovery-center.js?v=6.26.0';
+import { createPublicationReviewController } from './publication-review-controller.js?v=6.26.0';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
 import {
+  createBirthdaysController,
+  createBirthdayActions,
   birthdayDisplayDate,
   birthdayStatus,
   birthdayMatchesPeriod,
   birthdayRows,
   birthdayCards
 } from './birthdays.js';
+import { createBirthdayArtworkController } from './birthday-artwork.js';
 import { avatar, empty, kpi, priorityBadge, statusBadge } from './visual-helpers.js';
 import { createAgendaController } from './agenda.js';
 import {
@@ -33,74 +36,91 @@ import {
   appointmentTypeBadge,
   compareAppointments,
   downloadAppointmentCalendar,
-  getAppointments,
+  getAppointments as buildAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.36.2';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.36.2';
-import { getPortalElements } from './portal-elements.js?v=6.36.2';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.36.2';
-import { createTreasuryFeature } from './portal-composition/treasury-feature.js?v=6.36.2';
-import { createAdministrationFeature } from './portal-composition/administration-feature.js?v=6.36.2';
-import { createPublicationFeature } from './portal-composition/publication-feature.js?v=6.36.2';
-import { createNavigationFeature } from './portal-composition/navigation-feature.js?v=6.36.2';
-import { createPortalViewRendererOptions } from './portal-composition/view-dependencies.js?v=6.36.2';
+} from './appointments.js?v=6.26.0';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.26.0';
+import { getPortalElements } from './portal-elements.js?v=6.26.0';
+import { createReadOnlyGuard } from './read-only-guard.js?v=6.26.0';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.26.0';
 
 export function bootstrapPortal() {
   let state = loadState();
-  let runtime = null;
-  let fileInputs = null;
-  let administration = null;
-  let publicationFeature = null;
-  let navigationFeature = null;
-  let viewRenderer = null;
-
-  const elements = getPortalElements();
-  const confirmation = createConfirmationController({
-    confirmModal: elements.confirmModal,
-    confirmTitle: elements.confirmTitle,
-    confirmMessage: elements.confirmMessage,
-    confirmIcon: elements.confirmIcon,
-    confirmAccept: elements.confirmAccept,
-    confirmSecondary: elements.confirmSecondary,
-    confirmCancel: elements.confirmCancel
-  });
-  const modalController = createModalController({
-    modal: elements.modal,
-    modalBody: elements.modalBody,
-    modalTitle: elements.modalTitle,
-    onClose: () => fileInputs?.clearImageTarget()
-  });
-  const financePrivacy = createFinancePrivacyController();
-  const treasuryFeature = createTreasuryFeature({
+  const treasury = createTreasuryController({
     getState: () => state,
     parseLocalDate,
     normalize,
     todayStart,
-    sumTreasury
+    sumTreasury,
+    initialSection: sessionStorage.getItem('lions.treasury.section') || 'movements',
+    onSectionChange: section => sessionStorage.setItem('lions.treasury.section', section)
+  });
+  const {
+    parseCurrencyInput,
+    currencyInputValue,
+    memberIsActive,
+    accountSummaries: treasuryAccountSummaries,
+    accountTypeIcon
+  } = treasury;
+  const financePrivacy = createFinancePrivacyController();
+  const {
+    root,
+    pageTitle,
+    pageDescription,
+    modeChip,
+    sidebar,
+    overlay,
+    modal,
+    modalBody,
+    modalTitle,
+    confirmModal,
+    confirmTitle,
+    confirmMessage,
+    confirmIcon,
+    confirmAccept,
+    confirmSecondary,
+    confirmCancel,
+    importInput,
+    imageInput,
+    toastRegion,
+    clock,
+    currentDate,
+    portalRefreshButton,
+    publishCenter: publishCenterElements
+  } = getPortalElements();
+  const confirmation = createConfirmationController({
+    confirmModal,
+    confirmTitle,
+    confirmMessage,
+    confirmIcon,
+    confirmAccept,
+    confirmSecondary,
+    confirmCancel
+  });
+  let fileInputs = null;
+  const modalController = createModalController({
+    modal,
+    modalBody,
+    modalTitle,
+    onClose: () => fileInputs?.clearImageTarget()
   });
   const auditLog = createAuditLogController({
     storage: localStorage,
     modalController,
-    toast
+    toast: message => toast(message)
   });
+  let runtime = null;
+  let readOnlyGuard = null;
+  let viewRenderer = null;
   const recoveryCenter = createRecoveryCenterController({
     getState: () => state,
     modalController,
     confirmation,
-    toast,
+    toast: message => toast(message),
     onRestore: (nextState, details) => runtime.restoreState(nextState, details),
-    remoteRecovery: {
-      isAvailable: () => Boolean(runtime?.hasActiveSecureStorageSession?.(state)),
-      canWrite: () => Boolean(runtime?.isWriteAllowed?.()),
-      listBackups: () => runtime.listPrivateStateBackups(state),
-      createBackup: label => runtime.createPrivateStateBackup(state, label),
-      diagnose: () => runtime.diagnosePrivateStorageIntegrity(state),
-      restoreBackup: key => runtime.restorePrivateStateBackup(state, key),
-      applyRestoredState: (payload, details) => runtime.applyRemotePrivateState(payload, details)
-    },
     onSummaryChange: () => {
-      if (navigationFeature?.navigation.currentView === 'admin' && runtime?.adminUnlocked) renderAdmin();
+      if (navigation?.currentView === 'admin' && runtime?.adminUnlocked) renderAdmin();
     }
   });
 
@@ -108,40 +128,46 @@ export function bootstrapPortal() {
     getState: () => state,
     setState: nextState => { state = nextState; },
     confirmation,
-    applySettings: () => administration?.applySettings(),
+    applySettings: () => applySettings(),
     renderCurrentView: () => render(),
-    updateClock: () => navigationFeature?.uiShell.updateClock(),
+    updateClock: () => uiShell.updateClock(),
     bindControllers: () => {
-      navigationFeature.bind();
+      navigation.bind();
+      uiShell.bind();
       fileInputs.bind();
-      publicationFeature.publishCenter.bind();
-      publicationFeature.portalRefresh.bind();
+      publishCenter.bind();
+      portalRefresh.bind();
+      readOnlyGuard?.bind();
     },
     syncFinancePrivacy: () => financePrivacy.sync(),
-    openPublishCenter: options => publicationFeature.publishCenter.open(options),
-    closePublishCenter: options => publicationFeature.publishCenter.close(options),
-    refreshPublishCenter: () => publicationFeature.publishCenter.refresh(),
-    setPublishStatus: (status, message) => publicationFeature.publishCenter.setStatus(status, message),
-    resetInterfaceState,
-    getCurrentView: () => navigationFeature.navigation.currentView,
-    renderAdmin,
-    updateAccessUI,
-    setView,
-    toast,
+    openPublishCenter: options => publishCenter.open(options),
+    closePublishCenter: options => publishCenter.close(options),
+    refreshPublishCenter: () => publishCenter.refresh(),
+    setPublishStatus: (status, message) => publishCenter.setStatus(status, message),
+    resetInterfaceState: () => resetInterfaceState(),
+    getCurrentView: () => navigation.currentView,
+    renderAdmin: () => renderAdmin(),
+    updateAccessUI: () => updateAccessUI(),
+    setView: view => setView(view),
+    toast: message => toast(message),
     auditLog,
     recoveryCenter
   });
-
-  publicationFeature = createPublicationFeature({
-    elements: elements.publishCenter,
-    modalController,
-    confirmation,
-    runtime,
-    refreshButton: elements.portalRefreshButton,
-    toast
+  const publicationReview = createPublicationReviewController({ modalController, runtime });
+  const publishCenter = createPublishCenterController({
+    ...publishCenterElements,
+    getAdminUnlocked: runtime.isWriteAllowed,
+    getPendingChanges: () => runtime.pendingChanges,
+    getGithubToken: () => runtime.githubToken,
+    getLastSyncInfo: () => runtime.lastSyncInfo,
+    getPendingReview: () => runtime.getPendingPublicationReview(),
+    onReview: publicationReview.open,
+    onPublish: runtime.commitPendingChanges,
+    onDiscard: runtime.discardPendingChanges
   });
-
-  const treasuryAdministration = treasuryFeature.createAdministration({
+  const treasuryAdmin = createTreasuryAdminController({
+    getState: () => state,
+    treasury,
     modalController,
     confirmation,
     persist: runtime.persist,
@@ -152,130 +178,195 @@ export function bootstrapPortal() {
     avatar,
     empty
   });
-
-  administration = createAdministrationFeature({
+  const {
+    openFamilyGroupsManager,
+    openMembershipPayment,
+    openMutualGroupsManager,
+    openMutualPayment,
+    openTreasuryAccountsManager,
+    shareMembershipCharge,
+    openTreasuryEntryForm
+  } = treasuryAdmin;
+  const entityForms = createEntityFormsController({
     getState: () => state,
-    root: elements.root,
-    runtime,
-    treasury: treasuryFeature.treasury,
-    treasuryAdministration,
+    treasury,
+    root,
     modalController,
     confirmation,
+    persist: runtime.persist,
+    renderCurrentView: render,
+    closeModal,
+    toast,
+    isAdminUnlocked: runtime.isWriteAllowed,
+    setView,
+    openTreasuryEntryForm,
+    selectImage: target => fileInputs?.requestImage(target)
+  });
+  const {
+    applyBirthdayPhoto,
+    bindRowActions,
+    bindToolbar,
+    ensureAdmin,
+    openForm,
+    pageToolbar,
+    rowActions
+  } = entityForms;
+  const reports = createReportsController({
+    getState: () => state,
+    toast
+  });
+  const adminPanel = createAdminPanelController({
+    root,
+    getState: () => state,
+    isAdminUnlocked: runtime.isAdminUnlocked,
+    getAccessRole: () => runtime.accessRole,
+    canWrite: runtime.isWriteAllowed,
+    loginAdmin: runtime.connectAdminSession,
+    loginDirector: runtime.connectDirectorSession,
+    logout: runtime.logoutAdmin,
+    openForm,
+    setView,
+    exportState,
+    requestImport: () => fileInputs?.requestImport(),
+    refreshSyncStatus: () => publishCenter.refresh(),
     financePrivacy,
     auditLog,
     recoveryCenter,
-    avatar,
-    empty,
-    toast,
-    setView,
-    renderCurrentView: render,
-    closeModal,
-    updateAccessUI,
-    getFileInputs: () => fileInputs,
-    getPublishCenter: () => publicationFeature.publishCenter
+    reports,
+    toast
+  });
+  const birthdays = createBirthdaysController();
+  const birthdayActions = createBirthdayActions(rowActions);
+  const birthdayArtwork = createBirthdayArtworkController({
+    getBirthdays: () => state.birthdays,
+    toast
   });
 
+  const settingsPanel = createSettingsController({
+    root,
+    getState: () => state,
+    isAdminUnlocked: runtime.isAdminUnlocked,
+    canWrite: runtime.isWriteAllowed,
+    getAccessRole: () => runtime.accessRole,
+    empty,
+    parseCurrencyInput,
+    currencyInputValue,
+    persist: runtime.persist,
+    requestLogoUpload: () => fileInputs?.requestImage('logo'),
+    updateAccessUI,
+    configureDirectorProfile: runtime.configureDirectorProfile,
+    removeDirectorProfile: runtime.removeDirectorProfile,
+    confirmation,
+    toast
+  });
+  const {
+    apply: applySettings,
+    applyLogo: applySettingsLogo,
+    render: renderSettings
+  } = settingsPanel;
+
   fileInputs = createFileInputsController({
-    importInput: elements.importInput,
-    imageInput: elements.imageInput,
+    importInput,
+    imageInput,
     confirmation,
     parseImportFile,
     fileToDataUrl,
     onImport: (importedState, file) => runtime.importState(importedState, file),
     onImage: (target, dataUrl) => {
-      if (target === 'logo') return administration.applySettingsLogo(dataUrl);
-      if (target === 'birthday') return administration.entityForms.applyBirthdayPhoto(dataUrl);
+      if (target === 'logo') return applySettingsLogo(dataUrl);
+      if (target === 'birthday') return applyBirthdayPhoto(dataUrl);
       throw new Error(`Destino de imagem não reconhecido: ${target}`);
     },
     toast
   });
 
-  navigationFeature = createNavigationFeature({
-    elements,
-    runtime,
+  const navigation = createNavigationController({
+    pageTitle,
+    pageDescription,
+    modeChip,
+    sidebar,
+    overlay,
+    isAdminUnlocked: runtime.isAdminUnlocked,
+    getAccessRole: () => runtime.accessRole,
+    getAccessPolicy: runtime.getAccessPolicy,
     renderView: render,
-    destroyViewResources: treasuryFeature.destroyCharts,
-    refreshGlobalControls: () => publicationFeature.publishCenter.refresh(),
-    ensureAdmin: administration.entityForms.ensureAdmin,
-    openForm: administration.entityForms.openForm,
+    destroyViewResources: destroyTreasuryCharts,
+    refreshGlobalControls: () => publishCenter.refresh(),
+    ensureAdmin,
+    openForm,
     setTreasurySection,
-    fullDateFormat,
-    confirmation,
-    closeModal,
-    shareBirthday: administration.birthdayArtwork.share
+    logoutAdmin: runtime.logoutAdmin
   });
 
-  const agenda = createAgendaController();
-  viewRenderer = createPortalViewRenderer(createPortalViewRendererOptions({
-    getState: () => state,
-    getRuntime: () => runtime,
-    getNavigation: () => navigationFeature.navigation,
-    root: elements.root,
-    treasuryFeature,
-    treasuryAdministration,
-    administration,
-    agenda,
-    renderAdmin,
-    renderSettings: () => administration.renderSettings(),
-    financePrivacy,
-    helpers: {
-      avatar,
-      empty,
-      kpi,
-      priorityBadge,
-      statusBadge,
-      birthdayDisplayDate,
-      birthdayStatus,
-      birthdayMatchesPeriod,
-      birthdayRows,
-      birthdayCards
-    },
-    utilities: {
-      normalize,
-      parseLocalDate,
-      nextBirthdayDate,
-      daysUntil,
-      escapeHtml,
-      todayStart,
-      toInputDate,
-      timelineHeading,
-      formatDate
-    },
-    appointments: {
-      build: getAppointments,
-      locationInfo,
-      compare: compareAppointments,
-      typeBadge: appointmentTypeBadge,
-      renderLocation,
-      locationText: appointmentLocationText,
-      downloadCalendar: downloadAppointmentCalendar
-    },
-    markdownToHtml,
-    modalController,
+  const uiShell = createUiShellController({
+    toastRegion,
+    clock,
+    currentDate,
+    fullDateFormat,
+    confirmAccept,
+    confirmSecondary,
+    confirmModal,
+    confirmation,
     closeModal,
-    setTreasurySection,
-    setView,
+    closeSidebar,
+    shareBirthday: birthdayArtwork.share
+  });
+  readOnlyGuard = createReadOnlyGuard({
+    getAccessPolicy: runtime.getAccessPolicy,
     toast
-  }));
+  });
 
-  recoveryCenter.initialize()
-    .catch(error => console.error('Falha ao iniciar a recuperação local:', error));
-  return runtime.bootstrap();
+  const portalRefresh = createPortalRefreshController({
+    button: portalRefreshButton,
+    getPendingChanges: () => runtime.pendingChanges,
+    refreshPortal: runtime.refreshPortalInterface,
+    requestPendingDecision: ({ count, message }) => confirmation.askChoice({
+      title: count === 1 ? 'Existe uma alteração pendente' : `Existem ${count} alterações pendentes`,
+      message,
+      icon: '☁️',
+      primaryText: 'Publicar alterações',
+      primaryTone: 'primary',
+      secondaryText: 'Descartar alterações',
+      secondaryTone: 'danger-soft',
+      cancelText: 'Cancelar atualização',
+      tone: 'warning'
+    }),
+    publishPendingChanges: runtime.commitPendingChanges,
+    discardPendingChanges: runtime.discardPendingChanges,
+    toast
+  });
 
-  function setView(view) {
-    navigationFeature.navigation.setView(view);
+  function setView(view) { navigation.setView(view); }
+  function updateAccessUI() { navigation.updateAccessUI(); }
+  function closeSidebar() { navigation.closeSidebar(); }
+  function toast(message) { uiShell.toast(message); }
+
+  function resetInterfaceState() {
+    modalController.close({ restoreFocus: false });
+    confirmation.closeConfirmModal(false);
+    navigation.closeSidebar();
+    publishCenter.close({ focus: false });
+    destroyTreasuryCharts();
+    treasury.reset();
+    birthdays.reset();
+    agenda.reset();
+    navigation.setView('dashboard');
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.getElementById('mainContent')?.focus({ preventScroll: true });
+    });
   }
 
-  function updateAccessUI() {
-    navigationFeature?.navigation.updateAccessUI();
-  }
-
-  function closeModal() {
-    modalController.close();
-  }
-
-  function toast(message) {
-    navigationFeature?.toast(message);
+  function setTreasurySection(section){
+    treasury.section = section;
+    document.querySelectorAll('[data-treasury-section]').forEach(item => {
+      const active = item.dataset.treasurySection === section;
+      item.classList.toggle('is-active', active);
+      if (active) item.setAttribute('aria-current', 'page');
+      else item.removeAttribute('aria-current');
+    });
+    if(navigation.currentView!=='treasury')setView('treasury'); else renderTreasuryView();
   }
 
   function render(view) {
@@ -286,36 +377,116 @@ export function bootstrapPortal() {
     return viewRenderer?.renderTreasury();
   }
 
+  const agenda = createAgendaController();
+  function getAppointments() {
+    return buildAppointments(state);
+  }
+
   function renderAdmin() {
-    administration?.renderAdmin();
+    adminPanel.render();
   }
 
-  function setTreasurySection(section) {
-    treasuryFeature.treasury.section = section;
-    document.querySelectorAll('[data-treasury-section]').forEach(item => {
-      const active = item.dataset.treasurySection === section;
-      item.classList.toggle('is-active', active);
-      if (active) item.setAttribute('aria-current', 'page');
-      else item.removeAttribute('aria-current');
-    });
-    if (navigationFeature.navigation.currentView !== 'treasury') setView('treasury');
-    else renderTreasuryView();
+
+  function closeModal() {
+    modalController.close();
   }
 
-  function resetInterfaceState() {
-    modalController.close({ restoreFocus: false });
-    confirmation.closeConfirmModal(false);
-    navigationFeature.navigation.closeSidebar();
-    publicationFeature.publishCenter.close({ focus: false });
-    treasuryFeature.destroyCharts();
-    treasuryFeature.treasury.reset();
-    administration.birthdays.reset();
-    agenda.reset();
-    navigationFeature.navigation.setView('dashboard');
-
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      document.getElementById('mainContent')?.focus({ preventScroll: true });
-    });
-  }
+  viewRenderer = createPortalViewRenderer({
+    getState: () => state,
+    getRuntime: () => runtime,
+    getNavigation: () => navigation,
+    root,
+    treasury,
+    birthdays,
+    agenda,
+    renderAdmin,
+    renderSettings,
+    dashboardDependencies: {
+      memberIsActive,
+      kpi,
+      avatar,
+      empty,
+      financePrivacy,
+      treasuryAccountSummaries,
+      accountTypeIcon,
+      treasury,
+      setTreasurySection,
+      setView
+    },
+    birthdayDependencies: {
+      normalize,
+      memberIsActive,
+      parseLocalDate,
+      nextBirthdayDate,
+      daysUntil,
+      birthdayMatchesPeriod,
+      birthdayRows,
+      birthdayCards,
+      birthdayStatus,
+      birthdayDisplayDate,
+      avatar,
+      escapeHtml,
+      birthdayActions,
+      empty,
+      bindRowActions,
+      ensureAdmin,
+      openForm
+    },
+    agendaDependencies: {
+      getAppointments,
+      todayStart,
+      toInputDate,
+      parseLocalDate,
+      locationInfo,
+      pageToolbar,
+      bindToolbar,
+      timelineHeading,
+      compareAppointments,
+      appointmentTypeBadge,
+      escapeHtml,
+      formatDate,
+      statusBadge,
+      renderLocation,
+      markdownToHtml,
+      rowActions,
+      empty,
+      bindRowActions,
+      normalize,
+      modalController,
+      appointmentLocationText,
+      downloadAppointmentCalendar,
+      closeModal,
+      openForm
+    },
+    noticeDependencies: {
+      pageToolbar,
+      bindToolbar,
+      priorityBadge,
+      rowActions,
+      empty,
+      bindRowActions
+    },
+    treasuryDependencies: {
+      financePrivacy,
+      kpi,
+      avatar,
+      empty,
+      pageToolbar,
+      bindToolbar,
+      rowActions,
+      bindRowActions,
+      ensureAdmin,
+      openForm,
+      toast,
+      openTreasuryAccountsManager,
+      openFamilyGroupsManager,
+      openMembershipPayment,
+      openMutualGroupsManager,
+      openMutualPayment,
+      shareMembershipCharge
+    }
+  });
+  recoveryCenter.initialize()
+    .catch(error => console.error('Falha ao iniciar a recuperação local:', error));
+  return runtime.bootstrap();
 }

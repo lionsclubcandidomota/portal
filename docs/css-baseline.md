@@ -1,4 +1,4 @@
-# Linha de base do CSS — v6.32.0
+# Linha de base do CSS — v6.26.0
 
 O bundle é gerado por `tools/build-css.mjs`. A lista explícita de fontes preserva a ordem da cascata e não contém fontes na pasta `legacy`.
 
@@ -10,8 +10,8 @@ O bundle é gerado por `tools/build-css.mjs`. A lista explícita de fontes prese
 - 330 seletores redefinidos no mesmo contexto.
 - 488 regras de sobrescrita.
 - 0 fontes e 0 bytes na camada `legacy`.
-- Maior fonte individual limitada a 36.000 bytes.
-- Bundle limitado a 330.000 bytes.
+- Maior fonte individual limitada a 40.000 bytes.
+- Bundle limitado a 340.000 bytes.
 
 Execute:
 
@@ -36,10 +36,3 @@ A quantidade de fontes permaneceu em 27. O orçamento do bundle foi ampliado de 
 - Correções não devem ser adicionadas ao final do bundle como camada genérica.
 - Redefinições de seletores precisam reduzir ou manter os limites atuais.
 - Componentes globais devem reutilizar tokens e padrões existentes.
-
-## Consolidação 6.32.0
-
-- Zero declarações já substituídas pelo mesmo seletor e contexto.
-- Até 280 seletores redefinidos.
-- Até 360 regras de sobrescrita.
-- Resultado atual: 254 seletores redefinidos, 325 sobrescritas e bundle próximo de 320 KB.

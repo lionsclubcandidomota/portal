@@ -2,14 +2,13 @@ import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   roleHasCapability
-} from './authorization.js?v=6.36.2';
+} from './authorization.js?v=6.26.0';
 
-export { ACCESS_ROLES } from './authorization.js?v=6.36.2';
+export { ACCESS_ROLES } from './authorization.js?v=6.26.0';
 
 const DIRECTOR_PROFILE_VERSION = 2;
 const DIRECTOR_PASSWORD_CONTEXT = 'lions-portal-director-password-v2';
-const DIRECTOR_PASSWORD_ITERATIONS = 100000;
-const DIRECTOR_WORKER_MAX_ITERATIONS = 100000;
+const DIRECTOR_PASSWORD_ITERATIONS = 210000;
 const DIRECTOR_PASSWORD_MIN_LENGTH = 10;
 const DIRECTOR_PASSWORD_MAX_LENGTH = 128;
 
@@ -127,12 +126,6 @@ export function directorProfileFromState(state) {
     configuredAt: String(source.configuredAt || ''),
     configuredBy: String(source.configuredBy || '').trim()
   };
-}
-
-
-export function directorProfileRequiresWorkerMigration(state) {
-  const profile = directorProfileFromState(state);
-  return Boolean(profile && Number(profile.iterations || 0) > DIRECTOR_WORKER_MAX_ITERATIONS);
 }
 
 export function hasLegacyDirectorTokenProfile(state) {

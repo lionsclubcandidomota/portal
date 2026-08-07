@@ -1,32 +1,32 @@
 {
-  "updatedAt": "2026-08-06T23:35:59.169Z",
-  "deploymentId": "1786059359169-0ddbe273-a338-4676-9ec4-a27759c83b34",
-  "audience": "public",
+  "updatedAt": "2026-08-04T13:17:46.164Z",
+  "deploymentId": "1785849466164-b18da517-3480-4e32-9b51-b24571693919",
   "app": "Lions Clube de Cândido Mota Dashboard",
-  "schemaVersion": 11,
-  "version": 11,
+  "schemaVersion": 9,
+  "version": 9,
   "data": {
     "settings": {
       "clubName": "Lions Clube de Cândido Mota",
       "logo": "./public/logo.png",
       "primaryColor": "#00529B",
       "accentColor": "#F2C100",
-      "secureStorage": {
-        "version": 1,
-        "enabled": true,
-        "provider": "cloudflare-r2",
-        "workerUrl": "https://lions-portal-anexos.lionsclubcandidomota.workers.dev"
-      },
-      "initialized": true,
+      "membershipMonthlyFee": 40,
+      "membershipFamilyPrimaryFee": 40,
+      "membershipFamilyAdditionalFee": 15,
       "accessProfiles": {
         "director": {
           "version": 2,
           "credentialType": "password",
           "enabled": true,
           "label": "Diretoria",
-          "configuredAt": "2026-08-04T15:02:44.005Z"
+          "salt": "b529e5b0377178380c3c1e7451a74798",
+          "passwordHash": "5dfdf265aeebaae1a706f37e5dedbf91627edbd48c0308946a453066e3bb70de",
+          "iterations": 210000,
+          "configuredAt": "2026-08-01T02:15:45.561Z",
+          "configuredBy": "lionsclubcandidomota"
         }
-      }
+      },
+      "initialized": true
     },
     "birthdays": [
       {
@@ -241,7 +241,7 @@
         "id": "b_ms3xrctq_knqsof",
         "memberNumber": "6050963",
         "name": "Sueli Neves",
-        "birthDate": "1974-08-18",
+        "birthDate": "1974-08-07",
         "photo": "./public/members/b_ms3xrctq_knqsof-0aokyx8.jpg",
         "membershipNotes": "PIX recebido junto com a mensalidade do Marcos Antônio de Almeida (Marido)",
         "status": "Ativo",
@@ -320,11 +320,1823 @@
         "photo": ""
       }
     ],
-    "treasuryAccounts": [],
-    "treasuryCategories": [],
-    "familyGroups": [],
-    "mutualGroups": [],
-    "treasury": [],
+    "treasuryAccounts": [
+      {
+        "id": "acc-current",
+        "name": "SicoobCrediceripa - CC",
+        "type": "Conta corrente",
+        "initialBalance": 0,
+        "active": true
+      },
+      {
+        "id": "acc-investment",
+        "name": "SicoobCrediceripa - Ap",
+        "type": "Aplicação",
+        "initialBalance": 0,
+        "active": false
+      },
+      {
+        "id": "acc-cash",
+        "name": "Dinheiro em caixa",
+        "type": "Dinheiro em caixa",
+        "initialBalance": 0,
+        "active": false
+      }
+    ],
+    "treasuryCategories": [
+      "Mensalidades",
+      "Mútuas",
+      "Material de escritório",
+      "Documentação",
+      "Projeto",
+      "Evento",
+      "Patrocínio",
+      "Combustível",
+      "Taxa bancária",
+      "Doação",
+      "Outros",
+      "Associação Internacional de Lions Clubes",
+      "Camisetas",
+      "Mutua",
+      "Saldo Inicial"
+    ],
+    "familyGroups": [
+      {
+        "id": "f_ms7u4ij3_4qo1rk",
+        "name": "Fernanda e Luiz",
+        "memberIds": [
+          "b_ms3xkgot_6anwnv",
+          "b_ms3xlpvb_50kztj"
+        ],
+        "primaryMemberId": "b_ms3xlpvb_50kztj",
+        "notes": ""
+      },
+      {
+        "id": "f_ms7u6fcz_4zy7h4",
+        "name": "Vitória e João",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "primaryMemberId": "b_ms3xe4af_85o3yp",
+        "notes": "PIX integral pago pelo João Augusto Batista de Paula"
+      },
+      {
+        "id": "f_ms7u756k_hzxhqy",
+        "name": "Roberta, Regina e Roberto",
+        "memberIds": [
+          "b_ms3xpn5s_svjeqa",
+          "b_ms3xpzjw_4n88dj",
+          "b_ms3xq92x_jjequd"
+        ],
+        "primaryMemberId": "b_ms3xq92x_jjequd",
+        "notes": ""
+      },
+      {
+        "id": "f_ms7u9632_68wm2f",
+        "name": "Amanda, Maria, Daniel e Mario",
+        "memberIds": [
+          "b_ms3xfobh_l0tq8n",
+          "b_ms3xh5de_4qya3j",
+          "b_ms3xnmv9_jt5r46",
+          "b_ms3xnxct_7h4wxe"
+        ],
+        "primaryMemberId": "b_ms3xnxct_7h4wxe",
+        "notes": ""
+      },
+      {
+        "id": "f_ms7uat8h_x2b3d3",
+        "name": "Sônia e Oswaldo",
+        "memberIds": [
+          "b_ms3xp6en_ka98gi",
+          "b_ms3xr0sd_wd81n3"
+        ],
+        "primaryMemberId": "b_ms3xp6en_ka98gi",
+        "notes": ""
+      },
+      {
+        "id": "f_ms7ug13o_9k8spc",
+        "name": "Ana e Gustavo",
+        "memberIds": [
+          "b_ms3xg16k_59dtg6",
+          "b_ms3zd19y_z8aqbx"
+        ],
+        "primaryMemberId": "b_ms3zd19y_z8aqbx",
+        "notes": ""
+      },
+      {
+        "id": "f_ms7ugenh_mmkqzy",
+        "name": "Larissa e Denis",
+        "memberIds": [
+          "b_ms3xhsbp_w6a41l",
+          "b_ms3xlhbw_3m6x55"
+        ],
+        "primaryMemberId": "b_ms3xhsbp_w6a41l",
+        "notes": ""
+      },
+      {
+        "id": "f_ms7uq2k2_juhsdo",
+        "name": "Evelin e Adriano",
+        "memberIds": [
+          "b_ms3xfcuq_bi8m42",
+          "b_ms3xi4tc_b25op6"
+        ],
+        "primaryMemberId": "b_ms3xfcuq_bi8m42",
+        "notes": ""
+      }
+    ],
+    "mutualGroups": [
+      {
+        "id": "mu_mse0d4dd_xo9pzr",
+        "name": "Mutua 658",
+        "monthlyAmount": 15,
+        "startedMonth": "2026-08",
+        "notes": "",
+        "memberships": [
+          {
+            "id": "mum_mse0d4dd_k2ypga",
+            "memberId": "b_ms3xh5de_4qya3j",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_u2aktc",
+            "memberId": "b_ms3xhsbp_w6a41l",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_wyv6no",
+            "memberId": "b_mse0ajj2_8450i5",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_3hzvp5",
+            "memberId": "b_ms3xlhbw_3m6x55",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_9i4dno",
+            "memberId": "b_ms3xlpvb_50kztj",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_0bm0y6",
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_vm9pol",
+            "memberId": "b_ms3xn2nf_jifrzi",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_zgzztm",
+            "memberId": "b_mse09jtk_ksrs8z",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_c0euqw",
+            "memberId": "b_ms3xnxct_7h4wxe",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_ec82aw",
+            "memberId": "b_ms3xpn5s_svjeqa",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_yhmwbh",
+            "memberId": "b_ms3xq92x_jjequd",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0d4dd_xtvvxs",
+            "memberId": "b_ms3xrctq_knqsof",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0df8x_9vbtsn",
+            "memberId": "b_mse0ax4r_eics02",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          },
+          {
+            "id": "mum_mse0df8x_8awty8",
+            "memberId": "b_ms3xp6en_ka98gi",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          }
+        ],
+        "amountHistory": [
+          {
+            "fromMonth": "2026-08",
+            "amount": 15
+          }
+        ]
+      }
+    ],
+    "treasury": [
+      {
+        "id": "t_ms8vq35c_89arju",
+        "date": "2026-08-30",
+        "accountId": "acc-current",
+        "category": "Documentação",
+        "description": "Cartório de Registro Civil - Reconhecimento de Firma",
+        "entry": 0,
+        "exit": 118.17,
+        "notes": "Pagamento realizado com recursos próprios em 13/07/2026, razão do bloqueio temporário da conta bancária do clube (Secretaria - Vitória Caroline Zibordi)",
+        "status": "Programado",
+        "attachments": [
+          {
+            "id": "att_msemlade_cs69d5",
+            "name": "Pagamento - Rec. Firma - Cartório de Registro Civil.jpg",
+            "type": "image/jpeg",
+            "size": 70254,
+            "originalSize": 50947,
+            "optimized": true,
+            "url": "./public/treasury/t_ms8vq35c_89arju/att_msemlade_cs69d5-0oyiu28.jpg"
+          },
+          {
+            "id": "att_msemnpvs_03j7nb",
+            "name": "Recibo - Rec. Firma - Cartório de Registro Civil.jpg",
+            "type": "image/jpeg",
+            "size": 134607,
+            "originalSize": 112261,
+            "optimized": true,
+            "url": "./public/treasury/t_ms8vq35c_89arju/att_msemnpvs_03j7nb-02xv66n.jpg"
+          }
+        ]
+      },
+      {
+        "id": "t_ms8vs6iw_sgqfho",
+        "date": "2026-08-30",
+        "accountId": "acc-current",
+        "category": "Documentação",
+        "description": "Cartório de Registro Civil - Atas de Assembleias ",
+        "entry": 0,
+        "exit": 244.59,
+        "notes": "Pagamento realizado com recursos próprios em 14/07/2026, razão do bloqueio temporário da conta bancária do clube (Secretaria - Vitória Caroline Zibordi)",
+        "status": "Programado",
+        "attachments": [
+          {
+            "id": "att_msemmff4_ojt7wg",
+            "name": "Pagamento - Registro - Cartório de Registro.jpg",
+            "type": "image/jpeg",
+            "size": 71826,
+            "originalSize": 52222,
+            "optimized": true,
+            "url": "./public/treasury/t_ms8vs6iw_sgqfho/att_msemmff4_ojt7wg-1nx0s9f.jpg"
+          }
+        ]
+      },
+      {
+        "id": "t_ms8vtpaq_nhs553",
+        "date": "2026-08-30",
+        "accountId": "acc-current",
+        "category": "Camisetas",
+        "description": "Estamparia Pererê - Camiseta Associado",
+        "entry": 0,
+        "exit": 83.2,
+        "notes": "Pagamento realizado com recursos próprios em 15/07/2026, razão do bloqueio temporário da conta bancária do clube (Tesoureiro - João Augusto Batista de Paula)",
+        "status": "Programado",
+        "attachments": [
+          {
+            "id": "att_msempsv8_9muus4",
+            "name": "Comprovante Pagamento Pererê - Camisetas.jpg",
+            "type": "image/jpeg",
+            "size": 93642,
+            "originalSize": 99927,
+            "optimized": true,
+            "url": "./public/treasury/t_ms8vtpaq_nhs553/att_msempsv8_9muus4-1nwfuaz.jpg"
+          }
+        ]
+      },
+      {
+        "id": "t_ms8vvl2p_vbr2nq",
+        "date": "2026-08-30",
+        "accountId": "acc-current",
+        "category": "Documentação",
+        "description": "Tabelionato de Notas e Protestos - Autenticação das Cópias das Atas Assembleias ",
+        "entry": 0,
+        "exit": 78.6,
+        "notes": "Pagamento realizado com recursos próprios em 23/07/2026, razão do bloqueio temporário da conta bancária do clube (Tesoureiro - João Augusto Batista de Paula)",
+        "status": "Programado",
+        "attachments": [
+          {
+            "id": "att_msemolr5_a5ah3s",
+            "name": "Pix Tabelionato de Notas.jpg",
+            "type": "image/jpeg",
+            "size": 71583,
+            "originalSize": 52034,
+            "optimized": true,
+            "url": "./public/treasury/t_ms8vvl2p_vbr2nq/att_msemolr5_a5ah3s-0vh7e97.jpg"
+          },
+          {
+            "id": "att_msemp4lt_suk863",
+            "name": "Recibo Tabelionato de Notas.jpg",
+            "type": "image/jpeg",
+            "size": 95967,
+            "originalSize": 79567,
+            "optimized": true,
+            "url": "./public/treasury/t_ms8vvl2p_vbr2nq/att_msemp4lt_suk863-0sij5oz.jpg"
+          }
+        ]
+      },
+      {
+        "id": "t_ms9053sc_w8aq90",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Daniel Flavio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 652 - Doc: 8143991",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms905s84_pmh5bo",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 652 - Doc: 8143997",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms906rdy_x8u59a",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 652 Brancalhão - Doc: 8143999",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms90h4za_a57k7p",
+        "date": "2026-03-02",
+        "paymentDate": "2026-03-02",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-03"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-03",
+        "coveredMonths": [
+          "2026-03"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: março de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms90hgfh_175m45",
+        "date": "2026-03-02",
+        "paymentDate": "2026-03-02",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-03"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-03",
+        "coveredMonths": [
+          "2026-03"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: março de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms90ionf_ok2prb",
+        "date": "2026-03-02",
+        "paymentDate": "2026-07-31",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-03"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-03"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-03",
+        "coveredMonths": [
+          "2026-03"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: março de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms90ka0y_tbftv1",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Luiz H B Franciscatte",
+        "entry": 30,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms90lvkb_hdl1ok",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Marcos Antônio de Almeida",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutua 652 - Sueli Neves e Marcos Antônio de Almeida ",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91981r_8a991t",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Pagamento de Mutuas",
+        "entry": 0,
+        "exit": 720,
+        "notes": "Mutuas 649, 650 e 651",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91dz0f_2khvh5",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Rogerio Andreotti",
+        "entry": 840,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91ep0z_7gxwok",
+        "date": "2026-03-13",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Regina Bolfarini Jabur Freire",
+        "entry": 60,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91gna6_qr3xil",
+        "date": "2026-03-25",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Pagamento de Mutuas",
+        "entry": 0,
+        "exit": 210,
+        "notes": "Mutua 652 com 14 membros",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91pnlr_7iqan3",
+        "date": "2026-03-01",
+        "accountId": "acc-current",
+        "category": "Saldo Inicial",
+        "description": "Saldo Inicial da Conta Corrente",
+        "entry": 5117.46,
+        "exit": 0,
+        "notes": "Inicio do Controle pelo Portal",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91rkjg_wim7xh",
+        "date": "2026-04-01",
+        "paymentDate": "2026-04-01",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-04"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-04"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-04",
+        "coveredMonths": [
+          "2026-04"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: abril de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91rxtx_7s0rw3",
+        "date": "2026-04-01",
+        "paymentDate": "2026-07-31",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-04"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-04",
+        "coveredMonths": [
+          "2026-04"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: abril de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91s63x_817q7i",
+        "date": "2026-04-01",
+        "paymentDate": "2026-04-01",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-04"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-04",
+        "coveredMonths": [
+          "2026-04"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: abril de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91vkql_4wu8xz",
+        "date": "2026-04-06",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Larissa Iaia Baldesserra",
+        "entry": 135,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms91zkqa_nf4qhh",
+        "date": "2026-04-08",
+        "accountId": "acc-current",
+        "category": "Associação Internacional de Lions Clubes",
+        "description": "Boleto Distrital Lions de Cândido Mota",
+        "entry": 0,
+        "exit": 1989,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms9207cf_9wkmfs",
+        "date": "2026-04-08",
+        "accountId": "acc-current",
+        "category": "Associação Internacional de Lions Clubes",
+        "description": "Boleto Taxa Internacional",
+        "entry": 0,
+        "exit": 3346.28,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms9225g3_wmdevo",
+        "date": "2026-04-13",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Daniel Flavio Gozzi",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutuas 653 e 654 - Doc: 8259377",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms925o9y_r34taf",
+        "date": "2026-04-13",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutua 653 e 654 - Doc: 8259393",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms9274yj_zroo5n",
+        "date": "2026-04-13",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutua 653 e 654 Brancalhão - Doc: 8259405",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms929gxq_oi4113",
+        "date": "2026-04-13",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Luiz H B Franciscatte",
+        "entry": 60,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92b804_9ed6ge",
+        "date": "2026-04-22",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Larissa Iaia Baldesserra",
+        "entry": 90,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92c7ed_fya9te",
+        "date": "2026-04-22",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Marcos Antônio de Almeida",
+        "entry": 60,
+        "exit": 0,
+        "notes": "Mutuas 653 e 654 - Sueli e Marcos",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92d0zd_w94p4f",
+        "date": "2026-04-22",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Roberto Martins Freire",
+        "entry": 120,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92fqqo_scz3h8",
+        "date": "2026-05-04",
+        "paymentDate": "2026-05-04",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-05"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-05",
+        "coveredMonths": [
+          "2026-05"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: maio de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92g023_6uh7ge",
+        "date": "2026-05-04",
+        "paymentDate": "2026-05-04",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-05"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-05",
+        "coveredMonths": [
+          "2026-05"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: maio de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92gymy_tq8779",
+        "date": "2026-05-04",
+        "paymentDate": "2026-07-31",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-05"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-05"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-05",
+        "coveredMonths": [
+          "2026-05"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: maio de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92jlw2_qn8zrz",
+        "date": "2026-05-11",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Luiz H B Franciscatte",
+        "entry": 60,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92kie1_binmn6",
+        "date": "2026-05-11",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Larissa Iaia Baldesserra",
+        "entry": 90,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92lvz9_mpsb3x",
+        "date": "2026-05-12",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutua 655 e 656 - Doc: 8345787",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92mqiz_xdjuwj",
+        "date": "2026-05-12",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutua 655 e 656 - Brancalhão - Doc: 8345796",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92nmyn_xnauxm",
+        "date": "2026-05-12",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Daniel Flavio Gozzi",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutuas 655 e 656 - Doc: 8346132",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92p50p_tnjgjl",
+        "date": "2026-05-12",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Roberto Martins Freire",
+        "entry": 120,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92qjyh_neaxb6",
+        "date": "2026-05-13",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Pins Lions",
+        "entry": 0,
+        "exit": 177.95,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92rnu6_b37k9k",
+        "date": "2026-05-13",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Pagamento de Mutuas",
+        "entry": 0,
+        "exit": 840,
+        "notes": "Mutuas referentes: 653, 654, 655 e 656",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92sxc5_761k4i",
+        "date": "2026-05-20",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Resgate RDC",
+        "entry": 1000,
+        "exit": 0,
+        "notes": "DOC.: 41 - 7",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92twyd_kxy9cj",
+        "date": "2026-05-19",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Marcos Antônio de Almeida",
+        "entry": 60,
+        "exit": 0,
+        "notes": "",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92wa21_lbydp2",
+        "date": "2026-05-21",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Pagamento Pix - 10.573.521/0001-91",
+        "entry": 0,
+        "exit": 899,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92ysmb_vtxv4j",
+        "date": "2026-06-01",
+        "paymentDate": "2026-06-01",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-06"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-06"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-06",
+        "coveredMonths": [
+          "2026-06"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: junho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92z993_000oqm",
+        "date": "2026-06-01",
+        "paymentDate": "2026-06-01",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-06"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-06",
+        "coveredMonths": [
+          "2026-06"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: junho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms92zgbo_r5yp1e",
+        "date": "2026-06-01",
+        "paymentDate": "2026-06-01",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-06"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-06",
+        "coveredMonths": [
+          "2026-06"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: junho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms930cv0_oq6cmk",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Luiz H B Franciscatte",
+        "entry": 30,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms930y6d_2mfb8r",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Daniel Flavio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 657 - Doc: 8401728",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms931p4b_7sn7ez",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Marcos Antônio de Almeida",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutua 657",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms932gto_m3jzrq",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 657 Brancalhão - Doc: 8401947",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms9337lj_fvk8bb",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 657 - Doc: 8401958",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms934cvn_95oyea",
+        "date": "2026-06-02",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Pagamento de Mutuas",
+        "entry": 0,
+        "exit": 210,
+        "notes": "Chamada da Mutua 657 Cândido Mota",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93516g_3tboe8",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 658 Brancalhão - Doc: 8448229",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms935lyu_8582j6",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Daniel Flavio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 658 - Doc: 8448231",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms936b4s_7y01al",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Mario Sergio Gozzi",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mutua 658 - Doc: 8448235",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms9374pc_c7dwmc",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Roberto Martins Freire",
+        "entry": 60,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93bjy5_tfjg4l",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Luiz H B Franciscatte",
+        "entry": 30,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93cogo_be2uuz",
+        "date": "2026-06-17",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Larissa Iaia Baldesserra",
+        "entry": 45,
+        "exit": 0,
+        "notes": "A confirmar com Adriano do que se trata esse valor.",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93dmui_amagrq",
+        "date": "2026-06-18",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Pagamento Pix - 02.248.416/0001-59",
+        "entry": 0,
+        "exit": 210,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93evvt_lk1fqn",
+        "date": "2026-06-22",
+        "accountId": "acc-current",
+        "category": "Mutua",
+        "description": "Marcos Antônio de Almeida",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mutua 658",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93fnst_z4e5vm",
+        "date": "2026-06-24",
+        "accountId": "acc-current",
+        "category": "Evento",
+        "description": "Cozinheia",
+        "entry": 0,
+        "exit": 300,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93gg3r_ex5av2",
+        "date": "2026-06-24",
+        "accountId": "acc-current",
+        "category": "Outros",
+        "description": "Resgate RDC",
+        "entry": 2000,
+        "exit": 0,
+        "notes": "Doc: 41 - 7",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93jzpk_3wv8g6",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "Evento",
+        "description": "Mario Sergio Gozzi",
+        "entry": 0,
+        "exit": 626.76,
+        "notes": "Cessão de Posse - Doc: 8472451",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93l1ic_724j46",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "Evento",
+        "description": "Pagamento Pix - ***.602.778-**",
+        "entry": 0,
+        "exit": 760,
+        "notes": "Cessão de Posse",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93mao4_s4r63v",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "Evento",
+        "description": "Pagamento Pix - ***.387.208-**",
+        "entry": 0,
+        "exit": 320,
+        "notes": "Cessão de Posse",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93myoz_tiriyq",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "Evento",
+        "description": "Pagamento Pix - ***.073.888-**",
+        "entry": 0,
+        "exit": 325,
+        "notes": "Cessão de Posse",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93o96x_pe2pw7",
+        "date": "2026-07-03",
+        "paymentDate": "2026-07-03",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-07"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-07",
+        "coveredMonths": [
+          "2026-07"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: julho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93omcd_b8aksf",
+        "date": "2026-07-03",
+        "paymentDate": "2026-07-03",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-07"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-07",
+        "coveredMonths": [
+          "2026-07"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: julho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_ms93oxv3_wns8br",
+        "date": "2026-07-03",
+        "paymentDate": "2026-07-03",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-07"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-07"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-07",
+        "coveredMonths": [
+          "2026-07"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: julho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msar4vkr_z1bmmb",
+        "date": "2026-08-30",
+        "accountId": "acc-current",
+        "category": "Evento",
+        "description": "Papelaria Geli",
+        "entry": 0,
+        "exit": 100.8,
+        "notes": "Matérias para fazer as cestas dos brindes do Porco no Rolete 02/08/2026",
+        "status": "Programado",
+        "attachments": [
+          {
+            "id": "att_msemt4ho_71gqc3",
+            "name": "PIX Papelaria Geli.jpg",
+            "type": "image/jpeg",
+            "size": 83370,
+            "originalSize": 60400,
+            "optimized": true,
+            "url": "./public/treasury/t_msar4vkr_z1bmmb/att_msemt4ho_71gqc3-0aql41k.jpg"
+          },
+          {
+            "id": "att_msemt4kj_jujvnq",
+            "name": "Papelaria Geli.jpg",
+            "type": "image/jpeg",
+            "size": 163851,
+            "originalSize": 133424,
+            "optimized": true,
+            "url": "./public/treasury/t_msar4vkr_z1bmmb/att_msemt4kj_jujvnq-19q1ylc.jpg"
+          }
+        ]
+      },
+      {
+        "id": "t_msdf5it3_7qtay6",
+        "date": "2026-08-31",
+        "accountId": "acc-current",
+        "category": "Evento",
+        "description": "Adega GGL Bebidas",
+        "entry": 0,
+        "exit": 956.5,
+        "notes": "Referente ao \"socorro\" no meio do Porco no Rolete 02/08/2026",
+        "status": "Programado",
+        "attachments": [
+          {
+            "id": "att_msemrpty_kyxsr3",
+            "name": "Adega GGL Bebidas.jpg",
+            "type": "image/jpeg",
+            "size": 212868,
+            "originalSize": 177088,
+            "optimized": true,
+            "url": "./public/treasury/t_msdf5it3_7qtay6/att_msemrpty_kyxsr3-1nhgfa6.jpg"
+          }
+        ]
+      },
+      {
+        "id": "t_msdykvnc_z9tatm",
+        "date": "2026-08-31",
+        "accountId": "acc-current",
+        "category": "Evento",
+        "description": "Bros Chopp",
+        "entry": 0,
+        "exit": 9552,
+        "notes": "Porco no Rolete 02/08/2026 |\n690L Chopp R$ 6.900,00 |\n37 Fardos Refri R$ 1.908,00 |\n31 Fardos Água R$ 744,00 |\n\nBonificações: \n6 Barracas R$ 420,00 |\n2 Térmicas R$ 80,00 |\n2 Caixa de Copos R$ 600,00 |\nTotal Bonificado: R$ 1.100,00",
+        "status": "Programado",
+        "attachments": []
+      },
+      {
+        "id": "t_msdyvy14_qy8jyz",
+        "date": "2026-08-03",
+        "paymentDate": "2026-08-03",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-08"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-08"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-08",
+        "coveredMonths": [
+          "2026-08"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: agosto de 2026",
+        "attachments": []
+      }
+    ],
     "events": [
       {
         "id": "e_ms3yahxo_wn15kr",
@@ -431,39 +2243,6 @@
         "onlineUrl": "",
         "description": "**🦁 É SÁBADO, 08 DE AGOSTO – DIA \"D\" LIONS! 🦁**\n\n**Todo segundo sábado de cada mês é o nosso Dia \"D\" Lions!**\n\nConvido todos os companheiros e companheiras a vestirem, com muito orgulho, a camiseta, o colete, o jaleco, o boné ou qualquer peça que represente o Lions, demonstrando o nosso ORGULHO DE SER LEÃO! 🦁💙💛\n\n🚗🚎✈️ Vai viajar? Não se esqueça de levar sua camiseta do Lions!\n\nVamos vestir as cores do Lions para ir ao mercado, à feira, ao shopping, ao trabalho, durante nossas atividades de serviços leonísticos ou em qualquer outro lugar. Quanto mais visível estivermos, mais divulgaremos a nossa missão de servir.\n\n📸 Não se esqueçam de tirar uma foto e publicar em suas redes sociais (Facebook, Instagram, TikTok, YouTube, WhatsApp e outras), utilizando as hashtags:\n\n#DiaDLions #DiaDLionsDLB1\n\n**Vamos mostrar a força do nosso movimento e o orgulho de fazer parte desta grande família leonística! 🤗🦁🦁🦁**",
         "status": "Confirmado"
-      },
-      {
-        "id": "e_mses7kep_iljv82",
-        "name": "💻 Treinamento de Tecnologia da Informação (TI)",
-        "date": "2026-08-10",
-        "time": "19:30",
-        "locationType": "physical",
-        "location": "Online - Será disponibilizado o link no dia",
-        "onlineUrl": "",
-        "description": "📅 No dia 10 de agosto (segunda-feira), teremos o treinamento de Tecnologia da Informação (TI), que será conduzido pelo CL João Augusto Batista de Paula (LC Cândido Mota).\n\n💻 Este treinamento é de extrema importância para os(as) Assessores(as) de Marketing dos Clubes, mas é aberto e recomendado a TODOS os associados, independentemente de exercerem cargos. Quanto maior a participação, mais fortalecemos o trabalho dos nossos Clubes! 🤝\n\n📌 Organizem-se em seus Clubes e incentivem a participação de todos!\n\n🏆 Lembramos que os treinamentos são critérios obrigatórios para a conquista do Prêmio Excelência de Clube de Lions Internacional.\n\n🎖️ E tem mais: o Distrito premiará os Clubes que participarem de todos os treinamentos do Ano Leonístico 2026/2027!\n\n💙 Contamos com a presença e o comprometimento de todos para fazermos um excelente trabalho neste AL 2026/2027.\n\n🙌 Sua participação é fundamental! Esperamos vocês! 🦁",
-        "status": "Confirmado"
-      },
-      {
-        "id": "e_msesareg_jukv5f",
-        "name": "📊 Treinamento de Métricas e Portal Lions",
-        "date": "2026-08-11",
-        "time": "19:30",
-        "locationType": "physical",
-        "location": "Online - Será disponibilizado o link no dia",
-        "onlineUrl": "",
-        "description": "📅 No dia 11 de agosto (terça-feira), teremos o treinamento de Métricas e Portal Lions, que será conduzido pela PMJF Karina Casanova Lima.\n\n📊 Este treinamento é de extrema importância para os(as) Secretários(as) dos Clubes, mas é aberto e recomendado a TODOS os associados, independentemente de exercerem cargos. Conhecer as métricas e utilizar corretamente o Portal Lions fortalece a gestão do Clube e contribui para o sucesso de nossas ações! 🤝\n\n📌 Organizem-se em seus Clubes e incentivem a participação de todos!\n\n🏆 Lembramos que os treinamentos são critérios obrigatórios para a conquista do Prêmio Excelência de Clube de Lions Internacional.\n\n🎖️ E tem mais: o Distrito premiará os Clubes que participarem de todos os treinamentos do Ano Leonístico 2026/2027!\n\n💙 Contamos com a presença e o comprometimento de todos para realizarmos um excelente trabalho neste AL 2026/2027.\n\n🙌 Sua participação faz a diferença! Esperamos vocês! 🦁",
-        "status": "Confirmado"
-      },
-      {
-        "id": "e_msi5kvtm_qu7n5d",
-        "name": "💙 APAEXONADOS 2026",
-        "date": "2026-09-13",
-        "time": "12:00",
-        "locationType": "physical",
-        "location": "Apae de Cândido Mota",
-        "onlineUrl": "",
-        "description": "💙 **2ª edição do nosso APAEXONADOS** 💙",
-        "status": "Em planejamento"
       }
     ],
     "meetings": [
@@ -494,17 +2273,6 @@
         "onlineUrl": "",
         "theme": "Prestação de contas do evento 🐷 Porco no Rolete",
         "notes": "🤝 Vamos nos reunir para a prestação de contas do evento **Porco no Rolete**, incluindo o recebimento dos convites e o alinhamento dos demais assuntos relacionados.\n💛Contamos com a presença de todos!",
-        "status": "Em andamento"
-      },
-      {
-        "id": "m_msi5mb8j_e4blhg",
-        "date": "2026-08-11",
-        "time": "20:00",
-        "locationType": "physical",
-        "location": "Sede Apae de Cândido Mota",
-        "onlineUrl": "",
-        "theme": "🦁 Reunião de Alinhamento",
-        "notes": "No dia 13 de setembro acontece a **2ª edição do nosso APAEXONADOS**!\n\n📋 Para alinharmos todos os detalhes e organizarmos esse grande evento, teremos uma reunião na próxima terça-feira, dia 11 de agosto, na sede. 🏢\n\n🤝 Contamos com a presença de todos! Juntos vamos fazer mais uma edição inesquecível! 💙✨",
         "status": "Em andamento"
       }
     ],

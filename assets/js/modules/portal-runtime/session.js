@@ -1,14 +1,14 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.36.2';
-import { RESTRICTED_VIEWS } from './constants.js?v=6.36.2';
-import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.36.2';
-import { createAdminSessionGuard } from './session-guard.js?v=6.36.2';
-import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.36.2';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.26.0';
+import { RESTRICTED_VIEWS } from './constants.js?v=6.26.0';
+import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.26.0';
+import { createAdminSessionGuard } from './session-guard.js?v=6.26.0';
+import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.26.0';
 import {
   ACCESS_ROLES,
   accessSnapshot,
   applyAccessRole,
   clearAccessRole
-} from './authorization.js?v=6.36.2';
+} from './authorization.js?v=6.26.0';
 
 function isLocalHomologation(environment) {
   const location = environment?.window?.location;
@@ -33,13 +33,6 @@ export function createAdminSessionActions(context) {
     model.githubAuthorization = null;
     model.auditActor = null;
     dependencies.auditLog?.setActor?.(null);
-    services.clearSecureStorageSession?.();
-    context.metadataStore?.clearPrivateState?.();
-    const publicState = services.createPublicPortalState?.(context.currentState());
-    if (publicState) {
-      context.replaceCurrentState(publicState);
-      services.saveState(publicState);
-    }
     sessionGuard.stop();
     context.publishStatus(model.pendingChanges > 0 ? 'pending' : 'offline');
     dependencies.updateAccessUI?.();
@@ -115,33 +108,6 @@ export function createAdminSessionActions(context) {
     );
     if (model.pendingChanges === 0) services.saveState(context.currentState());
 
-    const secureSession = await services.connectSecureStorageSession?.({
-      state: context.currentState(),
-      role: ACCESS_ROLES.ADMIN,
-      credential: token
-    });
-
-    if (secureSession?.enabled && services.loadPrivatePortalState) {
-      const privatePayload = await services.loadPrivatePortalState(context.currentState());
-      if (privatePayload?.found) {
-        const hydrated = services.mergePrivatePortalState?.(context.currentState(), privatePayload);
-        if (hydrated) {
-          context.replaceCurrentState(hydrated);
-          context.storeSyncedState(hydrated);
-          if (model.pendingChanges === 0) services.saveState(hydrated);
-        }
-      } else if (services.hasPrivatePortalData?.(remote.state)) {
-        model.pendingChanges = Math.max(1, Number(model.pendingChanges || 0));
-        model.privateMigrationPending = true;
-        context.storeSyncMeta();
-        dependencies.toast?.({
-          type: 'warning',
-          title: 'Migração de segurança pendente',
-          message: 'Publique a alteração pendente para mover a Tesouraria ao armazenamento privado e remover esses dados do JSON público.'
-        });
-      }
-    }
-
     return {
       ...finalizeSession({
         accessRole: ACCESS_ROLES.ADMIN,
@@ -160,33 +126,12 @@ export function createAdminSessionActions(context) {
     }
 
     const payload = await services.loadPublicGitHubPayload();
-    const secureProfile = services.secureStorageProfileFromState?.(payload.state);
-    let authenticatedState = cloneState(payload.state);
-
-    if (secureProfile?.enabled && services.connectSecureStorageSession) {
-      await services.connectSecureStorageSession({
-        state: payload.state,
-        role: ACCESS_ROLES.DIRECTOR,
-        credential: password
-      });
-      const privatePayload = await services.loadPrivatePortalState?.(payload.state);
-      if (!privatePayload?.found) {
-        throw new Error('Os dados privados da Diretoria ainda não foram migrados pelo Administrador.');
-      }
-      authenticatedState = services.mergePrivatePortalState?.(payload.state, privatePayload) || authenticatedState;
-    } else {
-      const allowed = await passwordMatchesDirectorProfile(password, payload.state);
-      if (!allowed) {
-        throw new Error('Senha da Diretoria inválida ou ainda não publicada pelo Administrador.');
-      }
-      await services.connectSecureStorageSession?.({
-        state: authenticatedState,
-        role: ACCESS_ROLES.DIRECTOR,
-        credential: password
-      });
+    const allowed = await passwordMatchesDirectorProfile(password, payload.state);
+    if (!allowed) {
+      throw new Error('Senha da Diretoria inválida ou ainda não publicada pelo Administrador.');
     }
 
-    context.replaceCurrentState(authenticatedState);
+    context.replaceCurrentState(cloneState(payload.state));
     services.saveState(context.currentState());
     context.storeSyncedState(context.currentState());
     model.pendingChanges = 0;

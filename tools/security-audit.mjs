@@ -2,7 +2,6 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { findSensitivePortalFields } from '../assets/js/core/portal-security.js';
-import { hasPrivatePortalData } from '../assets/js/core/portal-data-boundary.js';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const failures = [];
@@ -23,9 +22,6 @@ for (const relativePath of ['data/dados.json', 'data/modelo.json']) {
   const findings = findSensitivePortalFields(payload);
   if (findings.length) {
     failures.push(`${relativePath}: campos sensíveis encontrados em ${findings.join(', ')}.`);
-  }
-  if (relativePath === 'data/dados.json' && hasPrivatePortalData(payload.data || payload)) {
-    failures.push('data/dados.json: o arquivo público contém coleções ou configurações privadas.');
   }
 }
 

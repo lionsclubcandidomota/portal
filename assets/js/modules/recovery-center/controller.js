@@ -4,13 +4,13 @@ import {
   mergeRecoveryAreas,
   summarizePortalState,
   verifyRecoverySnapshot
-} from './domain.js?v=6.36.2';
-import { createRecoverySnapshotStore } from './storage.js?v=6.36.2';
+} from './domain.js?v=6.26.0';
+import { createRecoverySnapshotStore } from './storage.js?v=6.26.0';
 import {
   recoveryCenterHtml,
   recoveryLoadingHtml,
   recoveryRestoreHtml
-} from './view.js?v=6.36.2';
+} from './view.js?v=6.26.0';
 
 function snapshotDownload(snapshot) {
   const blob = new Blob([JSON.stringify(snapshot.payload, null, 2)], { type: 'application/json' });
@@ -29,7 +29,6 @@ export function createRecoveryCenterController({
   toast,
   onRestore,
   onSummaryChange,
-  remoteRecovery = null,
   storeFactory = createRecoverySnapshotStore,
   storageEstimate = () => globalThis.navigator?.storage?.estimate?.()
 } = {}) {
@@ -42,16 +41,6 @@ export function createRecoveryCenterController({
   let diagnostic = diagnosePortalIntegrity(getState());
   let estimate = null;
   let initialized = false;
-  let remote = {
-    available: false,
-    loading: false,
-    canWrite: false,
-    backups: [],
-    retention: 0,
-    current: null,
-    diagnostic: null,
-    error: ''
-  };
 
   const loadSnapshots = async () => {
     snapshots = await store.list();
@@ -63,35 +52,6 @@ export function createRecoveryCenterController({
       };
     });
     return snapshots;
-  };
-
-  const remoteAvailable = () => Boolean(remoteRecovery?.isAvailable?.());
-
-  const loadRemote = async () => {
-    if (!remoteAvailable()) {
-      remote = { ...remote, available: false, loading: false, canWrite: false, backups: [], current: null, diagnostic: null, error: '' };
-      return remote;
-    }
-    remote = { ...remote, available: true, loading: true, canWrite: Boolean(remoteRecovery?.canWrite?.()), error: '' };
-    try {
-      const [backupPayload, diagnostic] = await Promise.all([
-        remoteRecovery.listBackups(),
-        remoteRecovery.diagnose()
-      ]);
-      remote = {
-        available: true,
-        loading: false,
-        canWrite: Boolean(remoteRecovery?.canWrite?.()),
-        backups: Array.isArray(backupPayload?.backups) ? backupPayload.backups : [],
-        retention: Math.max(0, Number(backupPayload?.retention || 0)),
-        current: backupPayload?.current || null,
-        diagnostic: diagnostic || null,
-        error: ''
-      };
-    } catch (error) {
-      remote = { ...remote, available: true, loading: false, error: error?.message || 'Não foi possível consultar o R2.' };
-    }
-    return remote;
   };
 
   const notifySummary = () => onSummaryChange?.(getSummary());
@@ -120,9 +80,7 @@ export function createRecoveryCenterController({
     diagnosticStatus: diagnostic.status,
     errors: diagnostic.errors,
     warnings: diagnostic.warnings,
-    storageMode: store?.mode || '',
-    remoteStatus: remote.diagnostic?.status || (remote.error ? 'error' : remote.available ? 'unknown' : 'offline'),
-    remoteBackups: remote.backups.length
+    storageMode: store?.mode || ''
   });
 
   const createSnapshot = async ({
@@ -162,8 +120,7 @@ export function createRecoveryCenterController({
       snapshots,
       diagnostic,
       storageMode: store?.mode || '',
-      storageEstimate: estimate,
-      remote
+      storageEstimate: estimate
     });
     const body = initial
       ? modalController.open('Recuperação e integridade', html)
@@ -243,54 +200,7 @@ export function createRecoveryCenterController({
     toast?.('Ponto de recuperação excluído.');
   };
 
-  const createRemoteBackup = async () => {
-    if (!remote.canWrite) return;
-    try {
-      await remoteRecovery.createBackup('Backup manual criado pela Central de Recuperação');
-      await loadRemote();
-      renderOverview();
-      toast?.('Backup privado criado no Cloudflare R2.');
-    } catch (error) {
-      toast?.(error?.message || 'Não foi possível criar o backup privado.');
-    }
-  };
-
-  const restoreRemoteBackup = async key => {
-    if (!remote.canWrite) return;
-    const backup = remote.backups.find(item => item.key === key);
-    if (!backup) return;
-    const approved = await confirmation?.askConfirmation({
-      title: 'Restaurar backup privado do R2?',
-      message: 'A Tesouraria, as contas e as configurações privadas voltarão para a versão selecionada. Um backup de segurança do estado atual será criado automaticamente.',
-      icon: '☁️',
-      confirmText: 'Criar proteção e restaurar',
-      tone: 'warning'
-    });
-    if (!approved) return;
-    try {
-      const payload = await remoteRecovery.restoreBackup(key);
-      await remoteRecovery.applyRestoredState(payload, {
-        message: 'Backup privado restaurado diretamente no Cloudflare R2.',
-        successMessage: 'Tesouraria restaurada e sincronizada com o R2.'
-      });
-      await loadRemote();
-      refreshDiagnostic();
-      renderOverview();
-    } catch (error) {
-      toast?.(error?.message || 'Não foi possível restaurar o backup privado.');
-    }
-  };
-
   function bindOverview(body) {
-    body.querySelector('#refreshPrivateRecoveryBtn')?.addEventListener('click', async () => {
-      await loadRemote();
-      renderOverview();
-      if (!remote.error) toast?.('Integridade do armazenamento privado atualizada.');
-    });
-    body.querySelector('#createPrivateBackupBtn')?.addEventListener('click', createRemoteBackup);
-    body.querySelectorAll('[data-private-backup-restore]').forEach(button => {
-      button.addEventListener('click', () => restoreRemoteBackup(button.dataset.privateBackupRestore));
-    });
     body.querySelector('#createRecoverySnapshotBtn')?.addEventListener('click', async () => {
       try {
         await createSnapshot({ reason: 'manual', label: 'Ponto criado pelo administrador' });
@@ -323,7 +233,6 @@ export function createRecoveryCenterController({
     try {
       await ensureReady();
       refreshDiagnostic();
-      await loadRemote();
       renderOverview();
     } catch (error) {
       modalController.setContent('<div class="recovery-empty"><span aria-hidden="true">!</span><h3>Recuperação indisponível</h3><p>O navegador não permitiu abrir o armazenamento local de recuperação.</p></div>');

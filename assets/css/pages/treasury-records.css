@@ -1,8 +1,8 @@
 /* v3.7.5 — lançamentos da Tesouraria em cards */
 .treasury-card-grid{
-  
+  display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  
+  gap:14px;
 }
 .treasury-card-grid .treasury-mobile-card{
   display:flex;
@@ -25,19 +25,19 @@
   width:4px;
   background:var(--primary);
 }
-.treasury-card-grid .treasury-mobile-card.is-scheduled::before{background:#d49a18;}
+.treasury-card-grid .treasury-mobile-card.is-scheduled::before{background:#d49a18}
 .treasury-card-grid .treasury-mobile-card.is-completed{
   background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);
   color:inherit;
 }
-.treasury-card-grid .treasury-mobile-card.is-completed .badge{filter:none;}
+.treasury-card-grid .treasury-mobile-card.is-completed .badge{filter:none}
 .treasury-card-grid .treasury-mobile-top{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
   gap:14px;
 }
-.treasury-card-grid .treasury-mobile-top>div{min-width:0;}
+.treasury-card-grid .treasury-mobile-top>div{min-width:0}
 .treasury-card-grid .treasury-mobile-card h4{
   margin:10px 0 0;
   font-size:1rem;
@@ -52,8 +52,8 @@
   font-weight:800;
   white-space:nowrap;
 }
-.treasury-card-grid .treasury-mobile-value.entry{background:#e8f7ef;color:#157347;}
-.treasury-card-grid .treasury-mobile-value.exit{background:#fff0ef;color:#b42318;}
+.treasury-card-grid .treasury-mobile-value.entry{background:#e8f7ef;color:#157347}
+.treasury-card-grid .treasury-mobile-value.exit{background:#fff0ef;color:#b42318}
 .treasury-card-grid .treasury-mobile-meta{
   display:flex;
   align-items:center;
@@ -70,22 +70,22 @@
   line-height:1.5;
   overflow-wrap:anywhere;
 }
-.treasury-card-grid .treasury-mobile-actions{margin-top:auto;}
+.treasury-card-grid .treasury-mobile-actions{margin-top:auto}
 .treasury-card-grid .treasury-mobile-actions .actions{
   margin-top:14px;
   padding-top:12px;
   border-top:1px solid var(--border);
   justify-content:flex-end;
 }
-.treasury-empty-state{margin:0;}
+.treasury-empty-state{margin:0}
 
 @media(max-width:1180px){
-  .treasury-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .treasury-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:700px){
-  .treasury-card-grid{grid-template-columns:1fr;gap:11px;}
-  .treasury-card-grid .treasury-mobile-card{padding:14px;border-radius:16px;}
+  .treasury-card-grid{grid-template-columns:1fr;gap:11px}
+  .treasury-card-grid .treasury-mobile-card{padding:14px;border-radius:16px}
 }
 
 /* Anexos das movimentações financeiras — v6.26 */
-.treasury-attachment-picker{display:grid;gap:12px;}.treasury-attachment-dropzone{position:relative;}.treasury-attachment-dropzone input{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}.treasury-attachment-dropzone label{display:grid;grid-template-columns:42px minmax(0,1fr);gap:3px 12px;align-items:center;padding:16px;border:1.5px dashed color-mix(in srgb,var(--primary) 46%,var(--border));border-radius:16px;background:color-mix(in srgb,var(--primary) 4%,var(--surface));cursor:pointer;transition:border-color var(--transition),background var(--transition),box-shadow var(--transition);}.treasury-attachment-dropzone label>span{grid-row:1/3;display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--primary-soft);color:var(--primary);font-size:1.2rem;}.treasury-attachment-dropzone label strong{font-size:.9rem;}.treasury-attachment-dropzone label small{color:var(--muted);font-size:.72rem;line-height:1.4;}.treasury-attachment-dropzone input:focus-visible+label,.treasury-attachment-dropzone label:hover{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 7%,var(--surface));box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 12%,transparent);}.treasury-attachment-dropzone input:disabled+label{cursor:wait;opacity:.7;}.treasury-attachment-feedback{min-height:18px;margin:0;color:var(--muted);font-size:.74rem;}.treasury-attachment-feedback.is-success{color:var(--success);}.treasury-attachment-feedback.is-error{color:var(--danger);}.treasury-attachment-feedback.is-loading,.treasury-attachment-feedback.is-info{color:var(--primary);}.treasury-attachment-editor-list{display:grid;gap:8px;margin:0;padding:0;list-style:none;}.treasury-attachment-editor-item{display:grid;grid-template-columns:36px minmax(0,1fr) 38px;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:13px;background:var(--surface);}.treasury-attachment-editor-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--surface-2);}.treasury-attachment-editor-copy{min-width:0;}.treasury-attachment-editor-copy strong,.treasury-attachment-editor-copy small{display:block;}.treasury-attachment-editor-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem;}.treasury-attachment-editor-copy small{margin-top:2px;color:var(--muted);font-size:.67rem;}.treasury-attachment-editor-item .icon-btn{width:34px;height:34px;font-size:1rem;}.treasury-attachment-empty{padding:14px;border:1px dashed var(--border);border-radius:13px;color:var(--muted);font-size:.76rem;text-align:center;}.treasury-attachment-summary{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:9px 11px;border-radius:12px;background:var(--surface-2);color:var(--muted);font-size:.69rem;}.treasury-attachment-summary strong{color:var(--text);}.treasury-attachment-gallery{display:grid;gap:10px;padding:14px;border-top:1px solid var(--border);background:color-mix(in srgb,var(--primary) 2%,var(--surface));}.treasury-attachment-gallery-heading>div{display:flex;align-items:center;gap:9px;}.treasury-attachment-gallery-heading>div>span{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--primary-soft);}.treasury-attachment-gallery-heading strong,.treasury-attachment-gallery-heading small{display:block;}.treasury-attachment-gallery-heading strong{font-size:.82rem;}.treasury-attachment-gallery-heading small{margin-top:2px;color:var(--muted);font-size:.68rem;}.treasury-attachment-gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.treasury-attachment-card{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:9px;padding:10px;border:1px solid var(--border);border-radius:13px;background:var(--surface);}.treasury-attachment-card-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:var(--surface-2);}.treasury-attachment-card-copy{min-width:0;}.treasury-attachment-card-copy strong,.treasury-attachment-card-copy small{display:block;}.treasury-attachment-card-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.75rem;}.treasury-attachment-card-copy small{margin-top:2px;color:var(--muted);font-size:.62rem;}.treasury-attachment-card-actions{display:flex;gap:6px;}.treasury-attachment-card-actions .btn{min-height:32px;padding:6px 9px;font-size:.68rem;}@media(max-width:860px){.treasury-attachment-gallery-grid{grid-template-columns:1fr;}}@media(max-width:560px){.treasury-attachment-card{grid-template-columns:34px minmax(0,1fr);}.treasury-attachment-card-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}.treasury-attachment-card-actions .btn:only-child{grid-column:1/-1;}.treasury-attachment-summary{display:grid;grid-template-columns:1fr;}.treasury-attachment-dropzone label{grid-template-columns:38px minmax(0,1fr);padding:13px;}.treasury-attachment-dropzone label>span{width:38px;height:38px;}}
+.treasury-attachment-picker{display:grid;gap:12px}.treasury-attachment-dropzone{position:relative}.treasury-attachment-dropzone input{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.treasury-attachment-dropzone label{display:grid;grid-template-columns:42px minmax(0,1fr);gap:3px 12px;align-items:center;padding:16px;border:1.5px dashed color-mix(in srgb,var(--primary) 46%,var(--border));border-radius:16px;background:color-mix(in srgb,var(--primary) 4%,var(--surface));cursor:pointer;transition:border-color var(--transition),background var(--transition),box-shadow var(--transition)}.treasury-attachment-dropzone label>span{grid-row:1/3;display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--primary-soft);color:var(--primary);font-size:1.2rem}.treasury-attachment-dropzone label strong{font-size:.9rem}.treasury-attachment-dropzone label small{color:var(--muted);font-size:.72rem;line-height:1.4}.treasury-attachment-dropzone input:focus-visible+label,.treasury-attachment-dropzone label:hover{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 7%,var(--surface));box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 12%,transparent)}.treasury-attachment-dropzone input:disabled+label{cursor:wait;opacity:.7}.treasury-attachment-feedback{min-height:18px;margin:0;color:var(--muted);font-size:.74rem}.treasury-attachment-feedback.is-success{color:var(--success)}.treasury-attachment-feedback.is-error{color:var(--danger)}.treasury-attachment-feedback.is-loading,.treasury-attachment-feedback.is-info{color:var(--primary)}.treasury-attachment-editor-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}.treasury-attachment-editor-item{display:grid;grid-template-columns:36px minmax(0,1fr) 38px;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}.treasury-attachment-editor-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--surface-2)}.treasury-attachment-editor-copy{min-width:0}.treasury-attachment-editor-copy strong,.treasury-attachment-editor-copy small{display:block}.treasury-attachment-editor-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem}.treasury-attachment-editor-copy small{margin-top:2px;color:var(--muted);font-size:.67rem}.treasury-attachment-editor-item .icon-btn{width:34px;height:34px;font-size:1rem}.treasury-attachment-empty{padding:14px;border:1px dashed var(--border);border-radius:13px;color:var(--muted);font-size:.76rem;text-align:center}.treasury-attachment-summary{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:9px 11px;border-radius:12px;background:var(--surface-2);color:var(--muted);font-size:.69rem}.treasury-attachment-summary strong{color:var(--text)}.treasury-attachment-gallery{display:grid;gap:10px;padding:14px;border-top:1px solid var(--border);background:color-mix(in srgb,var(--primary) 2%,var(--surface))}.treasury-attachment-gallery-heading>div{display:flex;align-items:center;gap:9px}.treasury-attachment-gallery-heading>div>span{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--primary-soft)}.treasury-attachment-gallery-heading strong,.treasury-attachment-gallery-heading small{display:block}.treasury-attachment-gallery-heading strong{font-size:.82rem}.treasury-attachment-gallery-heading small{margin-top:2px;color:var(--muted);font-size:.68rem}.treasury-attachment-gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.treasury-attachment-card{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:9px;padding:10px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}.treasury-attachment-card-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:var(--surface-2)}.treasury-attachment-card-copy{min-width:0}.treasury-attachment-card-copy strong,.treasury-attachment-card-copy small{display:block}.treasury-attachment-card-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.75rem}.treasury-attachment-card-copy small{margin-top:2px;color:var(--muted);font-size:.62rem}.treasury-attachment-card-actions{display:flex;gap:6px}.treasury-attachment-card-actions .btn{min-height:32px;padding:6px 9px;font-size:.68rem}@media(max-width:860px){.treasury-attachment-gallery-grid{grid-template-columns:1fr}}@media(max-width:560px){.treasury-attachment-card{grid-template-columns:34px minmax(0,1fr)}.treasury-attachment-card-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.treasury-attachment-card-actions .btn:only-child{grid-column:1/-1}.treasury-attachment-summary{display:grid;grid-template-columns:1fr}.treasury-attachment-dropzone label{grid-template-columns:38px minmax(0,1fr);padding:13px}.treasury-attachment-dropzone label>span{width:38px;height:38px}}

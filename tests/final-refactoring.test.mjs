@@ -128,23 +128,3 @@ test('alternância repetida dos formulários mantém somente um perfil ativo', (
   assert.equal(directorInput.disabled, true);
   assert.equal(tabs[0].classList.has('is-active'), true);
 });
-
-test('composição principal delega funcionalidades aos módulos de feature', async () => {
-  const app = await readFile(path.join(projectRoot, 'assets/js/modules/portal-app.js'), 'utf8');
-  const featureFiles = [
-    'treasury-feature.js',
-    'administration-feature.js',
-    'publication-feature.js',
-    'navigation-feature.js',
-    'view-dependencies.js'
-  ];
-
-  assert.ok(app.split(/\r?\n/).length < 340);
-  for (const file of featureFiles) {
-    assert.match(app, new RegExp(`portal-composition/${file.replace('.', '\\.')}`));
-    const source = await readFile(path.join(projectRoot, 'assets/js/modules/portal-composition', file), 'utf8');
-    assert.ok(source.split(/\r?\n/).length < 140, `${file} deve permanecer focado em uma responsabilidade`);
-  }
-
-  assert.doesNotMatch(app, /createTreasuryAdminController|createAdminPanelController|createPublishCenterController|createNavigationController/);
-});

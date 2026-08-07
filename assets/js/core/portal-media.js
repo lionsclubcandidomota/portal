@@ -122,21 +122,6 @@ function prepareTreasuryAttachments(entry, assetsByPath) {
   if (!Array.isArray(entry?.attachments)) return [];
 
   return entry.attachments.map(attachment => {
-    if (String(attachment?.storage || '').toLowerCase() === 'r2' && /^treasury\/[a-z0-9/_-]+\.[a-z0-9]+$/i.test(String(attachment?.objectKey || ''))) {
-      return {
-        id: String(attachment?.id || ''),
-        name: String(attachment?.name || 'Documento'),
-        type: String(attachment?.type || ''),
-        size: Number(attachment?.size || 0),
-        originalSize: Number(attachment?.originalSize || attachment?.size || 0),
-        optimized: Boolean(attachment?.optimized),
-        storage: 'r2',
-        objectKey: String(attachment.objectKey),
-        checksum: String(attachment?.checksum || ''),
-        uploadedAt: String(attachment?.uploadedAt || '')
-      };
-    }
-
     const embedded = parseEmbeddedFile(attachment?.dataUrl || attachment?.content || attachment?.url);
     if (!embedded) {
       return {
@@ -159,7 +144,7 @@ function prepareTreasuryAttachments(entry, assetsByPath) {
       optimized: Boolean(attachment?.optimized),
       url: asset.reference
     };
-  }).filter(attachment => attachment?.url || (attachment?.storage === 'r2' && attachment?.objectKey));
+  }).filter(attachment => attachment.url);
 }
 
 /**

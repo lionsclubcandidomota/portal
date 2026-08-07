@@ -5,7 +5,6 @@ import {
   buildDirectorProfile,
   createAccessProfileActions,
   directorProfileFromState,
-  directorProfileRequiresWorkerMigration,
   hasLegacyDirectorTokenProfile,
   passwordMatchesDirectorProfile
 } from '../assets/js/modules/portal-runtime/access-profile.js';
@@ -105,29 +104,7 @@ test('perfil Diretoria reconhece a senha sem armazenar a credencial original', a
   assert.match(profile.passwordHash, /^[a-f0-9]{64}$/);
   assert.equal(profile.salt.length, 32);
   assert.equal(profile.credentialType, 'password');
-  assert.equal(profile.iterations, 100000);
-  assert.equal(directorProfileRequiresWorkerMigration(state), false);
   assert.equal(directorProfileFromState(state)?.configuredBy, 'admin-lions');
-});
-
-
-test('perfil Diretoria antigo sinaliza atualização para o Worker do R2', () => {
-  const state = baseState({
-    settings: {
-      accessProfiles: {
-        director: {
-          version: 2,
-          credentialType: 'password',
-          enabled: true,
-          salt: 'a'.repeat(32),
-          passwordHash: 'b'.repeat(64),
-          iterations: 210000
-        }
-      }
-    }
-  });
-
-  assert.equal(directorProfileRequiresWorkerMigration(state), true);
 });
 
 test('perfil antigo por token é identificado como pendente de substituição', () => {

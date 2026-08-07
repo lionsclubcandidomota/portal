@@ -1,10 +1,10 @@
-import { cloneState } from '../../core/portal-state.js?v=6.36.2';
-import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.36.2';
-import { buildPublicationMessage } from './domain.js?v=6.36.2';
-import { ACCESS_CAPABILITIES, ACCESS_ROLES, roleHasCapability } from './authorization.js?v=6.36.2';
+import { cloneState } from '../../core/portal-state.js?v=6.26.0';
+import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.26.0';
+import { buildPublicationMessage } from './domain.js?v=6.26.0';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.26.0';
 
 export function createPublicationActions(context) {
-  const { dependencies, services, model, environment } = context;
+  const { dependencies, services, model } = context;
 
   const createSafetySnapshot = async (reason, label, metadata = {}) => {
     await dependencies.recoveryCenter?.createAutomaticSnapshot?.({
@@ -103,69 +103,18 @@ export function createPublicationActions(context) {
     try {
       const state = context.sanitizeCurrentState();
       services.saveState(state);
-      const secureProfile = services.secureStorageProfileFromState?.(state);
-      let securePublication = {
-        state,
-        enabled: false,
-        convertedCount: 0,
-        uploadedObjectKeys: [],
-        deletedPublicPaths: []
-      };
-
-      if (secureProfile?.enabled) {
-        if (!services.hasActiveSecureStorageSession?.(state, ACCESS_ROLES.ADMIN)) {
-          await services.connectSecureStorageSession?.({
-            state,
-            role: ACCESS_ROLES.ADMIN,
-            credential: model.githubToken
-          });
-        }
-        securePublication = await services.prepareSecureTreasuryAttachmentsForPublication(state, {
-          baseUrl: environment?.document?.baseURI || environment?.window?.location?.href || ''
-        });
-      }
-
-      const previousSecureKeys = services.collectSecureTreasuryObjectKeys?.(model.lastSyncedState) || new Set();
-      const nextSecureKeys = services.collectSecureTreasuryObjectKeys?.(securePublication.state) || new Set();
-      const removedSecureKeys = [...previousSecureKeys].filter(key => !nextSecureKeys.has(key));
-      const publication = preparePortalMediaForPublication(securePublication.state);
-      let result;
-      try {
-        const publishedSecureKeys = services.collectSecureTreasuryObjectKeys?.(publication.state) || new Set();
-        const lostSecureKeys = [...nextSecureKeys].filter(key => !publishedSecureKeys.has(key));
-        if (lostSecureKeys.length) {
-          throw new Error('A publicação foi interrompida porque referências de anexos privados seriam removidas do portal.');
-        }
-        let privateStateResult = null;
-        if (secureProfile?.enabled) {
-          privateStateResult = await services.savePrivatePortalState?.(publication.state);
-        }
-        result = await services.saveGitHubState(
-          model.githubToken,
-          publication.state,
-          model.githubFileSha,
-          message,
-          publication.assets,
-          securePublication.deletedPublicPaths
-        );
-        result.privateState = privateStateResult;
-      } catch (error) {
-        if (securePublication.uploadedObjectKeys.length) {
-          await services.deleteSecureTreasuryObjects?.(state, securePublication.uploadedObjectKeys).catch(() => {});
-        }
-        throw error;
-      }
-
-      if (removedSecureKeys.length) {
-        services.deleteSecureTreasuryObjects?.(publication.state, removedSecureKeys).catch(error => {
-          console.warn('Não foi possível remover anexos privados antigos:', error);
-        });
-      }
+      const publication = preparePortalMediaForPublication(state);
+      const result = await services.saveGitHubState(
+        model.githubToken,
+        publication.state,
+        model.githubFileSha,
+        message,
+        publication.assets
+      );
       model.githubFileSha = result.sha;
       model.lastSyncInfo = result;
       model.pendingChanges = 0;
       model.pendingAuditBatchId = '';
-      model.privateMigrationPending = false;
       dependencies.auditLog?.linkPublication?.(auditBatchId, { ...result, message });
       context.replaceCurrentState(publication.state);
       services.saveState(context.currentState());
@@ -182,9 +131,8 @@ export function createPublicationActions(context) {
         message
       };
 
-      const uploadedFileCount = Number(result.mediaCount || 0) + Number(securePublication.convertedCount || 0);
-      const uploadSummary = uploadedFileCount > 0
-        ? `Envio concluído com ${uploadedFileCount} arquivo(s); atualizando visitantes`
+      const uploadSummary = result.mediaCount > 0
+        ? `Envio concluído com ${result.mediaCount} arquivo(s); atualizando visitantes`
         : 'Envio concluído; atualizando visitantes';
       context.publishStatus('publishing', uploadSummary);
       dependencies.toast?.({ type: 'info', title: 'Publicação enviada', message: uploadSummary });

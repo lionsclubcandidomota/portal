@@ -61,33 +61,31 @@ test('contas inativas permanecem visíveis com aparência desabilitada', async (
 
 
 test('topo administrativo oferece atualização global sem recarregar a página', async () => {
-  const [html, app, publicationFeature, refreshController] = await Promise.all([
+  const [html, app, refreshController] = await Promise.all([
     source('index.html'),
     source('assets/js/modules/portal-app.js'),
-    source('assets/js/modules/portal-composition/publication-feature.js'),
     source('assets/js/modules/portal-refresh.js')
   ]);
 
   assert.match(html, /id="portalRefreshButton"/);
   assert.match(html, /Atualizar todo o painel sem encerrar a sessão/);
-  assert.match(publicationFeature, /refreshPortal:\s*runtime\.refreshPortalInterface/);
+  assert.match(app, /refreshPortal:\s*runtime\.refreshPortalInterface/);
   assert.match(app, /resetInterfaceState/);
   assert.doesNotMatch(refreshController, /location\.reload/);
 });
 
 test('atualização pendente oferece publicar, descartar ou cancelar antes de continuar', async () => {
-  const [html, app, publicationFeature, controller, publishCenter] = await Promise.all([
+  const [html, app, controller, publishCenter] = await Promise.all([
     source('index.html'),
     source('assets/js/modules/portal-app.js'),
-    source('assets/js/modules/portal-composition/publication-feature.js'),
     source('assets/js/modules/portal-refresh.js'),
     source('assets/js/modules/publish-center.js')
   ]);
 
   assert.match(html, /id="confirmSecondary"/);
-  assert.match(publicationFeature, /primaryText:\s*'Publicar alterações'/);
-  assert.match(publicationFeature, /secondaryText:\s*'Descartar alterações'/);
-  assert.match(publicationFeature, /cancelText:\s*'Cancelar atualização'/);
+  assert.match(app, /primaryText:\s*'Publicar alterações'/);
+  assert.match(app, /secondaryText:\s*'Descartar alterações'/);
+  assert.match(app, /cancelText:\s*'Cancelar atualização'/);
   assert.match(controller, /requestPendingDecision/);
   assert.match(controller, /publishPendingChanges/);
   assert.match(controller, /discardPendingChanges\(\{ skipConfirmation: true \}\)/);
@@ -178,16 +176,6 @@ test('baixa de Mútuas exibe somente um controle visual de seleção por associa
   assert.doesNotMatch(css, /grid-template-columns:20px 24px 40px minmax\(0,1fr\) auto/);
 });
 
-
-test('modal reinicia a rolagem ao abrir formulários longos', async () => {
-  const modal = await source('assets/js/modules/modal.js');
-
-  assert.match(modal, /modal\.querySelector\('\.modal-card'\)/);
-  assert.match(modal, /scrollContainer\.scrollTop = 0/);
-  assert.match(modal, /modalBody\.scrollTop = 0/);
-  assert.match(modal, /requestAnimationFrame/);
-});
-
 test('menu Configurações e sua rota ficam exclusivos do perfil Administrador', async () => {
   const [html, navigation, authorization, baseCss] = await Promise.all([
     source('index.html'),
@@ -227,25 +215,5 @@ test('acesso da Diretoria inicia vazio e o menu usa Acesso Administrativo', asyn
   assert.match(loginState, /resetSecretField\(directorInput, directorToggle, 'senha'\)/);
   assert.match(loginState, /directorInput\.disabled = !directorMode/);
   assert.match(controller, /get\('directorAccessPassword'\)/);
-  assert.match(css, /\.admin-login-form\[hidden\]\{display:none!important;?\}/);
-});
-
-test('Dashboard autenticado equilibra resumos, compromissos e avisos em layout responsivo', async () => {
-  const [dashboard, css, build] = await Promise.all([
-    source('assets/js/modules/dashboard.js'),
-    source('assets/css/components/core.css'),
-    source('tools/build-css.mjs')
-  ]);
-
-  assert.match(dashboard, /is-admin-compact is-authenticated/);
-  assert.match(dashboard, /col-7[^\n]*dashboard-feed-card dashboard-agenda-card/);
-  assert.match(dashboard, /col-5[^\n]*dashboard-feed-card dashboard-notices-card/);
-  assert.match(dashboard, /dashboard-summary-foot/);
-  assert.match(dashboard, /dashboard-notice-copy/);
-  assert.match(dashboard, /role="progressbar"/);
-  assert.match(css, /\.dashboard-main-grid\.is-authenticated\{/);
-  assert.match(css, /\.dashboard-notice-copy\{/);
-  assert.match(css, /-webkit-line-clamp:2/);
-  assert.match(css, /@media\(max-width:1260px\)/);
-  assert.doesNotMatch(build, /pages\/dashboard-authenticated\.css/);
+  assert.match(css, /\.admin-login-form\[hidden\]\{display:none!important\}/);
 });

@@ -31,46 +31,27 @@ function setup() {
       {
         id: 'mu1',
         name: 'Mútua Social',
-        createdDate: '2026-06-01',
-        closedDate: '',
-        closureReason: '',
-        memberships: [
-          { id: 'mship1', memberId: 'm1', joinedDate: '2026-06-01', endedDate: '' },
-          { id: 'mship2', memberId: 'm2', joinedDate: '2026-06-01', endedDate: '' },
-          { id: 'mship3', memberId: 'm3', joinedDate: '2026-06-01', endedDate: '2026-07-31' }
+        monthlyAmount: 15,
+        startedMonth: '2026-06',
+        amountHistory: [
+          { fromMonth: '2026-06', amount: 15 },
+          { fromMonth: '2026-08', amount: 18 }
         ],
-        events: [
-          {
-            id: 'e1',
-            deceasedName: 'João do Distrito',
-            deathDate: '2026-07-10',
-            amountPerParticipant: 15,
-            participantIds: ['m1', 'm2', 'm3'],
-            notes: ''
-          },
-          {
-            id: 'e2',
-            deceasedName: 'Maria do Distrito',
-            deathDate: '2026-08-05',
-            amountPerParticipant: 18,
-            participantIds: ['m1', 'm2'],
-            notes: ''
-          }
+        memberships: [
+          { id: 'mship1', memberId: 'm1', joinedMonth: '2026-06', endedMonth: '' },
+          { id: 'mship2', memberId: 'm2', joinedMonth: '2026-07', endedMonth: '' },
+          { id: 'mship3', memberId: 'm3', joinedMonth: '2026-06', endedMonth: '2026-07' }
         ]
       },
       {
         id: 'mu2',
         name: 'Mútua Especial',
-        createdDate: '2026-08-01',
-        closedDate: '',
-        memberships: [{ id: 'mship4', memberId: 'm3', joinedDate: '2026-08-01', endedDate: '' }],
-        events: [{
-          id: 'e3',
-          deceasedName: 'Pedro do Distrito',
-          deathDate: '2026-08-20',
-          amountPerParticipant: 20,
-          participantIds: ['m3']
-        }]
+        monthlyAmount: 20,
+        startedMonth: '2026-08',
+        amountHistory: [{ fromMonth: '2026-08', amount: 20 }],
+        memberships: [
+          { id: 'mship4', memberId: 'm3', joinedMonth: '2026-08', endedMonth: '' }
+        ]
       }
     ],
     treasury: [
@@ -86,11 +67,10 @@ function setup() {
         memberId: 'm1',
         memberIds: ['m1'],
         mutualGroupId: 'mu1',
-        mutualEventId: 'e1',
-        mutualEventDate: '2026-07-10',
-        mutualDeceasedName: 'João do Distrito',
         mutualMemberId: 'm1',
-        mutualChargeKey: 'mu1::e1::m1'
+        mutualReferenceMonth: '2026-07',
+        mutualReferenceDate: '2026-07-01',
+        mutualChargeKey: 'mu1::m1::2026-07'
       }
     ]
   };
@@ -102,14 +82,13 @@ function setup() {
     sumTreasury
   });
   treasury.mutualGroup = 'mu1';
-  treasury.mutualStart = '2026-07-01';
-  treasury.mutualEnd = '2026-07-31';
+  treasury.mutualMonth = '2026-07';
   return { state, treasury };
 }
 
-test('esquema v11 remove recorrência mensal legada e preserva o grupo ativo sem eventos automáticos', () => {
+test('esquema v9 preserva mútuas mensais, normaliza participantes e prepara anexos financeiros', () => {
   const migrated = migratePortalPayload({
-    schemaVersion: 10,
+    schemaVersion: 6,
     data: {
       settings: { clubName: 'Lions', initialized: true },
       birthdays: [{ id: 'm1', name: 'Ana' }],
@@ -119,85 +98,72 @@ test('esquema v11 remove recorrência mensal legada e preserva o grupo ativo sem
       mutualGroups: [{
         id: 'mu1',
         name: 'Mútua antiga',
-        monthlyAmount: 15,
-        startedMonth: '2026-07',
-        amountHistory: [{ fromMonth: '2026-07', amount: 15 }],
-        memberships: [{ id: 'mum1', memberId: 'm1', joinedMonth: '2026-07', endedMonth: '' }]
+        referenceDate: '2026-07-01',
+        memberCharges: [{ memberId: 'm1', amount: 15 }]
       }],
-      treasury: [],
+      treasury: [{
+        id: 't1',
+        date: '2026-07-10',
+        category: 'Mútuas',
+        entry: 15,
+        mutualGroupId: 'mu1',
+        mutualMemberId: 'm1',
+        mutualChargeKey: 'mu1::m1'
+      }],
       events: [], meetings: [], notices: []
     }
   });
 
-  assert.equal(CURRENT_SCHEMA_VERSION, 11);
-  const group = migrated.state.mutualGroups[0];
-  assert.equal(group.createdDate, '2026-07-01');
-  assert.equal(group.closedDate, '');
-  assert.equal(group.monthlyAmount, undefined);
-  assert.equal(group.startedMonth, undefined);
-  assert.deepEqual(group.memberships.map(item => item.memberId), ['m1']);
-  assert.deepEqual(group.events, []);
-  assert.match(migrated.migrations.join(' '), /v10→v11/);
+  assert.equal(CURRENT_SCHEMA_VERSION, 9);
+  assert.equal(migrated.state.mutualGroups[0].monthlyAmount, 15);
+  assert.equal(migrated.state.mutualGroups[0].startedMonth, '2026-07');
+  assert.deepEqual(migrated.state.mutualGroups[0].memberships.map(item => item.memberId), ['m1']);
+  assert.equal(migrated.state.treasury[0].mutualReferenceMonth, '2026-07');
+  assert.equal(migrated.state.treasury[0].mutualChargeKey, 'mu1::m1::2026-07');
+  assert.ok(migrated.state.treasuryCategories.includes('Mútuas'));
+  assert.ok(migrated.migrations.some(item => item.includes('v6→v7')));
+  assert.ok(migrated.migrations.some(item => item.includes('v7→v8')));
+  assert.ok(migrated.migrations.some(item => item.includes('v8→v9')));
+  assert.equal(migrated.state.birthdays[0].status, 'Ativo');
 });
 
-test('grupo ativo sem falecimento não gera cobrança', () => {
-  const { state, treasury } = setup();
-  state.mutualGroups[0].events = [];
-  const model = buildMutualViewModel(state, treasury);
-  assert.equal(model.charges.length, 0);
-  assert.equal(model.expectedTotal, 0);
-});
-
-test('evento de falecimento gera uma cobrança única para cada participante congelado', () => {
+test('grupo gera uma cobrança mensal igual para cada associado elegível', () => {
   const { state, treasury } = setup();
   const model = buildMutualViewModel(state, treasury);
 
+  assert.equal(model.selectedGroup.id, 'mu1');
+  assert.equal(model.selectedMonth, '2026-07');
   assert.equal(model.charges.length, 3);
   assert.equal(model.expectedTotal, 45);
   assert.equal(model.receivedTotal, 15);
   assert.equal(model.paidCharges.length, 1);
   assert.equal(model.pendingCharges.length, 2);
-  assert.ok(model.charges.every(item => item.event.id === 'e1' && item.amount === 15));
+  assert.ok(model.charges.every(item => item.amount === 15));
 });
 
-test('participantes repetidos no estado são deduplicados no grupo e nas cobranças', () => {
+test('remoção preserva a competência atual e impede cobranças futuras', () => {
   const { state, treasury } = setup();
-  state.mutualGroups[0].memberships.push({
-    id: 'mship-duplicada',
-    memberId: 'm1',
-    joinedDate: '2026-06-01',
-    endedDate: ''
-  });
-  state.mutualGroups[0].events[0].participantIds = ['m1', 'm1', 'm2', 'm2'];
-
-  const model = buildMutualViewModel(state, treasury);
-  assert.deepEqual(model.groupSections[0].members.map(item => item.member.id), ['m1', 'm2']);
-  assert.deepEqual(model.charges.map(item => item.member.id), ['m1', 'm2']);
-});
-
-test('alterações futuras no grupo não reescrevem participantes de eventos anteriores', () => {
-  const { state, treasury } = setup();
-  treasury.mutualStart = '2026-08-01';
-  treasury.mutualEnd = '2026-08-31';
+  treasury.mutualMonth = '2026-08';
   const model = buildMutualViewModel(state, treasury);
 
   assert.deepEqual(model.charges.map(item => item.member.id), ['m1', 'm2']);
   assert.equal(model.charges.some(item => item.member.id === 'm3'), false);
   assert.equal(model.expectedTotal, 36);
+  assert.ok(model.charges.every(item => item.amount === 18));
 });
 
-test('pagamento de mútua usa grupo, evento e participante e não é confundido com mensalidade', () => {
+test('pagamento de mútua é mensal, não é confundido com mensalidade e usa chave completa', () => {
   const { treasury } = setup();
-  const payment = treasury.mutualPaymentsFor('mu1', 'e1', 'm1')[0];
+  const payment = treasury.mutualPaymentsFor('mu1', 'm1', '2026-07')[0];
 
   assert.equal(treasury.isMutualEntry(payment), true);
   assert.equal(treasury.isMembershipEntry(payment), false);
-  assert.equal(treasury.mutualIsPaid('mu1', 'e1', 'm1'), true);
-  assert.equal(treasury.mutualIsPaid('mu1', 'e1', 'm2'), false);
-  assert.equal(treasury.mutualChargeKey('mu1', 'e1', 'm2'), 'mu1::e1::m2');
+  assert.equal(treasury.mutualIsPaid('mu1', 'm1', '2026-07'), true);
+  assert.equal(treasury.mutualIsPaid('mu1', 'm1', '2026-08'), false);
+  assert.equal(treasury.mutualChargeKey('mu1', 'm2', '2026-07'), 'mu1::m2::2026-07');
 });
 
-test('filtros de situação e pesquisa refinam as cobranças por evento', () => {
+test('filtros de situação e pesquisa refinam os associados do grupo e mês selecionados', () => {
   const { state, treasury } = setup();
 
   treasury.mutualStatus = 'pending';
@@ -206,26 +172,26 @@ test('filtros de situação e pesquisa refinam as cobranças por evento', () => 
   assert.deepEqual(model.visibleCharges.map(item => item.member.id), ['m2']);
 
   treasury.mutualStatus = 'paid';
-  treasury.mutualSearch = 'João';
+  treasury.mutualSearch = 'Ana';
   model = buildMutualViewModel(state, treasury);
   assert.deepEqual(model.visibleCharges.map(item => item.member.id), ['m1']);
 });
 
-test('seleção em lote considera somente cobranças abertas do evento', () => {
+test('seleção em lote considera somente cobranças abertas da competência atual', () => {
   const { state, treasury } = setup();
-  treasury.toggleMutualSelection('mu1::e1::m1', true);
-  treasury.toggleMutualSelection('mu1::e1::m2', true);
-  treasury.toggleMutualSelection('mu1::e1::m3', true);
+  treasury.toggleMutualSelection('mu1::m1::2026-07', true);
+  treasury.toggleMutualSelection('mu1::m2::2026-07', true);
+  treasury.toggleMutualSelection('mu1::m3::2026-07', true);
 
   const model = buildMutualViewModel(state, treasury);
   assert.deepEqual(model.selectedCharges.map(item => item.key).sort(), [
-    'mu1::e1::m2',
-    'mu1::e1::m3'
+    'mu1::m2::2026-07',
+    'mu1::m3::2026-07'
   ]);
   assert.equal(model.selectedCharges.reduce((sum, item) => sum + item.amount, 0), 30);
 });
 
-test('interface explica cobrança por falecimento e não oferece recorrência mensal', () => {
+test('interface de mútuas oferece todos os grupos, intervalo de competências, accordions e baixa em lote', () => {
   const { state, treasury } = setup();
   const html = renderMutualSection({
     model: buildMutualViewModel(state, treasury),
@@ -234,125 +200,87 @@ test('interface explica cobrança por falecimento e não oferece recorrência me
     empty: (_icon, text) => text
   });
 
-  assert.match(html, /Mútuas por evento de falecimento/);
-  assert.match(html, /Registrar falecimento/);
-  assert.match(html, /Data inicial/);
-  assert.match(html, /type="date"/);
-  assert.match(html, /João do Distrito/);
-  assert.match(html, /data-mutual-key="mu1::e1::m2"/);
-  assert.match(html, /data-mutual-group-view="charges"/);
-  assert.match(html, /data-mutual-group-view="participants"/);
-  assert.match(html, /data-mutual-group-panel="charges" role="tabpanel"/);
-  assert.match(html, /data-mutual-group-panel="participants" role="tabpanel" hidden/);
-  assert.match(html, /data-mutual-group-member="m1"/);
-  assert.match(html, /Composição atual do grupo/);
-  assert.match(html, /mutual-charge-row/);
-  assert.doesNotMatch(html, /membership-family-chip/);
-  assert.equal(buildMutualViewModel(state, treasury).groupSections[0].members.length, 2);
-  assert.doesNotMatch(html, /Controle mensal de mútuas|Valor mensal por participante|competência/i);
+  assert.match(html, /Controle mensal de mútuas/);
+  assert.match(html, /Todos os grupos/);
+  assert.match(html, /Mês\/Ano inicial/);
+  assert.match(html, /Mês\/Ano final/);
+  assert.match(html, /type="month"/);
+  assert.match(html, /Gerenciar grupos/);
+  assert.match(html, /mutual-group-accordion/);
+  assert.match(html, /Selecionar pendentes filtradas/);
+  assert.match(html, /Dar baixa selecionadas/);
+  assert.match(html, /data-mutual-key="mu1::m2::2026-07"/);
+  assert.doesNotMatch(html, /valor individual por associado/i);
 });
 
-test('grupo sem evento abre participantes e grupo com cobrança separa as duas visualizações', () => {
-  const { state, treasury } = setup();
-  state.mutualGroups[0].events = [];
-  const emptyEventModel = buildMutualViewModel(state, treasury);
-  assert.equal(emptyEventModel.groupSections[0].view, 'participants');
-
-  state.mutualGroups[0].events = [{
-    id: 'e4',
-    deceasedName: 'Evento novo',
-    deathDate: '2026-07-20',
-    amountPerParticipant: 10,
-    participantIds: ['m1', 'm2']
-  }];
-  const eventModel = buildMutualViewModel(state, treasury);
-  assert.equal(eventModel.groupSections[0].view, 'charges');
-
-  treasury.setMutualGroupView('mu1', 'participants');
-  assert.equal(buildMutualViewModel(state, treasury).groupSections[0].view, 'participants');
-});
-
-test('filtro Todos reúne eventos dos grupos no período e inicia accordions recolhidos', () => {
+test('filtro Todos reúne os grupos no período e inicia os accordions recolhidos', () => {
   const { state, treasury } = setup();
   treasury.mutualGroup = 'all';
-  treasury.mutualStart = '2026-07-01';
-  treasury.mutualEnd = '2026-08-31';
+  treasury.mutualStart = '2026-07';
+  treasury.mutualEnd = '2026-08';
 
   const model = buildMutualViewModel(state, treasury);
   assert.equal(model.allGroupsMode, true);
   assert.equal(model.groupSections.length, 2);
   assert.ok(model.groupSections.every(section => section.expanded === false));
-  assert.equal(model.eventCount, 3);
-  assert.ok(model.charges.some(item => item.group.id === 'mu1' && item.event.id === 'e1'));
-  assert.ok(model.charges.some(item => item.group.id === 'mu2' && item.event.id === 'e3'));
+  assert.deepEqual(model.months, ['2026-07', '2026-08']);
+  assert.ok(model.charges.some(item => item.group.id === 'mu1' && item.month === '2026-07'));
+  assert.ok(model.charges.some(item => item.group.id === 'mu2' && item.month === '2026-08'));
 });
 
-test('controlador preserva intervalo por data e estado individual dos accordions', () => {
+test('controlador preserva intervalo e estado individual dos accordions', () => {
   const { treasury } = setup();
-  treasury.mutualStart = '2025-01-10';
-  treasury.mutualEnd = '2025-06-20';
-  assert.equal(treasury.mutualStart, '2025-01-10');
-  assert.equal(treasury.mutualEnd, '2025-06-20');
+  treasury.mutualStart = '2025-01';
+  treasury.mutualEnd = '2025-06';
+  assert.equal(treasury.mutualStart, '2025-01');
+  assert.equal(treasury.mutualEnd, '2025-06');
   assert.equal(treasury.isMutualGroupExpanded('mu1'), false);
   treasury.setMutualGroupExpanded('mu1', true);
   assert.equal(treasury.isMutualGroupExpanded('mu1'), true);
   treasury.collapseMutualGroups();
   assert.equal(treasury.isMutualGroupExpanded('mu1'), false);
-  assert.equal(treasury.mutualGroupView('mu1', true), 'charges');
-  treasury.setMutualGroupView('mu1', 'participants');
-  assert.equal(treasury.mutualGroupView('mu1', true), 'participants');
 });
 
-test('registro de falecimento cria evento único e congela participantes', async () => {
-  const source = await readFile(
-    path.join(projectRoot, 'assets/js/modules/treasury-admin/mutual-events.js'),
-    'utf8'
-  );
-  assert.match(source, /Falecimento de associado do distrito/);
-  assert.match(source, /amountPerParticipant/);
-  assert.match(source, /participantIds: participants\.map/);
-  assert.match(source, /mutual-event-workspace/);
-  assert.match(source, /mutual-event-participant-list/);
-  assert.match(source, /mutual-event-participant/);
-  assert.match(source, /setMutualGroupView\(group\.id, 'charges'\)/);
-  assert.match(source, /group\.events\.push/);
-  assert.match(source, /não cria recorrência/i);
-});
-
-test('baixa gera movimento individual vinculado ao evento, sem competência mensal', async () => {
+test('baixa exige data manual e gera um movimento individual por associado e competência', async () => {
   const source = await readFile(
     path.join(projectRoot, 'assets/js/modules/treasury-admin/mutual-payments.js'),
     'utf8'
   );
 
   assert.match(source, /name="paymentDate" type="date" required value=""/);
-  assert.match(source, /const \[groupId, eventId, memberId\]/);
-  assert.match(source, /mutualEventId: item\.event\.id/);
-  assert.match(source, /mutualEventDate: item\.event\.deathDate/);
-  assert.match(source, /mutualDeceasedName: item\.event\.deceasedName/);
-  assert.doesNotMatch(source, /mutualReferenceMonth|coveredMonths|Pagamento mensal/);
+  assert.match(source, /const \[groupId, memberId, month\]/);
+  assert.match(source, /selected\.forEach\(item => \{/);
+  assert.match(source, /state\(\)\.treasury\.push\(\{/);
+  assert.match(source, /mutualGroupId: item\.group\.id/);
+  assert.match(source, /mutualMemberId: item\.member\.id/);
+  assert.match(source, /mutualReferenceMonth: item\.month/);
+  assert.match(source, /coveredMonths: \[item\.month\]/);
+  assert.match(source, /groupNames = \[\.\.\.new Set/);
+  assert.match(source, /monthReferences = \[\.\.\.new Set/);
+  assert.doesNotMatch(source, /Realize a baixa de um grupo e de uma competência por vez/);
   assert.match(source, /category: 'Mútuas'/);
-  assert.match(source, /groupChargesByEvent/);
-  assert.match(source, /mutual-payment-event-group/);
-  assert.match(source, /setMutualGroupView\(item\.group\.id, 'charges'\)/);
 });
 
-test('gestão do grupo cria ativo sem baixa e exige motivo para encerramento', async () => {
+test('gestão de grupos usa valor mensal único e histórico de participação', async () => {
   const source = await readFile(
     path.join(projectRoot, 'assets/js/modules/treasury-admin/mutual-groups.js'),
     'utf8'
   );
 
-  assert.match(source, /Grupo de mutuários criado ativo, sem cobranças automáticas/);
-  assert.match(source, /name="createdDate" type="date" required/);
-  assert.match(source, /name="closedDate" type="date"/);
-  assert.match(source, /name="closureReason"/);
-  assert.match(source, /Para dar baixa no grupo, informe a data e o motivo/);
-  assert.match(source, /membership\.endedDate = today/);
-  assert.doesNotMatch(source, /monthlyAmount|amountHistory|startedMonth|Valor mensal/);
+  assert.match(source, /Valor mensal por participante/);
+  assert.match(source, /name="memberIds"/);
+  assert.match(source, /memberCanJoinMutual/);
+  assert.match(source, /Mútua · Mutuário/);
+  assert.match(source, /new FormData\(form\)/);
+  assert.match(source, /name="startedMonth" type="month" required/);
+  assert.match(source, /membership\.endedMonth = currentMonth/);
+  assert.match(source, /joinedMonth: editingGroup \? currentMonth : startedMonth/);
+  assert.match(source, /amountHistory/);
+  assert.match(source, /persist\('Grupo de mútua criado com cobranças mensais\.'/);
+  assert.doesNotMatch(source, /data-mutual-amount-for/);
 });
 
-test('estilos cobrem grupos, eventos, baixa e movimentos de mútuas', async () => {
+test('estilos cobrem criação de grupos, baixa e movimentos de mútuas', async () => {
   const [source, bundle, build] = await Promise.all([
     readFile(path.join(projectRoot, 'assets/css/pages/memberships.css'), 'utf8'),
     readFile(path.join(projectRoot, 'assets/css/app.css'), 'utf8'),
@@ -364,14 +292,6 @@ test('estilos cobrem grupos, eventos, baixa e movimentos de mútuas', async () =
     '.mutual-group-accordion',
     '.mutual-member-option',
     '.mutual-payment-hero',
-    '.mutual-event-workspace',
-    '.mutual-event-participant',
-    '.mutual-group-view-tabs',
-    '.mutual-event-card',
-    '.mutual-charge-row',
-    '.mutual-group-members',
-    '.mutual-group-member-card',
-    '.mutual-payment-event-group',
     '.treasury-record-card.is-mutual'
   ]) {
     const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

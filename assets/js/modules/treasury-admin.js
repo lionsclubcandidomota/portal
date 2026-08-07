@@ -3,7 +3,6 @@ import { createMemberSelectorCard } from './treasury-admin/member-selector.js';
 import { createFamilyGroupsManager } from './treasury-admin/family-groups.js';
 import { createMembershipPaymentManager } from './treasury-admin/membership-payments.js';
 import { createMutualGroupsManager } from './treasury-admin/mutual-groups.js';
-import { createMutualEventManager } from './treasury-admin/mutual-events.js';
 import { createMutualPaymentManager } from './treasury-admin/mutual-payments.js';
 import { createMembershipChargeSharer } from './treasury-admin/sharing.js';
 import { createTreasuryAccountsManager } from './treasury-admin/accounts.js';
@@ -15,7 +14,6 @@ export function createTreasuryAdminController(dependencies) {
   const openFamilyGroupsManager = createFamilyGroupsManager(context, memberSelectorCard);
   const openMembershipPayment = createMembershipPaymentManager(context, memberSelectorCard);
   const openMutualGroupsManager = createMutualGroupsManager(context);
-  const openMutualEvent = createMutualEventManager(context);
   const openMutualPayment = createMutualPaymentManager(context);
   const shareMembershipCharge = createMembershipChargeSharer(context);
   const openTreasuryAccountsManager = createTreasuryAccountsManager(context);
@@ -26,7 +24,6 @@ export function createTreasuryAdminController(dependencies) {
     openFamilyGroupsManager,
     openMembershipPayment,
     openMutualGroupsManager,
-    openMutualEvent,
     openMutualPayment,
     openTreasuryAccountsManager,
     shareMembershipCharge,

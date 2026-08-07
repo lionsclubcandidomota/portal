@@ -1,4 +1,4 @@
-# Arquitetura da Tesouraria — v6.35.0
+# Arquitetura da Tesouraria — v6.26.0
 
 A Tesouraria mantém **Movimentações** como centro da gestão financeira e separa regras, composição visual e eventos em módulos especializados.
 
@@ -7,7 +7,7 @@ A Tesouraria mantém **Movimentações** como centro da gestão financeira e sep
 - `domain.js`: datas, competências, moeda, status, paginação e identificação de cobranças.
 - `controller.js`: navegação, filtros, seleção e serviços financeiros.
 - `memberships.js`: modelo e HTML do controle de mensalidades.
-- `mutuals.js`: modelo e HTML das cobranças de mútuas geradas por eventos de falecimento.
+- `mutuals.js`: modelo e HTML das cobranças mensais de mútuas.
 - `movements.js`: histórico, pesquisa, paginação e origem dos movimentos.
 - `charts.js`: renderização e ciclo de vida dos gráficos nativos.
 
@@ -42,7 +42,7 @@ portal-app.js
 - O controlador não deve gerar HTML.
 - `view.js` deve apenas montar o modelo e coordenar os módulos de tela.
 - Estado visual transitório não deve ser persistido no banco.
-- Mensalidades e mútuas devem permanecer classificadas separadamente; somente as Mensalidades possuem recorrência por competência.
+- Mensalidades e mútuas devem permanecer classificadas separadamente.
 
 ## Contrato público
 

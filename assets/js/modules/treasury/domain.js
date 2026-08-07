@@ -1,4 +1,4 @@
-import { memberCanJoinMutual, memberIsActive, memberIsInactive, memberIsMutual, memberStatusKey, memberStatusLabel } from '../../core/portal-members.js?v=6.36.2';
+import { memberCanJoinMutual, memberIsActive, memberIsInactive, memberIsMutual, memberStatusKey, memberStatusLabel } from '../../core/portal-members.js?v=6.26.0';
 
 export const DEFAULT_ACCOUNTS = Object.freeze([
   { id: 'acc-current', name: 'Conta corrente', type: 'Conta corrente', initialBalance: 0, active: true },
@@ -63,167 +63,103 @@ export function normalizeMonthReference(value, fallback = '') {
   return /^\d{4}-\d{2}$/.test(normalized) ? normalized : String(fallback || '');
 }
 
-export function normalizeDateReference(value, fallback = '') {
-  const normalized = String(value || '').trim().slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(normalized) ? normalized : String(fallback || '');
-}
-
-export function mutualChargeKey(groupId, eventId, memberId) {
-  return [groupId, eventId, memberId]
-    .map(value => String(value || '').trim())
-    .filter(Boolean)
-    .join('::');
-}
-
-export function mutualEventDate(item, parseDate) {
-  const explicit = normalizeDateReference(item?.mutualEventDate || item?.deathDate || item?.eventDate);
-  if (explicit) return explicit;
-  const date = parseDate(item?.date);
-  if (!date || Number.isNaN(date.getTime())) return '';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+export function mutualChargeKey(groupId, memberId, month = '') {
+  const base = `${String(groupId || '').trim()}::${String(memberId || '').trim()}`;
+  const reference = normalizeMonthReference(month);
+  return reference ? `${base}::${reference}` : base;
 }
 
 export function mutualReferenceMonth(item, parseDate) {
-  const eventDate = mutualEventDate(item, parseDate);
-  if (eventDate) return eventDate.slice(0, 7);
   const explicit = normalizeMonthReference(item?.mutualReferenceMonth || item?.mutualReferenceDate);
   if (explicit) return explicit;
   return referenceMonth(item, parseDate);
 }
 
-function uniqueIds(values = []) {
-  return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))];
-}
-
-export function normalizeMutualEvent(event, groupId = '', fallback = {}) {
-  const source = event && typeof event === 'object' ? event : {};
-  const deathDate = normalizeDateReference(
-    source.deathDate || source.eventDate || source.chargeDate,
-    normalizeDateReference(fallback.deathDate)
-  );
-  const amountPerParticipant = Math.max(0, Number(
-    source.amountPerParticipant ?? source.amount ?? fallback.amountPerParticipant ?? 0
-  ));
-  const participantIds = uniqueIds(
-    Array.isArray(source.participantIds)
-      ? source.participantIds
-      : Array.isArray(source.memberIds)
-        ? source.memberIds
-        : fallback.participantIds || []
-  );
-  return {
-    id: String(source.id || `mue_${groupId || 'group'}_${deathDate || 'event'}`),
-    deceasedName: String(source.deceasedName || source.associateName || source.title || '').trim(),
-    deceasedMemberNumber: String(source.deceasedMemberNumber || source.memberNumber || '').trim(),
-    deceasedClub: String(source.deceasedClub || source.club || '').trim(),
-    deathDate,
-    dueDate: normalizeDateReference(source.dueDate),
-    amountPerParticipant,
-    participantIds,
-    notes: String(source.notes || '').trim(),
-    createdAt: String(source.createdAt || ''),
-    cancelledAt: String(source.cancelledAt || '')
-  };
-}
-
-export function normalizeMutualGroup(group, fallbackDate = '') {
+export function normalizeMutualGroup(group, fallbackMonth = '') {
   const source = group && typeof group === 'object' ? group : {};
   const legacyCharges = Array.isArray(source.memberCharges) ? source.memberCharges : [];
-  const legacyStartedMonth = normalizeMonthReference(source.startedMonth || source.referenceDate);
-  const createdDate = normalizeDateReference(
-    source.createdDate || source.startedDate,
-    legacyStartedMonth ? `${legacyStartedMonth}-01` : normalizeDateReference(fallbackDate)
+  const startedMonth = normalizeMonthReference(
+    source.startedMonth || source.referenceDate,
+    normalizeMonthReference(fallbackMonth)
   );
-  const legacyMemberIds = legacyCharges.map(charge => charge?.memberId);
-  const membershipSource = Array.isArray(source.memberships) && source.memberships.length
-    ? source.memberships
-    : legacyMemberIds.map((memberId, index) => ({
-      id: `mum_${source.id || 'group'}_${memberId || index}`,
-      memberId,
-      joinedDate: createdDate,
-      endedDate: ''
-    }));
-  const memberships = membershipSource
-    .map((membership, index) => {
-      const joinedMonth = normalizeMonthReference(membership?.joinedMonth);
-      const endedMonth = normalizeMonthReference(membership?.endedMonth);
-      return {
+  const legacyAmount = legacyCharges.find(charge => Number(charge?.amount || 0) > 0)?.amount;
+  const monthlyAmount = Math.max(0, Number(source.monthlyAmount || legacyAmount || 0));
+  const existingMemberships = Array.isArray(source.memberships) ? source.memberships : [];
+  const memberships = existingMemberships.length
+    ? existingMemberships
+      .map((membership, index) => ({
         id: String(membership?.id || `mum_${source.id || 'group'}_${membership?.memberId || index}`),
         memberId: String(membership?.memberId || '').trim(),
-        joinedDate: normalizeDateReference(membership?.joinedDate, joinedMonth ? `${joinedMonth}-01` : createdDate),
-        endedDate: normalizeDateReference(membership?.endedDate, endedMonth ? `${endedMonth}-01` : '')
-      };
-    })
-    .filter(membership => membership.memberId && membership.joinedDate);
-  const events = (Array.isArray(source.events) ? source.events : [])
-    .map(event => normalizeMutualEvent(event, source.id, {
-      participantIds: memberships.filter(item => !item.endedDate).map(item => item.memberId)
+        joinedMonth: normalizeMonthReference(membership?.joinedMonth, startedMonth),
+        endedMonth: normalizeMonthReference(membership?.endedMonth)
+      }))
+      .filter(membership => membership.memberId && membership.joinedMonth)
+    : legacyCharges
+      .map((charge, index) => ({
+        id: `mum_${source.id || 'group'}_${charge?.memberId || index}`,
+        memberId: String(charge?.memberId || '').trim(),
+        joinedMonth: startedMonth,
+        endedMonth: ''
+      }))
+      .filter(membership => membership.memberId && membership.joinedMonth);
+  const amountHistorySource = Array.isArray(source.amountHistory) ? source.amountHistory : [];
+  const amountHistory = amountHistorySource
+    .map(item => ({
+      fromMonth: normalizeMonthReference(item?.fromMonth, startedMonth),
+      amount: Math.max(0, Number(item?.amount || 0))
     }))
-    .filter(event => event.id && event.deathDate && event.deceasedName && event.amountPerParticipant > 0)
-    .sort((first, second) => first.deathDate.localeCompare(second.deathDate));
+    .filter(item => item.fromMonth && item.amount > 0)
+    .sort((first, second) => first.fromMonth.localeCompare(second.fromMonth));
 
-  const {
-    memberCharges: _legacyCharges,
-    referenceDate: _legacyReference,
-    monthlyAmount: _monthlyAmount,
-    startedMonth: _startedMonth,
-    amountHistory: _amountHistory,
-    startedDate: _startedDate,
-    endedDate: _endedDate,
-    ...rest
-  } = source;
+  if (!amountHistory.length && startedMonth && monthlyAmount > 0) {
+    amountHistory.push({ fromMonth: startedMonth, amount: monthlyAmount });
+  }
+
+  const { memberCharges: _legacyCharges, referenceDate: _legacyReference, ...rest } = source;
   return {
     ...rest,
     id: String(source.id || ''),
     name: String(source.name || '').trim(),
-    createdDate,
-    closedDate: normalizeDateReference(source.closedDate || source.endedDate),
-    closureReason: String(source.closureReason || source.endReason || '').trim(),
-    notes: String(source.notes || '').trim(),
+    monthlyAmount,
+    startedMonth,
     memberships,
-    events
+    amountHistory
   };
 }
 
-export function mutualGroupIsActive(group, onDate = '') {
-  const normalized = normalizeMutualGroup(group, onDate);
-  const reference = normalizeDateReference(onDate);
-  if (!normalized.closedDate) return true;
-  return reference ? normalized.closedDate >= reference : false;
+export function mutualAmountForMonth(group, month) {
+  const reference = normalizeMonthReference(month);
+  const normalized = normalizeMutualGroup(group, reference);
+  if (!reference) return normalized.monthlyAmount;
+  const applicable = normalized.amountHistory
+    .filter(item => item.fromMonth <= reference)
+    .at(-1);
+  return Math.max(0, Number(applicable?.amount ?? normalized.monthlyAmount ?? 0));
 }
 
-export function mutualMemberIsIncluded(group, memberId, date) {
-  const reference = normalizeDateReference(date);
+export function mutualMemberIsIncluded(group, memberId, month) {
+  const reference = normalizeMonthReference(month);
   const normalizedId = String(memberId || '');
   if (!reference || !normalizedId) return false;
   const normalized = normalizeMutualGroup(group, reference);
   return normalized.memberships.some(membership => (
     String(membership.memberId) === normalizedId
-    && membership.joinedDate <= reference
-    && (!membership.endedDate || membership.endedDate >= reference)
+    && membership.joinedMonth <= reference
+    && (!membership.endedMonth || membership.endedMonth >= reference)
   ));
 }
 
-export function mutualMemberIdsForDate(group, date) {
-  const normalized = normalizeMutualGroup(group, date);
-  return uniqueIds(normalized.memberships
-    .filter(membership => mutualMemberIsIncluded(normalized, membership.memberId, date))
-    .map(membership => membership.memberId));
-}
-
-export function mutualEventFor(group, eventId) {
-  const normalized = normalizeMutualGroup(group);
-  return normalized.events.find(event => String(event.id) === String(eventId || '')) || null;
-}
-
-export function mutualEventMemberIds(event) {
-  return uniqueIds(Array.isArray(event?.participantIds) ? event.participantIds : []);
+export function mutualMemberIdsForMonth(group, month) {
+  const normalized = normalizeMutualGroup(group, month);
+  return [...new Set(normalized.memberships
+    .filter(membership => mutualMemberIsIncluded(normalized, membership.memberId, month))
+    .map(membership => String(membership.memberId)))];
 }
 
 export function isMutualEntry(item, normalizeText = value => String(value || '').toLocaleLowerCase('pt-BR')) {
   return Number(item?.entry || 0) > 0
     && Boolean(item?.mutualGroupId && (item?.mutualMemberId || item?.memberId))
-    && (Boolean(item?.mutualEventId || item?.mutualChargeKey) || normalizeText(item?.category || '').includes('mutua'));
+    && (Boolean(item?.mutualChargeKey) || normalizeText(item?.category || '').includes('mutua'));
 }
 
 export function isMembershipEntry(item, normalizeText) {

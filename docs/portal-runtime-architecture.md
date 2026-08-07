@@ -1,4 +1,4 @@
-# Arquitetura do Runtime do Portal — v6.27.1
+# Arquitetura do Runtime do Portal — v6.26.0
 
 A fachada pública continua em `assets/js/modules/portal-runtime.js`. O runtime coordena sessão, persistência, sincronização e publicação por módulos especializados.
 

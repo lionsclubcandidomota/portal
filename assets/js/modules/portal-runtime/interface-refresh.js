@@ -1,10 +1,10 @@
-import { cloneState } from '../../core/portal-state.js?v=6.36.2';
-import { remotePayloadVersion } from './domain.js?v=6.36.2';
+import { cloneState } from '../../core/portal-state.js?v=6.26.0';
+import { remotePayloadVersion } from './domain.js?v=6.26.0';
 import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   roleHasCapability
-} from './authorization.js?v=6.36.2';
+} from './authorization.js?v=6.26.0';
 
 export function createInterfaceRefreshActions(context) {
   const { dependencies, services, model } = context;
@@ -34,25 +34,6 @@ export function createInterfaceRefreshActions(context) {
       const remote = activeRole === ACCESS_ROLES.DIRECTOR
         ? await services.loadPublicGitHubPayload()
         : await services.connectGitHub(activeToken);
-
-      const secureProfile = services.secureStorageProfileFromState?.(remote.state);
-      if (secureProfile?.enabled && services.loadPrivatePortalState) {
-        if (!services.hasActiveSecureStorageSession?.(remote.state, activeRole)) {
-          if (activeRole === ACCESS_ROLES.ADMIN) {
-            await services.connectSecureStorageSession?.({
-              state: remote.state,
-              role: activeRole,
-              credential: activeToken
-            });
-          } else {
-            throw new Error('A sessão privada da Diretoria expirou. Entre novamente.');
-          }
-        }
-        const privatePayload = await services.loadPrivatePortalState(remote.state);
-        if (privatePayload?.found) {
-          remote.state = services.mergePrivatePortalState?.(remote.state, privatePayload) || remote.state;
-        }
-      }
 
       // Uma edição pode ter sido concluída enquanto a consulta remota estava em andamento.
       // Nesse caso, a interface não deve substituir o estado local recém-alterado.

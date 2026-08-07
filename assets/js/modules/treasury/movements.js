@@ -7,23 +7,7 @@ import {
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
-import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.36.2';
 
-
-export function movementValueSummary(items = [], isProgrammed = () => false, mode = 'realized') {
-  const scheduled = mode === 'scheduled';
-  const summarized = (Array.isArray(items) ? items : [])
-    .filter(item => Boolean(isProgrammed(item)) === scheduled);
-  const entries = summarized.reduce((sum, item) => sum + Number(item?.entry || 0), 0);
-  const exits = summarized.reduce((sum, item) => sum + Number(item?.exit || 0), 0);
-  return {
-    scheduled,
-    entries,
-    exits,
-    result: entries - exits,
-    count: summarized.length
-  };
-}
 
 function attachmentIcon(type = '') {
   const normalized = String(type).toLowerCase();
@@ -35,21 +19,13 @@ function attachmentIcon(type = '') {
 
 function treasuryAttachmentGallery(item) {
   const attachments = (Array.isArray(item?.attachments) ? item.attachments : [])
-    .map(attachment => ({
-      ...attachment,
-      secure: isSecureTreasuryAttachment(attachment),
-      href: attachmentReference(attachment)
-    }))
-    .filter(attachment => attachment.secure || attachment.href);
+    .map(attachment => ({ ...attachment, href: attachmentReference(attachment) }))
+    .filter(attachment => attachment.href);
   if (!attachments.length) return '';
 
   const cards = attachments.map(attachment => {
     const previewable = String(attachment.type || '').startsWith('image/') || attachment.type === 'application/pdf';
-    const actions = attachment.secure
-      ? `${previewable ? `<button class="btn btn-ghost btn-sm" type="button" data-secure-attachment-action="inline" data-movement-id="${escapeHtml(item.id)}" data-attachment-id="${escapeHtml(attachment.id)}">Visualizar</button>` : ''}<button class="btn btn-primary btn-sm" type="button" data-secure-attachment-action="attachment" data-movement-id="${escapeHtml(item.id)}" data-attachment-id="${escapeHtml(attachment.id)}">Baixar</button>`
-      : `${previewable ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(attachment.href)}" target="_blank" rel="noopener noreferrer">Visualizar</a>` : ''}<a class="btn btn-primary btn-sm" href="${escapeHtml(attachment.href)}" download="${escapeHtml(attachment.name)}">Baixar</a>`;
-    const storageLabel = attachment.secure ? 'Armazenamento privado' : 'Arquivo público legado';
-    return `<article class="treasury-attachment-card"><span class="treasury-attachment-card-icon" aria-hidden="true">${attachmentIcon(attachment.type)}</span><div class="treasury-attachment-card-copy"><strong>${escapeHtml(attachment.name)}</strong><small>${escapeHtml(attachment.type || 'Documento')} · ${formatAttachmentSize(attachment.size)} · ${storageLabel}</small></div><div class="treasury-attachment-card-actions">${actions}</div></article>`;
+    return `<article class="treasury-attachment-card"><span class="treasury-attachment-card-icon" aria-hidden="true">${attachmentIcon(attachment.type)}</span><div class="treasury-attachment-card-copy"><strong>${escapeHtml(attachment.name)}</strong><small>${escapeHtml(attachment.type || 'Documento')} · ${formatAttachmentSize(attachment.size)}</small></div><div class="treasury-attachment-card-actions">${previewable ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(attachment.href)}" target="_blank" rel="noopener noreferrer">Visualizar</a>` : ''}<a class="btn btn-primary btn-sm" href="${escapeHtml(attachment.href)}" download="${escapeHtml(attachment.name)}">Baixar</a></div></article>`;
   }).join('');
 
   return `<section class="treasury-attachment-gallery"><div class="treasury-attachment-gallery-heading"><div><span aria-hidden="true">📎</span><div><strong>Comprovantes e documentos</strong><small>${attachments.length} arquivo(s) vinculado(s) a esta movimentação</small></div></div></div><div class="treasury-attachment-gallery-grid">${cards}</div></section>`;
@@ -70,15 +46,14 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
     const membership = treasury.isMembershipEntry(item);
     const mutual = treasury.isMutualEntry(item);
     const mutualGroup = mutual ? treasury.mutualGroupFor(item.mutualGroupId) : null;
-    const mutualEvent = mutual ? treasury.mutualEventFor(item.mutualGroupId, item.mutualEventId) : null;
-    const mutualDate = mutual ? (item.mutualEventDate || mutualEvent?.deathDate || treasury.mutualEventDate(item)) : '';
+    const mutualMonth = mutual ? treasury.mutualReferenceMonth(item) : '';
     const coveredMonthText = treasury.coveredMonths(item)
       .map(treasury.monthLabel)
       .join(', ');
     const secondaryText = membership
       ? `Mensalidade · ${coveredMonthText || 'referência não informada'}`
       : mutual
-        ? `Mútua · ${mutualGroup?.name || 'grupo não informado'} · Falecimento de ${item.mutualDeceasedName || mutualEvent?.deceasedName || 'associado não informado'} · ${formatDate(mutualDate)}`
+        ? `Mútua · ${mutualGroup?.name || 'grupo não informado'} · ${treasury.monthLabel(mutualMonth)}`
         : (item.notes || 'Sem observações adicionais');
     const movementLabel = item.entry ? 'Entrada financeira' : 'Saída financeira';
     const attachmentCount = Array.isArray(item.attachments) ? item.attachments.length : 0;
@@ -116,7 +91,7 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${treasury.accountTypeIcon(account?.type)}</span><div><small>Conta</small><strong>${escapeHtml(account?.name || 'Conta principal')}</strong></div></div>
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">🏷️</span><div><small>Categoria</small><strong>${escapeHtml(item.category)}</strong></div></div>
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${item.entry ? '↗' : '↘'}</span><div><small>Tipo</small><strong>${item.entry ? 'Entrada' : 'Saída'}</strong></div></div>
-          ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">👥</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🗓️</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🤲</span><div><small>Grupo / evento</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · Falecimento de ${escapeHtml(item.mutualDeceasedName || mutualEvent?.deceasedName || 'associado não informado')} · ${escapeHtml(formatDate(mutualDate))}</strong></div></div>` : ''}` : ''}
+          ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">👥</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🗓️</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🤲</span><div><small>Grupo / competência</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
         </div>
         ${treasuryAttachmentGallery(item)}
         <div class="treasury-expanded-footer">
@@ -155,7 +130,7 @@ export function categorySummaries(items, treasury) {
     ));
 }
 
-export function bindTreasuryMovementLists({ root, state, periodItems, treasury, helpers }) {
+export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers }) {
   const { bindToolbar, bindRowActions } = helpers;
   let treasurySearchQuery = '';
   let movementFilter = 'all';
@@ -198,77 +173,17 @@ export function bindTreasuryMovementLists({ root, state, periodItems, treasury, 
       entries: searchMatched.filter(item => Number(item.entry || 0) > 0).length,
       exits: searchMatched.filter(item => Number(item.exit || 0) > 0).length
     };
-    const scheduledSummary = movementFilter === 'scheduled';
-    const summary = movementValueSummary(
-      filtered,
-      item => treasury.isProgrammed(item),
-      scheduledSummary ? 'scheduled' : 'realized'
-    );
-    const summaryEntries = summary.entries;
-    const summaryExits = summary.exits;
-    const summaryResult = summary.result;
-    const summaryModeLabel = scheduledSummary ? 'programado' : 'realizado';
-    const summaryEntriesLabel = scheduledSummary ? 'Entradas programadas' : 'Entradas realizadas';
-    const summaryExitsLabel = scheduledSummary ? 'Saídas programadas' : 'Saídas realizadas';
-    const summaryDescription = scheduledSummary
-      ? 'Os valores abaixo são previsões e ainda não alteram o saldo atual.'
-      : 'Use os filtros rápidos para localizar lançamentos e conferir valores realizados.';
-    const showScheduledSection = movementFilter !== 'completed';
-    const showCompletedSection = movementFilter !== 'scheduled';
+    const realizedEntries = filtered
+      .filter(item => !treasury.isProgrammed(item))
+      .reduce((sum, item) => sum + Number(item.entry || 0), 0);
+    const realizedExits = filtered
+      .filter(item => !treasury.isProgrammed(item))
+      .reduce((sum, item) => sum + Number(item.exit || 0), 0);
     const filterButton = (key, label) => `<button type="button" class="treasury-movement-filter ${movementFilter === key ? 'is-active' : ''}" data-movement-filter="${key}" aria-pressed="${String(movementFilter === key)}"><span>${label}</span><strong>${counts[key]}</strong></button>`;
-    const scheduledSection = showScheduledSection
-      ? `<section class="timeline-section">${timelineHeading('🗓️', 'Lançamentos programados', 'Receitas e despesas agendadas que ainda não impactam o saldo atual.', scheduled.length)}${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</section>`
-      : '';
-    const completedSection = showCompletedSection
-      ? `<section class="timeline-section is-history">${timelineHeading('🧾', 'Lançamentos realizados', 'Somente movimentações recebidas, pagas ou realizadas.', completed.length, true)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`
-      : '';
 
-    lists.innerHTML = `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Histórico financeiro</span><h3>Movimentações do período</h3><p>${summaryDescription}</p></div><div class="treasury-movement-balance ${summaryResult >= 0 ? 'is-positive' : 'is-negative'} ${scheduledSummary ? 'is-scheduled' : ''}"><small>Resultado ${summaryModeLabel}</small><strong class="sensitive-money">${money.format(summaryResult)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summaryEntriesLabel}</small><strong class="sensitive-money">${money.format(summaryEntries)}</strong></span><span><small>${summaryExitsLabel}</small><strong class="sensitive-money">${money.format(summaryExits)}</strong></span><span><small>Registros exibidos</small><strong>${filtered.length}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section>${scheduledSection}${completedSection}`;
+    lists.innerHTML = `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Histórico financeiro</span><h3>Movimentações do período</h3><p>Use os filtros rápidos para localizar lançamentos e conferir valores realizados.</p></div><div class="treasury-movement-balance ${realizedEntries - realizedExits >= 0 ? 'is-positive' : 'is-negative'}"><small>Resultado exibido</small><strong class="sensitive-money">${money.format(realizedEntries - realizedExits)}</strong></div></div><div class="treasury-movement-stats"><span><small>Entradas realizadas</small><strong class="sensitive-money">${money.format(realizedEntries)}</strong></span><span><small>Saídas realizadas</small><strong class="sensitive-money">${money.format(realizedExits)}</strong></span><span><small>Registros exibidos</small><strong>${filtered.length}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section><section class="timeline-section">${timelineHeading('🗓️', 'Lançamentos programados', 'Receitas e despesas agendadas que ainda não impactam o saldo atual.', scheduled.length)}${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</section><section class="timeline-section is-history">${timelineHeading('🧾', 'Lançamentos realizados', 'Somente movimentações recebidas, pagas ou realizadas.', completed.length, true)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
 
     bindRowActions();
-
-    root.querySelectorAll('[data-secure-attachment-action]').forEach(button => {
-      button.addEventListener('click', async () => {
-        const movement = (Array.isArray(state?.treasury) ? state.treasury : [])
-          .find(item => String(item?.id || '') === String(button.dataset.movementId || ''));
-        const attachment = (Array.isArray(movement?.attachments) ? movement.attachments : [])
-          .find(item => String(item?.id || '') === String(button.dataset.attachmentId || ''));
-        if (!attachment) {
-          helpers.toast?.({ type: 'error', title: 'Anexo indisponível', message: 'Não foi possível localizar o documento vinculado.' });
-          return;
-        }
-
-        const disposition = button.dataset.secureAttachmentAction === 'attachment' ? 'attachment' : 'inline';
-        const originalText = button.textContent;
-        button.disabled = true;
-        button.textContent = disposition === 'attachment' ? 'Preparando…' : 'Abrindo…';
-        let previewWindow = null;
-        if (disposition === 'inline') {
-          previewWindow = window.open('', '_blank');
-          if (previewWindow) previewWindow.opener = null;
-        }
-        try {
-          const url = await requestSecureAttachmentAccess(state, attachment, disposition);
-          if (disposition === 'inline') {
-            if (previewWindow) previewWindow.location.href = url;
-            else window.open(url, '_blank', 'noopener,noreferrer');
-          } else {
-            const link = document.createElement('a');
-            link.href = url;
-            link.rel = 'noopener noreferrer';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-          }
-        } catch (error) {
-          previewWindow?.close();
-          helpers.toast?.({ type: 'error', title: 'Acesso ao anexo bloqueado', message: error?.message || 'Não foi possível abrir o documento.' });
-        } finally {
-          button.disabled = false;
-          button.textContent = originalText;
-        }
-      });
-    });
 
     root.querySelectorAll('[data-movement-filter]').forEach(button => {
       button.addEventListener('click', () => {

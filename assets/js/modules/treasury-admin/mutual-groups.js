@@ -1,17 +1,12 @@
-import { escapeHtml, formatDate, normalize, uid } from '../../utils.js';
+import { escapeHtml, money, normalize, uid } from '../../utils.js';
 
 function activeMemberships(group) {
   return (Array.isArray(group?.memberships) ? group.memberships : [])
-    .filter(membership => !membership.endedDate);
+    .filter(membership => !membership.endedMonth);
 }
 
 function uniqueMemberIds(memberships) {
   return [...new Set((memberships || []).map(item => String(item.memberId || '')).filter(Boolean))];
-}
-
-function todayReference() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 export function createMutualGroupsManager(context) {
@@ -31,9 +26,9 @@ export function createMutualGroupsManager(context) {
     const currentState = state();
     const groups = treasury.mutualGroups();
     const editingGroup = groups.find(group => group.id === editGroupId) || null;
-    const today = todayReference();
+    const currentMonth = treasury.currentMonth();
     const activeIds = new Set(uniqueMemberIds(activeMemberships(editingGroup)));
-    const createdDate = editingGroup?.createdDate || today;
+    const initialMonth = editingGroup?.startedMonth || currentMonth;
     const availableMembers = [...currentState.birthdays]
       .filter(member => treasury.memberCanJoinMutual(member) || activeIds.has(String(member.id)))
       .sort((first, second) => first.name.localeCompare(second.name, 'pt-BR'));
@@ -41,38 +36,35 @@ export function createMutualGroupsManager(context) {
     const groupSummary = group => {
       const currentIds = uniqueMemberIds(activeMemberships(group));
       const historicalIds = uniqueMemberIds(group.memberships);
-      const events = Array.isArray(group.events) ? group.events : [];
-      const paymentCount = events.reduce((total, event) => (
-        total + event.participantIds.reduce(
-          (sum, memberId) => sum + treasury.mutualPaymentsFor(group.id, event.id, memberId).length,
-          0
-        )
-      ), 0);
-      return { currentIds, historicalIds, eventCount: events.length, paymentCount };
+      const paymentCount = historicalIds.reduce(
+        (sum, memberId) => sum + treasury.mutualPaymentsFor(group.id, memberId).length,
+        0
+      );
+      return { currentIds, historicalIds, paymentCount };
     };
 
     modalBody.innerHTML = `<div class="family-manager family-manager-v2 mutual-group-manager">
       <section class="family-existing-section mutual-existing-groups">
-        <div class="family-section-heading"><div><strong>Grupos de mutuários</strong><small>Os grupos permanecem ativos e só geram cobranças quando um falecimento é registrado.</small></div><span class="family-count-badge">${groups.length}</span></div>
+        <div class="family-section-heading"><div><strong>Grupos de mútuas</strong><small>O valor é mensal e igual para todos os participantes ativos do grupo.</small></div><span class="family-count-badge">${groups.length}</span></div>
         <div class="family-group-list">${groups.length ? groups.map(group => {
           const summary = groupSummary(group);
           const members = summary.currentIds
             .map(memberId => currentState.birthdays.find(member => String(member.id) === memberId))
             .filter(Boolean);
-          const active = !group.closedDate;
           return `<article class="family-group-row family-group-row-v2 mutual-group-row ${editingGroup?.id === group.id ? 'is-editing' : ''}">
-            <div class="family-group-main"><span class="family-group-icon">🤲</span><div><strong>${escapeHtml(group.name)}</strong><small>${summary.currentIds.length} participante(s) ativo(s) · ${summary.eventCount} evento(s) · ${summary.paymentCount} pagamento(s)</small><p class="family-group-notes">${active ? `Grupo ativo desde ${escapeHtml(formatDate(group.createdDate))}` : `Baixado em ${escapeHtml(formatDate(group.closedDate))} · ${escapeHtml(group.closureReason || 'Motivo não informado')}`}</p>${group.notes ? `<p class="family-group-notes">${escapeHtml(group.notes)}</p>` : ''}<div class="family-group-avatars">${members.slice(0, 5).map(member => avatar(member)).join('')}${members.length > 5 ? `<span class="family-avatar-more">+${members.length - 5}</span>` : ''}</div></div></div>
+            <div class="family-group-main"><span class="family-group-icon">🤲</span><div><strong>${escapeHtml(group.name)}</strong><small>${summary.currentIds.length} participante(s) ativo(s) · ${summary.paymentCount} pagamento(s) registrado(s)</small><p class="family-group-notes">Valor mensal: <span class="sensitive-money">${money.format(group.monthlyAmount)}</span> · Cobranças desde ${escapeHtml(treasury.monthLabel(group.startedMonth))}</p>${group.notes ? `<p class="family-group-notes">${escapeHtml(group.notes)}</p>` : ''}<div class="family-group-avatars">${members.slice(0, 5).map(member => avatar(member)).join('')}${members.length > 5 ? `<span class="family-avatar-more">+${members.length - 5}</span>` : ''}</div></div></div>
             <div class="family-group-actions"><button class="btn btn-ghost btn-sm" type="button" data-edit-mutual-group="${escapeHtml(group.id)}">Editar</button><button class="btn btn-danger-soft btn-sm" type="button" data-remove-mutual-group="${escapeHtml(group.id)}">Excluir</button></div>
           </article>`;
-        }).join('') : empty('🤲', 'Nenhum grupo de mutuários cadastrado.')}</div>
+        }).join('') : empty('🤲', 'Nenhum grupo de mútua cadastrado.')}</div>
       </section>
       <form id="mutualGroupForm" class="admin-entity-form family-group-form-v2 mutual-group-form">
         <input type="hidden" name="groupId" value="${escapeHtml(editingGroup?.id || '')}">
-        <section class="admin-form-section"><div class="admin-form-section-heading"><span>${editingGroup ? '✏️' : '➕'}</span><div><h3>${editingGroup ? 'Editar grupo de mutuários' : 'Novo grupo de mutuários'}</h3><p>O cadastro do grupo não cria cobranças. As cobranças serão geradas somente por eventos de falecimento.</p></div></div>
+        <section class="admin-form-section"><div class="admin-form-section-heading"><span>${editingGroup ? '✏️' : '➕'}</span><div><h3>${editingGroup ? 'Editar grupo de mútua' : 'Novo grupo de mútua'}</h3><p>Defina o valor mensal e marque os associados ou Mutuários que participarão das próximas cobranças.</p></div></div>
           <div class="form-grid admin-form-section-grid">
-            <div class="form-field"><label for="mutualGroupName">Nome do grupo *</label><input id="mutualGroupName" name="name" required placeholder="Ex.: Mútua 658" value="${escapeHtml(editingGroup?.name || '')}"></div>
-            <div class="form-field"><label for="mutualCreatedDate">Data de criação *</label>${editingGroup ? `<input id="mutualCreatedDate" type="date" value="${escapeHtml(createdDate)}" disabled><input type="hidden" name="createdDate" value="${escapeHtml(createdDate)}"><small>A data de criação é preservada após o cadastro.</small>` : `<input id="mutualCreatedDate" name="createdDate" type="date" required value="${escapeHtml(createdDate)}"><small>O grupo será criado ativo e sem data de baixa.</small>`}</div>
-            <div class="form-field full-row mutual-member-picker"><label>Participantes do grupo *</label>
+            <div class="form-field"><label for="mutualGroupName">Nome do grupo *</label><input id="mutualGroupName" name="name" required placeholder="Ex.: Mútua Social" value="${escapeHtml(editingGroup?.name || '')}"></div>
+            <div class="form-field"><label for="mutualMonthlyAmount">Valor mensal por participante *</label><div class="currency-input"><span>R$</span><input id="mutualMonthlyAmount" name="monthlyAmount" type="text" inputmode="decimal" autocomplete="off" required value="${escapeHtml(treasury.currencyInputValue(editingGroup?.monthlyAmount || 0))}" placeholder="0,00"></div><small>${editingGroup ? 'Alterações passam a valer na competência atual e nas seguintes.' : 'O valor será aplicado integralmente a cada participante.'}</small></div>
+            <div class="form-field"><label for="mutualStartedMonth">Competência inicial *</label>${editingGroup ? `<input id="mutualStartedMonth" type="month" value="${escapeHtml(initialMonth)}" disabled><input type="hidden" name="startedMonth" value="${escapeHtml(initialMonth)}"><small>A competência inicial é preservada após a criação do grupo.</small>` : `<input id="mutualStartedMonth" name="startedMonth" type="month" required value="${escapeHtml(initialMonth)}"><small>Permite criar cobranças e registrar pagamentos retroativos.</small>`}</div>
+            <div class="form-field full-row mutual-member-picker"><label>Participantes da mútua *</label>
               <div class="member-picker-toolbar mutual-member-picker-toolbar"><div class="search-box compact"><span>⌕</span><input id="mutualMemberSearch" type="search" placeholder="Filtrar por nome ou número" autocomplete="off"></div><span id="mutualSelectedCount" class="selected-count" aria-live="polite">0 selecionado(s)</span></div>
               <div class="mutual-member-options" id="mutualMemberOptions">${availableMembers.map(member => {
                 const checked = activeIds.has(String(member.id));
@@ -85,16 +77,15 @@ export function createMutualGroupsManager(context) {
                 </article>`;
               }).join('')}</div>
               <div id="mutualMemberEmpty" class="member-picker-empty" hidden>Nenhum participante encontrado.</div>
-              <small>Alterações na composição afetam somente eventos futuros. Eventos já registrados preservam a lista original de participantes.</small>
+              <small>Ao remover um participante, as baixas já registradas são preservadas e ele deixa de receber novas cobranças a partir do próximo mês.</small>
             </div>
-            <div class="form-field full-row"><label for="mutualGroupNotes">Observações do grupo</label><textarea id="mutualGroupNotes" name="notes" rows="3" placeholder="Informações sobre o grupo de mutuários">${escapeHtml(editingGroup?.notes || '')}</textarea></div>
-            ${editingGroup ? `<div class="form-field"><label for="mutualClosedDate">Data de baixa</label><input id="mutualClosedDate" name="closedDate" type="date" min="${escapeHtml(createdDate)}" value="${escapeHtml(editingGroup.closedDate || '')}"><small>Deixe em branco enquanto o grupo estiver ativo.</small></div><div class="form-field"><label for="mutualClosureReason">Motivo da baixa</label><input id="mutualClosureReason" name="closureReason" value="${escapeHtml(editingGroup.closureReason || '')}" placeholder="Obrigatório somente ao encerrar o grupo"><small>A baixa só é aceita com data e motivo específicos.</small></div>` : ''}
+            <div class="form-field full-row"><label for="mutualGroupNotes">Observações do grupo</label><textarea id="mutualGroupNotes" name="notes" rows="3" placeholder="Informações sobre a finalidade ou orientação de cobrança">${escapeHtml(editingGroup?.notes || '')}</textarea></div>
           </div>
         </section>
-        <div class="form-actions admin-form-actions"><button type="button" class="btn btn-ghost" data-close-modal>Fechar</button>${editingGroup ? '<button type="button" class="btn btn-ghost" id="cancelMutualEdit">Cancelar edição</button>' : ''}<button class="btn btn-primary" type="submit">${editingGroup ? 'Salvar alterações' : 'Criar grupo ativo'}</button></div>
+        <div class="form-actions admin-form-actions"><button type="button" class="btn btn-ghost" data-close-modal>Fechar</button>${editingGroup ? '<button type="button" class="btn btn-ghost" id="cancelMutualEdit">Cancelar edição</button>' : ''}<button class="btn btn-primary" type="submit">${editingGroup ? 'Salvar alterações' : 'Criar grupo'}</button></div>
       </form>
     </div>`;
-    showModal('Grupos de mutuários');
+    showModal('Grupos de mútuas');
 
     const form = document.getElementById('mutualGroupForm');
     const search = document.getElementById('mutualMemberSearch');
@@ -132,42 +123,38 @@ export function createMutualGroupsManager(context) {
       const formData = new FormData(form);
       const memberIds = [...new Set(formData.getAll('memberIds').map(String))];
       if (!memberIds.length) {
-        toast('Selecione ao menos um participante para o grupo de mutuários.');
+        toast('Selecione ao menos um participante para o grupo de mútua.');
         return;
       }
 
       const groupId = String(formData.get('groupId') || '');
       const name = String(formData.get('name') || '').trim();
-      const createdDateValue = String(formData.get('createdDate') || '').trim();
-      const closedDate = String(formData.get('closedDate') || '').trim();
-      const closureReason = String(formData.get('closureReason') || '').trim();
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(createdDateValue)) {
-        toast('Informe a data de criação do grupo.');
-        form.elements.createdDate?.focus();
+      const monthlyAmount = treasury.parseCurrencyInput(formData.get('monthlyAmount'));
+      const startedMonth = String(formData.get('startedMonth') || '').trim();
+      if (!/^\d{4}-\d{2}$/.test(startedMonth)) {
+        toast('Selecione a competência inicial do grupo.');
+        form.elements.startedMonth?.focus();
         return;
       }
-      if ((closedDate && !closureReason) || (!closedDate && closureReason)) {
-        toast('Para dar baixa no grupo, informe a data e o motivo. Para mantê-lo ativo, deixe os dois campos em branco.');
-        return;
-      }
-      if (closedDate && closedDate < createdDateValue) {
-        toast('A data de baixa não pode ser anterior à criação do grupo.');
+      if (!(monthlyAmount > 0)) {
+        toast('Informe um valor mensal maior que zero.');
+        form.elements.monthlyAmount?.focus();
         return;
       }
       const duplicateName = groups.find(group => group.id !== groupId && normalize(group.name) === normalize(name));
       if (duplicateName) {
-        toast('Já existe um grupo de mutuários com esse nome.');
+        toast('Já existe um grupo de mútua com esse nome.');
         return;
       }
 
       const memberships = editingGroup
         ? (editingGroup.memberships || []).map(item => ({ ...item }))
         : [];
-      const currentlyActive = new Set(uniqueMemberIds(memberships.filter(item => !item.endedDate)));
+      const currentlyActive = new Set(uniqueMemberIds(memberships.filter(item => !item.endedMonth)));
 
       memberships.forEach(membership => {
-        if (!membership.endedDate && !memberIds.includes(String(membership.memberId))) {
-          membership.endedDate = today;
+        if (!membership.endedMonth && !memberIds.includes(String(membership.memberId))) {
+          membership.endedMonth = currentMonth;
         }
       });
       memberIds.forEach(memberId => {
@@ -175,29 +162,40 @@ export function createMutualGroupsManager(context) {
         memberships.push({
           id: uid('mum'),
           memberId,
-          joinedDate: editingGroup ? today : createdDateValue,
-          endedDate: ''
+          joinedMonth: editingGroup ? currentMonth : startedMonth,
+          endedMonth: ''
         });
       });
+
+      const amountHistory = editingGroup
+        ? (editingGroup.amountHistory || []).map(item => ({ ...item }))
+        : [];
+      const previousAmount = Number(editingGroup?.monthlyAmount || 0);
+      if (!amountHistory.length) amountHistory.push({ fromMonth: editingGroup?.startedMonth || startedMonth, amount: monthlyAmount });
+      if (editingGroup && previousAmount !== monthlyAmount) {
+        const currentRecord = amountHistory.find(item => item.fromMonth === currentMonth);
+        if (currentRecord) currentRecord.amount = monthlyAmount;
+        else amountHistory.push({ fromMonth: currentMonth, amount: monthlyAmount });
+      }
+      amountHistory.sort((first, second) => first.fromMonth.localeCompare(second.fromMonth));
 
       const payload = {
         id: groupId || uid('mu'),
         name,
-        createdDate: editingGroup?.createdDate || createdDateValue,
-        closedDate,
-        closureReason,
+        monthlyAmount,
+        startedMonth: editingGroup?.startedMonth || startedMonth,
         notes: String(formData.get('notes') || '').trim(),
         memberships,
-        events: Array.isArray(editingGroup?.events) ? editingGroup.events.map(item => ({ ...item })) : []
+        amountHistory
       };
 
       if (groupId) {
         const index = groups.findIndex(group => group.id === groupId);
         if (index >= 0) groups[index] = payload;
-        persist(closedDate ? 'Grupo de mutuários atualizado e baixado.' : 'Grupo de mutuários atualizado e mantido ativo.');
+        persist('Grupo de mútua atualizado. As cobranças futuras foram recalculadas.');
       } else {
         groups.push(payload);
-        persist('Grupo de mutuários criado ativo, sem cobranças automáticas.');
+        persist('Grupo de mútua criado com cobranças mensais.');
       }
       treasury.clearMutualSelection();
       openMutualGroupsManager();
@@ -211,17 +209,15 @@ export function createMutualGroupsManager(context) {
       button.addEventListener('click', async () => {
         const group = groups.find(item => item.id === button.dataset.removeMutualGroup);
         if (!group) return;
-        const events = Array.isArray(group.events) ? group.events : [];
-        const hasPayments = events.some(event => event.participantIds.some(memberId => (
-          treasury.mutualPaymentsFor(group.id, event.id, memberId).length > 0
-        )));
-        if (events.length || hasPayments) {
-          toast('Este grupo possui eventos ou pagamentos registrados. Faça a baixa do grupo em vez de excluí-lo.');
+        const memberIds = uniqueMemberIds(group.memberships);
+        const hasPayments = memberIds.some(memberId => treasury.mutualPaymentsFor(group.id, memberId).length > 0);
+        if (hasPayments) {
+          toast('Este grupo possui pagamentos registrados e não pode ser excluído. Remova os participantes para interromper as cobranças futuras.');
           return;
         }
         const approved = await confirmation.askConfirmation({
-          title: 'Excluir grupo de mutuários?',
-          message: 'O grupo será removido. Nenhuma cobrança será criada ou excluída, pois o grupo não possui eventos registrados.',
+          title: 'Excluir grupo de mútua?',
+          message: 'O grupo e suas cobranças mensais ainda não pagas deixarão de ser exibidos.',
           icon: '🤲',
           confirmText: 'Excluir grupo',
           tone: 'danger'
@@ -229,7 +225,7 @@ export function createMutualGroupsManager(context) {
         if (!approved) return;
         state().mutualGroups = groups.filter(item => item.id !== group.id);
         treasury.clearMutualSelection();
-        persist('Grupo de mutuários removido.');
+        persist('Grupo de mútua removido.');
         openMutualGroupsManager();
       });
     });

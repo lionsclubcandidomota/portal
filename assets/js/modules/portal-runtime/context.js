@@ -1,11 +1,11 @@
-import { buildPublicationReview } from '../publication-review.js?v=6.36.2';
+import { buildPublicationReview } from '../publication-review.js?v=6.26.0';
 import {
   cloneState,
   normalizeTreasuryStatuses,
   sanitizePortalState
-} from '../../core/portal-state.js?v=6.36.2';
-import { createRuntimeMetadataStore } from './storage.js?v=6.36.2';
-import { ACCESS_ROLES } from './authorization.js?v=6.36.2';
+} from '../../core/portal-state.js?v=6.26.0';
+import { createRuntimeMetadataStore } from './storage.js?v=6.26.0';
+import { ACCESS_ROLES } from './authorization.js?v=6.26.0';
 
 const REQUIRED_DEPENDENCIES = [
   'getState',
@@ -26,8 +26,7 @@ export function createPortalRuntimeContext(dependencies, services, environment =
   validateDependencies(dependencies);
 
   const storage = environment.storage || globalThis.localStorage;
-  const privateStorage = environment.sessionStorage || globalThis.sessionStorage;
-  const metadataStore = createRuntimeMetadataStore(storage, privateStorage);
+  const metadataStore = createRuntimeMetadataStore(storage);
   const metadata = metadataStore.read();
 
   const context = {
@@ -56,8 +55,7 @@ export function createPortalRuntimeContext(dependencies, services, environment =
       awaitingPublicDeploymentId: metadata.awaitingPublicDeploymentId,
       remoteRefreshRunning: false,
       refreshScheduled: false,
-      bootstrapped: false,
-      privateMigrationPending: false
+      bootstrapped: false
     }
   };
 

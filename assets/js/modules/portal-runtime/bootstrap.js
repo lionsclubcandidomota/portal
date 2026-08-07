@@ -1,11 +1,11 @@
-import { createSeedState, cloneState } from '../../core/portal-state.js?v=6.36.2';
+import { createSeedState, cloneState } from '../../core/portal-state.js?v=6.26.0';
 import {
   mergePortalStates,
   remotePayloadVersion,
   selectCachedState,
   shouldAcceptStartupPayload
-} from './domain.js?v=6.36.2';
-import { INITIAL_REMOTE_TIMEOUT } from './constants.js?v=6.36.2';
+} from './domain.js?v=6.26.0';
+import { INITIAL_REMOTE_TIMEOUT } from './constants.js?v=6.26.0';
 
 export function createBootstrapAction(context, remoteSync) {
   const { dependencies, services, environment, model } = context;
@@ -24,12 +24,11 @@ export function createBootstrapAction(context, remoteSync) {
     const initialState = context.currentState();
     if (createSeedState(initialState)) services.saveState(initialState);
 
-    const selectedCache = selectCachedState({
+    const cachedState = selectCachedState({
       pendingChanges: model.pendingChanges,
       lastSyncedState: model.lastSyncedState,
       localState: services.loadState()
     });
-    const cachedState = services.createPublicPortalState?.(selectedCache) || selectedCache;
     context.replaceCurrentState(cachedState);
 
     dependencies.applySettings();
@@ -48,8 +47,7 @@ export function createBootstrapAction(context, remoteSync) {
         return false;
       }
 
-      const publicRemote = services.createPublicPortalState?.(payload.state) || payload.state;
-      context.replaceCurrentState(mergePortalStates(cachedState, publicRemote));
+      context.replaceCurrentState(mergePortalStates(cachedState, payload.state));
       services.saveState(context.currentState());
       context.storeSyncedState(context.currentState());
 

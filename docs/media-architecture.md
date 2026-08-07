@@ -2,73 +2,48 @@
 
 ## Objetivo
 
-Manter imagens institucionais e fotos públicas no site estático, mas retirar comprovantes, recibos, notas fiscais e documentos financeiros da publicação pública.
+Retirar imagens e documentos Base64 do arquivo principal de dados sem perder compatibilidade com cadastros, movimentações e backups antigos.
 
-## Separação adotada
+## Estrutura
 
 ```text
-GitHub Pages
-├── HTML, CSS e JavaScript
-├── data/dados.json
-├── public/branding/
-└── public/members/
-
-Cloudflare Worker
-├── autentica Administrador ou Diretoria
-├── valida formato e tamanho
-├── grava e lê objetos pelo binding R2
-└── emite links temporários assinados
-
-Cloudflare R2 privado
-└── treasury/<id-da-movimentacao>/<id-do-anexo>-<hash>.<ext>
+public/
+├── branding/
+│   └── club-logo-<hash>.<ext>
+├── members/
+│   └── <id-do-associado>-<hash>.<ext>
+└── treasury/
+    └── <id-da-movimentacao>/
+        └── <id-do-anexo>-<hash>.<ext>
 ```
 
-O bucket não utiliza domínio público, `r2.dev` ou credenciais no navegador.
-
-## Referência publicada
+O JSON guarda somente referências públicas:
 
 ```json
 {
   "photo": "./public/members/b_123-0abc123.jpg",
   "attachments": [
     {
-      "id": "att_123",
       "name": "comprovante.pdf",
-      "type": "application/pdf",
-      "size": 84231,
-      "storage": "r2",
-      "objectKey": "treasury/t_123/att_123-0abc1234.pdf",
-      "checksum": "0abc1234...",
-      "uploadedAt": "2026-08-04T12:00:00.000Z"
+      "url": "./public/treasury/t_123/att_123-0abc123.pdf"
     }
   ]
 }
 ```
 
-O JSON não contém o arquivo em Base64, URL pública permanente, chave R2 ou segredo do Worker.
+O hash é derivado do conteúdo. Uma nova versão recebe outro caminho, evitando reutilização indevida do cache.
 
-## Fluxo de edição e publicação
+## Fluxo de edição
 
-1. O arquivo selecionado é validado pelo navegador.
-2. Imagens compatíveis são redimensionadas e recomprimidas; PDFs e documentos são preservados.
-3. O arquivo permanece incorporado somente enquanto a alteração estiver pendente no navegador.
-4. A revisão da publicação mostra nomes e quantidades, sem expor o conteúdo.
-5. O Portal cria uma sessão curta no Worker usando a credencial já informada no login.
-6. O Worker valida novamente o arquivo e o grava no R2 pelo binding `ATTACHMENTS`.
-7. O Portal publica no GitHub apenas o JSON com os metadados e `objectKey`.
-8. Depois do commit confirmado, o estado local troca o conteúdo incorporado pela referência privada.
+1. A imagem ou documento selecionado é validado antes de entrar no cadastro.
+2. Imagens compatíveis são redimensionadas e recomprimidas no navegador; PDFs e documentos são preservados.
+3. O arquivo permanece como Data URL enquanto a alteração estiver pendente.
+4. A revisão da publicação resume os nomes dos anexos sem expor o conteúdo Base64.
+5. Ao publicar, `preparePortalMediaForPublication()` cria os ativos e uma cópia do estado com referências externas.
+6. O GitHub recebe anexos, imagens e JSON em um único commit.
+7. Somente após o commit ser confirmado o estado local troca o Base64 pelo caminho público.
 
-Se o commit no GitHub falhar, o Portal solicita a remoção dos objetos enviados naquela tentativa para evitar arquivos órfãos.
-
-## Visualização e download
-
-1. Administrador ou Diretoria seleciona **Visualizar** ou **Baixar**.
-2. O Portal pede autorização ao Worker usando a sessão mantida somente em memória.
-3. O Worker verifica o perfil e assina um ticket de curta duração.
-4. O navegador abre uma rota temporária do Worker.
-5. O Worker lê o objeto privado do R2 e transmite o arquivo com `Cache-Control: private, no-store`.
-
-Visitantes não recebem sessão e não conseguem solicitar tickets.
+Se a publicação falhar, o estado local mantém os arquivos incorporados e o usuário pode tentar novamente sem selecioná-los outra vez.
 
 ## Limites operacionais
 
@@ -76,23 +51,29 @@ Visitantes não recebem sessão e não conseguem solicitar tickets.
 - até 5 MB no arquivo originalmente selecionado;
 - até 1,25 MB por anexo depois do processamento;
 - até 3,2 MB armazenados por movimentação;
-- imagens limitadas a 1.800 px no maior lado e alvo aproximado de 900 KB;
-- exclusão em lotes limitados pelo Worker.
+- imagens limitadas a 1.800 px no maior lado e alvo aproximado de 900 KB.
 
-As verificações existem tanto no navegador quanto no Worker. As validações do navegador melhoram o feedback; as do Worker aplicam a regra de segurança.
+Esses limites protegem o armazenamento local utilizado antes da publicação. Caso o navegador não consiga persistir o estado, a movimentação é revertida e o usuário recebe uma mensagem clara.
 
-## Migração dos anexos públicos antigos
+## Publicação atômica
 
-Ao ativar o Worker em **Configurações → Armazenamento privado de anexos**, a primeira publicação:
+`assets/js/github.js` usa a API Git do GitHub:
 
-1. identifica referências em `public/treasury/`;
-2. busca cada arquivo antigo;
-3. envia o conteúdo ao R2;
-4. publica os novos metadados;
-5. inclui a exclusão dos arquivos públicos antigos na árvore do mesmo commit.
+1. verifica se `data/dados.json` ainda possui o SHA esperado;
+2. lê o commit e a árvore atuais da branch;
+3. cria blobs para anexos, imagens e JSON;
+4. cria uma nova árvore baseada na árvore atual;
+5. cria um único commit;
+6. atualiza a referência da branch sem `force`.
 
-Até essa primeira publicação ser concluída, os anexos antigos continuam públicos. A separação de segurança só está completa depois da migração e da confirmação de que `public/treasury/` não contém mais documentos financeiros.
+Assim, o JSON nunca é publicado apontando para um arquivo ausente.
 
-## Mídias que permanecem públicas
+## Migração dos arquivos oficiais
 
-Fotos de associados e imagens institucionais continuam em `public/members/` e `public/branding/`, pois fazem parte da apresentação pública atual. Caso futuramente precisem de privacidade, devem receber um fluxo de autorização próprio em vez de reutilizar URLs públicas.
+Execute:
+
+```bash
+npm run migrate:media
+```
+
+O comando é idempotente: extrai Data URLs presentes em `data/dados.json` e `data/modelo.json`, grava os arquivos correspondentes e atualiza o envelope para o esquema atual.
