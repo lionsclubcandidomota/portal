@@ -1,117 +1,118 @@
-# Release 6.47.0
+# Release 6.47.2
 
 Data: 07/08/2026
 
-## Escopo
+## Objetivo
 
-- Portal 6.47.0: todos os dados estruturados são lidos e gravados pelo Cloudflare D1.
-- Worker 1.13.0: API pública D1, publicação transacional, migração automática do conteúdo anterior e mídias públicas no R2.
-- D1 esquema 9: tabelas públicas, histórico de publicações e revisão do módulo público.
-- R2: mídias públicas, anexos privados e backups.
-- Hospedagem estática: somente a interface.
+Esta revisão usa o backup público de 04/08/2026 para restaurar os aniversariantes que desapareceram após a migração da versão 6.47.0, sem substituir os dados atuais da Tesouraria.
 
-## Ordem obrigatória de implantação
+## Componentes
 
-### 1. Manter a versão 6.46.0 publicada
+- Portal 6.47.2
+- Cloudflare Worker 1.13.2
+- D1 esquema operacional 9
+- Migração corretiva de dados `0011_recover_public_members_20260804.sql`
+- R2 mantido para fotos, anexos e backups
 
-Não remova ainda `data/dados.json`, o logo ou as fotos antigas. Eles serão a fonte da importação inicial.
+## Conteúdo recuperado
 
-### 2. Preparar o Worker 1.13.0
+A migração contém 32 cadastros do backup:
 
-Copie o `wrangler.toml` da versão anterior e mantenha os bindings `PORTAL_DB` e `ATTACHMENTS`.
+- 29 associados com status Ativo;
+- 3 participantes com status Mútua.
 
-Adicione temporariamente:
+Somente os campos públicos do cadastro foram incluídos: identificador, número de associado, nome, data de nascimento, foto, status e situação ativa.
 
-```toml
-PUBLIC_DATA_URL = "https://lionsclubcandidomota.github.io/portal/data/dados.json"
-```
+## Segurança da correção
 
-### 3. Publicar o Worker
+A migração usa `UPSERT` e não executa exclusão do diretório. Quando um cadastro já existe no D1:
+
+1. os dados atuais permanecem prioritários;
+2. data de nascimento e foto são preenchidas apenas quando estiverem ausentes;
+3. informações adicionais atuais são preservadas;
+4. registros novos são adicionados sem apagar os atuais.
+
+A migração não altera as tabelas de movimentações, contas, categorias, grupos familiares, grupos de Mútua, mensalidades, anexos ou backups.
+
+O Worker também bloqueia uma publicação pública vazia quando o D1 já possui associados, evitando que uma resposta ou cache incompleto apague novamente o diretório.
+
+## Ordem de implantação
+
+### 1. Preparar o Worker
+
+Extraia `cloudflare-worker-v1.13.2.zip`, copie para a pasta o `wrangler.toml` já configurado e execute:
 
 ```bash
 npm ci
-npx wrangler deploy --config wrangler.toml
+npx wrangler d1 migrations list lions-portal-dados --remote
 ```
 
-### 4. Aplicar a migração
+A lista deve mostrar `0011_recover_public_members_20260804.sql` como pendente.
+
+### 2. Aplicar a recuperação no D1
 
 ```bash
-npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
+npx wrangler d1 migrations apply lions-portal-dados --remote
 ```
 
-Confirme `0010_public_portal_d1.sql`.
+Confirme a aplicação quando o Wrangler solicitar.
 
-### 5. Importar o conteúdo público
+### 3. Conferir o banco
 
-Faça logout e login novamente como Administrador. O Worker detecta o D1 público vazio e importa automaticamente o JSON e as mídias da versão 6.46.0.
-
-Como alternativa administrativa, a rota autenticada abaixo executa a mesma importação:
-
-```text
-POST /api/storage/migrate-public-d1
+```bash
+npx wrangler d1 execute lions-portal-dados --remote --command="SELECT COUNT(*) AS total, SUM(CASE WHEN mutual = 1 THEN 1 ELSE 0 END) AS mutuas FROM portal_members;"
 ```
 
-### 6. Conferir o `/health`
+Resultado mínimo esperado para o conjunto do backup:
 
-```json
-{
-  "workerVersion": "1.13.0",
-  "d1": {
-    "active": true,
-    "schemaVersion": 9,
-    "requiredSchemaVersion": 9
-  },
-  "automaticSync": {
-    "available": true,
-    "intervalSeconds": 60,
-    "lightweightRevisionCheck": true
-  },
-  "publicData": {
-    "source": "d1",
-    "active": true,
-    "media": "cloudflare-r2"
-  },
-  "structuredDataSource": "cloudflare-d1",
-  "snapshotPolicy": "recovery-only"
-}
+- `total = 32`;
+- `mutuas = 3`.
+
+Caso o D1 já possuísse outros cadastros válidos, o total poderá ser maior que 32.
+
+Confira que a Tesouraria permanece intacta:
+
+```bash
+npx wrangler d1 execute lions-portal-dados --remote --command="SELECT COUNT(*) AS movimentos FROM treasury_movements;"
 ```
 
-Contagens esperadas do conjunto atual:
+Compare o total com o valor anterior à atualização.
 
-```text
-32 associados
-12 eventos
-3 reuniões
-2 avisos
+Confira a revisão pública:
+
+```bash
+npx wrangler d1 execute lions-portal-dados --remote --command="SELECT key, value FROM portal_meta WHERE key IN ('schema_version','public_revision','public_updated_at','public_migration_complete');"
 ```
 
-### 7. Publicar o Portal 6.47.0
+Resultados esperados:
 
-Somente depois da conferência, publique `portal-site-v6.47.0.zip`. Esse pacote não contém o JSON operacional nem as fotos dinâmicas antigas.
+- `schema_version = 9`;
+- `public_revision = recovery-members-20260804-v1`;
+- `public_updated_at` preenchida;
+- `public_migration_complete = 1`.
 
-### 8. Encerrar a transição
+### 4. Publicar o Worker
 
-Depois da homologação:
+```bash
+npx wrangler deploy
+```
 
-- remova `PUBLIC_DATA_URL` do Worker;
-- remova `GITHUB_TOKEN`, caso ainda esteja cadastrado;
-- mantenha os pacotes 6.46.0 e 1.12.0 durante a janela de rollback.
+O `/health` deverá informar Worker `1.13.2` e esquema D1 `9`.
 
-## Testes essenciais
+### 5. Publicar o Portal
 
-1. Abrir o Portal como visitante e validar associados, agenda, reuniões e avisos.
-2. Abrir algumas fotos de associados.
-3. Entrar como Administrador e alterar um aviso.
-4. Publicar e conferir a nova revisão no D1.
-5. Abrir uma segunda sessão e validar atualização sem F5 em até 60 segundos.
-6. Testar Movimentações, Mensalidades, Mútuas, relatórios e anexos.
-7. Criar um backup manual e executar o diagnóstico de integridade.
-8. Confirmar que o site publicado não contém `data/dados.json`, `public/members` ou `public/treasury`.
+Substitua os arquivos estáticos do GitHub Pages pelo conteúdo de `portal-site-v6.47.2.zip` e pressione `Ctrl + F5`.
 
-## Segurança
+## Homologação essencial
 
-- O navegador não acessa diretamente D1 ou R2.
-- O payload público bloqueia coleções privadas e credenciais.
-- Mídias novas são removidas do R2 quando a transação pública falha.
-- Revalidações públicas usam ETag e resposta 304.
-- `GITHUB_TOKEN` não é necessário.
+1. Verificar os aniversariantes no dashboard.
+2. Abrir a página Aniversariantes e conferir 29 ativos e 3 mutuários do backup, além de eventuais cadastros mais recentes.
+3. Confirmar que fotos ausentes usam avatar neutro.
+4. Abrir Movimentações e conferir valores, filtros e totais anteriores.
+5. Conferir Mensalidades e Mútuas.
+6. Publicar uma alteração pública e verificar que o diretório não desaparece.
+7. Validar sincronização automática em até 60 segundos e atualização ao retornar para a aba.
+
+## Rollback
+
+A migração é aditiva e preserva registros atuais. O esquema permanece na versão 9. Em caso de problema no código, o Worker 1.13.1 pode ser republicado sem desfazer a migração 0011. Não apague backups do R2 durante a homologação.

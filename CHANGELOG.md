@@ -1,5 +1,28 @@
 # Changelog
 
+## 6.47.2 — Recuperação controlada dos aniversariantes
+
+- Adiciona a migração corretiva `0011_recover_public_members_20260804.sql` com 32 cadastros do backup de 04/08/2026.
+- Restaura os associados por `UPSERT`, sem apagar o diretório atual e sem tocar nas tabelas da Tesouraria.
+- Preserva dados mais recentes existentes no D1 e preenche data de nascimento e foto somente quando ausentes.
+- Importa somente campos públicos e exclui observações financeiras ou administrativas do backup.
+- Corrige a projeção relacional para reconhecer status `Mútua` como `mutual = 1`.
+- Bloqueia publicações públicas vazias quando o D1 já possui associados, evitando nova perda do diretório.
+- Mantém o esquema D1 na versão 9 e atualiza a revisão pública após a recuperação.
+- Atualiza o Worker para 1.13.2 e amplia a suíte para 299 testes.
+
+## 6.47.1 — Recuperação segura do conteúdo público
+
+- Corrige a importação inicial para que fotos antigas ausentes não interrompam a migração dos associados para o D1.
+- Recupera aniversariantes diretamente do diretório relacional `portal_members` quando o antigo `data/dados.json` já não estiver acessível.
+- Usa como fontes auxiliares o snapshot e os campos extras do D1 para recuperar agenda, reuniões e avisos quando disponíveis.
+- Impede que a resposta transitória `migrationPending` substitua o cache local por coleções públicas vazias.
+- Mantém avatares neutros para referências de fotos que ainda não existem no R2, sem gerar dezenas de erros 404.
+- Repara automaticamente um módulo público vazio durante o login administrativo.
+- Completa a sincronização automática com backoff progressivo de 60 s, 120 s, 5 min e 10 min após falhas.
+- Mantém a pausa em abas ocultas e executa verificação imediata ao retornar à aba ou focar a janela.
+- Atualiza o Worker para 1.13.1 e amplia a suíte para 296 testes.
+
 ## 6.47.0 — Portal integral no Cloudflare D1
 
 - Cria a migração `0010_public_portal_d1.sql` e eleva o esquema D1 para a versão 9.

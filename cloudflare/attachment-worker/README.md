@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.13.0
+# Cloudflare Worker do Portal Lions — v1.13.2
 
 O Worker é a API do Portal. Todo dado estruturado, público ou privado, utiliza o Cloudflare D1 como fonte principal. O Cloudflare R2 guarda somente arquivos binários e cópias de recuperação.
 
@@ -40,9 +40,10 @@ npx wrangler secret put ADMIN_BOOTSTRAP_KEY
 npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
 ```
 
-A migração mais recente é:
+As migrações mais recentes são:
 
-- `0010_public_portal_d1.sql`: conteúdo público relacional, histórico de publicações, mídias no R2 e esquema D1 9.
+- `0010_public_portal_d1.sql`: conteúdo público relacional, histórico de publicações, mídias no R2 e esquema D1 9;
+- `0011_recover_public_members_20260804.sql`: recuperação aditiva dos 32 cadastros públicos do backup de 04/08/2026, sem alteração do esquema.
 
 As migrações anteriores, `0001` a `0009`, preservam autenticação, dados privados, gravações granulares, consultas operacionais e revisões por módulo.
 
@@ -64,6 +65,15 @@ POST /api/storage/migrate-public-d1
 ```
 
 A importação é idempotente: depois da primeira revisão pública, novas execuções não duplicam registros.
+
+
+## Recuperação da implantação 6.47.0
+
+A versão 1.13.2 inclui a migração corretiva `0011`, produzida a partir do backup público de 04/08/2026. Ela restaura 32 cadastros por `UPSERT`, preserva registros atuais e não altera Tesouraria, grupos, mensalidades, anexos ou backups.
+
+A versão também mantém a tolerância a fotos antigas ausentes, identifica corretamente registros com status Mútua e bloqueia uma publicação vazia quando o D1 já contém associados.
+
+A migração `0011` é somente de dados; o esquema permanece na versão 9.
 
 ## Rotas públicas
 
@@ -107,7 +117,7 @@ O `/health` deve informar:
 
 ```json
 {
-  "workerVersion": "1.13.0",
+  "workerVersion": "1.13.2",
   "structuredDataSource": "cloudflare-d1",
   "d1": { "schemaVersion": 9, "requiredSchemaVersion": 9 },
   "publicData": { "source": "d1", "active": true, "media": "cloudflare-r2" }

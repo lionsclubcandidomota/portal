@@ -16,7 +16,7 @@ import {
   readD1ModuleRevisions,
   readD1ReferenceModule
 } from '../cloudflare/attachment-worker/src/d1-sync.js';
-import { createLiveSyncActions } from '../assets/js/modules/portal-runtime/live-sync.js?v=6.47.0';
+import { createLiveSyncActions } from '../assets/js/modules/portal-runtime/live-sync.js?v=6.47.2';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -188,4 +188,53 @@ test('sincronização do Portal aplica apenas módulos alterados sem recarregar 
   assert.equal(state.familyGroups[0].name, 'Família nova');
   assert.deepEqual(invalidated.sort(), ['groups', 'memberships', 'mutuals', 'reference', 'treasury'].sort());
   assert.equal(renders, 1);
+});
+
+test('sincronização automática aplica backoff progressivo após falhas e volta a 60 segundos após sucesso', async () => {
+  let shouldFail = true;
+  const state = { settings: {}, treasuryAccounts: [], treasuryCategories: [], familyGroups: [], mutualGroups: [], treasury: [] };
+  const context = {
+    model: { accessRole: 'admin', pendingChanges: 0, privateSavePending: 0, lastSyncedState: structuredClone(state) },
+    dependencies: {
+      isModalOpen: () => false,
+      invalidateOperationalReads: () => {},
+      applySettings: () => {},
+      renderCurrentView: () => {},
+      setDatabaseSyncStatus: () => {},
+      getCurrentView: () => 'dashboard'
+    },
+    services: {
+      hasActiveSecureStorageSession: () => true,
+      loadD1ModuleRevisions: async () => {
+        if (shouldFail) throw new Error('falha simulada');
+        return { revision: 'ok', modules: { reference: { revision: 1 } } };
+      },
+      saveState: () => {}
+    },
+    environment: {
+      window: { setTimeout() { return 1; }, clearTimeout() {}, clearInterval() {}, addEventListener() {}, removeEventListener() {} },
+      document: { hidden: false, addEventListener() {}, removeEventListener() {} }
+    },
+    currentState: () => state,
+    replaceCurrentState: value => value,
+    storeSyncedState: () => {},
+    storeSyncMeta: () => {}
+  };
+
+  const live = createLiveSyncActions(context);
+  await live.check({ reason: 'failure-1' });
+  assert.equal(live.failureCount(), 1);
+  assert.equal(live.currentDelay(), 60_000);
+  await live.check({ reason: 'failure-2' });
+  assert.equal(live.currentDelay(), 120_000);
+  await live.check({ reason: 'failure-3' });
+  assert.equal(live.currentDelay(), 300_000);
+  await live.check({ reason: 'failure-4' });
+  assert.equal(live.currentDelay(), 600_000);
+
+  shouldFail = false;
+  const recovered = await live.check({ initialize: true, reason: 'recovered' });
+  assert.equal(recovered.ok, true);
+  assert.equal(live.failureCount(), 0);
+  assert.equal(live.currentDelay(), 60_000);
 });

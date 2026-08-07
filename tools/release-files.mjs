@@ -37,6 +37,7 @@ export const SITE_FILES = Object.freeze([
 
 export const WORKER_ROOT = 'cloudflare/attachment-worker';
 export const WORKER_FILES = Object.freeze([
+  'ATUALIZACAO-D1.md',
   'README.md',
   'package-lock.json',
   'package.json',

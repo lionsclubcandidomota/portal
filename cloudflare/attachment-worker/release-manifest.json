@@ -1,20 +1,22 @@
 {
   "application": "lions-portal-attachment-worker",
   "artifactType": "cloudflare-worker",
-  "version": "1.13.0",
+  "version": "1.13.2",
   "schemaVersion": 9,
-  "generatedAt": "2026-08-07T23:58:00.000Z",
+  "generatedAt": "2026-08-07T17:45:00.000Z",
   "summary": {
-    "files": 23,
+    "files": 25,
     "javascript": 8,
-    "migrations": 10,
-    "totalBytes": 300506
+    "css": 0,
+    "tests": 0,
+    "memberImages": 0,
+    "totalBytes": 325727
   },
   "files": [
     {
-      "path": "README.md",
-      "bytes": 3713,
-      "sha256": "76a7c9ff2d238c0de9150782ad50c5a74fdfdf101df2fc2efcdcc9dabf3fa5cc"
+      "path": "ATUALIZACAO-D1.md",
+      "bytes": 1772,
+      "sha256": "b2ec7c2f5c4e872c9904421f3578b23e70f085d777456386f86245dddeaed948"
     },
     {
       "path": "migrations/0001_portal_private_state.sql",
@@ -67,14 +69,24 @@
       "sha256": "1e6a6d7d114c1213d816b3de14400fa0d340b0f3bb93164b1ef5a541d249a670"
     },
     {
+      "path": "migrations/0011_recover_public_members_20260804.sql",
+      "bytes": 12736,
+      "sha256": "ae8e97358051ccd1221ec3f5ba803c2cdccc97564d4b7f997e3596c9e8944ede"
+    },
+    {
       "path": "package-lock.json",
       "bytes": 49385,
-      "sha256": "494f85723e65a7f4ed41ec58eaa597d9a0ef8398348790d2a1355d53681476cd"
+      "sha256": "d6f154fbc013f07ae7d1b29bbd0048ff81027ed9e4cd7bc1ed59de1d4f3697c3"
     },
     {
       "path": "package.json",
       "bytes": 742,
-      "sha256": "cf46173060ac4ca2a9021af0837c136190186e50034f4342137c700ffed0cf3a"
+      "sha256": "3d02332d3168028f675f7c60af524dbf044ff020b4b516834f55abe26ad5ca08"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4416,
+      "sha256": "c2339965a8a236b2f5ebb81c19d9166868d270483e5c44d26b07353e01464b87"
     },
     {
       "path": "src/auth.js",
@@ -98,8 +110,8 @@
     },
     {
       "path": "src/d1-public.js",
-      "bytes": 27428,
-      "sha256": "2f1995a87cc72c80382b4253e302d823e7c5aa41d5454afc467a1e60860e7cd9"
+      "bytes": 35762,
+      "sha256": "133e9f5072eeb2b7884b5164eef075916bfa2b319f601857b2c8200a5c77910d"
     },
     {
       "path": "src/d1-storage.js",
@@ -113,8 +125,8 @@
     },
     {
       "path": "src/index.js",
-      "bytes": 78219,
-      "sha256": "9e0ab43f6d24e0f4ca593c975ec072ef835e0882c340bc1fa0c8220aed787bfd"
+      "bytes": 79895,
+      "sha256": "27777129ac0849f6590e3b6eb90bbedb0237f03db6c1287a6b346d642ee304e1"
     },
     {
       "path": "wrangler.ci.toml",

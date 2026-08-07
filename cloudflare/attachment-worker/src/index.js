@@ -48,7 +48,7 @@ import {
   writeD1PublicState
 } from './d1-public.js';
 
-const WORKER_VERSION = '1.13.0';
+const WORKER_VERSION = '1.13.2';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -733,10 +733,14 @@ async function handleSession(request, env) {
       const session = await authenticateAdministrator(request, env, body);
       try {
         const publicStatus = await getD1PublicStatus(env);
-        if (publicStatus.initialized && !publicStatus.active && env.PUBLIC_DATA_URL) {
+        if (
+          publicStatus.initialized
+          && (!publicStatus.active || Number(publicStatus.counts?.members || 0) === 0)
+          && (env.PUBLIC_DATA_URL || publicStatus.counts?.members !== undefined)
+        ) {
           session.publicMigration = await migrateLegacyPublicStateToD1(env, {
             sub: session.user?.username || 'administrador'
-          });
+          }, { repairEmpty: true });
         }
       } catch (error) {
         session.publicMigration = {
@@ -1565,11 +1569,53 @@ export default {
       }
 
       if (url.pathname === '/api/public/state' && request.method === 'GET') {
-        const record = await readD1PublicState(env, request.url, {
+        let record = await readD1PublicState(env, request.url, {
           ifNoneMatch: request.headers.get('If-None-Match') || ''
         });
+
+        // Durante a primeira implantação, tente importar automaticamente a fonte
+        // pública legada configurada. Isso evita que o Portal fique bloqueado em
+        // 503 antes mesmo de o Administrador conseguir entrar.
         if (!record.found) {
-          return json({ error: 'O conteúdo público ainda não foi migrado para o D1.' }, 503, cors);
+          try {
+            await migrateLegacyPublicStateToD1(env, { sub: 'public-bootstrap' }, { repairEmpty: true });
+            record = await readD1PublicState(env, request.url, {
+              ifNoneMatch: request.headers.get('If-None-Match') || ''
+            });
+          } catch (error) {
+            console.warn('Migração pública automática pendente:', error instanceof Error ? error.message : String(error));
+          }
+        }
+
+        if (!record.found) {
+          const workerUrl = new URL(request.url).origin;
+          return json({
+            schemaVersion: 11,
+            revision: '',
+            updatedAt: '',
+            migrationPending: true,
+            migrationMessage: 'O banco D1 está disponível, mas o conteúdo público inicial ainda precisa ser importado.',
+            settings: {
+              secureStorage: {
+                version: 1,
+                enabled: true,
+                workerUrl
+              }
+            },
+            birthdays: [],
+            events: [],
+            meetings: [],
+            notices: [],
+            treasury: [],
+            treasuryAccounts: [],
+            treasuryCategories: [],
+            familyGroups: [],
+            mutualGroups: []
+          }, 200, {
+            ...cors,
+            'Cache-Control': 'no-store',
+            'X-Public-Data-Status': 'migration-pending'
+          });
         }
         if (record.notModified) {
           return new Response(null, {

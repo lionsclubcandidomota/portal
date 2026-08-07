@@ -8,7 +8,7 @@ import { queryD1DashboardAnalytics, queryD1ReportState } from '../cloudflare/att
 import { D1_SCHEMA_VERSION, getD1StorageStatus, writeD1PrivateState } from '../cloudflare/attachment-worker/src/d1-storage.js';
 import { applyD1TreasuryAnalytics, createAdminDashboardModel } from '../assets/js/modules/admin-dashboard/domain.js';
 import { loadD1DashboardAnalytics, loadD1ReportState } from '../assets/js/modules/secure-storage/analytics-client.js';
-import { clearSecureStorageSession, setActiveSecureStorageSession } from '../assets/js/modules/secure-storage/session-store.js?v=6.47.0';
+import { clearSecureStorageSession, setActiveSecureStorageSession } from '../assets/js/modules/secure-storage/session-store.js?v=6.47.2';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 

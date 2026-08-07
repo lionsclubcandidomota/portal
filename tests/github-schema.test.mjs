@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CURRENT_SCHEMA_VERSION } from '../assets/js/core/portal-schema.js';
 import { PUBLIC_DATA_CONFIG, loadPublicD1Payload } from '../assets/js/public-data.js';
+import { mergePortalStates } from '../assets/js/modules/portal-runtime/domain.js?v=6.47.2';
 import {
   getD1PublicStatus,
   migrateLegacyPublicStateToD1,
@@ -77,6 +78,9 @@ async function createFixture() {
   const migrationDirectory = path.join(projectRoot, 'cloudflare/attachment-worker/migrations');
   const migrations = (await readdir(migrationDirectory))
     .filter(name => /^\d{4}_.+\.sql$/.test(name))
+    // Esta suíte valida a migração inicial a partir de um banco estruturalmente
+    // atualizado, porém ainda sem a recuperação corretiva de dados da 0011.
+    .filter(name => name !== '0011_recover_public_members_20260804.sql')
     .sort();
   for (const migration of migrations) {
     database.exec(await readFile(path.join(migrationDirectory, migration), 'utf8'));
@@ -178,6 +182,31 @@ test('cliente público reaproveita o payload quando o D1 responde 304 por ETag',
   assert.equal(requests[1].cache, 'no-cache');
 });
 
+test('estado de migração pendente preserva aniversariantes já disponíveis no cache local', async t => {
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async () => jsonResponse({
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    migrationPending: true,
+    migrationMessage: 'Recuperação em andamento',
+    settings: { secureStorage: { enabled: true, workerUrl: 'https://worker.example' } },
+    birthdays: [], events: [], meetings: [], notices: []
+  });
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  const payload = await loadPublicD1Payload('https://worker.example/api/public/state?pending-test=1');
+  const cached = {
+    settings: { clubName: 'Lions' },
+    birthdays: [{ id: 'member-cache', name: 'Associada em cache', birthDate: '1980-08-10' }],
+    events: [{ id: 'event-cache' }], meetings: [], notices: []
+  };
+  const merged = mergePortalStates(cached, payload.state);
+
+  assert.equal(payload.migrationPending, true);
+  assert.equal(merged.birthdays.length, 1);
+  assert.equal(merged.events.length, 1);
+  assert.equal(merged.settings.secureStorage.enabled, true);
+});
+
 test('D1 armazena todo conteúdo estruturado público e o R2 armazena somente as mídias', async () => {
   const { database, env } = await createFixture();
   const storage = await getD1StorageStatus(env);
@@ -274,16 +303,16 @@ test('migração inicial importa JSON legado e mídias públicas para D1/R2 uma 
     if (target === 'https://portal.example/public/logo.png') {
       return new Response(Buffer.from('legacy-logo'), { status: 200, headers: { 'Content-Type': 'image/png' } });
     }
-    if (target === 'https://portal.example/public/members/member-1.jpg') {
-      return new Response(Buffer.from('legacy-photo'), { status: 200, headers: { 'Content-Type': 'image/jpeg' } });
-    }
+    if (target === 'https://portal.example/public/members/member-1.jpg') return new Response('removida', { status: 404 });
     throw new Error(`URL inesperada na migração: ${target}`);
   };
   t.after(() => { globalThis.fetch = previousFetch; });
 
   const migrated = await migrateLegacyPublicStateToD1(env, { sub: 'admin' });
   assert.equal(migrated.source, 'd1');
-  assert.equal(env.ATTACHMENTS.objects.size, 2);
+  assert.equal(migrated.missingMediaCount, 1);
+  assert.equal(env.ATTACHMENTS.objects.size, 1);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM portal_members').get().total, 1);
   const repeated = await migrateLegacyPublicStateToD1(env, { sub: 'admin' });
   assert.equal(repeated.alreadyMigrated, true);
 
@@ -291,5 +320,31 @@ test('migração inicial importa JSON legado e mídias públicas para D1/R2 uma 
   assert.equal(status.available, true);
   assert.equal(status.databaseReady, true);
   assert.equal(status.source, 'd1');
+  database.close();
+});
+
+test('migração recupera associados do diretório relacional quando o JSON legado não está mais disponível', async t => {
+  const { database, env } = await createFixture();
+  const member = publicState().birthdays[0];
+  database.prepare(`INSERT INTO portal_members
+    (id, sort_order, name, member_number, status, active, mutual, payload, updated_at)
+    VALUES (?, 0, ?, ?, ?, 1, 0, ?, ?)`)
+    .run(member.id, member.name, member.memberNumber, member.status, JSON.stringify(member), '2026-08-07T12:00:00.000Z');
+
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async url => {
+    if (String(url).startsWith(env.PUBLIC_DATA_URL)) return new Response('não encontrado', { status: 404 });
+    throw new Error(`URL inesperada: ${url}`);
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  const migrated = await migrateLegacyPublicStateToD1(env, { sub: 'public-bootstrap' }, { repairEmpty: true });
+  const record = await readD1PublicState(env, 'https://worker.example/api/public/state');
+
+  assert.equal(migrated.recoveredFromD1, true);
+  assert.match(migrated.legacyWarning, /404/);
+  assert.equal(record.found, true);
+  assert.equal(record.envelope.data.birthdays.length, 1);
+  assert.equal(record.envelope.data.birthdays[0].name, 'Associada Teste');
   database.close();
 });

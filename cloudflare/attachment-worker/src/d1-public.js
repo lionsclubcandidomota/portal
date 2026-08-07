@@ -178,18 +178,27 @@ function payloadRow(item, index, dateKey, titleKey) {
   };
 }
 
+function normalizedStatusKey(value) {
+  return text(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+}
+
 function memberRow(member, index) {
   const source = objectValue(member);
   const id = text(source.id || `member-${index}`).trim();
   if (!/^[a-z0-9_-]{1,120}$/i.test(id)) throw new Error('Um associado possui identificador público inválido.');
+  const status = text(source.status || 'Ativo').slice(0, 80);
   return {
     id,
     sortOrder: index,
     name: text(source.name).slice(0, 200),
     memberNumber: text(source.memberNumber).slice(0, 80),
-    status: text(source.status || 'Ativo').slice(0, 80),
+    status,
     active: source.active === false ? 0 : 1,
-    mutual: source.mutual === true ? 1 : 0,
+    mutual: source.mutual === true || ['mutua', 'mutual'].includes(normalizedStatusKey(status)) ? 1 : 0,
     payload: JSON.stringify(source)
   };
 }
@@ -255,6 +264,127 @@ function parsePayload(value, label) {
   } catch {
     throw new Error(`O registro público de ${label} contém JSON inválido no D1.`);
   }
+}
+
+function stripPrivateSettings(settings = {}) {
+  const clean = cloneValue(objectValue(settings));
+  delete clean.membershipMonthlyFee;
+  delete clean.membershipFamilyPrimaryFee;
+  delete clean.membershipFamilyAdditionalFee;
+
+  const director = objectValue(clean.accessProfiles?.director);
+  const publicDirector = director.enabled === false || !Object.keys(director).length
+    ? null
+    : {
+        version: Number(director.version || 2),
+        credentialType: text(director.credentialType || 'password'),
+        enabled: true,
+        label: text(director.label || 'Diretoria'),
+        configuredAt: text(director.configuredAt || '')
+      };
+  clean.accessProfiles = publicDirector ? { director: publicDirector } : {};
+  return clean;
+}
+
+function recoveryCandidate(value = {}) {
+  const source = objectValue(legacyStateFromPayload(value));
+  return {
+    settings: stripPrivateSettings(source.settings),
+    birthdays: arrayValue(source.birthdays),
+    events: arrayValue(source.events),
+    meetings: arrayValue(source.meetings),
+    notices: arrayValue(source.notices),
+    treasuryAccounts: [],
+    treasuryCategories: [],
+    familyGroups: [],
+    mutualGroups: [],
+    treasury: []
+  };
+}
+
+function candidateHasContent(candidate = {}) {
+  return Object.keys(objectValue(candidate.settings)).length > 0
+    || ['birthdays', 'events', 'meetings', 'notices']
+      .some(key => arrayValue(candidate[key]).length > 0);
+}
+
+function preferCollection(primary, fallback) {
+  return arrayValue(primary).length ? arrayValue(primary) : arrayValue(fallback);
+}
+
+function combineRecoveryCandidates(databaseCandidate = {}, legacyCandidate = {}) {
+  const database = recoveryCandidate(databaseCandidate);
+  const legacy = recoveryCandidate(legacyCandidate);
+  return recoveryCandidate({
+    settings: { ...database.settings, ...legacy.settings },
+    // O diretório relacional do D1 pode estar mais recente que o JSON legado.
+    birthdays: preferCollection(database.birthdays, legacy.birthdays),
+    // Agenda e avisos eram exclusivamente públicos na versão anterior.
+    events: preferCollection(legacy.events, database.events),
+    meetings: preferCollection(legacy.meetings, database.meetings),
+    notices: preferCollection(legacy.notices, database.notices)
+  });
+}
+
+async function optionalFirst(db, sql) {
+  try { return await db.prepare(sql).first(); }
+  catch { return null; }
+}
+
+async function optionalRows(db, sql) {
+  try { return (await db.prepare(sql).all()).results || []; }
+  catch { return []; }
+}
+
+async function readD1PublicRecoveryCandidate(env) {
+  if (!env?.PORTAL_DB?.prepare) return recoveryCandidate();
+  const db = env.PORTAL_DB;
+  const [publicSettings, privateSettings, members, events, meetings, notices, snapshot, extras] = await Promise.all([
+    optionalFirst(db, 'SELECT payload FROM portal_public_settings WHERE id = 1'),
+    optionalFirst(db, 'SELECT payload FROM portal_settings WHERE id = 1'),
+    optionalRows(db, 'SELECT payload FROM portal_members ORDER BY sort_order, name, id'),
+    optionalRows(db, 'SELECT payload FROM portal_public_events ORDER BY sort_order, event_date, id'),
+    optionalRows(db, 'SELECT payload FROM portal_public_meetings ORDER BY sort_order, meeting_date, id'),
+    optionalRows(db, 'SELECT payload FROM portal_public_notices ORDER BY sort_order, start_date, id'),
+    optionalFirst(db, 'SELECT payload FROM portal_state_snapshot WHERE id = 1'),
+    optionalRows(db, "SELECT key, payload FROM portal_extras WHERE key IN ('birthdays','events','meetings','notices')")
+  ]);
+
+  let snapshotState = {};
+  if (snapshot?.payload) {
+    try { snapshotState = JSON.parse(text(snapshot.payload)); }
+    catch { snapshotState = {}; }
+  }
+  const extrasState = {};
+  for (const row of extras) {
+    try { extrasState[text(row.key)] = JSON.parse(text(row.payload)); }
+    catch { /* Registro de recuperação inválido é ignorado. */ }
+  }
+
+  const relational = recoveryCandidate({
+    settings: publicSettings?.payload
+      ? parsePayload(publicSettings.payload, 'configurações públicas')
+      : privateSettings?.payload
+        ? parsePayload(privateSettings.payload, 'configurações de recuperação')
+        : {},
+    birthdays: members.map(row => parsePayload(row.payload, 'associado de recuperação')),
+    events: events.map(row => parsePayload(row.payload, 'evento de recuperação')),
+    meetings: meetings.map(row => parsePayload(row.payload, 'reunião de recuperação')),
+    notices: notices.map(row => parsePayload(row.payload, 'aviso de recuperação'))
+  });
+  const snapshotCandidate = recoveryCandidate(snapshotState);
+  const extrasCandidate = recoveryCandidate(extrasState);
+
+  return recoveryCandidate({
+    settings: {
+      ...snapshotCandidate.settings,
+      ...relational.settings
+    },
+    birthdays: preferCollection(relational.birthdays, preferCollection(extrasCandidate.birthdays, snapshotCandidate.birthdays)),
+    events: preferCollection(relational.events, preferCollection(extrasCandidate.events, snapshotCandidate.events)),
+    meetings: preferCollection(relational.meetings, preferCollection(extrasCandidate.meetings, snapshotCandidate.meetings)),
+    notices: preferCollection(relational.notices, preferCollection(extrasCandidate.notices, snapshotCandidate.notices))
+  });
 }
 
 function publicRevisionEtag(revision) {
@@ -397,6 +527,13 @@ export async function writeD1PublicState(env, body = {}, actor = {}) {
   const schemaVersion = Math.max(1, Number(body.schemaVersion || DEFAULT_SCHEMA_VERSION));
   const message = text(body.commitMessage || 'Atualiza conteúdo público do Portal').trim().slice(0, 240);
   const members = cleanState.birthdays.map(memberRow);
+  const existingMemberCount = Number(status.counts?.members || 0);
+  if (!members.length && existingMemberCount > 0 && body.allowEmptyMemberDirectory !== true) {
+    throw new Error(
+      `Publicação bloqueada: o conteúdo recebido não possui aniversariantes, mas o D1 contém ${existingMemberCount} associado(s). `
+      + 'Atualize o Portal antes de publicar ou confirme explicitamente a remoção integral do diretório.'
+    );
+  }
   const events = cleanState.events.map((item, index) => payloadRow(item, index, 'date', 'name'));
   const meetings = cleanState.meetings.map((item, index) => payloadRow(item, index, 'date', 'theme'));
   const notices = cleanState.notices.map((item, index) => payloadRow(item, index, 'date', 'title'));
@@ -518,9 +655,18 @@ async function legacyMediaAsset(reference, baseUrl, kind, ownerId) {
   const value = text(reference).trim();
   const objectKey = referenceObjectKey(value);
   if (!objectKey) return null;
-  const url = new URL(value.replace(/^\.\//, ''), new URL('../', baseUrl));
+  const fetchReference = value.startsWith(PUBLIC_MEDIA_REFERENCE_PREFIX)
+    ? objectKey
+    : value.replace(/^\.\//, '');
+  const url = new URL(fetchReference, new URL('../', baseUrl));
   const response = await fetch(url.href, { headers: { Accept: '*/*' }, cf: { cacheTtl: 0, cacheEverything: false } });
-  if (!response.ok) throw new Error(`Não foi possível migrar a mídia pública ${objectKey} (${response.status}).`);
+  if (!response.ok) {
+    // Fotos antigas podem ter sido removidas do GitHub antes da migração. Isso
+    // não deve impedir a importação dos cadastros; o endpoint de mídia entrega
+    // um avatar neutro até que uma nova imagem seja cadastrada no R2.
+    if (response.status === 404 || response.status === 410) return null;
+    throw new Error(`Não foi possível migrar a mídia pública ${objectKey} (${response.status}).`);
+  }
   const bytes = new Uint8Array(await response.arrayBuffer());
   if (bytes.byteLength > MAX_ASSET_BYTES) throw new Error(`${objectKey} excede o limite de 8 MB.`);
   return {
@@ -534,24 +680,40 @@ async function legacyMediaAsset(reference, baseUrl, kind, ownerId) {
   };
 }
 
-export async function migrateLegacyPublicStateToD1(env, actor = {}) {
+export async function migrateLegacyPublicStateToD1(env, actor = {}, options = {}) {
   const existing = await getD1PublicStatus(env);
-  if (existing.active) {
+  const repairEmpty = options.repairEmpty === true;
+  if (existing.active && (!repairEmpty || Number(existing.counts?.members || 0) > 0)) {
     return { migrated: false, alreadyMigrated: true, revision: existing.revision, updatedAt: existing.updatedAt, counts: existing.counts || {} };
   }
+
+  const databaseCandidate = await readD1PublicRecoveryCandidate(env);
   const legacyUrl = text(env.PUBLIC_DATA_URL).trim();
-  if (!legacyUrl) throw new Error('PUBLIC_DATA_URL precisa apontar para o dados.json público atual durante a migração.');
-  const response = await fetch(`${legacyUrl}${legacyUrl.includes('?') ? '&' : '?'}migration=${Date.now()}`, {
-    headers: { Accept: 'application/json' },
-    cf: { cacheTtl: 0, cacheEverything: false }
-  });
-  if (!response.ok) throw new Error(`Não foi possível carregar os dados públicos atuais (${response.status}).`);
-  const payload = await response.json();
-  const legacyState = cloneValue(legacyStateFromPayload(payload));
-  const state = normalizedPublicState(legacyState);
+  let payload = null;
+  let legacyState = {};
+  let legacyWarning = '';
+  if (legacyUrl) {
+    try {
+      const response = await fetch(`${legacyUrl}${legacyUrl.includes('?') ? '&' : '?'}migration=${Date.now()}`, {
+        headers: { Accept: 'application/json' },
+        cf: { cacheTtl: 0, cacheEverything: false }
+      });
+      if (!response.ok) throw new Error(`Não foi possível carregar os dados públicos atuais (${response.status}).`);
+      payload = await response.json();
+      legacyState = cloneValue(legacyStateFromPayload(payload));
+    } catch (error) {
+      legacyWarning = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  const recoveredState = combineRecoveryCandidates(databaseCandidate, legacyState);
+  if (!candidateHasContent(recoveredState)) {
+    throw new Error(legacyWarning || 'Não foram encontrados dados públicos no D1 nem na fonte legada para concluir a migração.');
+  }
+  const state = normalizedPublicState(recoveredState);
   const references = [];
-  if (legacyState.settings?.logo) references.push({ reference: legacyState.settings.logo, kind: 'club-logo', ownerId: 'settings' });
-  for (const member of arrayValue(legacyState.birthdays)) {
+  if (state.settings?.logo) references.push({ reference: state.settings.logo, kind: 'club-logo', ownerId: 'settings' });
+  for (const member of arrayValue(state.birthdays)) {
     if (member?.photo) references.push({ reference: member.photo, kind: 'member-photo', ownerId: member.id || member.memberNumber || '' });
   }
   const unique = new Map();
@@ -560,9 +722,11 @@ export async function migrateLegacyPublicStateToD1(env, actor = {}) {
     if (key && !unique.has(key)) unique.set(key, item);
   }
   const assets = [];
-  for (const item of unique.values()) {
-    const asset = await legacyMediaAsset(item.reference, legacyUrl, item.kind, item.ownerId);
-    if (asset) assets.push(asset);
+  if (legacyUrl && payload) {
+    for (const item of unique.values()) {
+      const asset = await legacyMediaAsset(item.reference, legacyUrl, item.kind, item.ownerId);
+      if (asset) assets.push(asset);
+    }
   }
   const base64Assets = assets.map(asset => ({
     path: asset.path,
@@ -579,13 +743,23 @@ export async function migrateLegacyPublicStateToD1(env, actor = {}) {
     ownerId: asset.ownerId
   }));
 
-  return writeD1PublicState(env, {
+  const result = await writeD1PublicState(env, {
     state,
     schemaVersion: Number(payload?.schemaVersion || payload?.version || DEFAULT_SCHEMA_VERSION),
-    commitMessage: 'Migração inicial do conteúdo público para o D1',
+    commitMessage: existing.active
+      ? 'Recupera conteúdo público incompleto no D1'
+      : 'Migração inicial do conteúdo público para o D1',
     mediaAssets: base64Assets,
-    expectedPublicRevision: ''
+    expectedPublicRevision: existing.revision || ''
   }, actor);
+
+  return {
+    ...result,
+    recoveredFromD1: candidateHasContent(databaseCandidate),
+    legacySourceAvailable: Boolean(payload),
+    legacyWarning,
+    missingMediaCount: Math.max(0, unique.size - assets.length)
+  };
 }
 
 export async function publicPublicationStatus(env) {
@@ -610,7 +784,22 @@ export async function handlePublicMedia(request, env) {
   }
   if (!env?.ATTACHMENTS?.get) return new Response('Armazenamento de mídia indisponível.', { status: 503 });
   const object = await env.ATTACHMENTS.get(key);
-  if (!object) return new Response('Mídia pública não encontrada.', { status: 404 });
+  if (!object) {
+    // Referências antigas podem permanecer no D1 mesmo quando o arquivo original
+    // já não existe no GitHub. Retorne um avatar neutro para evitar dezenas de
+    // erros 404 e mantenha o caminho pronto para receber a imagem no R2 depois.
+    const label = key.split('/').pop()?.split(/[._-]/)[0]?.slice(0, 2)?.toUpperCase() || 'LC';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Imagem indisponível"><rect width="160" height="160" rx="80" fill="#e8f1f8"/><circle cx="80" cy="62" r="29" fill="#9bb7cc"/><path d="M29 145c5-32 25-49 51-49s46 17 51 49" fill="#9bb7cc"/><text x="80" y="153" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#31546d">${label}</text></svg>`;
+    return new Response(svg, {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=300',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Public-Media-Fallback': 'missing-r2-object'
+      }
+    });
+  }
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set('Cache-Control', 'public, max-age=31536000, immutable');
