@@ -776,7 +776,7 @@
     {
       "path": "data/dados.json",
       "bytes": 27733,
-      "sha256": "9cf20273cd042216f6d47a80b3f7241b623fae0d64b5a5e7e236ee11479b8501"
+      "sha256": "4642b7c1252588eb6ef61da6cb010bfe097bf0072455245ac3fba7c8e0e880d2"
     },
     {
       "path": "data/modelo.json",
@@ -1443,5 +1443,6 @@
       "bytes": 3219,
       "sha256": "437608963cb4b5df0afa8f7e95e6e717ebb8868c1128848494360d8d94737bd5"
     }
-  ]
+  ],
+  "runtimeUpdatedAt": "2026-08-07T01:56:17.507Z"
 }
