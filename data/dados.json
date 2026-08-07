@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-04T13:17:46.164Z",
-  "deploymentId": "1785849466164-b18da517-3480-4e32-9b51-b24571693919",
+  "updatedAt": "2026-08-07T18:17:46.385Z",
+  "deploymentId": "1786126666385-eee5146e-cf5e-46ef-965b-aad107bca4db",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 9,
   "version": 9,
@@ -2008,71 +2008,6 @@
         "membershipPlan": "family",
         "familyGroupId": "f_ms7u6fcz_4zy7h4",
         "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: julho de 2026",
-        "attachments": []
-      },
-      {
-        "id": "t_msar4vkr_z1bmmb",
-        "date": "2026-08-30",
-        "accountId": "acc-current",
-        "category": "Evento",
-        "description": "Papelaria Geli",
-        "entry": 0,
-        "exit": 100.8,
-        "notes": "Matérias para fazer as cestas dos brindes do Porco no Rolete 02/08/2026",
-        "status": "Programado",
-        "attachments": [
-          {
-            "id": "att_msemt4ho_71gqc3",
-            "name": "PIX Papelaria Geli.jpg",
-            "type": "image/jpeg",
-            "size": 83370,
-            "originalSize": 60400,
-            "optimized": true,
-            "url": "./public/treasury/t_msar4vkr_z1bmmb/att_msemt4ho_71gqc3-0aql41k.jpg"
-          },
-          {
-            "id": "att_msemt4kj_jujvnq",
-            "name": "Papelaria Geli.jpg",
-            "type": "image/jpeg",
-            "size": 163851,
-            "originalSize": 133424,
-            "optimized": true,
-            "url": "./public/treasury/t_msar4vkr_z1bmmb/att_msemt4kj_jujvnq-19q1ylc.jpg"
-          }
-        ]
-      },
-      {
-        "id": "t_msdf5it3_7qtay6",
-        "date": "2026-08-31",
-        "accountId": "acc-current",
-        "category": "Evento",
-        "description": "Adega GGL Bebidas",
-        "entry": 0,
-        "exit": 956.5,
-        "notes": "Referente ao \"socorro\" no meio do Porco no Rolete 02/08/2026",
-        "status": "Programado",
-        "attachments": [
-          {
-            "id": "att_msemrpty_kyxsr3",
-            "name": "Adega GGL Bebidas.jpg",
-            "type": "image/jpeg",
-            "size": 212868,
-            "originalSize": 177088,
-            "optimized": true,
-            "url": "./public/treasury/t_msdf5it3_7qtay6/att_msemrpty_kyxsr3-1nhgfa6.jpg"
-          }
-        ]
-      },
-      {
-        "id": "t_msdykvnc_z9tatm",
-        "date": "2026-08-31",
-        "accountId": "acc-current",
-        "category": "Evento",
-        "description": "Bros Chopp",
-        "entry": 0,
-        "exit": 9552,
-        "notes": "Porco no Rolete 02/08/2026 |\n690L Chopp R$ 6.900,00 |\n37 Fardos Refri R$ 1.908,00 |\n31 Fardos Água R$ 744,00 |\n\nBonificações: \n6 Barracas R$ 420,00 |\n2 Térmicas R$ 80,00 |\n2 Caixa de Copos R$ 600,00 |\nTotal Bonificado: R$ 1.100,00",
-        "status": "Programado",
         "attachments": []
       },
       {
