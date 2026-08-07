@@ -81,3 +81,7 @@ O Worker 1.2.0 aplica checksum SHA-256 ao estado principal e aos backups version
 O binding `PORTAL_DB` existe somente no Cloudflare Worker. O navegador nunca recebe credenciais do banco e continua acessando os dados privados por sessões temporárias. O D1 passa a ser a fonte principal somente depois de uma migração autenticada, com conferência de revisão e backup prévio no R2.
 
 O R2 permanece privado e armazena comprovantes, backups versionados e um espelho de contingência. A restauração de um backup usa a fonte ativa: quando o D1 está ativo, o estado restaurado é escrito no banco e novamente espelhado no R2.
+
+## Salvamento privado desacoplado — versão 6.38.0
+
+Alterações privadas são enviadas somente ao Worker autenticado e nunca entram no envelope público do GitHub. A fila de sincronização conclui o D1 antes de permitir publicação pública, atualização remota ou logout. Falhas preservam a cópia local e exigem confirmação posterior do Worker.

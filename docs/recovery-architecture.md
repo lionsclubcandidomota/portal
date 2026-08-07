@@ -75,3 +75,7 @@ A Central de Recuperação apresenta esse resultado sem expor o conteúdo dos ar
 ## Continuidade com D1 — versão 6.37.0
 
 A Central de Recuperação consulta `GET /api/storage/status` e apresenta claramente a fonte principal. O corte para D1 cria um backup `before-d1-migration`; o retorno ao R2 cria `before-d1-rollback`. Em operação normal, cada gravação D1 mantém um espelho atual no objeto `__portal/private-state-v1.json`, além da linha do tempo de backups.
+
+## Fila privada e continuidade — versão 6.38.0
+
+A fila serial consolida alterações rápidas e mantém a geração ainda não confirmada. Em falha de rede, o Portal conserva os dados no navegador, sinaliza o erro e tenta novamente quando a conexão retorna ou quando o Administrador aciona o indicador. Publicação, atualização e logout são bloqueados enquanto a gravação privada não puder ser confirmada.

@@ -1,4 +1,4 @@
-# Homologação — v6.37.0
+# Homologação — v6.38.0
 
 ## Fluxos prioritários do Portal
 
@@ -43,10 +43,10 @@ Execute esta seção somente depois de publicar o Worker e salvar sua URL em Con
 
 ## Migração e homologação do Cloudflare D1
 
-Execute esta seção somente depois de criar o banco, aplicar `0001_portal_private_state.sql` e publicar o Worker 1.3.0.
+Execute esta seção somente depois de criar o banco, aplicar `0001_portal_private_state.sql` e publicar o Worker 1.4.0.
 
 1. Abra `/health` e confirme `storage: "cloudflare-r2+d1"`, D1 disponível e inicializado, mas ainda inativo.
-2. Publique o Portal 6.37.0 e entre como Administrador.
+2. Publique o Portal 6.38.0 e entre como Administrador.
 3. Abra **Recuperação e integridade** e confirme **Banco pronto para receber os dados**.
 4. Registre os totais atuais de movimentações, contas, grupos, mútuas e anexos.
 5. Clique em **Migrar para o D1** e confirme a criação do backup prévio no R2.
@@ -87,8 +87,8 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 1. Execute `npm run release:build`.
 2. Confirme que a pasta `dist` contém os três ZIPs e `checksums.sha256`.
 3. Execute `npm run release:dist:verify` e confirme a validação dos artefatos.
-4. Publique somente o conteúdo de `portal-site-v6.37.0.zip` no GitHub Pages.
-5. Atualize o Worker primeiro com o pacote `cloudflare-worker-v1.3.0.zip` quando houver alteração no Worker.
+4. Publique somente o conteúdo de `portal-site-v6.38.0.zip` no GitHub Pages.
+5. Atualize o Worker primeiro com o pacote `cloudflare-worker-v1.4.0.zip` quando houver alteração no Worker.
 
 
 ## GitHub Actions — versão 6.37.0
@@ -100,3 +100,12 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 5. Compare `checksums.sha256` com os ZIPs antes da publicação.
 6. Confirme que nenhuma execução solicitou token do Portal, segredo do Worker ou permissão de escrita.
 7. Depois da primeira execução, configure a proteção da branch conforme `docs/github-actions.md`.
+
+## Salvamento privado sem publicação — versão 6.38.0
+
+1. Confirme que o `/health` informa `privateAutosave: "available"` e `d1.active: true`.
+2. Inclua uma movimentação financeira. O indicador deve passar por **Salvando no banco** e terminar em **Banco sincronizado**.
+3. Recarregue o Portal e confirme que a movimentação permanece. Não use o botão de publicação nesse teste.
+4. Cadastre ou altere uma Mútua e confirme o mesmo comportamento.
+5. Crie um aviso público. Somente essa operação deve aparecer como pendência em **Publicar conteúdo público**.
+6. Publique o aviso e confirme o GitHub Actions verde.

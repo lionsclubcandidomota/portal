@@ -23,6 +23,7 @@ function setup(overrides = {}) {
     events: [],
     meetings: []
   };
+  let persistedState = JSON.parse(JSON.stringify(state));
   const calls = [];
   const dependencies = {
     getState: () => state,
@@ -39,8 +40,11 @@ function setup(overrides = {}) {
   };
   const saved = [];
   const services = {
-    loadState: () => state,
-    saveState: value => saved.push(JSON.parse(JSON.stringify(value))),
+    loadState: () => JSON.parse(JSON.stringify(persistedState)),
+    saveState: value => {
+      persistedState = JSON.parse(JSON.stringify(value));
+      saved.push(JSON.parse(JSON.stringify(value)));
+    },
     connectGitHub: async () => ({
       sha: 'sha-1',
       state: { settings: { clubName: 'Remoto' }, notices: [{ id: 'n1' }] }
@@ -90,7 +94,7 @@ test('persistência registra pendência, salva estado sanitizado e abre a Centra
   assert.equal(fixture.context.model.pendingChanges, 1);
   assert.equal(fixture.saved.length, 1);
   assert.equal('responsible' in fixture.saved[0].events[0], false);
-  assert.deepEqual(fixture.calls[0], ['openCenter', { autoCloseAfter: 4800 }]);
+  assert.ok(fixture.calls.some(call => Array.isArray(call) && call[0] === 'openCenter' && call[1]?.autoCloseAfter === 4800));
   assert.ok(fixture.calls.some(call => Array.isArray(call) && call[0] === 'status' && call[1] === 'pending'));
 });
 

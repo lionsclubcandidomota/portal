@@ -1,6 +1,6 @@
 # Worker de dados privados — Portal Lions
 
-O Worker 1.3.0 usa dois serviços Cloudflare:
+O Worker 1.4.0 usa dois serviços Cloudflare:
 
 - **D1 (`PORTAL_DB`)**: fonte principal dos dados privados estruturados após a migração;
 - **R2 (`ATTACHMENTS`)**: comprovantes, documentos, backups versionados e espelho de contingência.
@@ -95,3 +95,9 @@ O Worker cria um backup no R2, grava o snapshot canônico e as projeções relac
 - Gravações que removeriam todos os registros privados continuam bloqueadas.
 
 O roteiro completo está em `docs/cloudflare-d1-migration.md`.
+
+## Salvamento automático do Portal 6.38.0
+
+O Portal envia alterações privadas diretamente para `PUT /api/private-state`. Quando o D1 está ativo, a resposta inclui `backend: "d1"`; durante um retorno controlado ao R2, inclui `backend: "r2"`.
+
+O endpoint `/health` informa `privateAutosave: "available"`. A publicação no GitHub não participa mais do salvamento de Tesouraria, mensalidades, Mútuas, contas ou categorias.

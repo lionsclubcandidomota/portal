@@ -1,7 +1,7 @@
 export const AUDIT_LOG_SCHEMA_VERSION = 1;
 export const AUDIT_LOG_MAX_ENTRIES = 400;
 
-const STATUS_ORDER = Object.freeze({ pending: 0, published: 1, confirmed: 2, discarded: 3, replaced: 4 });
+const STATUS_ORDER = Object.freeze({ pending: 0, saved: 1, published: 2, confirmed: 3, discarded: 4, replaced: 5 });
 
 function text(value, limit = 300) {
   const normalized = String(value ?? '').trim();
@@ -162,7 +162,7 @@ export function confirmAuditPublication(entries, deploymentId, confirmedAt = new
 }
 
 export function closeAuditBatch(entries, batchId, status = 'discarded', reason = '') {
-  const safeStatus = ['discarded', 'replaced'].includes(status) ? status : 'discarded';
+  const safeStatus = ['saved', 'discarded', 'replaced'].includes(status) ? status : 'discarded';
   return updateAuditBatch(entries, batchId, entry => ({
     ...entry,
     status: safeStatus,
@@ -178,7 +178,7 @@ export function auditLogSummary(entries) {
     batches.get(entry.batchId).push(entry);
   });
 
-  const statuses = { pending: 0, published: 0, confirmed: 0, discarded: 0, replaced: 0 };
+  const statuses = { pending: 0, saved: 0, published: 0, confirmed: 0, discarded: 0, replaced: 0 };
   for (const batchEntries of batches.values()) {
     const status = batchEntries.map(entry => entry.status).sort((a, b) => STATUS_ORDER[a] - STATUS_ORDER[b])[0] || 'pending';
     statuses[status] += 1;
@@ -187,6 +187,7 @@ export function auditLogSummary(entries) {
   return {
     operations: normalized.length,
     publications: statuses.published + statuses.confirmed,
+    databaseSaves: statuses.saved,
     pendingBatches: statuses.pending,
     discardedBatches: statuses.discarded + statuses.replaced,
     latestAt: normalized[0]?.createdAt || '',
@@ -230,6 +231,7 @@ export function groupAuditBatches(entries, { status = 'all', query = '' } = {}) 
   }).filter(batch => {
     const statusMatches = status === 'all'
       || (status === 'published' && ['published', 'confirmed'].includes(batch.status))
+      || (status === 'saved' && batch.status === 'saved')
       || batch.status === status;
     return statusMatches && (!normalizedQuery || batch.searchable.includes(normalizedQuery));
   }).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));

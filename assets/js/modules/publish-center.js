@@ -1,6 +1,6 @@
 const STATUS_LABELS = {
   offline: 'Somente local',
-  pending: 'Alterações pendentes',
+  pending: 'Alterações públicas pendentes',
   syncing: 'Criando commit…',
   publishing: 'Publicando no site…',
   published: 'Disponível no site',
@@ -175,7 +175,7 @@ export function createPublishCenterController({
     } else if (pendingChanges > 0) {
       percent = 12;
       title.textContent = `${displayCount} alteraç${displayCount === 1 ? 'ão' : 'ões'} pendente${displayCount === 1 ? '' : 's'}`;
-      detail.textContent = attentionMessage || 'Publique as alterações antes de concluir o trabalho.';
+      detail.textContent = attentionMessage || 'Publique somente o conteúdo público quando estiver pronto.';
       if (statusIcon) statusIcon.textContent = '•';
     } else {
       percent = 100;
@@ -204,8 +204,8 @@ export function createPublishCenterController({
       reviewSummary.textContent = reviewCount > 0
         ? `${reviewCount} alteraç${reviewCount === 1 ? 'ão' : 'ões'} em ${reviewAreaCount} área${reviewAreaCount === 1 ? '' : 's'}`
         : pendingChanges > 0
-          ? 'Verifique as diferenças antes de publicar'
-          : 'Nenhuma alteração para revisar';
+          ? 'Revise apenas o conteúdo que ficará público'
+          : 'Nenhuma alteração pública para revisar';
     }
 
     if (sendButton) {
@@ -214,7 +214,7 @@ export function createPublishCenterController({
         ? 'Salvando…'
         : status === 'publishing'
           ? 'Publicando…'
-          : 'Publicar alterações';
+          : 'Publicar conteúdo público';
     }
     if (discardButton) discardButton.disabled = pendingChanges === 0 || isBusy;
   };

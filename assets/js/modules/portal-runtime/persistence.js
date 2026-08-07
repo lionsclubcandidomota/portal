@@ -1,8 +1,8 @@
-import { migratePortalPayload } from '../../core/portal-schema.js?v=6.37.0';
-import { cloneState } from '../../core/portal-state.js?v=6.37.0';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.37.0';
+import { migratePortalPayload } from '../../core/portal-schema.js?v=6.38.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.38.0';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.38.0';
 
-export function createPersistenceActions(context) {
+export function createPersistenceActions(context, privateSync = null) {
   const { dependencies, services, model } = context;
 
   const persist = (message = 'Alteração registrada') => {
@@ -13,12 +13,18 @@ export function createPersistenceActions(context) {
       dependencies.toast?.('O perfil Diretoria possui acesso somente leitura. Nenhuma alteração foi salva.');
       return { ok: false, reason: 'read-only' };
     }
-    dependencies.openPublishCenter?.({ autoCloseAfter: 4800 });
+
     const previousState = services.loadState();
     const state = context.sanitizeCurrentState();
+    const previousPublic = services.createPublicPortalState?.(previousState) || previousState;
+    const currentPublic = services.createPublicPortalState?.(state) || state;
+    const previousPrivate = services.createPrivatePortalState?.(previousState) || {};
+    const currentPrivate = services.createPrivatePortalState?.(state) || {};
+    const publicChanged = !statesAreEquivalent(previousPublic, currentPublic);
+    const privateChanged = !statesAreEquivalent(previousPrivate, currentPrivate);
+
     services.saveState(state);
     dependencies.applySettings();
-    model.pendingChanges += 1;
 
     const audit = dependencies.auditLog?.recordChange?.({
       message,
@@ -28,16 +34,54 @@ export function createPersistenceActions(context) {
     });
     if (audit?.batchId) model.pendingAuditBatchId = audit.batchId;
 
+    const secureProfile = services.secureStorageProfileFromState?.(state);
+    const privateCanAutosave = Boolean(
+      privateChanged
+      && secureProfile?.enabled
+      && privateSync?.schedule
+    );
+
+    if (publicChanged || (privateChanged && !privateCanAutosave)) {
+      model.pendingChanges += 1;
+      dependencies.openPublishCenter?.({ autoCloseAfter: 4800 });
+      context.publishStatus('pending');
+    } else if (model.pendingChanges > 0) {
+      context.publishStatus('pending');
+    } else {
+      context.publishStatus(model.adminUnlocked ? 'synced' : 'offline');
+    }
+
+    let privateSave = null;
+    if (privateCanAutosave) {
+      privateSave = privateSync.schedule({
+        message,
+        auditBatchId: audit?.batchId || '',
+        closeAuditOnSave: !publicChanged && model.pendingChanges === 0
+      });
+    } else if (privateChanged) {
+      model.privateMigrationPending = true;
+      dependencies.toast?.({
+        type: 'warning',
+        title: 'Salvamento privado pendente',
+        message: 'Configure e ative o armazenamento privado para gravar os dados sem publicar no GitHub.'
+      });
+    }
+
     context.storeSyncMeta();
-    context.publishStatus('pending');
-    return { ok: true };
+    return {
+      ok: true,
+      publicChanged,
+      privateChanged,
+      privateSave
+    };
   };
 
   const replaceStateAndPersist = (nextState, message, successMessage = '') => {
     context.replaceCurrentState(migratePortalPayload(nextState).state);
-    persist(message);
+    const result = persist(message);
     dependencies.renderCurrentView();
     if (successMessage) dependencies.toast?.(successMessage);
+    return result;
   };
 
   const importState = async (importedState, file = null) => {
@@ -54,7 +98,7 @@ export function createPersistenceActions(context) {
         pendingChanges: model.pendingChanges
       }
     });
-    replaceStateAndPersist(importedState, 'Backup importado.', 'Backup importado com sucesso.');
+    return replaceStateAndPersist(importedState, 'Backup importado.', 'Backup importado com sucesso.');
   };
 
   const restoreState = async (nextState, details = {}) => {
@@ -62,7 +106,7 @@ export function createPersistenceActions(context) {
       dependencies.toast?.('O perfil Diretoria não pode restaurar dados.');
       return { ok: false, reason: 'read-only' };
     }
-    replaceStateAndPersist(
+    return replaceStateAndPersist(
       nextState,
       details.message || 'Dados restaurados a partir de um ponto de recuperação.'
     );
@@ -83,6 +127,7 @@ export function createPersistenceActions(context) {
     model.pendingChanges = 0;
     model.pendingAuditBatchId = '';
     context.storeSyncMeta();
+    privateSync?.markLoaded?.('Backup privado restaurado e sincronizado com o banco.');
     dependencies.applySettings?.();
     dependencies.renderCurrentView?.();
     dependencies.toast?.(details.successMessage || 'Backup privado restaurado com sucesso.');

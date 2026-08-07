@@ -44,6 +44,7 @@ function baseState(overrides = {}) {
 
 function setup({ state = baseState(), services = {}, dependencies = {}, location } = {}) {
   let currentState = state;
+  let persistedState = structuredClone(state);
   const calls = [];
   const saved = [];
   const context = createPortalRuntimeContext({
@@ -60,8 +61,11 @@ function setup({ state = baseState(), services = {}, dependencies = {}, location
     getCurrentView: () => 'dashboard',
     ...dependencies
   }, {
-    loadState: () => currentState,
-    saveState: value => saved.push(structuredClone(value)),
+    loadState: () => structuredClone(persistedState),
+    saveState: value => {
+      persistedState = structuredClone(value);
+      saved.push(structuredClone(value));
+    },
     connectGitHub: async () => ({
       sha: 'remote-sha',
       actor: { login: 'admin-lions', name: 'Administrador Lions' },

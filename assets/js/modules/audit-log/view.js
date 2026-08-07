@@ -1,5 +1,6 @@
 const STATUS_LABELS = Object.freeze({
   pending: 'Pendente',
+  saved: 'Salva no banco',
   published: 'Enviada ao GitHub',
   confirmed: 'Publicada no portal',
   discarded: 'Descartada',
@@ -63,8 +64,8 @@ function renderBatch(batch) {
 export function auditLogHtml({ summary, batches, filter = 'all', query = '' }) {
   return `<section class="audit-log">
     <div class="audit-log-intro"><div class="audit-log-icon" aria-hidden="true">◷</div><div><span class="section-eyebrow">Rastreabilidade local</span><h3>Histórico de alterações</h3><p>Consulte as operações realizadas neste navegador e veja a publicação associada. Tokens, senhas e conteúdos de imagens não são registrados.</p></div></div>
-    <div class="audit-log-summary"><div><small>Operações</small><strong>${summary.operations}</strong></div><div><small>Publicações</small><strong>${summary.publications}</strong></div><div><small>Pendentes</small><strong>${summary.pendingBatches}</strong></div><div><small>Descartadas</small><strong>${summary.discardedBatches}</strong></div></div>
-    <div class="audit-log-toolbar"><label><span>Pesquisar</span><input id="auditLogSearch" type="search" value="${escapeHtml(query)}" placeholder="Ação, área, registro ou administrador"></label><label><span>Situação</span><select id="auditLogFilter"><option value="all" ${filter === 'all' ? 'selected' : ''}>Todas</option><option value="pending" ${filter === 'pending' ? 'selected' : ''}>Pendentes</option><option value="published" ${filter === 'published' ? 'selected' : ''}>Publicadas</option><option value="discarded" ${filter === 'discarded' ? 'selected' : ''}>Descartadas</option><option value="replaced" ${filter === 'replaced' ? 'selected' : ''}>Substituídas</option></select></label><button class="btn btn-ghost" id="auditLogExport" type="button">Exportar histórico</button></div>
+    <div class="audit-log-summary"><div><small>Operações</small><strong>${summary.operations}</strong></div><div><small>Salvas no banco</small><strong>${summary.databaseSaves || 0}</strong></div><div><small>Publicações</small><strong>${summary.publications}</strong></div><div><small>Pendentes</small><strong>${summary.pendingBatches}</strong></div></div>
+    <div class="audit-log-toolbar"><label><span>Pesquisar</span><input id="auditLogSearch" type="search" value="${escapeHtml(query)}" placeholder="Ação, área, registro ou administrador"></label><label><span>Situação</span><select id="auditLogFilter"><option value="all" ${filter === 'all' ? 'selected' : ''}>Todas</option><option value="pending" ${filter === 'pending' ? 'selected' : ''}>Pendentes</option><option value="saved" ${filter === 'saved' ? 'selected' : ''}>Salvas no banco</option><option value="published" ${filter === 'published' ? 'selected' : ''}>Publicadas</option><option value="discarded" ${filter === 'discarded' ? 'selected' : ''}>Descartadas</option><option value="replaced" ${filter === 'replaced' ? 'selected' : ''}>Substituídas</option></select></label><button class="btn btn-ghost" id="auditLogExport" type="button">Exportar histórico</button></div>
     <div class="audit-log-list">${batches.length ? batches.map(renderBatch).join('') : '<div class="audit-log-empty"><span aria-hidden="true">◌</span><h3>Nenhum registro encontrado</h3><p>As próximas alterações administrativas aparecerão aqui.</p></div>'}</div>
     <footer class="audit-log-note">O histórico é armazenado somente neste navegador, com retenção das 400 operações mais recentes.</footer>
   </section>`;

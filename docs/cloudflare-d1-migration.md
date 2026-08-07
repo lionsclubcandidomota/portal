@@ -17,7 +17,7 @@ A migração não altera o JSON público do GitHub Pages e não expõe dados fin
 Portal no GitHub Pages
         │ sessão autenticada
         ▼
-Cloudflare Worker 1.3.0
+Cloudflare Worker 1.4.0
         ├── D1: dados privados estruturados
         └── R2: anexos, backups e espelho de contingência
 ```
@@ -97,7 +97,7 @@ A resposta de `/health` deve conter:
 
 O valor `privateState: "r2"` antes do corte é intencional.
 
-## 4. Publicar o Portal 6.37.0
+## 4. Publicar o Portal 6.38.0
 
 Depois do Worker, publique os arquivos do Portal. Entre como Administrador e abra:
 
@@ -138,10 +138,11 @@ O `/health` passa a apresentar:
 }
 ```
 
-Faça uma inclusão e uma exclusão de teste, publique e confirme:
+Faça uma inclusão e uma exclusão privada de teste, sem publicar no GitHub, e confirme:
 
 - dados preservados após recarregar;
-- GitHub Actions verde;
+- indicador “Banco sincronizado” após cada operação;
+- nenhuma pendência pública criada por operações financeiras;
 - totais financeiros iguais;
 - anexos acessíveis;
 - backup R2 criado;
@@ -156,3 +157,25 @@ Antes da troca, o Worker copia o estado atual do D1 para o R2 e cria um backup. 
 ## Recuperação
 
 O D1 dispõe de recuperação por ponto no tempo da própria Cloudflare — atualmente 7 dias no Workers Free e 30 dias no Workers Paid. Os backups do Portal no R2 continuam existindo como segunda camada e podem ser restaurados pela interface; quando o D1 está ativo, a restauração grava o conteúdo no D1 e atualiza o espelho do R2.
+
+## Salvamento automático — versão 6.38.0
+
+Depois que o D1 estiver ativo, operações privadas não dependem mais da publicação do GitHub:
+
+```text
+Tesouraria / Mensalidades / Mútuas / Contas / Categorias
+        → fila privada do navegador
+        → PUT /api/private-state
+        → transação no D1
+        → espelho e backups no R2
+```
+
+O botão **Publicar conteúdo público** permanece apenas para dados que precisam aparecer no GitHub Pages, como avisos, agenda, associados e conteúdo institucional.
+
+O cabeçalho administrativo mostra um estado independente:
+
+- **Salvando no banco**: existe uma gravação privada em andamento;
+- **Banco sincronizado**: a última alteração privada foi confirmada;
+- **Falha ao salvar**: a alteração permanece no navegador e o indicador permite tentar novamente.
+
+Antes de publicar conteúdo público, atualizar o Portal ou encerrar a sessão, a fila privada é finalizada. Se o Worker não confirmar a gravação, a ação é interrompida para evitar perda de dados.

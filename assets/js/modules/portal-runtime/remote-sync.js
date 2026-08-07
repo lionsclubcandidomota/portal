@@ -1,9 +1,17 @@
-import { mergePortalStates, remotePayloadVersion, remoteRefreshInterval, shouldApplyRemotePayload } from './domain.js?v=6.37.0';
+import { mergePortalStates, remotePayloadVersion, remoteRefreshInterval, shouldApplyRemotePayload } from './domain.js?v=6.38.0';
 
 export function createRemoteSyncActions(context) {
   const { dependencies, services, environment, model } = context;
   const browserWindow = environment.window;
   const browserDocument = environment.document;
+
+  const mergeRemotePublicWithLocalPrivate = (local, remote) => {
+    const localPrivate = services.createPrivatePortalState?.(local) || {};
+    const localPublic = services.createPublicPortalState?.(local) || local;
+    const remotePublic = services.createPublicPortalState?.(remote) || remote;
+    const mergedPublic = mergePortalStates(localPublic, remotePublic);
+    return services.mergePublicAndPrivatePortalState?.(mergedPublic, localPrivate) || mergedPublic;
+  };
 
   const applyRemotePayload = (payload, { force = false } = {}) => {
     const remote = payload.state;
@@ -20,7 +28,7 @@ export function createRemoteSyncActions(context) {
     }
 
     const local = services.loadState();
-    const merged = mergePortalStates(local, remote);
+    const merged = mergeRemotePublicWithLocalPrivate(local, remote);
 
     if (model.pendingChanges === 0) {
       context.replaceCurrentState(merged);
@@ -29,7 +37,10 @@ export function createRemoteSyncActions(context) {
       dependencies.applySettings();
       dependencies.renderCurrentView();
     } else {
-      context.storeSyncedState(merged);
+      const currentPrivate = services.createPrivatePortalState?.(context.currentState()) || {};
+      const remotePublic = services.createPublicPortalState?.(merged) || merged;
+      const syncedBaseline = services.mergePublicAndPrivatePortalState?.(remotePublic, currentPrivate) || merged;
+      context.storeSyncedState(syncedBaseline);
     }
 
     if (remoteVersion) {

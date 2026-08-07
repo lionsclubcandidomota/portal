@@ -1,12 +1,12 @@
-import { cloneState } from '../../core/portal-state.js?v=6.37.0';
-import { remotePayloadVersion } from './domain.js?v=6.37.0';
+import { cloneState } from '../../core/portal-state.js?v=6.38.0';
+import { remotePayloadVersion } from './domain.js?v=6.38.0';
 import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   roleHasCapability
-} from './authorization.js?v=6.37.0';
+} from './authorization.js?v=6.38.0';
 
-export function createInterfaceRefreshActions(context) {
+export function createInterfaceRefreshActions(context, privateSync = null) {
   const { dependencies, services, model } = context;
   let running = false;
 
@@ -25,6 +25,10 @@ export function createInterfaceRefreshActions(context) {
       return { ok: false, reason: 'unauthenticated' };
     }
     if (model.pendingChanges > 0) return blockedResult();
+    if (model.privateSavePending > 0) {
+      const saved = await privateSync?.flush?.();
+      if (saved && !saved.ok) return { ok: false, reason: 'private-save-failed', error: saved.error };
+    }
 
     running = true;
     const activeRole = model.accessRole;

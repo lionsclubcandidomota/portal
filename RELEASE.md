@@ -1,3 +1,24 @@
+# Release 6.38.0
+
+Esta etapa conclui a separação operacional entre **banco privado** e **publicação pública**.
+
+- Dados privados são salvos automaticamente no D1 pelo Worker 1.4.0.
+- Anexos privados continuam no R2.
+- O GitHub recebe somente conteúdo público e deixa de ser necessário para registrar operações financeiras.
+- Uma fila segura impede perda de alterações em falhas temporárias e permite nova tentativa pelo indicador do cabeçalho.
+
+## Ordem de implantação
+
+1. Publicar o Worker 1.4.0 com os bindings D1 e R2 já configurados.
+2. Confirmar no `/health` `workerVersion: "1.4.0"`, `privateAutosave: "available"` e D1 ativo.
+3. Publicar o Portal 6.38.0.
+4. Entrar como Administrador e testar uma movimentação privada sem usar “Publicar conteúdo público”.
+5. Testar um aviso público e confirmar que apenas ele gera pendência de publicação.
+
+O contrato `GET/PUT /api/private-state` continua compatível. Nesta etapa, o Worker atualiza transacionalmente o snapshot canônico e as projeções relacionais do D1 a cada salvamento privado.
+
+---
+
 
 ## Versão 6.37.0
 

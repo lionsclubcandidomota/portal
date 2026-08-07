@@ -6,7 +6,7 @@ import {
   writeD1PrivateState
 } from './d1-storage.js';
 
-const WORKER_VERSION = '1.3.0';
+const WORKER_VERSION = '1.4.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -785,7 +785,7 @@ async function handlePrivateStateWrite(request, env, session) {
   const current = await readPrivateStateRecord(env, storage);
   const expectedRevision = String(body.expectedRevision || '');
   if (current?.revision && expectedRevision !== current.revision) {
-    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de publicar.', { status: 409 });
+    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.', { status: 409 });
   }
 
   const incoming = privateStateSummary(state).summary;
@@ -800,16 +800,16 @@ async function handlePrivateStateWrite(request, env, session) {
     });
     await putPrivateBackup(env, safetyEnvelope, {
       updatedBy: String(session.sub || 'administrador'),
-      reason: 'before-publication',
-      label: 'Estado anterior à publicação'
+      reason: 'before-write',
+      label: 'Estado anterior à gravação automática'
     });
   }
 
   const saved = await persistPrivateState(env, state, session, {
-    reason: current ? 'publication' : 'migration',
-    label: current ? 'Estado confirmado após a publicação' : 'Migração inicial para o R2'
+    reason: current ? 'automatic-save' : 'migration',
+    label: current ? 'Estado salvo automaticamente' : 'Migração inicial do estado privado'
   }, storage);
-  return { saved: true, ...saved };
+  return { saved: true, backend: storage.backend, ...saved };
 }
 
 async function handlePrivateBackupList(env) {
@@ -1088,7 +1088,8 @@ export default {
           },
           privateBackups: 'versioned-r2',
           privateBackupRetention: MAX_PRIVATE_BACKUPS,
-          attachmentIntegrity: 'available'
+          attachmentIntegrity: 'available',
+          privateAutosave: 'available'
         }, 200, cors);
       }
 

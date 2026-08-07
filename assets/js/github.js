@@ -1,6 +1,6 @@
-import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.37.0';
-import { findSensitivePortalFields, normalizeGitHubToken } from './core/portal-security.js?v=6.37.0';
-import { createPublicPortalState, hasPrivatePortalData } from './core/portal-data-boundary.js?v=6.37.0';
+import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.38.0';
+import { findSensitivePortalFields, normalizeGitHubToken } from './core/portal-security.js?v=6.38.0';
+import { createPublicPortalState, hasPrivatePortalData } from './core/portal-data-boundary.js?v=6.38.0';
 
 export const GITHUB_CONFIG = Object.freeze({
   owner: 'lionsclubcandidomota',

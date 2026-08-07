@@ -1,14 +1,14 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.37.0';
-import { RESTRICTED_VIEWS } from './constants.js?v=6.37.0';
-import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.37.0';
-import { createAdminSessionGuard } from './session-guard.js?v=6.37.0';
-import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.37.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.38.0';
+import { RESTRICTED_VIEWS } from './constants.js?v=6.38.0';
+import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.38.0';
+import { createAdminSessionGuard } from './session-guard.js?v=6.38.0';
+import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.38.0';
 import {
   ACCESS_ROLES,
   accessSnapshot,
   applyAccessRole,
   clearAccessRole
-} from './authorization.js?v=6.37.0';
+} from './authorization.js?v=6.38.0';
 
 function isLocalHomologation(environment) {
   const location = environment?.window?.location;
@@ -21,7 +21,7 @@ function isLocalHomologation(environment) {
     || hostname === '[::1]';
 }
 
-export function createAdminSessionActions(context) {
+export function createAdminSessionActions(context, privateSync = null) {
   const { dependencies, services, model, environment } = context;
 
   const lockAdminSession = reason => {
@@ -42,6 +42,7 @@ export function createAdminSessionActions(context) {
     }
     sessionGuard.stop();
     context.publishStatus(model.pendingChanges > 0 ? 'pending' : 'offline');
+    dependencies.setDatabaseSyncStatus?.('idle', 'Entre novamente para acessar os dados privados.');
     dependencies.updateAccessUI?.();
 
     if (wasUnlocked) {
@@ -103,7 +104,10 @@ export function createAdminSessionActions(context) {
     const remoteMerged = mergePortalStates(localBeforeLogin, remote.state);
     context.storeSyncedState(remoteMerged);
 
-    if (model.pendingChanges > 0 && statesAreEquivalent(localBeforeLogin, remoteMerged)) {
+    if (model.pendingChanges > 0 && statesAreEquivalent(
+      services.createPublicPortalState?.(localBeforeLogin) || localBeforeLogin,
+      services.createPublicPortalState?.(remoteMerged) || remoteMerged
+    )) {
       model.pendingChanges = 0;
       context.storeSyncMeta();
     }
@@ -129,17 +133,23 @@ export function createAdminSessionActions(context) {
           context.replaceCurrentState(hydrated);
           context.storeSyncedState(hydrated);
           if (model.pendingChanges === 0) services.saveState(hydrated);
+          privateSync?.markLoaded?.('Dados privados carregados e sincronizados com o banco.');
         }
       } else if (services.hasPrivatePortalData?.(remote.state)) {
         model.pendingChanges = Math.max(1, Number(model.pendingChanges || 0));
         model.privateMigrationPending = true;
         context.storeSyncMeta();
+        dependencies.setDatabaseSyncStatus?.('warning', 'Migração dos dados privados pendente.');
         dependencies.toast?.({
           type: 'warning',
           title: 'Migração de segurança pendente',
-          message: 'Publique a alteração pendente para mover a Tesouraria ao armazenamento privado e remover esses dados do JSON público.'
+          message: 'Conclua a migração pela Central de Recuperação antes de usar o salvamento automático.'
         });
+      } else {
+        privateSync?.markLoaded?.('Banco conectado e pronto para receber dados privados.');
       }
+    } else {
+      dependencies.setDatabaseSyncStatus?.('warning', 'Armazenamento privado não configurado.');
     }
 
     return {
@@ -174,6 +184,7 @@ export function createAdminSessionActions(context) {
         throw new Error('Os dados privados da Diretoria ainda não foram migrados pelo Administrador.');
       }
       authenticatedState = services.mergePrivatePortalState?.(payload.state, privatePayload) || authenticatedState;
+      privateSync?.markLoaded?.('Dados privados carregados em modo somente leitura.');
     } else {
       const allowed = await passwordMatchesDirectorProfile(password, payload.state);
       if (!allowed) {
@@ -205,7 +216,17 @@ export function createAdminSessionActions(context) {
     };
   };
 
-  const logoutAdmin = () => lockAdminSession('manual');
+  const logoutAdmin = async () => {
+    if (model.accessRole === ACCESS_ROLES.ADMIN && model.privateSavePending > 0) {
+      const result = await privateSync?.flush?.();
+      if (result && !result.ok) {
+        dependencies.toast?.('O encerramento foi cancelado porque ainda existem dados privados não salvos.');
+        return { ok: false, reason: 'private-save-failed' };
+      }
+    }
+    lockAdminSession('manual');
+    return { ok: true };
+  };
 
   return { connectAdminSession, connectDirectorSession, logoutAdmin };
 }

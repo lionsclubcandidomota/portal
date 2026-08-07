@@ -1,5 +1,20 @@
 # Changelog
 
+## 6.38.0 — Salvamento privado automático no D1
+
+- Separa definitivamente o salvamento dos dados privados da publicação do conteúdo público.
+- Movimentações, contas, categorias, mensalidades, grupos familiares e Mútuas passam a ser gravados automaticamente pelo Worker no backend privado ativo.
+- Quando o D1 está ativo, cada operação privada é confirmada no banco sem gerar commit no GitHub.
+- Mantém o botão de publicação somente para avisos, agenda, associados, diretoria e demais conteúdos públicos.
+- Adiciona fila serial de salvamento com consolidação de alterações rápidas, nova tentativa ao recuperar a conexão e bloqueio seguro de logout/publicação enquanto houver gravação privada pendente.
+- Envia anexos privados ao R2 durante o salvamento automático e mantém no D1 somente seus metadados e referências.
+- Preserva dados privados ao descartar ou atualizar conteúdo público.
+- Adiciona indicador independente “Banco sincronizado / Salvando / Falha ao salvar” no cabeçalho administrativo.
+- Auditoria diferencia alterações salvas no banco de publicações realizadas no GitHub.
+- Worker 1.4.0 informa o backend utilizado em cada gravação e expõe `privateAutosave: available` no `/health`.
+- Adiciona testes de regressão para alterações privadas, públicas, mistas e fila de sincronização.
+- Ajusta o orçamento CSS para 338 KB para acomodar o indicador independente de sincronização, mantendo zero declarações substituídas.
+
 ## 6.37.0 — Migração segura para Cloudflare D1
 
 - Adicionado esquema D1 versionado para Tesouraria, contas, categorias, grupos familiares, mútuas, eventos e anexos.

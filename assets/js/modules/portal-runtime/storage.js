@@ -1,7 +1,7 @@
-import { createPortalEnvelope, migratePortalPayload } from '../../core/portal-schema.js?v=6.37.0';
-import { RUNTIME_STORAGE_KEYS } from './constants.js?v=6.37.0';
-import { normalizePendingChanges } from './domain.js?v=6.37.0';
-import { createPublicPortalState } from '../../core/portal-data-boundary.js?v=6.37.0';
+import { createPortalEnvelope, migratePortalPayload } from '../../core/portal-schema.js?v=6.38.0';
+import { RUNTIME_STORAGE_KEYS } from './constants.js?v=6.38.0';
+import { normalizePendingChanges } from './domain.js?v=6.38.0';
+import { createPublicPortalState } from '../../core/portal-data-boundary.js?v=6.38.0';
 
 function readJson(storage, key) {
   try {
@@ -46,16 +46,22 @@ export function createRuntimeMetadataStore(storage, privateStorage = globalThis.
         lastSyncedState: readPortalState(hasSeparatePrivateStorage ? privateStorage : storage, RUNTIME_STORAGE_KEYS.syncedState)
           || readPortalState(storage, RUNTIME_STORAGE_KEYS.syncedState),
         lastRemoteVersion: storage.getItem(RUNTIME_STORAGE_KEYS.remoteVersion) || '',
-        awaitingPublicDeploymentId: storage.getItem(RUNTIME_STORAGE_KEYS.awaitingDeployment) || ''
+        awaitingPublicDeploymentId: storage.getItem(RUNTIME_STORAGE_KEYS.awaitingDeployment) || '',
+        pendingDeletedPublicPaths: readJson(storage, RUNTIME_STORAGE_KEYS.pendingDeletedPublicPaths) || []
       };
     },
 
-    writeSyncMeta({ pendingChanges, lastSyncInfo }) {
+    writeSyncMeta({ pendingChanges, lastSyncInfo, pendingDeletedPublicPaths }) {
       storage.setItem(
         RUNTIME_STORAGE_KEYS.pendingChanges,
         String(normalizePendingChanges(pendingChanges))
       );
       writeJson(storage, RUNTIME_STORAGE_KEYS.lastSync, lastSyncInfo);
+      writeJson(
+        storage,
+        RUNTIME_STORAGE_KEYS.pendingDeletedPublicPaths,
+        [...(pendingDeletedPublicPaths instanceof Set ? pendingDeletedPublicPaths : pendingDeletedPublicPaths || [])]
+      );
     },
 
     writeSyncedState(state) {

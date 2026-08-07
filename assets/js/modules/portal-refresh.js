@@ -31,8 +31,8 @@ export function createPortalRefreshController({
   const pendingMessage = count => {
     const total = Number(count || 0);
     return total === 1
-      ? 'Existe 1 alteração local ainda não publicada. Publique para mantê-la, descarte para restaurar a última versão sincronizada ou cancele a atualização.'
-      : `Existem ${total} alterações locais ainda não publicadas. Publique para mantê-las, descarte para restaurar a última versão sincronizada ou cancele a atualização.`;
+      ? 'Existe 1 alteração pública ainda não publicada. Os dados privados já salvos no banco serão preservados. Publique, descarte ou cancele a atualização.'
+      : `Existem ${total} alterações públicas ainda não publicadas. Os dados privados já salvos no banco serão preservados. Publique, descarte ou cancele a atualização.`;
   };
 
   const setRunning = (value, text = 'Atualizando…') => {
@@ -102,7 +102,7 @@ export function createPortalRefreshController({
         return result;
       }
       if (result?.reason === 'pending') {
-        toast?.('A atualização foi interrompida porque surgiram novas alterações pendentes.');
+        toast?.('A atualização foi interrompida porque surgiram novas alterações públicas pendentes.');
         return result;
       }
       if (result?.ok) {

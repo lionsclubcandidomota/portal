@@ -1,10 +1,10 @@
-import { cloneState } from '../../core/portal-state.js?v=6.37.0';
-import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.37.0';
-import { buildPublicationMessage } from './domain.js?v=6.37.0';
-import { ACCESS_CAPABILITIES, ACCESS_ROLES, roleHasCapability } from './authorization.js?v=6.37.0';
+import { cloneState } from '../../core/portal-state.js?v=6.38.0';
+import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.38.0';
+import { buildPublicationMessage } from './domain.js?v=6.38.0';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.38.0';
 
-export function createPublicationActions(context) {
-  const { dependencies, services, model, environment } = context;
+export function createPublicationActions(context, privateSync = null) {
+  const { dependencies, services, model } = context;
 
   const createSafetySnapshot = async (reason, label, metadata = {}) => {
     await dependencies.recoveryCenter?.createAutomaticSnapshot?.({
@@ -15,13 +15,20 @@ export function createPublicationActions(context) {
     });
   };
 
+  const ensurePrivateStateSaved = async () => {
+    if (!privateSync?.flush || model.privateSavePending <= 0) return { ok: true };
+    const result = await privateSync.flush();
+    if (result?.ok) return result;
+    throw result?.error || new Error('Os dados privados ainda não foram gravados no banco.');
+  };
+
   const discardPendingChanges = async ({ skipConfirmation = false } = {}) => {
     if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.DISCARD_DATA)) {
       dependencies.toast?.('Este perfil não pode descartar alterações administrativas.');
       return { ok: false, reason: 'read-only' };
     }
     if (model.pendingChanges === 0) {
-      dependencies.toast?.('Não há alterações pendentes para descartar.');
+      dependencies.toast?.('Não há alterações públicas pendentes para descartar.');
       return { ok: false, reason: 'no-pending' };
     }
     if (!model.lastSyncedState) {
@@ -30,22 +37,23 @@ export function createPublicationActions(context) {
     }
 
     const approved = skipConfirmation || await dependencies.confirmation?.askConfirmation({
-      title: 'Descartar alterações pendentes?',
-      message: `${model.pendingChanges} alteração(ões) ainda não foram publicadas. O portal voltará para a última versão sincronizada e esta ação não poderá ser desfeita.`,
+      title: 'Descartar alterações públicas pendentes?',
+      message: `${model.pendingChanges} alteração(ões) públicas ainda não foram publicadas. Os dados privados já salvos no banco serão preservados.`,
       icon: '↩️',
-      confirmText: 'Descartar alterações',
+      confirmText: 'Descartar alterações públicas',
       tone: 'danger'
     });
     if (!approved) return { ok: false, reason: 'cancelled' };
 
     try {
+      await ensurePrivateStateSaved();
       await createSafetySnapshot(
         'before-discard',
-        'Antes de descartar alterações pendentes',
+        'Antes de descartar alterações públicas pendentes',
         { auditBatchId: model.pendingAuditBatchId || '' }
       );
     } catch (error) {
-      dependencies.toast?.(error?.message || 'Não foi possível criar o ponto de recuperação. O descarte foi cancelado.');
+      dependencies.toast?.(error?.message || 'Não foi possível proteger os dados antes do descarte.');
       return { ok: false, reason: 'snapshot-failed', error };
     }
 
@@ -54,13 +62,13 @@ export function createPublicationActions(context) {
     services.saveState(context.currentState());
     model.pendingChanges = 0;
     model.pendingAuditBatchId = '';
-    dependencies.auditLog?.closeBatch?.(discardedBatchId, 'discarded', 'Alterações locais descartadas antes da publicação.');
+    dependencies.auditLog?.closeBatch?.(discardedBatchId, 'discarded', 'Alterações públicas locais descartadas.');
     model.lastSyncInfo = null;
     context.storeSyncMeta();
     context.publishStatus(model.adminUnlocked && model.githubToken ? 'synced' : 'offline');
     dependencies.applySettings();
     dependencies.renderCurrentView();
-    dependencies.toast?.('Alterações pendentes descartadas.');
+    dependencies.toast?.('Alterações públicas descartadas. Os dados privados salvos no banco foram mantidos.');
     return { ok: true, reason: 'discarded' };
   };
 
@@ -74,18 +82,19 @@ export function createPublicationActions(context) {
       return { ok: false, reason: 'unauthenticated' };
     }
     if (model.pendingChanges === 0) {
-      dependencies.toast?.('Não há alterações pendentes.');
+      dependencies.toast?.('Não há alterações públicas pendentes.');
       return { ok: false, reason: 'no-pending' };
     }
 
     try {
+      await ensurePrivateStateSaved();
       await createSafetySnapshot(
         'before-publication',
-        'Antes de publicar alterações',
+        'Antes de publicar alterações públicas',
         { auditBatchId: model.pendingAuditBatchId || '' }
       );
     } catch (error) {
-      dependencies.toast?.(error?.message || 'Não foi possível criar o ponto de recuperação. A publicação foi cancelada.');
+      dependencies.toast?.(error?.message || 'Não foi possível concluir o salvamento privado antes da publicação.');
       return { ok: false, reason: 'snapshot-failed', error };
     }
 
@@ -95,79 +104,38 @@ export function createPublicationActions(context) {
     const review = context.pendingPublicationReview();
     const auditBatchId = model.pendingAuditBatchId || dependencies.auditLog?.ensurePendingBatch?.({
       review,
-      message: 'Alterações pendentes consolidadas antes da publicação.'
+      message: 'Alterações públicas consolidadas antes da publicação.'
     }) || '';
     model.pendingAuditBatchId = auditBatchId;
     context.publishStatus('syncing');
 
     try {
-      const state = context.sanitizeCurrentState();
-      services.saveState(state);
-      const secureProfile = services.secureStorageProfileFromState?.(state);
-      let securePublication = {
-        state,
-        enabled: false,
-        convertedCount: 0,
-        uploadedObjectKeys: [],
-        deletedPublicPaths: []
-      };
+      const currentState = context.sanitizeCurrentState();
+      services.saveState(currentState);
+      const publicState = services.createPublicPortalState?.(currentState) || currentState;
+      const publication = preparePortalMediaForPublication(publicState);
+      const deletedPublicPaths = [...model.pendingDeletedPublicPaths];
+      const result = await services.saveGitHubState(
+        model.githubToken,
+        publication.state,
+        model.githubFileSha,
+        message,
+        publication.assets,
+        deletedPublicPaths
+      );
 
-      if (secureProfile?.enabled) {
-        if (!services.hasActiveSecureStorageSession?.(state, ACCESS_ROLES.ADMIN)) {
-          await services.connectSecureStorageSession?.({
-            state,
-            role: ACCESS_ROLES.ADMIN,
-            credential: model.githubToken
-          });
-        }
-        securePublication = await services.prepareSecureTreasuryAttachmentsForPublication(state, {
-          baseUrl: environment?.document?.baseURI || environment?.window?.location?.href || ''
-        });
-      }
-
-      const previousSecureKeys = services.collectSecureTreasuryObjectKeys?.(model.lastSyncedState) || new Set();
-      const nextSecureKeys = services.collectSecureTreasuryObjectKeys?.(securePublication.state) || new Set();
-      const removedSecureKeys = [...previousSecureKeys].filter(key => !nextSecureKeys.has(key));
-      const publication = preparePortalMediaForPublication(securePublication.state);
-      let result;
-      try {
-        const publishedSecureKeys = services.collectSecureTreasuryObjectKeys?.(publication.state) || new Set();
-        const lostSecureKeys = [...nextSecureKeys].filter(key => !publishedSecureKeys.has(key));
-        if (lostSecureKeys.length) {
-          throw new Error('A publicação foi interrompida porque referências de anexos privados seriam removidas do portal.');
-        }
-        let privateStateResult = null;
-        if (secureProfile?.enabled) {
-          privateStateResult = await services.savePrivatePortalState?.(publication.state);
-        }
-        result = await services.saveGitHubState(
-          model.githubToken,
-          publication.state,
-          model.githubFileSha,
-          message,
-          publication.assets,
-          securePublication.deletedPublicPaths
-        );
-        result.privateState = privateStateResult;
-      } catch (error) {
-        if (securePublication.uploadedObjectKeys.length) {
-          await services.deleteSecureTreasuryObjects?.(state, securePublication.uploadedObjectKeys).catch(() => {});
-        }
-        throw error;
-      }
-
-      if (removedSecureKeys.length) {
-        services.deleteSecureTreasuryObjects?.(publication.state, removedSecureKeys).catch(error => {
-          console.warn('Não foi possível remover anexos privados antigos:', error);
-        });
-      }
       model.githubFileSha = result.sha;
       model.lastSyncInfo = result;
       model.pendingChanges = 0;
       model.pendingAuditBatchId = '';
       model.privateMigrationPending = false;
+      model.pendingDeletedPublicPaths.clear();
       dependencies.auditLog?.linkPublication?.(auditBatchId, { ...result, message });
-      context.replaceCurrentState(publication.state);
+
+      const privateState = services.createPrivatePortalState?.(context.currentState()) || {};
+      const mergedState = services.mergePublicAndPrivatePortalState?.(publication.state, privateState)
+        || publication.state;
+      context.replaceCurrentState(mergedState);
       services.saveState(context.currentState());
       context.storeSyncedState(context.currentState());
       context.storeSyncMeta();
@@ -182,10 +150,10 @@ export function createPublicationActions(context) {
         message
       };
 
-      const uploadedFileCount = Number(result.mediaCount || 0) + Number(securePublication.convertedCount || 0);
+      const uploadedFileCount = Number(result.mediaCount || 0);
       const uploadSummary = uploadedFileCount > 0
-        ? `Envio concluído com ${uploadedFileCount} arquivo(s); atualizando visitantes`
-        : 'Envio concluído; atualizando visitantes';
+        ? `Conteúdo público enviado com ${uploadedFileCount} arquivo(s); atualizando visitantes`
+        : 'Conteúdo público enviado; atualizando visitantes';
       context.publishStatus('publishing', uploadSummary);
       dependencies.toast?.({ type: 'info', title: 'Publicação enviada', message: uploadSummary });
       if (dependencies.getCurrentView?.() === 'admin') dependencies.renderAdmin?.();
@@ -194,17 +162,17 @@ export function createPublicationActions(context) {
         timeout: 120000,
         interval: 4000
       })
-        .then(publication => {
-          model.lastSyncInfo = { ...model.lastSyncInfo, ...publication };
+        .then(publicationResult => {
+          model.lastSyncInfo = { ...model.lastSyncInfo, ...publicationResult };
           context.setAwaitingDeployment('');
-          dependencies.auditLog?.confirmPublication?.(result.deploymentId, publication.publishedAt);
+          dependencies.auditLog?.confirmPublication?.(result.deploymentId, publicationResult.publishedAt);
           context.storeSyncMeta();
           context.publishStatus('published');
-          dependencies.toast?.({ type: 'success', title: 'Portal sincronizado', message: 'As alterações já estão disponíveis para os visitantes.' });
+          dependencies.toast?.({ type: 'success', title: 'Portal público sincronizado', message: 'As alterações públicas já estão disponíveis para os visitantes.' });
           if (dependencies.getCurrentView?.() === 'admin') dependencies.renderAdmin?.();
         })
         .catch(() => {
-          context.publishStatus('publishing', 'Envio concluído; propagação em andamento');
+          context.publishStatus('publishing', 'Envio concluído; propagação pública em andamento');
           if (dependencies.getCurrentView?.() === 'admin') dependencies.renderAdmin?.();
         });
 
@@ -212,12 +180,10 @@ export function createPublicationActions(context) {
     } catch (error) {
       console.error(error);
       context.publishStatus('error');
-      dependencies.toast?.(error?.message || 'Falha ao sincronizar com o GitHub.');
+      dependencies.toast?.(error?.message || 'Falha ao sincronizar o conteúdo público com o GitHub.');
       return { ok: false, reason: 'error', error };
     }
   };
-
-
 
   return {
     commitPendingChanges,
