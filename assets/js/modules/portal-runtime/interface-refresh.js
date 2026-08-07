@@ -1,10 +1,10 @@
-import { cloneState } from '../../core/portal-state.js?v=6.36.2';
-import { remotePayloadVersion } from './domain.js?v=6.36.2';
+import { cloneState } from '../../core/portal-state.js?v=6.37.0';
+import { remotePayloadVersion } from './domain.js?v=6.37.0';
 import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   roleHasCapability
-} from './authorization.js?v=6.36.2';
+} from './authorization.js?v=6.37.0';
 
 export function createInterfaceRefreshActions(context) {
   const { dependencies, services, model } = context;

@@ -74,3 +74,10 @@ Nesta versão, a Configuração aceita URLs HTTPS em `*.workers.dev` e endereço
 ## Backups privados e integridade
 
 O Worker 1.2.0 aplica checksum SHA-256 ao estado principal e aos backups versionados. Uma substituição completamente vazia é recusada quando já existem registros privados. Restaurações exigem sessão administrativa, revisão atual e criação prévia de um ponto de segurança. O diagnóstico de anexos usa apenas o binding R2 e não publica URLs permanentes nem credenciais.
+
+
+## Banco D1 e fronteira privada — versão 6.37.0
+
+O binding `PORTAL_DB` existe somente no Cloudflare Worker. O navegador nunca recebe credenciais do banco e continua acessando os dados privados por sessões temporárias. O D1 passa a ser a fonte principal somente depois de uma migração autenticada, com conferência de revisão e backup prévio no R2.
+
+O R2 permanece privado e armazena comprovantes, backups versionados e um espelho de contingência. A restauração de um backup usa a fonte ativa: quando o D1 está ativo, o estado restaurado é escrito no banco e novamente espelhado no R2.

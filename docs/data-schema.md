@@ -106,3 +106,13 @@ O campo legado `active` é mantido por compatibilidade. Ele é `false` somente p
 - Pagamentos usam `mutualGroupId`, `mutualEventId`, `mutualMemberId` e `mutualChargeKey`.
 - A chave de cobrança segue `grupo::evento::participante`.
 - A migração v10→v11 remove a recorrência mensal legada e não cria eventos retroativos.
+
+
+## Persistência D1 — esquema 1
+
+O estado privado possui duas representações gravadas atomicamente:
+
+- `portal_state_snapshot`: snapshot canônico que preserva exatamente o contrato JSON atual e o checksum;
+- projeções relacionais: configurações, contas, categorias, movimentações, anexos, grupos familiares e mútuas.
+
+Cada entidade relacional mantém também um `payload` JSON validado para preservar campos já existentes e permitir evolução compatível. Colunas indexadas atendem consultas por data, situação, conta, categoria e vínculos de mútuas. O snapshot é usado para manter compatibilidade com o frontend durante esta primeira fase; as projeções permitem evoluir posteriormente para endpoints granulares sem nova migração de dados.

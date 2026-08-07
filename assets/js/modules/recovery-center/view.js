@@ -1,4 +1,4 @@
-import { RECOVERY_AREAS, SNAPSHOT_REASON_LABELS } from './domain.js?v=6.36.2';
+import { RECOVERY_AREAS, SNAPSHOT_REASON_LABELS } from './domain.js?v=6.37.0';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -78,6 +78,23 @@ function privateBackupCard(backup, canWrite) {
   </article>`;
 }
 
+
+function privateDatabaseCard(storage = {}, canWrite = false) {
+  const d1 = storage?.d1 || {};
+  const backend = String(storage?.backend || 'r2');
+  if (!d1.available) {
+    return `<div class="recovery-database is-pending"><div class="recovery-database-icon" aria-hidden="true">🗄️</div><div class="recovery-database-copy"><small>Banco de dados estruturado</small><strong>D1 ainda não vinculado</strong><p>Adicione o binding <code>PORTAL_DB</code> ao Worker para preparar a migração. O Portal continua seguro no R2.</p></div><span class="recovery-database-badge">R2 ativo</span></div>`;
+  }
+  if (!d1.initialized) {
+    return `<div class="recovery-database is-warning"><div class="recovery-database-icon" aria-hidden="true">🧱</div><div class="recovery-database-copy"><small>Cloudflare D1</small><strong>Migrações SQL pendentes</strong><p>O binding foi encontrado, mas o esquema ainda não foi criado. Aplique as migrações do pacote do Worker antes de transferir os dados.</p>${d1.error ? `<em>${escapeHtml(d1.error)}</em>` : ''}</div><span class="recovery-database-badge">Preparação</span></div>`;
+  }
+  if (!d1.active || backend !== 'd1') {
+    return `<div class="recovery-database is-ready"><div class="recovery-database-icon" aria-hidden="true">🗄️</div><div class="recovery-database-copy"><small>Cloudflare D1 · esquema v${Number(d1.schemaVersion || 0)}</small><strong>Banco pronto para receber os dados</strong><p>A migração cria um backup no R2, copia o estado privado para tabelas estruturadas e faz o corte sem apagar o arquivo atual.</p></div>${canWrite ? '<button class="btn btn-primary btn-sm" id="migratePrivateStorageD1Btn" type="button">Migrar para o D1</button>' : '<span class="recovery-readonly-label">Administrador necessário</span>'}</div>`;
+  }
+  const counts = d1.counts || {};
+  return `<div class="recovery-database is-active"><div class="recovery-database-icon" aria-hidden="true">✓</div><div class="recovery-database-copy"><small>Fonte principal · Cloudflare D1</small><strong>Banco estruturado ativo</strong><p>${Number(counts.treasury || 0)} movimentações · ${Number(counts.accounts || 0)} contas · ${Number(counts.mutualGroups || 0)} grupo(s) de mútua · atualizado em ${formatDate(d1.updatedAt)}</p><em>O R2 permanece como espelho de contingência e armazenamento dos anexos.</em></div>${canWrite ? '<button class="btn btn-ghost btn-sm" id="rollbackPrivateStorageR2Btn" type="button">Retornar ao R2</button>' : '<span class="recovery-database-badge">D1 ativo</span>'}</div>`;
+}
+
 function privateRecoverySection(remote = {}) {
   if (!remote.available) {
     return `<section class="recovery-cloud"><header><div><span class="section-eyebrow">Cloudflare R2</span><h3>Proteção do estado privado</h3></div></header><div class="recovery-cloud-empty"><span aria-hidden="true">☁️</span><div><strong>Disponível após entrar no painel</strong><p>Entre como Administrador ou Diretoria para verificar os dados privados, anexos e backups versionados.</p></div></div></section>`;
@@ -100,7 +117,8 @@ function privateRecoverySection(remote = {}) {
   const backups = Array.isArray(remote.backups) ? remote.backups : [];
 
   return `<section class="recovery-cloud">
-    <header><div><span class="section-eyebrow">Cloudflare R2</span><h3>Proteção do estado privado</h3><p>Backups automáticos, integridade da Tesouraria e conferência dos comprovantes.</p></div><div class="recovery-cloud-actions">${remote.canWrite ? '<button class="btn btn-primary btn-sm" id="createPrivateBackupBtn" type="button">＋ Criar backup no R2</button>' : ''}<button class="btn btn-ghost btn-sm" id="refreshPrivateRecoveryBtn" type="button">Verificar agora</button></div></header>
+    <header><div><span class="section-eyebrow">Dados privados</span><h3>D1, R2 e continuidade operacional</h3><p>Banco estruturado, backups automáticos e conferência dos comprovantes.</p></div><div class="recovery-cloud-actions">${remote.canWrite ? '<button class="btn btn-primary btn-sm" id="createPrivateBackupBtn" type="button">＋ Criar backup no R2</button>' : ''}<button class="btn btn-ghost btn-sm" id="refreshPrivateRecoveryBtn" type="button">Verificar agora</button></div></header>
+    ${privateDatabaseCard(remote.storage, remote.canWrite)}
     <div class="recovery-cloud-overview">
       <div class="recovery-health is-${escapeHtml(integrity.status || 'warning')}"><span aria-hidden="true">${status.icon}</span><div><small>Integridade remota</small><strong>${status.label}</strong><p>${problems.length ? `${problems.length} observação(ões)` : 'Nenhuma inconsistência encontrada'}</p></div></div>
       <div class="recovery-stat"><small>Estado protegido</small><strong>${Number(summary.treasury || 0)} movimentações</strong><p>${Number(summary.accounts || 0)} contas · ${formatDate(current.updatedAt)}</p></div>
@@ -132,7 +150,7 @@ export function recoveryCenterHtml({ snapshots, diagnostic, storageMode = '', st
     ${privateRecoverySection(remote)}
     <section class="recovery-diagnostic"><header><div><span class="section-eyebrow">Verificação</span><h3>Integridade dos dados atuais</h3></div><small>Atualizado em ${formatDate(diagnostic.checkedAt)}</small></header><div class="recovery-check-list">${diagnosticChecks(diagnostic)}</div></section>
     <section class="recovery-snapshots"><header><div><span class="section-eyebrow">Linha de segurança</span><h3>Pontos de recuperação</h3></div><small>Os ${snapshots.length} ponto(s) mais recentes deste navegador</small></header><div class="recovery-snapshot-list">${snapshots.length ? snapshots.map(snapshotCard).join('') : '<div class="recovery-empty"><span aria-hidden="true">◇</span><h3>Nenhum ponto criado</h3><p>O portal criará cópias automáticas antes de importar, publicar, descartar ou recarregar dados.</p></div>'}</div></section>
-    <footer class="recovery-note">Os pontos locais protegem alterações ainda não publicadas neste navegador. Os backups versionados do R2 protegem o estado privado já sincronizado.</footer>
+    <footer class="recovery-note">Os pontos locais protegem alterações ainda não publicadas neste navegador. O D1 organiza os dados privados; o R2 mantém anexos, espelho de contingência e backups versionados.</footer>
   </section>`;
 }
 

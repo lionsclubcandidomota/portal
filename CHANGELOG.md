@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.37.0 — Migração segura para Cloudflare D1
+
+- Adicionado esquema D1 versionado para Tesouraria, contas, categorias, grupos familiares, mútuas, eventos e anexos.
+- Worker 1.3.0 passa a alternar automaticamente entre R2 e D1 após migração autenticada.
+- Central de Recuperação exibe preparação, migração, backend ativo e retorno temporário ao R2.
+- Gravações D1 usam lote transacional e mantêm backup e espelho de contingência no R2.
+- Snapshot canônico e projeções relacionais são atualizados atomicamente, preservando o JSON atual e preparando endpoints granulares.
+- Inserções são compactadas com JSON SQL e limitadas a 40 consultas de escrita por sincronização para compatibilidade com o Workers Free.
+- Criadas rotas de status, migração e rollback com revisão otimista.
+- Adicionados testes de contrato, reconstrução do estado e interface de migração.
+
+
 ## 6.36.2 — Compartilhamento de aniversário somente com a imagem
 
 - Remove o título e a mensagem automática enviados junto à arte de aniversário.

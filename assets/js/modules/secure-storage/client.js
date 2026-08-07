@@ -1,7 +1,7 @@
 import {
   createPrivatePortalState,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.36.2';
+} from '../../core/portal-data-boundary.js?v=6.37.0';
 
 const SESSION_REFRESH_MARGIN_MS = 60_000;
 const R2_STORAGE_KIND = 'r2';
@@ -156,7 +156,7 @@ export async function testSecureStorageConnection(workerUrl) {
     cache: 'no-store'
   });
   const payload = await readJson(response, 'Não foi possível consultar o Cloudflare Worker');
-  if (payload.status !== 'ok' || payload.storage !== 'cloudflare-r2') {
+  if (payload.status !== 'ok' || !String(payload.storage || '').startsWith('cloudflare-r2')) {
     throw new Error('O endereço respondeu, mas não corresponde ao Worker de anexos do Portal.');
   }
   return payload;
@@ -242,6 +242,43 @@ export async function savePrivatePortalState(state) {
     revision: activeSession.privateRevision,
     updatedAt: String(payload.updatedAt || '')
   };
+}
+
+
+export async function getPrivateStorageStatus(state) {
+  const { profile, token } = requireSession(state, ['admin', 'director']);
+  const response = await fetch(apiUrl(profile.workerUrl, '/api/storage/status'), {
+    method: 'GET',
+    headers: jsonHeaders(token),
+    cache: 'no-store'
+  });
+  return readJson(response, 'Não foi possível consultar o banco de dados privado');
+}
+
+export async function migratePrivateStorageToD1(state) {
+  const { profile, token } = requireSession(state, ['admin']);
+  const response = await fetch(apiUrl(profile.workerUrl, '/api/storage/migrate-d1'), {
+    method: 'POST',
+    headers: jsonHeaders(token),
+    body: JSON.stringify({ expectedRevision: activeSession.privateRevision }),
+    cache: 'no-store'
+  });
+  const payload = await readJson(response, 'Não foi possível migrar os dados privados para o D1');
+  activeSession.privateRevision = String(payload.revision || activeSession.privateRevision || '');
+  return payload;
+}
+
+export async function rollbackPrivateStorageToR2(state) {
+  const { profile, token } = requireSession(state, ['admin']);
+  const response = await fetch(apiUrl(profile.workerUrl, '/api/storage/rollback-r2'), {
+    method: 'POST',
+    headers: jsonHeaders(token),
+    body: JSON.stringify({ expectedRevision: activeSession.privateRevision }),
+    cache: 'no-store'
+  });
+  const payload = await readJson(response, 'Não foi possível retornar temporariamente ao R2');
+  activeSession.privateRevision = String(payload.revision || activeSession.privateRevision || '');
+  return payload;
 }
 
 export async function listPrivateStateBackups(state) {

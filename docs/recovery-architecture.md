@@ -70,3 +70,8 @@ O relatório mostra:
 - quantidade de backups disponíveis.
 
 A Central de Recuperação apresenta esse resultado sem expor o conteúdo dos arquivos ou credenciais do bucket.
+
+
+## Continuidade com D1 — versão 6.37.0
+
+A Central de Recuperação consulta `GET /api/storage/status` e apresenta claramente a fonte principal. O corte para D1 cria um backup `before-d1-migration`; o retorno ao R2 cria `before-d1-rollback`. Em operação normal, cada gravação D1 mantém um espelho atual no objeto `__portal/private-state-v1.json`, além da linha do tempo de backups.

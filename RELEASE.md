@@ -1,3 +1,11 @@
+
+## Versão 6.37.0
+
+Esta versão introduz a migração segura do estado privado para Cloudflare D1. Publique primeiro o Worker 1.3.0, crie o banco, aplique as migrações e somente depois publique o Portal. O corte de dados é feito pela Central de Recuperação e mantém o R2 como espelho e backup.
+
+O D1 guarda um snapshot canônico e projeções relacionais na mesma transação. O frontend permanece compatível com o contrato atual enquanto a camada SQL fica pronta para futuras rotas granulares.
+
+Guia: `docs/cloudflare-d1-migration.md`.
 # Release 6.36.2
 
 Esta versão ajusta o botão **Desejar parabéns** para compartilhar somente a imagem gerada pelo Portal.

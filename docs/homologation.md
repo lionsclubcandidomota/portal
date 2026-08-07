@@ -1,4 +1,4 @@
-# Homologação — v6.36.2
+# Homologação — v6.37.0
 
 ## Fluxos prioritários do Portal
 
@@ -40,6 +40,24 @@ Execute esta seção somente depois de publicar o Worker e salvar sua URL em Con
 9. Interromper propositalmente uma publicação de homologação antes do commit e confirmar que o estado oficial não aponta para arquivos incompletos.
 10. Fechar ou minimizar o progresso da sincronização e confirmar que o envio continua em segundo plano.
 
+
+## Migração e homologação do Cloudflare D1
+
+Execute esta seção somente depois de criar o banco, aplicar `0001_portal_private_state.sql` e publicar o Worker 1.3.0.
+
+1. Abra `/health` e confirme `storage: "cloudflare-r2+d1"`, D1 disponível e inicializado, mas ainda inativo.
+2. Publique o Portal 6.37.0 e entre como Administrador.
+3. Abra **Recuperação e integridade** e confirme **Banco pronto para receber os dados**.
+4. Registre os totais atuais de movimentações, contas, grupos, mútuas e anexos.
+5. Clique em **Migrar para o D1** e confirme a criação do backup prévio no R2.
+6. Atualize `/health` e confirme `privateState: "d1"` e `d1.active: true`.
+7. Compare as contagens do D1 com os totais registrados antes do corte.
+8. Recarregue o Portal, teste uma inclusão, uma edição e uma exclusão e confirme a persistência.
+9. Abra anexos antigos e confirme que continuam sendo lidos do mesmo bucket R2.
+10. Crie um backup manual e restaure-o; com o D1 ativo, confirme que a restauração atualiza o banco e o espelho do R2.
+11. Em homologação, teste **Retornar ao R2**, confirme que os dados mais recentes foram copiados e depois migre novamente para o D1.
+12. Confirme que o GitHub Actions continua verde e que `data/dados.json` permanece sem dados financeiros.
+
 ## Regressões
 
 - Associados ativos continuam participando das Mensalidades e podem participar das Mútuas.
@@ -64,16 +82,16 @@ Execute esta seção somente depois de publicar o Worker e salvar sua URL em Con
 Antes da homologação funcional, publique o Worker atualizado e execute a migração descrita em `docs/private-data-migration.md`.
 
 
-## Pipeline de release — versão 6.36.2
+## Pipeline de release — versão 6.37.0
 
 1. Execute `npm run release:build`.
 2. Confirme que a pasta `dist` contém os três ZIPs e `checksums.sha256`.
 3. Execute `npm run release:dist:verify` e confirme a validação dos artefatos.
-4. Publique somente o conteúdo de `portal-site-v6.36.2.zip` no GitHub Pages.
-5. Atualize o Worker primeiro com o pacote `cloudflare-worker-v1.2.0.zip` quando houver alteração no Worker.
+4. Publique somente o conteúdo de `portal-site-v6.37.0.zip` no GitHub Pages.
+5. Atualize o Worker primeiro com o pacote `cloudflare-worker-v1.3.0.zip` quando houver alteração no Worker.
 
 
-## GitHub Actions — versão 6.36.2
+## GitHub Actions — versão 6.37.0
 
 1. Envie a pasta `.github/workflows` ao repositório.
 2. Na aba **Actions**, confirme a execução de **Qualidade do Portal**.

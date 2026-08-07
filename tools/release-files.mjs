@@ -44,7 +44,7 @@ export const WORKER_FILES = Object.freeze([
   'wrangler.toml.example',
   'wrangler.ci.toml'
 ]);
-export const WORKER_ROOTS = Object.freeze(['src']);
+export const WORKER_ROOTS = Object.freeze(['src', 'migrations']);
 
 const EXCLUDED_NAMES = new Set([
   'node_modules',

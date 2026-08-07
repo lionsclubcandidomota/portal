@@ -1,0 +1,278 @@
+import assert from 'node:assert/strict';
+import { DatabaseSync } from 'node:sqlite';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import {
+  D1_SCHEMA_VERSION,
+  composePrivateState,
+  decomposePrivateState,
+  getD1StorageStatus,
+  readD1PrivateState,
+  writeD1PrivateState
+} from '../cloudflare/attachment-worker/src/d1-storage.js';
+import {
+  clearSecureStorageSession,
+  connectSecureStorageSession,
+  getPrivateStorageStatus,
+  loadPrivatePortalState,
+  migratePrivateStorageToD1,
+  rollbackPrivateStorageToR2
+} from '../assets/js/modules/secure-storage/client.js';
+import { recoveryCenterHtml } from '../assets/js/modules/recovery-center/view.js';
+
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const workerUrl = 'https://lions-portal-anexos.exemplo.workers.dev';
+const state = {
+  settings: { secureStorage: { enabled: true, workerUrl } },
+  treasury: []
+};
+
+
+class SQLitePreparedStatement {
+  constructor(database, sql, values = []) {
+    this.database = database;
+    this.sql = sql;
+    this.values = values;
+  }
+
+  bind(...values) {
+    return new SQLitePreparedStatement(this.database, this.sql, values);
+  }
+
+  first() {
+    return this.database.prepare(this.sql).get(...this.values) || null;
+  }
+
+  run() {
+    return this.database.prepare(this.sql).run(...this.values);
+  }
+
+  result() {
+    const statement = this.database.prepare(this.sql);
+    if (statement.columns().length) return { results: statement.all(...this.values) };
+    statement.run(...this.values);
+    return { results: [] };
+  }
+}
+
+class SQLiteD1Database {
+  constructor(database) {
+    this.database = database;
+  }
+
+  prepare(sql) {
+    return new SQLitePreparedStatement(this.database, sql);
+  }
+
+  async batch(statements) {
+    this.database.exec('BEGIN');
+    try {
+      const results = statements.map(statement => statement.result());
+      this.database.exec('COMMIT');
+      return results;
+    } catch (error) {
+      this.database.exec('ROLLBACK');
+      throw error;
+    }
+  }
+}
+
+function response(payload, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+test('adaptador D1 preserva o estado privado e cria coleções relacionais', () => {
+  const original = {
+    version: 11,
+    settings: { membershipMonthlyFee: 40, accessProfiles: { director: { enabled: true } } },
+    treasuryAccounts: [{ id: 'acc-1', name: 'Conta', active: true }],
+    treasuryCategories: ['Mensalidades', 'Mútuas'],
+    familyGroups: [{ id: 'fam-1', name: 'Família', memberIds: ['m-1', 'm-2'], primaryMemberId: 'm-1' }],
+    mutualGroups: [{
+      id: 'mut-1',
+      name: 'Mútua 658',
+      createdDate: '2026-08-01',
+      memberships: [{ id: 'membership-1', memberId: 'm-1', joinedDate: '2026-08-01', endedDate: '' }],
+      events: [{ id: 'event-1', deceasedName: 'Associado', deathDate: '2026-08-05', amountPerParticipant: 15, participantIds: ['m-1'] }]
+    }],
+    treasury: [{
+      id: 'mov-1',
+      date: '2026-08-06',
+      accountId: 'acc-1',
+      category: 'Mútuas',
+      status: 'Realizado',
+      entry: 15,
+      exit: 0,
+      mutualGroupId: 'mut-1',
+      mutualEventId: 'event-1',
+      mutualMemberId: 'm-1',
+      attachments: [{ id: 'att-1', storage: 'r2', objectKey: 'treasury/mov-1/att-1-a.pdf', name: 'Comprovante.pdf' }]
+    }],
+    futurePrivateField: { enabled: true }
+  };
+  const model = decomposePrivateState(original);
+  assert.equal(D1_SCHEMA_VERSION, 1);
+  assert.equal(model.treasury.length, 1);
+  assert.equal(model.treasury[0].attachments.length, 1);
+  assert.equal(model.familyGroups[0].members.length, 2);
+  assert.equal(model.mutualGroups[0].events[0].participants.length, 1);
+
+  const restored = composePrivateState({
+    meta: { state_version: model.stateVersion },
+    settings: { payload: model.settings },
+    accounts: model.accounts,
+    categories: model.categories,
+    familyGroups: model.familyGroups,
+    mutualGroups: model.mutualGroups,
+    treasury: model.treasury,
+    extras: model.extras
+  });
+  assert.deepEqual(restored, original);
+});
+
+test('migração SQL cria tabelas, vínculos e índices do Portal', async () => {
+  const migration = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0001_portal_private_state.sql'), 'utf8');
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS portal_meta/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS portal_state_snapshot/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS treasury_movements/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS mutual_events/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS treasury_attachments/);
+  assert.match(migration, /FOREIGN KEY \(movement_id\) REFERENCES treasury_movements\(id\) ON DELETE CASCADE/);
+  assert.match(migration, /idx_treasury_movements_date/);
+  assert.match(migration, /schema_version', '1'/);
+});
+
+test('gravação D1 é transacional, compacta e preserva o snapshot exato', async () => {
+  const migration = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0001_portal_private_state.sql'), 'utf8');
+  const database = new DatabaseSync(':memory:');
+  database.exec(migration);
+  const env = { PORTAL_DB: new SQLiteD1Database(database) };
+  const privateState = {
+    version: 11,
+    settings: { membershipMonthlyFee: 40 },
+    treasuryAccounts: [{ id: 'acc-1', name: 'Conta principal', active: true }],
+    treasuryCategories: ['Mútuas'],
+    familyGroups: [],
+    mutualGroups: [],
+    treasury: Array.from({ length: 74 }, (_, index) => ({
+      id: `mov-${index + 1}`,
+      date: '2026-08-06',
+      accountId: 'acc-1',
+      category: 'Mútuas',
+      status: 'Realizado',
+      entry: 10,
+      exit: 0,
+      attachments: []
+    }))
+  };
+  const initialStatus = await getD1StorageStatus(env);
+  const saved = await writeD1PrivateState(env, privateState, {
+    revision: 'revision-1',
+    updatedAt: '2026-08-06T23:00:00.000Z',
+    updatedBy: 'teste',
+    checksum: 'checksum-1',
+    activate: true,
+    storageStatus: initialStatus
+  });
+  assert.ok(saved.statements <= 40, `A gravação utilizou ${saved.statements} consultas.`);
+  const activeStatus = await getD1StorageStatus(env);
+  const restored = await readD1PrivateState(env, { storageStatus: activeStatus });
+  assert.equal(activeStatus.active, true);
+  assert.equal(activeStatus.counts.treasury, 74);
+  assert.deepEqual(restored.state, privateState);
+  database.close();
+});
+
+test('cliente consulta o backend e executa migração e retorno com revisão otimista', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    const pathname = new URL(url).pathname;
+    calls.push({ pathname, method: options.method || 'GET', body: options.body ? JSON.parse(options.body) : null });
+    if (pathname === '/api/session') {
+      return response({ token: 'session-token', role: 'admin', expiresAt: new Date(Date.now() + 600_000).toISOString() });
+    }
+    if (pathname === '/api/private-state') {
+      return response({ found: true, state: { treasury: [] }, revision: 'rev-r2', updatedAt: '2026-08-06T20:00:00.000Z' });
+    }
+    if (pathname === '/api/storage/status') {
+      return response({ backend: 'r2', d1: { available: true, initialized: true, active: false, schemaVersion: 1 } });
+    }
+    if (pathname === '/api/storage/migrate-d1') {
+      return response({ migrated: true, backend: 'd1', revision: 'rev-r2' });
+    }
+    if (pathname === '/api/storage/rollback-r2') {
+      return response({ rolledBack: true, backend: 'r2', revision: 'rev-r2' });
+    }
+    return response({ error: 'unexpected' }, 500);
+  };
+
+  try {
+    await connectSecureStorageSession({ state, role: 'admin', credential: 'github-token' });
+    await loadPrivatePortalState(state);
+    const status = await getPrivateStorageStatus(state);
+    const migrated = await migratePrivateStorageToD1(state);
+    const rolledBack = await rollbackPrivateStorageToR2(state);
+    assert.equal(status.d1.initialized, true);
+    assert.equal(migrated.backend, 'd1');
+    assert.equal(rolledBack.backend, 'r2');
+    assert.equal(calls.find(call => call.pathname === '/api/storage/migrate-d1').body.expectedRevision, 'rev-r2');
+    assert.equal(calls.find(call => call.pathname === '/api/storage/rollback-r2').body.expectedRevision, 'rev-r2');
+  } finally {
+    clearSecureStorageSession();
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('Central de Recuperação diferencia D1 principal e R2 de contingência', () => {
+  const common = {
+    snapshots: [],
+    diagnostic: { status: 'ok', errors: 0, warnings: 0, checkedAt: '2026-08-06T20:00:00.000Z', checks: [] },
+    remote: {
+      available: true,
+      loading: false,
+      canWrite: true,
+      retention: 20,
+      backups: [],
+      current: { updatedAt: '2026-08-06T20:00:00.000Z', summary: { treasury: 74, accounts: 3 } },
+      diagnostic: {
+        status: 'ok',
+        errors: [],
+        warnings: [],
+        current: { updatedAt: '2026-08-06T20:00:00.000Z', summary: { treasury: 74, accounts: 3 } },
+        attachments: { referenced: 9, existing: 9, missing: [], orphaned: [] }
+      }
+    }
+  };
+  const ready = recoveryCenterHtml({
+    ...common,
+    remote: { ...common.remote, storage: { backend: 'r2', d1: { available: true, initialized: true, active: false, schemaVersion: 1 } } }
+  });
+  assert.match(ready, /Banco pronto para receber os dados/);
+  assert.match(ready, /migratePrivateStorageD1Btn/);
+
+  const active = recoveryCenterHtml({
+    ...common,
+    remote: { ...common.remote, storage: { backend: 'd1', d1: { available: true, initialized: true, active: true, schemaVersion: 1, updatedAt: '2026-08-06T20:00:00.000Z', counts: { treasury: 74, accounts: 3, mutualGroups: 1 } } } }
+  });
+  assert.match(active, /Banco estruturado ativo/);
+  assert.match(active, /rollbackPrivateStorageR2Btn/);
+  assert.match(active, /R2 permanece como espelho/);
+});
+
+test('Worker expõe rotas de migração, status e rollback do D1', async () => {
+  const worker = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/src/index.js'), 'utf8');
+  const config = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/wrangler.toml.example'), 'utf8');
+  assert.match(worker, /\/api\/storage\/status/);
+  assert.match(worker, /\/api\/storage\/migrate-d1/);
+  assert.match(worker, /\/api\/storage\/rollback-r2/);
+  assert.match(worker, /privateState: storage\.backend/);
+  assert.match(config, /\[\[d1_databases\]\]/);
+  assert.match(config, /binding = "PORTAL_DB"/);
+  assert.match(config, /migrations_dir = "migrations"/);
+});

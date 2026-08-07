@@ -6,6 +6,12 @@ compatibility_date = "2026-08-04"
 binding = "ATTACHMENTS"
 bucket_name = "SEU_BUCKET_R2"
 
+[[d1_databases]]
+binding = "PORTAL_DB"
+database_name = "lions-portal-dados"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
 [vars]
 ALLOWED_ORIGINS = "https://lionsclubcandidomota.github.io,http://localhost:*,http://127.0.0.1:*"
 GITHUB_OWNER = "lionsclubcandidomota"

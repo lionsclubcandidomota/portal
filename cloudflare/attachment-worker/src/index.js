@@ -1,3 +1,12 @@
+import {
+  D1_SCHEMA_VERSION,
+  deactivateD1PrivateState,
+  getD1StorageStatus,
+  readD1PrivateState,
+  writeD1PrivateState
+} from './d1-storage.js';
+
+const WORKER_VERSION = '1.3.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -354,7 +363,7 @@ async function parsePrivateStateObject(object, label = 'estado privado') {
   return { state, revision, updatedAt, checksum, summary, objectKeys };
 }
 
-async function readPrivateStateRecord(env) {
+async function readR2PrivateStateRecord(env) {
   const object = await env.ATTACHMENTS.get(PRIVATE_STATE_KEY);
   if (!object) return null;
   return parsePrivateStateObject(object, 'armazenamento privado do Portal');
@@ -422,7 +431,7 @@ async function prunePrivateBackups(env) {
   return Math.min(ordered.length, MAX_PRIVATE_BACKUPS);
 }
 
-async function persistPrivateState(env, state, session, { reason = 'automatic', label = '' } = {}) {
+async function persistR2PrivateState(env, state, session, { reason = 'automatic', label = '' } = {}) {
   const revision = crypto.randomUUID();
   const updatedAt = new Date().toISOString();
   const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
@@ -442,6 +451,214 @@ async function persistPrivateState(env, state, session, { reason = 'automatic', 
   });
   await prunePrivateBackups(env);
   return { revision, updatedAt, checksum: envelope.checksum, summary: envelope.summary, backup };
+}
+
+async function privateStorageBackend(env) {
+  const d1 = await getD1StorageStatus(env);
+  return { backend: d1.active ? 'd1' : 'r2', d1 };
+}
+
+async function readPrivateStateRecord(env, resolvedStorage = null) {
+  const storage = resolvedStorage || await privateStorageBackend(env);
+  if (storage.backend !== 'd1') return readR2PrivateStateRecord(env);
+  const record = await readD1PrivateState(env, { storageStatus: storage.d1 });
+  if (!record) return null;
+  const serializedState = JSON.stringify(record.state);
+  const checksum = await sha256Hex(encoder.encode(serializedState));
+  if (record.checksum && record.checksum !== checksum) {
+    throw new Error('O estado privado do D1 falhou na verificação de integridade.');
+  }
+  const { summary, objectKeys } = privateStateSummary(record.state);
+  return {
+    ...record,
+    checksum,
+    summary,
+    objectKeys,
+    backend: 'd1'
+  };
+}
+
+async function writeR2CurrentMirror(env, envelope, { updatedBy, reason, label }) {
+  await env.ATTACHMENTS.put(PRIVATE_STATE_KEY, envelope.serialized, {
+    httpMetadata: { contentType: 'application/json; charset=utf-8' },
+    customMetadata: privateStateMetadata({
+      revision: envelope.revision,
+      updatedAt: envelope.updatedAt,
+      updatedBy,
+      checksum: envelope.checksum,
+      summary: envelope.summary,
+      reason,
+      label
+    })
+  });
+}
+
+async function persistD1PrivateState(env, state, session, { reason = 'automatic', label = '', storageStatus = null } = {}) {
+  const revision = crypto.randomUUID();
+  const updatedAt = new Date().toISOString();
+  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
+  const envelope = await privateStateEnvelope(state, { revision, updatedAt });
+  envelope.revision = revision;
+  envelope.updatedAt = updatedAt;
+  const d1 = await writeD1PrivateState(env, state, {
+    revision,
+    updatedAt,
+    updatedBy,
+    checksum: envelope.checksum,
+    activate: true,
+    storageStatus
+  });
+  let mirrorWarning = '';
+  let backup = null;
+  try {
+    backup = await putPrivateBackup(env, envelope, { updatedBy, reason, label });
+    await writeR2CurrentMirror(env, envelope, { updatedBy, reason: 'd1-mirror', label: label || 'Espelho atual do D1' });
+    await prunePrivateBackups(env);
+  } catch (error) {
+    mirrorWarning = `Os dados foram salvos no D1, mas o espelho no R2 não pôde ser atualizado: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(mirrorWarning);
+  }
+  return {
+    revision,
+    updatedAt,
+    checksum: envelope.checksum,
+    summary: envelope.summary,
+    backup,
+    backend: 'd1',
+    d1,
+    mirrorWarning
+  };
+}
+
+async function persistPrivateState(env, state, session, options = {}, resolvedStorage = null) {
+  const storage = resolvedStorage || await privateStorageBackend(env);
+  return storage.backend === 'd1'
+    ? persistD1PrivateState(env, state, session, { ...options, storageStatus: storage.d1 })
+    : persistR2PrivateState(env, state, session, options);
+}
+
+async function handleStorageStatus(env) {
+  const d1 = await getD1StorageStatus(env);
+  const r2 = await readR2PrivateStateRecord(env);
+  return {
+    backend: d1.active ? 'd1' : 'r2',
+    d1: {
+      available: d1.available,
+      initialized: d1.initialized,
+      active: d1.active,
+      schemaVersion: d1.schemaVersion,
+      requiredSchemaVersion: D1_SCHEMA_VERSION,
+      revision: d1.revision,
+      updatedAt: d1.updatedAt,
+      migratedAt: d1.migratedAt || '',
+      counts: d1.counts || {},
+      error: d1.error || ''
+    },
+    r2: r2 ? {
+      found: true,
+      revision: r2.revision,
+      updatedAt: r2.updatedAt,
+      checksum: r2.checksum,
+      summary: r2.summary
+    } : { found: false, revision: '', updatedAt: '', checksum: '', summary: null }
+  };
+}
+
+async function handleD1Migration(request, env, session) {
+  const status = await getD1StorageStatus(env);
+  if (!status.available) throw new Error('O binding PORTAL_DB ainda não foi configurado no Worker.');
+  if (!status.initialized) throw new Error('Aplique a migração 0001_portal_private_state.sql antes de iniciar a transferência.');
+  if (status.schemaVersion !== D1_SCHEMA_VERSION) {
+    throw new Error(`O banco D1 está na versão ${status.schemaVersion}; aplique as migrações até a versão ${D1_SCHEMA_VERSION}.`);
+  }
+  const source = await readR2PrivateStateRecord(env);
+  if (!source) throw new Response('O estado privado atual não foi encontrado no R2.', { status: 404 });
+  const body = await request.json().catch(() => ({}));
+  const expectedRevision = String(body.expectedRevision || '');
+  if (expectedRevision && expectedRevision !== source.revision) {
+    throw new Response('O estado privado mudou desde a última leitura. Atualize a Central de Recuperação antes de migrar.', { status: 409 });
+  }
+  const migratedAt = new Date().toISOString();
+  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
+  const envelope = await privateStateEnvelope(source.state, {
+    revision: source.revision || crypto.randomUUID(),
+    updatedAt: source.updatedAt || migratedAt
+  });
+  envelope.revision = source.revision || crypto.randomUUID();
+  envelope.updatedAt = source.updatedAt || migratedAt;
+  await putPrivateBackup(env, envelope, {
+    updatedBy,
+    reason: 'before-d1-migration',
+    label: 'Estado do R2 antes da migração para o D1'
+  });
+  const result = await writeD1PrivateState(env, source.state, {
+    revision: envelope.revision,
+    updatedAt: envelope.updatedAt,
+    updatedBy,
+    checksum: envelope.checksum,
+    migratedAt,
+    activate: true,
+    storageStatus: status
+  });
+  let mirrorWarning = '';
+  try {
+    await writeR2CurrentMirror(env, envelope, {
+      updatedBy,
+      reason: 'd1-source-mirror',
+      label: 'Espelho preservado após a migração para o D1'
+    });
+    await prunePrivateBackups(env);
+  } catch (error) {
+    mirrorWarning = `O D1 foi ativado, mas a manutenção do espelho no R2 apresentou falha: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(mirrorWarning);
+  }
+  return {
+    migrated: true,
+    backend: 'd1',
+    revision: envelope.revision,
+    updatedAt: envelope.updatedAt,
+    checksum: envelope.checksum,
+    summary: envelope.summary,
+    d1: result,
+    mirrorWarning
+  };
+}
+
+async function handleD1Rollback(request, env, session) {
+  const current = await readD1PrivateState(env);
+  if (!current) throw new Response('O D1 não está ativo ou não possui dados para retornar ao R2.', { status: 409 });
+  const body = await request.json().catch(() => ({}));
+  const expectedRevision = String(body.expectedRevision || '');
+  if (expectedRevision && expectedRevision !== current.revision) {
+    throw new Response('O estado privado mudou desde a última leitura. Atualize a Central de Recuperação antes de retornar ao R2.', { status: 409 });
+  }
+  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
+  const envelope = await privateStateEnvelope(current.state, {
+    revision: current.revision || crypto.randomUUID(),
+    updatedAt: current.updatedAt || new Date().toISOString()
+  });
+  envelope.revision = current.revision || crypto.randomUUID();
+  envelope.updatedAt = current.updatedAt || new Date().toISOString();
+  await putPrivateBackup(env, envelope, {
+    updatedBy,
+    reason: 'before-d1-rollback',
+    label: 'Estado do D1 antes do retorno temporário ao R2'
+  });
+  await writeR2CurrentMirror(env, envelope, {
+    updatedBy,
+    reason: 'd1-rollback-mirror',
+    label: 'Estado atual copiado do D1 para o R2'
+  });
+  await deactivateD1PrivateState(env);
+  await prunePrivateBackups(env);
+  return {
+    rolledBack: true,
+    backend: 'r2',
+    revision: envelope.revision,
+    updatedAt: envelope.updatedAt,
+    checksum: envelope.checksum,
+    summary: envelope.summary
+  };
 }
 
 async function publishedDirectorProfile(env) {
@@ -564,7 +781,8 @@ async function handlePrivateStateWrite(request, env, session) {
     throw new Response('O estado privado excede o limite permitido.', { status: 413 });
   }
 
-  const current = await readPrivateStateRecord(env);
+  const storage = await privateStorageBackend(env);
+  const current = await readPrivateStateRecord(env, storage);
   const expectedRevision = String(body.expectedRevision || '');
   if (current?.revision && expectedRevision !== current.revision) {
     throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de publicar.', { status: 409 });
@@ -590,7 +808,7 @@ async function handlePrivateStateWrite(request, env, session) {
   const saved = await persistPrivateState(env, state, session, {
     reason: current ? 'publication' : 'migration',
     label: current ? 'Estado confirmado após a publicação' : 'Migração inicial para o R2'
-  });
+  }, storage);
   return { saved: true, ...saved };
 }
 
@@ -641,7 +859,8 @@ function requirePrivateBackupKey(value) {
 async function handlePrivateBackupRestore(request, env, session) {
   const body = await request.json().catch(() => ({}));
   const key = requirePrivateBackupKey(body.key);
-  const current = await readPrivateStateRecord(env);
+  const storage = await privateStorageBackend(env);
+  const current = await readPrivateStateRecord(env, storage);
   const expectedRevision = String(body.expectedRevision || '');
   if (current?.revision && expectedRevision !== current.revision) {
     throw new Response('Os dados privados foram atualizados em outra sessão. Atualize a Central de Recuperação antes de restaurar.', { status: 409 });
@@ -665,7 +884,7 @@ async function handlePrivateBackupRestore(request, env, session) {
   const restored = await persistPrivateState(env, backupRecord.state, session, {
     reason: 'restored',
     label: `Restaurado de ${backupRecord.updatedAt || key.split('/').pop()}`
-  });
+  }, storage);
   return {
     restored: true,
     found: true,
@@ -694,7 +913,7 @@ async function handlePrivateIntegrity(env) {
       status: 'error',
       found: false,
       checkedAt: new Date().toISOString(),
-      errors: ['O estado privado principal não existe no R2.'],
+      errors: ['O estado privado principal não existe na fonte de armazenamento ativa.'],
       warnings: [],
       current: null,
       attachments: { referenced: 0, existing: 0, missing: [], invalid: 0, duplicates: 0, orphaned: [] }
@@ -724,13 +943,16 @@ async function handlePrivateIntegrity(env) {
   if (!backups.length) warnings.push('Nenhum backup versionado foi encontrado no R2.');
   if (current.objectKeys.length > MAX_INTEGRITY_REFERENCES) warnings.push(`A verificação detalhada foi limitada aos primeiros ${MAX_INTEGRITY_REFERENCES} anexos.`);
 
+  const storage = await handleStorageStatus(env);
   return {
     status: errors.length ? 'error' : warnings.length ? 'warning' : 'ok',
     found: true,
     checkedAt: new Date().toISOString(),
     errors,
     warnings,
+    storage,
     current: {
+      backend: storage.backend,
       revision: current.revision,
       updatedAt: current.updatedAt,
       checksum: current.checksum,
@@ -849,7 +1071,25 @@ export default {
       }
 
       if (url.pathname === '/health' && request.method === 'GET') {
-        return json({ status: 'ok', storage: 'cloudflare-r2', version: SESSION_VERSION, directorPbkdf2Iterations: DIRECTOR_PASSWORD_ITERATIONS, privateState: 'r2', privateBackups: 'versioned', privateBackupRetention: MAX_PRIVATE_BACKUPS, attachmentIntegrity: 'available' }, 200, cors);
+        const storage = await privateStorageBackend(env);
+        return json({
+          status: 'ok',
+          storage: 'cloudflare-r2+d1',
+          version: SESSION_VERSION,
+          workerVersion: WORKER_VERSION,
+          directorPbkdf2Iterations: DIRECTOR_PASSWORD_ITERATIONS,
+          privateState: storage.backend,
+          d1: {
+            available: storage.d1.available,
+            initialized: storage.d1.initialized,
+            active: storage.d1.active,
+            schemaVersion: storage.d1.schemaVersion,
+            requiredSchemaVersion: D1_SCHEMA_VERSION
+          },
+          privateBackups: 'versioned-r2',
+          privateBackupRetention: MAX_PRIVATE_BACKUPS,
+          attachmentIntegrity: 'available'
+        }, 200, cors);
       }
 
       if (url.pathname === '/api/attachments/object' && request.method === 'GET') {
@@ -863,6 +1103,21 @@ export default {
         const session = await handleSession(request, env);
         clearSessionRateLimit(request);
         return json(session, 200, cors);
+      }
+
+      if (url.pathname === '/api/storage/status' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        return json(await handleStorageStatus(env), 200, cors);
+      }
+
+      if (url.pathname === '/api/storage/migrate-d1' && request.method === 'POST') {
+        const session = await requireSession(request, env, ['admin']);
+        return json(await handleD1Migration(request, env, session), 200, cors);
+      }
+
+      if (url.pathname === '/api/storage/rollback-r2' && request.method === 'POST') {
+        const session = await requireSession(request, env, ['admin']);
+        return json(await handleD1Rollback(request, env, session), 200, cors);
       }
 
       if (url.pathname === '/api/private-state' && request.method === 'GET') {

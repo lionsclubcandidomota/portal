@@ -30,3 +30,8 @@ O Worker grava no objeto interno `__portal/private-state-v1.json`:
 5. Saia e teste o acesso de Visitante e da Diretoria.
 
 A migração preserva o JSON legado até a publicação ser confirmada. Não apague manualmente os dados financeiros antes dessa etapa.
+
+
+## Etapa D1
+
+A migração R2 → D1 é executada pelo Worker, não pelo navegador. Ela verifica a revisão otimista, cria backup, grava as tabelas em um único `batch()` transacional e ativa o banco somente ao final. O arquivo R2 não é removido e permanece como contingência. Consulte `cloudflare-d1-migration.md`.

@@ -2,9 +2,9 @@ import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   roleHasCapability
-} from './authorization.js?v=6.36.2';
+} from './authorization.js?v=6.37.0';
 
-export { ACCESS_ROLES } from './authorization.js?v=6.36.2';
+export { ACCESS_ROLES } from './authorization.js?v=6.37.0';
 
 const DIRECTOR_PROFILE_VERSION = 2;
 const DIRECTOR_PASSWORD_CONTEXT = 'lions-portal-director-password-v2';

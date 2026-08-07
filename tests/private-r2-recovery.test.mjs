@@ -114,7 +114,7 @@ test('Central de Recuperação apresenta integridade, anexos e linha do tempo do
       }
     }
   });
-  assert.match(html, /Proteção do estado privado/);
+  assert.match(html, /D1, R2 e continuidade operacional/);
   assert.match(html, /74 movimentações/);
   assert.match(html, /9 de 9/);
   assert.match(html, /data-private-backup-restore/);

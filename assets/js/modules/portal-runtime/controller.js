@@ -4,8 +4,8 @@ import {
   loadPublicGitHubPayload,
   saveGitHubState,
   waitForPagesDeployment
-} from '../../github.js?v=6.36.2';
-import { createPortalRuntimeContext } from './context.js?v=6.36.2';
+} from '../../github.js?v=6.37.0';
+import { createPortalRuntimeContext } from './context.js?v=6.37.0';
 import {
   clearSecureStorageSession,
   collectSecureTreasuryObjectKeys,
@@ -14,28 +14,31 @@ import {
   diagnosePrivateStorageIntegrity,
   deleteSecureTreasuryObjects,
   hasActiveSecureStorageSession,
+  getPrivateStorageStatus,
   listPrivateStateBackups,
   loadPrivatePortalState,
   mergePrivatePortalState,
+  migratePrivateStorageToD1,
   prepareSecureTreasuryAttachmentsForPublication,
   restorePrivateStateBackup,
+  rollbackPrivateStorageToR2,
   savePrivatePortalState,
   secureStorageProfileFromState
-} from '../secure-storage/client.js?v=6.36.2';
-import { createPublicPortalState, hasPrivatePortalData } from '../../core/portal-data-boundary.js?v=6.36.2';
-import { createPersistenceActions } from './persistence.js?v=6.36.2';
-import { createAdminSessionActions } from './session.js?v=6.36.2';
-import { createPublicationActions } from './publication.js?v=6.36.2';
-import { createRemoteSyncActions } from './remote-sync.js?v=6.36.2';
-import { createBootstrapAction } from './bootstrap.js?v=6.36.2';
-import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.36.2';
-import { createAccessProfileActions } from './access-profile.js?v=6.36.2';
+} from '../secure-storage/client.js?v=6.37.0';
+import { createPublicPortalState, hasPrivatePortalData } from '../../core/portal-data-boundary.js?v=6.37.0';
+import { createPersistenceActions } from './persistence.js?v=6.37.0';
+import { createAdminSessionActions } from './session.js?v=6.37.0';
+import { createPublicationActions } from './publication.js?v=6.37.0';
+import { createRemoteSyncActions } from './remote-sync.js?v=6.37.0';
+import { createBootstrapAction } from './bootstrap.js?v=6.37.0';
+import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.37.0';
+import { createAccessProfileActions } from './access-profile.js?v=6.37.0';
 import {
   ACCESS_CAPABILITIES,
   accessSnapshot,
   canAccessView,
   roleHasCapability
-} from './authorization.js?v=6.36.2';
+} from './authorization.js?v=6.37.0';
 
 export function createPortalRuntimeController(dependencies) {
   const services = {
@@ -47,14 +50,17 @@ export function createPortalRuntimeController(dependencies) {
     diagnosePrivateStorageIntegrity,
     deleteSecureTreasuryObjects,
     hasActiveSecureStorageSession,
+    getPrivateStorageStatus,
     hasPrivatePortalData,
     listPrivateStateBackups,
     loadPrivatePortalState,
     loadPublicGitHubPayload,
     mergePrivatePortalState,
+    migratePrivateStorageToD1,
     loadState,
     prepareSecureTreasuryAttachmentsForPublication,
     restorePrivateStateBackup,
+    rollbackPrivateStorageToR2,
     saveGitHubState,
     savePrivatePortalState,
     saveState,
@@ -120,9 +126,12 @@ export function createPortalRuntimeController(dependencies) {
     isRefreshingInterface: interfaceRefresh.isRefreshingInterface,
     restoreState: persistence.restoreState,
     applyRemotePrivateState: persistence.applyRemotePrivateState,
+    getPrivateStorageStatus: services.getPrivateStorageStatus,
     listPrivateStateBackups: services.listPrivateStateBackups,
     createPrivateStateBackup: services.createPrivateStateBackup,
     restorePrivateStateBackup: services.restorePrivateStateBackup,
+    migratePrivateStorageToD1: services.migratePrivateStorageToD1,
+    rollbackPrivateStorageToR2: services.rollbackPrivateStorageToR2,
     diagnosePrivateStorageIntegrity: services.diagnosePrivateStorageIntegrity,
     hasActiveSecureStorageSession: services.hasActiveSecureStorageSession
   };
