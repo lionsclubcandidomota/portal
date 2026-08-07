@@ -1,3 +1,5 @@
+import { moduleRevisionStatement } from './d1-sync.js';
+
 const MONTH_PATTERN = /^\d{4}-\d{2}$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const MEMBER_STATUSES = new Set(['all', 'paid', 'pending']);
@@ -119,6 +121,13 @@ export async function replaceMemberDirectory(env, members = []) {
   }
   statements.push(db.prepare(`INSERT INTO portal_meta(key, value) VALUES ('member_directory_updated_at', ?)
     ON CONFLICT(key) DO UPDATE SET value = excluded.value`).bind(now));
+  const moduleSync = await db.prepare("SELECT value FROM portal_meta WHERE key = 'module_revision_sync'").first();
+  if (text(moduleSync?.value) === '1') {
+    const revisionStatement = moduleRevisionStatement(db, ['member-directory', 'memberships', 'mutuals'], {
+      updatedAt: now, updatedBy: 'member-directory-sync'
+    });
+    if (revisionStatement) statements.push(revisionStatement);
+  }
   await db.batch(statements);
   return { refreshed: true, count: normalizedMembers.length, updatedAt: now };
 }

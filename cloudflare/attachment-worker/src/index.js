@@ -21,6 +21,11 @@ import {
   syncMemberDirectory
 } from './d1-operational-memberships.js';
 import {
+  readD1GroupsModule,
+  readD1ModuleRevisions,
+  readD1ReferenceModule
+} from './d1-sync.js';
+import {
   AUTH_PASSWORD_ITERATIONS,
   authenticateAdministrator,
   bootstrapAdministrator,
@@ -40,7 +45,7 @@ import {
   publishPortalPublicState
 } from './github-publication.js';
 
-const WORKER_VERSION = '1.11.0';
+const WORKER_VERSION = '1.12.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -1536,6 +1541,12 @@ export default {
             available: storage.d1.schemaVersion >= 7 && storage.d1.privateBootstrapReadModel,
             strategy: 'reference-data-plus-payment-working-set'
           },
+          automaticSync: {
+            available: storage.d1.schemaVersion >= 8 && storage.d1.moduleRevisionSync,
+            intervalSeconds: 45,
+            refreshOnFocus: true,
+            moduleRevisions: true
+          },
           snapshotPolicy: storage.d1.schemaVersion >= 5 ? 'recovery-only' : 'operational-fallback'
         }, 200, cors);
       }
@@ -1614,6 +1625,33 @@ export default {
       if (url.pathname === '/api/storage/status' && request.method === 'GET') {
         await requireSession(request, env, ['admin', 'director']);
         return json(await handleStorageStatus(env), 200, cors);
+      }
+
+      if (url.pathname === '/api/sync/revisions' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 8 || !storage.moduleRevisionSync) {
+          throw new Response('A sincronização automática por módulo ainda não está disponível.', { status: 503 });
+        }
+        return json(await readD1ModuleRevisions(env), 200, cors);
+      }
+
+      if (url.pathname === '/api/operational/reference' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 8 || !storage.moduleRevisionSync) {
+          throw new Response('O módulo relacional de referências ainda não está disponível.', { status: 503 });
+        }
+        return json(await readD1ReferenceModule(env), 200, cors);
+      }
+
+      if (url.pathname === '/api/operational/groups' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 8 || !storage.moduleRevisionSync) {
+          throw new Response('O módulo relacional de grupos ainda não está disponível.', { status: 503 });
+        }
+        return json(await readD1GroupsModule(env), 200, cors);
       }
 
       if (url.pathname === '/api/analytics/dashboard' && request.method === 'GET') {

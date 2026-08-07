@@ -73,7 +73,11 @@ export function createTreasuryController({
   const state = () => getState();
   const clearMembershipOperational = () => { membershipOperational = null; membershipOperationalKey = ''; };
   const clearMutualOperational = () => { mutualOperational = null; mutualOperationalKey = ''; };
-  const invalidateOperationalReads = () => { clearMembershipOperational(); clearMutualOperational(); };
+  const invalidateOperationalReads = modules => { const changed = new Set(Array.isArray(modules) ? modules : []);
+    const affects = targets => !changed.size || [...changed].some(module => targets.includes(module));
+    if (affects(['reference', 'groups', 'treasury', 'memberships', 'member-directory'])) clearMembershipOperational();
+    if (affects(['reference', 'groups', 'treasury', 'mutuals', 'member-directory'])) clearMutualOperational();
+  };
   const memberDirectoryKey = () => (Array.isArray(state().birthdays) ? state().birthdays : []).map(member =>
     `${String(member?.id || '')}:${String(member?.name || '')}:${String(member?.status || '')}:${member?.active === false ? '0' : '1'}`).join('|');
   const membershipReadKey = () => JSON.stringify({ start: membershipStart || membershipMonth || currentMonth(),

@@ -1,4 +1,4 @@
-# Homologação — v6.45.0
+# Homologação — v6.46.0
 
 ## Fluxos prioritários do Portal
 
@@ -184,3 +184,17 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 7. Crie ou edite conta, categoria e configuração financeira privada e confirme **Banco sincronizado**, sem publicação pública pendente.
 8. Crie um backup manual e confirme que o snapshot completo é materializado para recuperação.
 9. Confirme que avisos, agenda e associados continuam seguindo o fluxo de publicação pública no GitHub.
+
+
+## Sincronização automática por módulo — versão 6.46.0
+
+1. Publique o Worker 1.12.0 e aplique `0009_module_revisions.sql`.
+2. Abra `/health` e confirme esquema D1 8, `automaticSync.available: true`, intervalo de 45 segundos e revisões por módulo ativas.
+3. Publique o Portal 6.46.0 e entre em duas sessões administrativas, preferencialmente em navegadores ou computadores diferentes.
+4. Na primeira sessão, altere uma conta ou categoria; na segunda, volte para a aba e confirme a atualização automática sem usar F5.
+5. Edite um grupo familiar ou de Mútua e confirme que somente os caches de grupos, Mensalidades e Mútuas são invalidados.
+6. Inclua, edite ou exclua uma movimentação e confirme que Movimentações, Dashboard e relatórios são atualizados na próxima revalidação.
+7. Deixe a segunda sessão aberta por pelo menos 45 segundos e confirme a verificação periódica.
+8. Abra um formulário ou deixe uma gravação pendente e confirme que a atualização remota é adiada até a operação local terminar.
+9. Alterne entre seções e confirme que a navegação também verifica novas revisões.
+10. Confirme que nenhuma sincronização automática recarrega a página inteira, perde filtros ativos ou cria publicação pendente no GitHub.

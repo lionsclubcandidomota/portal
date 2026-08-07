@@ -1,10 +1,10 @@
-import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.45.0';
-import { createTreasuryAdminController } from '../treasury-admin.js?v=6.45.0';
+import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.46.0';
+import { createTreasuryAdminController } from '../treasury-admin.js?v=6.46.0';
 import {
   loadD1OperationalMemberships,
   loadD1OperationalMutuals,
   loadD1OperationalTreasury
-} from '../secure-storage/client.js?v=6.45.0';
+} from '../secure-storage/client.js?v=6.46.0';
 
 export function createTreasuryFeature({
   getState,
@@ -61,6 +61,7 @@ export function createTreasuryFeature({
     parseCurrencyInput: treasury.parseCurrencyInput,
     currencyInputValue: treasury.currencyInputValue,
     memberIsActive: treasury.memberIsActive,
+    invalidateOperationalReads: modules => treasury.invalidateOperationalReads(modules),
     loadOperationalMovements: async options => {
       const result = await loadD1OperationalTreasury(getState(), options);
       hydrateOperationalTreasury([

@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.46.0 — Sincronização automática por módulo no D1
+
+- Cria a migração `0009_module_revisions.sql` e eleva o esquema D1 para a versão 8.
+- Adiciona revisões independentes para referências, grupos, Tesouraria, Mensalidades, Mútuas e diretório de associados.
+- Cria `GET /api/sync/revisions` para detectar alterações sem transferir coleções completas.
+- Cria `GET /api/operational/reference` e `GET /api/operational/groups` para atualizar somente os módulos alterados.
+- O Portal verifica novidades a cada 45 segundos, ao retornar para a aba, ao focar a janela e ao trocar de área.
+- Movimentações, Mensalidades e Mútuas invalidam apenas seus caches paginados e consultam novamente o D1.
+- Contas, categorias, configurações e grupos são incorporados ao estado atual sem recarregar a página inteira.
+- A sincronização é adiada enquanto houver formulário aberto, salvamento privado ou publicação local pendente.
+- Atualiza o Worker para 1.12.0 e o `/health` passa a informar `automaticSync` e esquema D1 8.
+- Adiciona testes reais em SQLite para revisões por módulo, atualização seletiva e sincronização sem `F5`.
+
 ## 6.45.0 — Login privado reduzido e referências granulares no D1
 
 - Cria a migração `0008_private_bootstrap_reference.sql` e eleva o esquema D1 para a versão 7.

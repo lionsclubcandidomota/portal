@@ -1,14 +1,14 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.45.0';
-import { RESTRICTED_VIEWS } from './constants.js?v=6.45.0';
-import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.45.0';
-import { createAdminSessionGuard } from './session-guard.js?v=6.45.0';
-import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.45.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.46.0';
+import { RESTRICTED_VIEWS } from './constants.js?v=6.46.0';
+import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.46.0';
+import { createAdminSessionGuard } from './session-guard.js?v=6.46.0';
+import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.46.0';
 import {
   ACCESS_ROLES,
   accessSnapshot,
   applyAccessRole,
   clearAccessRole
-} from './authorization.js?v=6.45.0';
+} from './authorization.js?v=6.46.0';
 
 function isLocalHomologation(environment) {
   const location = environment?.window?.location;
@@ -21,7 +21,7 @@ function isLocalHomologation(environment) {
     || hostname === '[::1]';
 }
 
-export function createAdminSessionActions(context, privateSync = null) {
+export function createAdminSessionActions(context, privateSync = null, liveSync = null) {
   const { dependencies, services, model, environment } = context;
 
   const lockAdminSession = reason => {
@@ -42,6 +42,7 @@ export function createAdminSessionActions(context, privateSync = null) {
       services.saveState(publicState);
     }
     sessionGuard.stop();
+    liveSync?.stop?.();
     context.publishStatus(model.pendingChanges > 0 ? 'pending' : 'offline');
     dependencies.setDatabaseSyncStatus?.('idle', 'Entre novamente para acessar os dados privados.');
     dependencies.updateAccessUI?.();
@@ -77,6 +78,7 @@ export function createAdminSessionActions(context, privateSync = null) {
     applyAccessRole(model, accessRole);
     dependencies.auditLog?.setActor?.(model.auditActor);
     sessionGuard.start();
+    liveSync?.start?.();
     context.publishStatus(model.canWrite && model.pendingChanges > 0 ? 'pending' : 'synced');
     dependencies.closePublishCenter?.({ focus: false });
     dependencies.applySettings();

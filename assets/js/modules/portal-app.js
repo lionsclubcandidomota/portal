@@ -14,8 +14,8 @@ import {
 import { createFinancePrivacyController } from './finance-privacy.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createAuditLogController } from './audit-log.js?v=6.45.0';
-import { createRecoveryCenterController } from './recovery-center.js?v=6.45.0';
+import { createAuditLogController } from './audit-log.js?v=6.46.0';
+import { createRecoveryCenterController } from './recovery-center.js?v=6.46.0';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
@@ -36,16 +36,16 @@ import {
   getAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.45.0';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.45.0';
-import { getPortalElements } from './portal-elements.js?v=6.45.0';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.45.0';
-import { createTreasuryFeature } from './portal-composition/treasury-feature.js?v=6.45.0';
-import { createAdministrationFeature } from './portal-composition/administration-feature.js?v=6.45.0';
-import { createPublicationFeature } from './portal-composition/publication-feature.js?v=6.45.0';
-import { createNavigationFeature } from './portal-composition/navigation-feature.js?v=6.45.0';
-import { createPortalViewRendererOptions } from './portal-composition/view-dependencies.js?v=6.45.0';
-import { createDatabaseSyncIndicator } from './database-sync-indicator.js?v=6.45.0';
+} from './appointments.js?v=6.46.0';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.46.0';
+import { getPortalElements } from './portal-elements.js?v=6.46.0';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.46.0';
+import { createTreasuryFeature } from './portal-composition/treasury-feature.js?v=6.46.0';
+import { createAdministrationFeature } from './portal-composition/administration-feature.js?v=6.46.0';
+import { createPublicationFeature } from './portal-composition/publication-feature.js?v=6.46.0';
+import { createNavigationFeature } from './portal-composition/navigation-feature.js?v=6.46.0';
+import { createPortalViewRendererOptions } from './portal-composition/view-dependencies.js?v=6.46.0';
+import { createDatabaseSyncIndicator } from './database-sync-indicator.js?v=6.46.0';
 
 export function bootstrapPortal() {
   let state = loadState();
@@ -130,6 +130,8 @@ export function bootstrapPortal() {
     setPublishStatus: (status, message) => publicationFeature.publishCenter.setStatus(status, message),
     setDatabaseSyncStatus: databaseSync.setStatus,
     resetInterfaceState,
+    isModalOpen: () => modalController.isOpen(),
+    invalidateOperationalReads: modules => treasuryFeature.invalidateOperationalReads(modules),
     getCurrentView: () => navigationFeature.navigation.currentView,
     renderAdmin,
     updateAccessUI,
@@ -273,6 +275,7 @@ export function bootstrapPortal() {
 
   function setView(view) {
     navigationFeature.navigation.setView(view);
+    void runtime?.checkForDatabaseUpdates?.({ reason: 'navigation' });
   }
 
   function updateAccessUI() {
@@ -308,7 +311,10 @@ export function bootstrapPortal() {
       else item.removeAttribute('aria-current');
     });
     if (navigationFeature.navigation.currentView !== 'treasury') setView('treasury');
-    else renderTreasuryView();
+    else {
+      renderTreasuryView();
+      void runtime?.checkForDatabaseUpdates?.({ reason: 'treasury-section' });
+    }
   }
 
   function resetInterfaceState() {

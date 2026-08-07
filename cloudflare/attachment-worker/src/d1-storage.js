@@ -1,4 +1,6 @@
-export const D1_SCHEMA_VERSION = 7;
+import { moduleRevisionStatement } from './d1-sync.js';
+
+export const D1_SCHEMA_VERSION = 8;
 export const D1_MIN_OPERATIONAL_SCHEMA_VERSION = 3;
 
 const encoder = new TextEncoder();
@@ -248,6 +250,7 @@ export async function getD1StorageStatus(env) {
       (SELECT value FROM portal_meta WHERE key = 'member_directory_updated_at') AS member_directory_updated_at,
       (SELECT value FROM portal_meta WHERE key = 'snapshot_stale') AS snapshot_stale,
       (SELECT value FROM portal_meta WHERE key = 'snapshot_updated_at') AS snapshot_updated_at,
+      (SELECT value FROM portal_meta WHERE key = 'module_revision_sync') AS module_revision_sync,
       (SELECT COUNT(*) FROM treasury_movements) AS treasury,
       (SELECT COUNT(*) FROM treasury_accounts) AS accounts,
       (SELECT COUNT(*) FROM family_groups) AS family_groups,
@@ -275,6 +278,7 @@ export async function getD1StorageStatus(env) {
       memberDirectoryUpdatedAt: text(row?.member_directory_updated_at),
       snapshotStale: text(row?.snapshot_stale) === '1',
       snapshotUpdatedAt: text(row?.snapshot_updated_at),
+      moduleRevisionSync: text(row?.module_revision_sync) === '1',
       counts: {
         treasury: Number(row?.treasury || 0),
         accounts: Number(row?.accounts || 0),
@@ -305,6 +309,7 @@ export async function getD1StorageStatus(env) {
       memberDirectoryUpdatedAt: '',
       snapshotStale: false,
       snapshotUpdatedAt: '',
+      moduleRevisionSync: false,
       error: /no such table/i.test(message) ? '' : message
     };
   }
@@ -726,6 +731,12 @@ export async function writeD1PrivateState(env, state, {
   if (statements.length > D1_MAX_WRITE_QUERIES) {
     throw new Error(`A sincronização exigiria ${statements.length} consultas D1; o limite seguro do Portal é ${D1_MAX_WRITE_QUERIES}.`);
   }
+  if (Number(status.schemaVersion || 0) >= 8 && status.moduleRevisionSync) {
+    const revisionStatement = moduleRevisionStatement(db, ['reference', 'groups', 'treasury', 'memberships', 'mutuals'], {
+      updatedAt, updatedBy, guardRevision: text(revision)
+    });
+    if (revisionStatement) statements.push(revisionStatement);
+  }
   await db.batch(statements);
   return {
     revision: text(revision),
@@ -909,6 +920,12 @@ export async function applyD1TreasuryMutation(env, {
       .bind(guardRevision)
   ];
 
+  if (Number(status.schemaVersion || 0) >= 8 && status.moduleRevisionSync) {
+    const revisionStatement = moduleRevisionStatement(db, ['treasury', 'memberships', 'mutuals'], {
+      updatedAt, updatedBy, guardRevision
+    });
+    if (revisionStatement) statements.push(revisionStatement);
+  }
   await db.batch(statements);
   const applied = await readD1Mutation(env, normalizedMutationId);
   if (!applied || applied.revision !== guardRevision) {
@@ -1018,6 +1035,12 @@ export async function applyD1ReferenceMutation(env, {
       .bind(guardRevision)
   ];
 
+  if (Number(status.schemaVersion || 0) >= 8 && status.moduleRevisionSync) {
+    const revisionStatement = moduleRevisionStatement(db, ['reference', 'memberships', 'mutuals'], {
+      updatedAt, updatedBy, guardRevision
+    });
+    if (revisionStatement) statements.push(revisionStatement);
+  }
   await db.batch(statements);
   const applied = await readD1Mutation(env, normalizedMutationId);
   if (!applied || applied.revision !== guardRevision) {
@@ -1217,6 +1240,12 @@ export async function applyD1GroupsMutation(env, {
       .bind(guardRevision)
   ];
 
+  if (Number(status.schemaVersion || 0) >= 8 && status.moduleRevisionSync) {
+    const revisionStatement = moduleRevisionStatement(db, ['groups', 'memberships', 'mutuals'], {
+      updatedAt, updatedBy, guardRevision
+    });
+    if (revisionStatement) statements.push(revisionStatement);
+  }
   await db.batch(statements);
   const applied = await readD1Mutation(env, normalizedMutationId);
   if (!applied || applied.revision !== guardRevision) {

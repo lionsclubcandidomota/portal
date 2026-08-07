@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.11.0
+# Cloudflare Worker do Portal Lions — v1.12.0
 
 O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
@@ -77,6 +77,7 @@ Migrações atuais:
 - `0006_relational_operational_source.sql`: fonte relacional, paginação operacional e esquema D1 5.
 - `0007_operational_memberships_mutuals.sql`: diretório de associados, Mensalidades/Mútuas paginadas e esquema D1 6.
 - `0008_private_bootstrap_reference.sql`: bootstrap privado reduzido, referências granulares e esquema D1 7.
+- `0009_module_revisions.sql`: revisões por módulo, sincronização automática e esquema D1 8.
 
 ## Implantação
 
@@ -338,3 +339,17 @@ Health esperado:
 O login usa `GET /api/private-state/bootstrap`, que retorna as referências privadas, grupos e somente pagamentos de Mensalidades/Mútuas necessários aos formulários. Movimentações ordinárias são carregadas pelas rotas paginadas.
 
 A rota `PUT /api/private-state/reference` atualiza configurações, contas e categorias em lote transacional, com revisão otimista e idempotência, sem reconstruir movimentações ou grupos.
+
+## Otimização v1.12.0
+
+A migração `0009_module_revisions.sql` cria revisões independentes por módulo e eleva o esquema D1 para 8.
+
+Novas rotas autenticadas:
+
+```text
+GET /api/sync/revisions
+GET /api/operational/reference
+GET /api/operational/groups
+```
+
+O Portal usa essas rotas para atualizar somente os dados alterados e invalidar caches operacionais sem recarregar a página inteira. A sincronização automática é executada a cada 45 segundos e ao retornar para a aba.

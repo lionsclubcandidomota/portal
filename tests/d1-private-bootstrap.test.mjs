@@ -19,7 +19,7 @@ import {
   clearSecureStorageSession,
   setActiveSecureStorageSession,
   setSecureStoragePrivateRevision
-} from '../assets/js/modules/secure-storage/session-store.js?v=6.45.0';
+} from '../assets/js/modules/secure-storage/session-store.js?v=6.46.0';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -92,7 +92,7 @@ async function fixture() {
 test('bootstrap privado carrega referências e somente o conjunto financeiro necessário', async () => {
   const { database, env } = await fixture();
   const status = await getD1StorageStatus(env);
-  assert.equal(status.schemaVersion, 7);
+  assert.equal(status.schemaVersion, 8);
   assert.equal(status.privateBootstrapReadModel, true);
   const result = await readD1PrivateBootstrap(env, { storageStatus: status });
   assert.equal(result.partial, true);
