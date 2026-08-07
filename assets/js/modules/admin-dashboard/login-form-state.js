@@ -27,6 +27,7 @@ export function createLoginFormState({
   adminForm,
   directorForm,
   adminInput,
+  adminUsernameInput,
   directorInput,
   adminToggle,
   directorToggle,
@@ -44,6 +45,7 @@ export function createLoginFormState({
     adminForm.hidden = directorMode;
     directorForm.hidden = !directorMode;
     adminInput.disabled = directorMode;
+    if (adminUsernameInput) adminUsernameInput.disabled = directorMode;
     adminToggle.disabled = directorMode;
     directorInput.disabled = !directorMode;
     directorToggle.disabled = !directorMode;
@@ -58,7 +60,7 @@ export function createLoginFormState({
     });
 
     scheduleFocus(() => {
-      const input = directorMode ? directorInput : adminInput;
+      const input = directorMode ? directorInput : (adminUsernameInput || adminInput);
       if (input?.isConnected) input.focus({ preventScroll: true });
     });
   };

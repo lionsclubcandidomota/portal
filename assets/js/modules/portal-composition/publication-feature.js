@@ -1,6 +1,6 @@
-import { createPublishCenterController } from '../publish-center.js?v=6.38.0';
-import { createPortalRefreshController } from '../portal-refresh.js?v=6.38.0';
-import { createPublicationReviewController } from '../publication-review-controller.js?v=6.38.0';
+import { createPublishCenterController } from '../publish-center.js?v=6.39.0';
+import { createPortalRefreshController } from '../portal-refresh.js?v=6.39.0';
+import { createPublicationReviewController } from '../publication-review-controller.js?v=6.39.0';
 
 export function createPublicationFeature({
   elements,

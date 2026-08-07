@@ -1,6 +1,6 @@
 # Esquema de dados do Portal — v11
 
-O esquema v11, a partir do Portal 6.35.0, separa todo o domínio financeiro do conteúdo público. Com o armazenamento seguro ativado, movimentações, contas, grupos, valores de mensalidade, perfil completo da Diretoria e anexos ficam em um bucket Cloudflare R2 privado. O JSON publicado contém somente os módulos destinados aos visitantes e metadados públicos de acesso.
+O esquema funcional permanece na versão 11. A partir do Portal 6.37.0, movimentações, contas, grupos, valores de mensalidade e perfil completo da Diretoria ficam no Cloudflare D1. O R2 privado mantém anexos, backups e espelho de contingência. O JSON publicado contém somente os módulos destinados aos visitantes e metadados públicos de acesso.
 
 A distinção entre Associados, Mutuários e registros inativos permanece inalterada.
 
@@ -69,7 +69,7 @@ A distinção entre Associados, Mutuários e registros inativos permanece inalte
 
 - Cada movimentação aceita até cinco anexos.
 - Enquanto a alteração estiver pendente, o arquivo pode permanecer como `dataUrl` somente no estado local.
-- Após a publicação segura, o JSON guarda `storage: "r2"` e `objectKey`; não guarda Base64 nem URL pública permanente.
+- Após o salvamento privado, o D1 guarda `storage: "r2"` e `objectKey`; não guarda Base64 nem URL pública permanente.
 - Imagens JPEG, PNG e WebP são redimensionadas e recomprimidas no navegador antes do envio.
 - GIFs, PDFs e documentos compatíveis são preservados para não comprometer a legibilidade.
 - O Worker repete a validação de formato e tamanho antes de gravar no R2.
@@ -116,3 +116,14 @@ O estado privado possui duas representações gravadas atomicamente:
 - projeções relacionais: configurações, contas, categorias, movimentações, anexos, grupos familiares e mútuas.
 
 Cada entidade relacional mantém também um `payload` JSON validado para preservar campos já existentes e permitir evolução compatível. Colunas indexadas atendem consultas por data, situação, conta, categoria e vínculos de mútuas. O snapshot é usado para manter compatibilidade com o frontend durante esta primeira fase; as projeções permitem evoluir posteriormente para endpoints granulares sem nova migração de dados.
+
+
+## Autenticação D1 — esquema 1
+
+A migração `0002_admin_auth.sql` adiciona três tabelas fora do snapshot operacional:
+
+- `portal_users`: usuário normalizado, nome exibido, perfil, derivação da senha, salt, iterações, bloqueio e datas de acesso;
+- `portal_auth_sessions`: hash do token opaco, perfil, usuário, expiração e revogação;
+- `portal_auth_audit`: eventos de autenticação sem senha ou token.
+
+A senha original e o token de sessão não entram no snapshot privado. O frontend recebe apenas a sessão opaca e a mantém em memória; o D1 guarda somente o hash SHA-256 dessa sessão.

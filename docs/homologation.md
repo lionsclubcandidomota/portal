@@ -1,4 +1,4 @@
-# Homologação — v6.38.0
+# Homologação — v6.39.0
 
 ## Fluxos prioritários do Portal
 
@@ -43,10 +43,10 @@ Execute esta seção somente depois de publicar o Worker e salvar sua URL em Con
 
 ## Migração e homologação do Cloudflare D1
 
-Execute esta seção somente depois de criar o banco, aplicar `0001_portal_private_state.sql` e publicar o Worker 1.4.0.
+Execute esta seção somente depois de criar o banco, aplicar `0001_portal_private_state.sql` e `0002_admin_auth.sql`, configurar os segredos e publicar o Worker 1.5.0.
 
 1. Abra `/health` e confirme `storage: "cloudflare-r2+d1"`, D1 disponível e inicializado, mas ainda inativo.
-2. Publique o Portal 6.38.0 e entre como Administrador.
+2. Publique o Portal 6.39.0, crie o primeiro Administrador e entre com usuário e senha.
 3. Abra **Recuperação e integridade** e confirme **Banco pronto para receber os dados**.
 4. Registre os totais atuais de movimentações, contas, grupos, mútuas e anexos.
 5. Clique em **Migrar para o D1** e confirme a criação do backup prévio no R2.
@@ -87,8 +87,8 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 1. Execute `npm run release:build`.
 2. Confirme que a pasta `dist` contém os três ZIPs e `checksums.sha256`.
 3. Execute `npm run release:dist:verify` e confirme a validação dos artefatos.
-4. Publique somente o conteúdo de `portal-site-v6.38.0.zip` no GitHub Pages.
-5. Atualize o Worker primeiro com o pacote `cloudflare-worker-v1.4.0.zip` quando houver alteração no Worker.
+4. Publique somente o conteúdo de `portal-site-v6.39.0.zip` no GitHub Pages.
+5. Atualize o Worker primeiro com o pacote `cloudflare-worker-v1.5.0.zip` quando houver alteração no Worker.
 
 
 ## GitHub Actions — versão 6.37.0
@@ -109,3 +109,14 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 4. Cadastre ou altere uma Mútua e confirme o mesmo comportamento.
 5. Crie um aviso público. Somente essa operação deve aparecer como pendência em **Publicar conteúdo público**.
 6. Publique o aviso e confirme o GitHub Actions verde.
+
+
+## Login por usuário e senha — versão 6.39.0
+
+1. Confirme no `/health` `workerVersion: "1.5.0"` e `authentication.initialized: true`.
+2. Antes do primeiro usuário, confirme `authentication.bootstrapRequired: true`.
+3. Use **Primeiro acesso** e a `ADMIN_BOOTSTRAP_KEY` para criar o Administrador.
+4. Entre com usuário e senha; a tela não deve solicitar token GitHub.
+5. Salve uma movimentação privada e confirme o D1.
+6. Publique um aviso público e confirme que o Worker usa o segredo sem solicitar token.
+7. Saia e confirme que a sessão anterior não pode mais acessar as rotas privadas.

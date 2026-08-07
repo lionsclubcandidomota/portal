@@ -1,7 +1,7 @@
-import { cloneState } from '../../core/portal-state.js?v=6.38.0';
-import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.38.0';
-import { buildPublicationMessage } from './domain.js?v=6.38.0';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.38.0';
+import { cloneState } from '../../core/portal-state.js?v=6.39.0';
+import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.39.0';
+import { buildPublicationMessage } from './domain.js?v=6.39.0';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.39.0';
 
 export function createPublicationActions(context, privateSync = null) {
   const { dependencies, services, model } = context;
@@ -65,7 +65,7 @@ export function createPublicationActions(context, privateSync = null) {
     dependencies.auditLog?.closeBatch?.(discardedBatchId, 'discarded', 'Alterações públicas locais descartadas.');
     model.lastSyncInfo = null;
     context.storeSyncMeta();
-    context.publishStatus(model.adminUnlocked && model.githubToken ? 'synced' : 'offline');
+    context.publishStatus(model.adminUnlocked ? 'synced' : 'offline');
     dependencies.applySettings();
     dependencies.renderCurrentView();
     dependencies.toast?.('Alterações públicas descartadas. Os dados privados salvos no banco foram mantidos.');
@@ -77,8 +77,8 @@ export function createPublicationActions(context, privateSync = null) {
       dependencies.toast?.('Este perfil não pode publicar alterações.');
       return { ok: false, reason: 'read-only' };
     }
-    if (!model.githubToken || !model.adminUnlocked) {
-      dependencies.toast?.('Conecte o acesso administrativo ao GitHub.');
+    if (!model.adminUnlocked || !services.hasActiveSecureStorageSession?.(context.currentState(), 'admin')) {
+      dependencies.toast?.('Entre novamente como Administrador para publicar o conteúdo público.');
       return { ok: false, reason: 'unauthenticated' };
     }
     if (model.pendingChanges === 0) {
@@ -115,13 +115,15 @@ export function createPublicationActions(context, privateSync = null) {
       const publicState = services.createPublicPortalState?.(currentState) || currentState;
       const publication = preparePortalMediaForPublication(publicState);
       const deletedPublicPaths = [...model.pendingDeletedPublicPaths];
-      const result = await services.saveGitHubState(
-        model.githubToken,
+      const result = await services.publishPublicPortalState(
+        context.currentState(),
         publication.state,
-        model.githubFileSha,
-        message,
-        publication.assets,
-        deletedPublicPaths
+        {
+          expectedDataSha: model.githubFileSha,
+          commitMessage: message,
+          mediaAssets: publication.assets,
+          deletedPaths: deletedPublicPaths
+        }
       );
 
       model.githubFileSha = result.sha;

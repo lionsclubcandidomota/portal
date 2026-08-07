@@ -1,5 +1,19 @@
 # Changelog
 
+## 6.39.0 — Autenticação administrativa por usuário e senha no D1
+
+- Substitui a entrada administrativa por token GitHub por login com usuário e senha validados pelo Cloudflare Worker.
+- Cria as tabelas `portal_users`, `portal_auth_sessions` e `portal_auth_audit` na migração `0002_admin_auth.sql`.
+- Armazena somente derivação PBKDF2-HMAC-SHA-256 com salt individual; a senha original nunca é persistida.
+- Cria sessões opacas aleatórias e guarda no D1 apenas o hash SHA-256 do token de sessão.
+- Bloqueia temporariamente a conta após cinco tentativas inválidas e registra login, logout, bootstrap e alterações de usuários na auditoria.
+- Adiciona configuração protegida do primeiro Administrador por `ADMIN_BOOTSTRAP_KEY`.
+- Move o `GITHUB_TOKEN` para segredo exclusivo do Worker e remove do frontend as rotas de autenticação e publicação direta no GitHub.
+- Publicações públicas passam pelo endpoint autenticado `/api/publication`; o Worker atualiza JSON, mídias e manifesto no mesmo commit.
+- Mantém o acesso legado por token desabilitado por padrão e disponível apenas como contingência temporária mediante variável explícita.
+- Prepara rotas administrativas para listar, criar, desativar e redefinir senhas de usuários em uma etapa posterior da interface.
+- Atualiza o Worker para 1.5.0 e adiciona testes reais com SQLite para bootstrap, login, sessão e logout.
+
 ## 6.38.0 — Salvamento privado automático no D1
 
 - Separa definitivamente o salvamento dos dados privados da publicação do conteúdo público.

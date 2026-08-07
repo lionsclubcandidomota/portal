@@ -1,14 +1,14 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.38.0';
-import { RESTRICTED_VIEWS } from './constants.js?v=6.38.0';
-import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.38.0';
-import { createAdminSessionGuard } from './session-guard.js?v=6.38.0';
-import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.38.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.39.0';
+import { RESTRICTED_VIEWS } from './constants.js?v=6.39.0';
+import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.39.0';
+import { createAdminSessionGuard } from './session-guard.js?v=6.39.0';
+import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.39.0';
 import {
   ACCESS_ROLES,
   accessSnapshot,
   applyAccessRole,
   clearAccessRole
-} from './authorization.js?v=6.38.0';
+} from './authorization.js?v=6.39.0';
 
 function isLocalHomologation(environment) {
   const location = environment?.window?.location;
@@ -51,7 +51,7 @@ export function createAdminSessionActions(context, privateSync = null) {
           ? 'A sessão do painel foi bloqueada após 30 minutos sem atividade.'
           : previousRole === ACCESS_ROLES.DIRECTOR
             ? 'Acesso Diretoria encerrado. A senha foi removida da memória.'
-            : 'Acesso administrativo encerrado. O token foi removido da memória.'
+            : 'Acesso administrativo encerrado. A sessão segura foi removida da memória.'
       );
     }
 
@@ -68,8 +68,8 @@ export function createAdminSessionActions(context, privateSync = null) {
     onTimeout: () => lockAdminSession('timeout')
   });
 
-  const finalizeSession = ({ accessRole, actor, authorization, sha = '', token = '' }) => {
-    model.githubToken = accessRole === ACCESS_ROLES.ADMIN ? String(token || '').trim() : '';
+  const finalizeSession = ({ accessRole, actor, authorization, sha = '' }) => {
+    model.githubToken = accessRole === ACCESS_ROLES.ADMIN ? 'worker-session' : '';
     model.githubFileSha = accessRole === ACCESS_ROLES.ADMIN ? String(sha || '') : '';
     model.githubAuthorization = authorization || null;
     model.auditActor = actor || null;
@@ -89,19 +89,14 @@ export function createAdminSessionActions(context, privateSync = null) {
     };
   };
 
-  const connectAdminSession = async token => {
-    const remote = await services.connectGitHub(token);
-    const localHomologation = isLocalHomologation(environment);
+  const connectAdminSession = async credentials => {
+    const username = String(credentials?.username || '').trim();
+    const password = String(credentials?.password || '');
+    if (!username || !password) throw new Error('Informe o usuário e a senha do Administrador.');
 
-    if (!localHomologation && remote.authorization?.canPush !== true) {
-      throw new Error(
-        remote.authorization?.warning
-          || 'Não foi possível confirmar que este token possui permissão para publicar no repositório do portal.'
-      );
-    }
-
+    const payload = await services.loadPublicGitHubPayload();
     const localBeforeLogin = services.loadState();
-    const remoteMerged = mergePortalStates(localBeforeLogin, remote.state);
+    const remoteMerged = mergePortalStates(localBeforeLogin, payload.state);
     context.storeSyncedState(remoteMerged);
 
     if (model.pendingChanges > 0 && statesAreEquivalent(
@@ -120,12 +115,14 @@ export function createAdminSessionActions(context, privateSync = null) {
     if (model.pendingChanges === 0) services.saveState(context.currentState());
 
     const secureSession = await services.connectSecureStorageSession?.({
-      state: context.currentState(),
+      state: payload.state,
       role: ACCESS_ROLES.ADMIN,
-      credential: token
+      username,
+      password
     });
+    if (!secureSession?.enabled) throw new Error('A autenticação por banco de dados ainda não está disponível.');
 
-    if (secureSession?.enabled && services.loadPrivatePortalState) {
+    if (services.loadPrivatePortalState) {
       const privatePayload = await services.loadPrivatePortalState(context.currentState());
       if (privatePayload?.found) {
         const hydrated = services.mergePrivatePortalState?.(context.currentState(), privatePayload);
@@ -135,7 +132,7 @@ export function createAdminSessionActions(context, privateSync = null) {
           if (model.pendingChanges === 0) services.saveState(hydrated);
           privateSync?.markLoaded?.('Dados privados carregados e sincronizados com o banco.');
         }
-      } else if (services.hasPrivatePortalData?.(remote.state)) {
+      } else if (services.hasPrivatePortalData?.(payload.state)) {
         model.pendingChanges = Math.max(1, Number(model.pendingChanges || 0));
         model.privateMigrationPending = true;
         context.storeSyncMeta();
@@ -148,21 +145,34 @@ export function createAdminSessionActions(context, privateSync = null) {
       } else {
         privateSync?.markLoaded?.('Banco conectado e pronto para receber dados privados.');
       }
-    } else {
-      dependencies.setDatabaseSyncStatus?.('warning', 'Armazenamento privado não configurado.');
     }
 
-    return {
-      ...finalizeSession({
-        accessRole: ACCESS_ROLES.ADMIN,
-        actor: remote.actor,
-        authorization: remote.authorization,
-        sha: remote.sha,
-        token
-      }),
-      localHomologation
-    };
+    const user = secureSession.user || {};
+    return finalizeSession({
+      accessRole: ACCESS_ROLES.ADMIN,
+      actor: {
+        id: String(user.id || ''),
+        login: String(user.username || username),
+        name: String(user.displayName || user.username || username),
+        role: 'admin'
+      },
+      authorization: {
+        verified: true,
+        canPush: secureSession.publication?.available === true,
+        credentialType: 'password',
+        publicationVia: 'worker-secret',
+        warning: secureSession.publication?.available === false
+          ? 'A publicação pública está indisponível porque GITHUB_TOKEN ainda não foi configurado no Worker.'
+          : ''
+      }
+    });
   };
+
+  const bootstrapAdmin = async credentials => {
+    const payload = await services.loadPublicGitHubPayload();
+    return services.bootstrapAdministrator?.(payload.state, credentials);
+  };
+
 
   const connectDirectorSession = async password => {
     if (model.pendingChanges > 0) {
@@ -224,9 +234,10 @@ export function createAdminSessionActions(context, privateSync = null) {
         return { ok: false, reason: 'private-save-failed' };
       }
     }
+    await services.logoutSecureStorageSession?.(context.currentState()).catch(() => {});
     lockAdminSession('manual');
     return { ok: true };
   };
 
-  return { connectAdminSession, connectDirectorSession, logoutAdmin };
+  return { bootstrapAdmin, connectAdminSession, connectDirectorSession, logoutAdmin };
 }

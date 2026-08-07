@@ -1,6 +1,6 @@
-import { ADMIN_PERIOD_STORAGE, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.38.0';
-import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.38.0';
-import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.38.0';
+import { ADMIN_PERIOD_STORAGE, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.39.0';
+import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.39.0';
+import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.39.0';
 export function createAdminPanelController({
   root,
   getState,
@@ -9,6 +9,8 @@ export function createAdminPanelController({
   canWrite = () => false,
   loginAdmin,
   loginDirector,
+  bootstrapAdmin,
+  getAuthenticationStatus,
   logout,
   openForm,
   setView,
@@ -40,6 +42,8 @@ export function createAdminPanelController({
     root,
     loginAdmin,
     loginDirector,
+    bootstrapAdmin,
+    getAuthenticationStatus,
     onSuccess: () => render(),
     toast
   });

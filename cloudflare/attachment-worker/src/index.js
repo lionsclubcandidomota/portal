@@ -5,8 +5,27 @@ import {
   readD1PrivateState,
   writeD1PrivateState
 } from './d1-storage.js';
+import {
+  AUTH_PASSWORD_ITERATIONS,
+  authenticateAdministrator,
+  bootstrapAdministrator,
+  changeOwnPassword,
+  createAdministratorUser,
+  createDirectorSession,
+  createLegacyAdministratorSession,
+  getAuthenticationStatus,
+  listAdministratorUsers,
+  requireAuthenticationSession as requireSession,
+  resetAdministratorPassword,
+  revokeAuthenticationSession,
+  updateAdministratorUser
+} from './auth.js';
+import {
+  publicationStatus,
+  publishPortalPublicState
+} from './github-publication.js';
 
-const WORKER_VERSION = '1.4.0';
+const WORKER_VERSION = '1.5.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -165,48 +184,6 @@ async function verifySignedPayload(token, secret) {
   if (!valid) throw new Error('Autorização inválida.');
   const payload = JSON.parse(base64UrlDecodeText(body));
   if (Number(payload.exp || 0) <= Math.floor(Date.now() / 1000)) throw new Error('Autorização expirada.');
-  return payload;
-}
-
-function sessionTtl(env) {
-  return Math.min(8 * 60 * 60, Math.max(5 * 60, Number(env.SESSION_TTL_SECONDS || 1800)));
-}
-
-function downloadTtl(env) {
-  return Math.min(15 * 60, Math.max(60, Number(env.DOWNLOAD_TTL_SECONDS || 300)));
-}
-
-async function createSessionToken(role, subject, env) {
-  const now = Math.floor(Date.now() / 1000);
-  const exp = now + sessionTtl(env);
-  const token = await signPayload({
-    v: SESSION_VERSION,
-    type: 'session',
-    role,
-    sub: String(subject || role),
-    iat: now,
-    exp,
-    nonce: crypto.randomUUID()
-  }, env.SESSION_SECRET);
-  return { token, exp };
-}
-
-async function requireSession(request, env, roles = []) {
-  const header = request.headers.get('Authorization') || '';
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  if (!match) throw new Response('Sessão não informada.', { status: 401 });
-  let payload;
-  try {
-    payload = await verifySignedPayload(match[1], env.SESSION_SECRET);
-  } catch (error) {
-    throw new Response(error.message, { status: 401 });
-  }
-  if (payload.type !== 'session' || payload.v !== SESSION_VERSION) {
-    throw new Response('Sessão incompatível.', { status: 401 });
-  }
-  if (roles.length && !roles.includes(payload.role)) {
-    throw new Response('Este perfil não possui permissão para esta operação.', { status: 403 });
-  }
   return payload;
 }
 
@@ -727,16 +704,21 @@ async function sha256Hex(buffer) {
 async function handleSession(request, env) {
   const body = await request.json().catch(() => ({}));
   const role = String(body.role || '').toLowerCase();
-  let subject;
-  if (role === 'admin') subject = await validateAdminCredential(body.credential, env);
-  else if (role === 'director') subject = await validateDirectorCredential(body.credential, env);
-  else throw new Error('Perfil de acesso não reconhecido.');
-  const session = await createSessionToken(role, subject, env);
-  return {
-    token: session.token,
-    role,
-    expiresAt: new Date(session.exp * 1000).toISOString()
-  };
+  if (role === 'admin') {
+    if (body.username || body.password) {
+      return authenticateAdministrator(request, env, body);
+    }
+    if (String(env.LEGACY_GITHUB_LOGIN_ENABLED || '').toLowerCase() !== 'true') {
+      throw new Error('O acesso administrativo por token foi desativado. Use usuário e senha.');
+    }
+    const subject = await validateAdminCredential(body.credential, env);
+    return createLegacyAdministratorSession(request, env, subject);
+  }
+  if (role === 'director') {
+    const subject = await validateDirectorCredential(body.credential, env);
+    return createDirectorSession(request, env, subject);
+  }
+  throw new Error('Perfil de acesso não reconhecido.');
 }
 
 
@@ -1072,12 +1054,16 @@ export default {
 
       if (url.pathname === '/health' && request.method === 'GET') {
         const storage = await privateStorageBackend(env);
+        const authentication = await getAuthenticationStatus(env);
         return json({
           status: 'ok',
           storage: 'cloudflare-r2+d1',
           version: SESSION_VERSION,
           workerVersion: WORKER_VERSION,
           directorPbkdf2Iterations: DIRECTOR_PASSWORD_ITERATIONS,
+          administratorPbkdf2Iterations: AUTH_PASSWORD_ITERATIONS,
+          authentication,
+          publicPublication: { available: Boolean(env.GITHUB_TOKEN), via: 'worker-secret' },
           privateState: storage.backend,
           d1: {
             available: storage.d1.available,
@@ -1099,11 +1085,69 @@ export default {
 
       requireAllowedOrigin(request, env);
 
+      if (url.pathname === '/api/auth/status' && request.method === 'GET') {
+        return json(await getAuthenticationStatus(env), 200, cors);
+      }
+
+      if (url.pathname === '/api/auth/bootstrap' && request.method === 'POST') {
+        enforceSessionRateLimit(request);
+        const body = await request.json().catch(() => ({}));
+        const result = await bootstrapAdministrator(request, env, body);
+        clearSessionRateLimit(request);
+        return json(result, 201, cors);
+      }
+
       if (url.pathname === '/api/session' && request.method === 'POST') {
         enforceSessionRateLimit(request);
         const session = await handleSession(request, env);
         clearSessionRateLimit(request);
         return json(session, 200, cors);
+      }
+
+      if (url.pathname === '/api/session/logout' && request.method === 'POST') {
+        return json(await revokeAuthenticationSession(request, env), 200, cors);
+      }
+
+      if (url.pathname === '/api/auth/password' && request.method === 'PUT') {
+        const session = await requireSession(request, env, ['admin']);
+        const body = await request.json().catch(() => ({}));
+        return json(await changeOwnPassword(request, env, session, body), 200, cors);
+      }
+
+      if (url.pathname === '/api/auth/users' && request.method === 'GET') {
+        await requireSession(request, env, ['admin']);
+        return json({ users: await listAdministratorUsers(env) }, 200, cors);
+      }
+
+      if (url.pathname === '/api/auth/users' && request.method === 'POST') {
+        const session = await requireSession(request, env, ['admin']);
+        const body = await request.json().catch(() => ({}));
+        return json(await createAdministratorUser(request, env, session, body), 201, cors);
+      }
+
+      const userRoute = url.pathname.match(/^\/api\/auth\/users\/([^/]+)$/);
+      if (userRoute && request.method === 'PATCH') {
+        const session = await requireSession(request, env, ['admin']);
+        const body = await request.json().catch(() => ({}));
+        return json(await updateAdministratorUser(request, env, session, decodeURIComponent(userRoute[1]), body), 200, cors);
+      }
+
+      const passwordResetRoute = url.pathname.match(/^\/api\/auth\/users\/([^/]+)\/password$/);
+      if (passwordResetRoute && request.method === 'PUT') {
+        const session = await requireSession(request, env, ['admin']);
+        const body = await request.json().catch(() => ({}));
+        return json(await resetAdministratorPassword(request, env, session, decodeURIComponent(passwordResetRoute[1]), body), 200, cors);
+      }
+
+      if (url.pathname === '/api/publication/status' && request.method === 'GET') {
+        await requireSession(request, env, ['admin']);
+        return json(await publicationStatus(env), 200, cors);
+      }
+
+      if (url.pathname === '/api/publication' && request.method === 'POST') {
+        const session = await requireSession(request, env, ['admin']);
+        const body = await request.json().catch(() => ({}));
+        return json(await publishPortalPublicState(env, body, session), 200, cors);
       }
 
       if (url.pathname === '/api/storage/status' && request.method === 'GET') {

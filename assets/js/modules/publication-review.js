@@ -471,6 +471,6 @@ export function publicationReviewHtml(review, { canPublish = false } = {}) {
       <button class="btn btn-ghost" type="button" data-publication-review-close>Voltar</button>
       <button class="btn btn-primary" type="button" data-publication-review-publish ${canPublish ? '' : 'disabled'}>Publicar ${safeReview.total} alteraç${safeReview.total === 1 ? 'ão' : 'ões'}</button>
     </div>
-    ${canPublish ? '' : '<p class="publication-review-help">Conecte o acesso administrativo ao GitHub para publicar o conteúdo público.</p>'}
+    ${canPublish ? '' : '<p class="publication-review-help">Entre como Administrador para publicar o conteúdo público pelo Worker.</p>'}
   </section>`;
 }

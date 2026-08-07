@@ -1,87 +1,98 @@
-# Segurança e endurecimento operacional — v6.29.0
+# Segurança e endurecimento operacional — v6.39.0
 
-A arquitetura mantém o frontend estático, mas separa todo o domínio financeiro em Cloudflare R2 privado e concentra a autenticação, o estado privado e a autorização de anexos em um Cloudflare Worker.
+## Fronteiras de dados
 
-## Dados públicos
+O Portal mantém quatro fronteiras independentes:
 
-A limpeza do esquema elimina campos de credencial conhecidos, incluindo usuários e senhas administrativas legadas, tokens, chaves de API e segredos. Ela é aplicada em:
+```text
+GitHub Pages  → interface e conteúdo público
+Cloudflare D1 → dados privados estruturados, usuários e sessões
+Cloudflare R2 → comprovantes, documentos, backups e espelho de contingência
+Worker        → autenticação, autorização, regras de negócio e publicação pública
+```
 
-- estado local;
-- backups exportados e importados;
-- pontos de recuperação;
-- estado sincronizado;
-- arquivo publicado no GitHub.
+O JSON público não contém movimentações, contas, grupos financeiros, credenciais, hashes de senha, identificadores de sessão ou referências privadas de anexos.
 
-O JSON publicado contém a URL do Worker, identidade visual, aniversariantes, agenda, compromissos, avisos e somente metadados públicos do acesso da Diretoria. Movimentações, contas, grupos, valores e identificadores de anexos não são enviados ao visitante.
+## Autenticação administrativa
 
-## Sessão administrativa do Portal
+O Administrador usa usuário e senha. A senha é derivada no Worker com PBKDF2-HMAC-SHA-256, salt individual e 150.000 iterações. O D1 armazena somente:
 
-O token do GitHub:
+- hash derivado;
+- salt;
+- quantidade de iterações;
+- situação da conta;
+- tentativas malsucedidas e bloqueio;
+- datas de criação, alteração e último acesso.
 
-- permanece somente em memória;
-- não é salvo em Local Storage, Session Storage, auditoria ou recuperação;
-- é validado antes da conexão;
-- é apagado ao sair ou após o encerramento da sessão.
+A senha original não é gravada no D1, R2, GitHub, auditoria ou armazenamento do navegador.
 
-A senha da Diretoria também não é persistida. Após a migração 6.29.0, a derivação criptográfica permanece apenas no estado privado do R2; o JSON público guarda somente que o perfil está habilitado.
+A criação do primeiro usuário exige `ADMIN_BOOTSTRAP_KEY`, segredo de pelo menos 24 caracteres configurado no Worker. O endpoint de bootstrap deixa de aceitar novos cadastros assim que um Administrador existe.
 
-## Sessão do armazenamento privado
+## Sessões
 
-Quando o R2 está ativado:
+Após o login, o Worker gera um token opaco aleatório de 32 bytes. O navegador mantém esse token somente em memória. O D1 armazena apenas seu hash SHA-256, com usuário, perfil, expiração, revogação, endereço de origem e agente do navegador.
 
-- o Administrador envia o token já informado no login diretamente ao Worker;
-- o Worker consulta o GitHub para confirmar acesso de escrita ao repositório configurado;
-- a Diretoria envia a senha ao Worker, que a valida contra a derivação armazenada no estado privado do R2;
-- o Worker devolve uma sessão HMAC de curta duração;
-- essa sessão fica apenas na memória do módulo `secure-storage/client.js`;
-- o estado privado usa revisão otimista para bloquear publicação sobre dados alterados em outra sessão;
-- o logout limpa imediatamente a sessão do Portal e a sessão do Worker.
+- expiração padrão: 30 minutos, limitada a no máximo 8 horas;
+- bloqueio de interface após inatividade;
+- revogação no logout;
+- revogação das demais sessões após troca de senha;
+- revogação de todas as sessões quando a conta é desativada.
 
-O token GitHub e a senha não são gravados pelo Worker no R2, no GitHub ou no navegador.
+Cinco falhas consecutivas bloqueiam temporariamente o usuário por 15 minutos. O Worker também aplica limite de tentativas por origem antes de consultar o banco.
 
-## Segredos e acesso ao R2
+## Publicação pública
 
-- O browser nunca recebe Access Key, Secret Access Key ou API Token do R2.
-- O Worker acessa o bucket por um binding chamado `ATTACHMENTS`.
-- `SESSION_SECRET` é cadastrado com o Wrangler e não deve existir em arquivos versionados.
-- O bucket deve permanecer privado, sem domínio público e sem `r2.dev` habilitado.
-- A lista `ALLOWED_ORIGINS` restringe as chamadas de sessão, upload e autorização ao domínio oficial e aos endereços locais de homologação.
+O frontend não contém mais funções para autenticação ou gravação direta com token GitHub. O segredo `GITHUB_TOKEN` existe apenas no Worker.
 
-## Autorização dos anexos
+O endpoint `/api/publication`:
 
-- Visitante: não cria sessão e não acessa documentos.
-- Diretoria: pode solicitar visualização e download.
-- Administrador: pode enviar, visualizar, baixar e remover objetos obsoletos.
-- O Worker valida tipo, tamanho, chave do objeto e perfil em cada operação.
-- Acesso aos arquivos ocorre por tickets HMAC com expiração curta.
-- Respostas de documentos usam cache privado e política `no-referrer`.
+1. exige sessão de Administrador;
+2. bloqueia coleções ou campos privados;
+3. verifica conflito pela revisão do arquivo público;
+4. valida caminhos, formatos e limites de mídias;
+5. atualiza `data/dados.json`, mídias e `release-manifest.json` no mesmo commit;
+6. atualiza a branch sem `force`.
 
-## Política do navegador
+## D1 e R2
 
-O HTML declara:
+O binding `PORTAL_DB` e o binding `ATTACHMENTS` existem somente no Worker. O navegador nunca recebe credenciais diretas do D1 ou R2.
 
-- Content Security Policy;
-- política de referência `no-referrer`;
-- Permissions Policy com recursos sensíveis desativados;
-- `connect-src` limitado às origens necessárias, incluindo Workers em `*.workers.dev`.
+O D1 mantém o snapshot privado canônico e projeções relacionais. O R2 mantém anexos, backups versionados e espelho de contingência. Gravações privadas usam revisão otimista para impedir sobrescritas concorrentes e criam pontos de recuperação antes de operações críticas.
 
-Nesta versão, a Configuração aceita URLs HTTPS em `*.workers.dev` e endereços locais de desenvolvimento. Um domínio personalizado exige sua inclusão explícita na validação do cliente e na CSP.
+## Diretoria
+
+A Diretoria continua usando senha própria e recebe sessão somente leitura. O Worker remove do payload devolvido os dados de derivação da credencial da Diretoria. Esse perfil pode consultar relatórios e documentos autorizados, mas não pode alterar dados, publicar conteúdo ou administrar usuários.
+
+## Segredos do Worker
+
+Devem ser cadastrados como Worker Secrets:
+
+- `SESSION_SECRET`;
+- `GITHUB_TOKEN`;
+- `ADMIN_BOOTSTRAP_KEY`.
+
+Eles não devem aparecer em `wrangler.toml`, código-fonte, logs, backups ou arquivos do Portal. `LEGACY_GITHUB_LOGIN_ENABLED` permanece `false` no uso normal.
+
+## Auditoria
+
+A tabela `portal_auth_audit` registra, sem senhas ou tokens:
+
+- bootstrap;
+- login bem-sucedido ou negado;
+- bloqueio;
+- logout;
+- criação e atualização de usuário;
+- redefinição e troca de senha.
+
+A auditoria operacional do Portal continua associando alterações privadas e publicações aos respectivos usuários.
+
+## Navegador e anexos
+
+O HTML mantém Content Security Policy, `no-referrer`, Permissions Policy e `connect-src` limitado. Anexos são acessados por tickets HMAC de curta duração e respostas com cache privado. O bucket R2 permanece sem exposição pública direta.
 
 ## Verificação automática
 
-`npm run audit:security` verifica arquivos de dados, metatags de segurança e padrões que poderiam persistir tokens no navegador. `tests/private-data-boundary.test.mjs` valida a projeção pública, a recomposição autenticada e a separação entre armazenamento permanente e sessão. `tests/secure-storage.test.mjs` verifica o binding privado, a ausência de credenciais R2 no frontend, as permissões do Worker e o esquema v11.
-
-## Backups privados e integridade
-
-O Worker 1.2.0 aplica checksum SHA-256 ao estado principal e aos backups versionados. Uma substituição completamente vazia é recusada quando já existem registros privados. Restaurações exigem sessão administrativa, revisão atual e criação prévia de um ponto de segurança. O diagnóstico de anexos usa apenas o binding R2 e não publica URLs permanentes nem credenciais.
-
-
-## Banco D1 e fronteira privada — versão 6.37.0
-
-O binding `PORTAL_DB` existe somente no Cloudflare Worker. O navegador nunca recebe credenciais do banco e continua acessando os dados privados por sessões temporárias. O D1 passa a ser a fonte principal somente depois de uma migração autenticada, com conferência de revisão e backup prévio no R2.
-
-O R2 permanece privado e armazena comprovantes, backups versionados e um espelho de contingência. A restauração de um backup usa a fonte ativa: quando o D1 está ativo, o estado restaurado é escrito no banco e novamente espelhado no R2.
-
-## Salvamento privado desacoplado — versão 6.38.0
-
-Alterações privadas são enviadas somente ao Worker autenticado e nunca entram no envelope público do GitHub. A fila de sincronização conclui o D1 antes de permitir publicação pública, atualização remota ou logout. Falhas preservam a cópia local e exigem confirmação posterior do Worker.
+- `npm run audit:security`: verifica dados públicos, CSP e padrões de persistência de segredos.
+- `tests/d1-admin-auth.test.mjs`: executa as migrações em SQLite real e valida bootstrap, PBKDF2, sessão opaca e revogação.
+- `tests/github-schema.test.mjs`: confirma que o navegador não publica com token e que o Worker mantém a fronteira pública.
+- `tests/private-data-boundary.test.mjs`: valida a projeção pública e a recomposição privada.

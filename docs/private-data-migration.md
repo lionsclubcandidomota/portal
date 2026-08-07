@@ -25,7 +25,7 @@ O Worker grava no objeto interno `__portal/private-state-v1.json`:
 
 1. Atualize e publique o Worker.
 2. Atualize o Portal sem editar manualmente `data/dados.json`.
-3. Entre como Administrador com o token do GitHub.
+3. Entre como Administrador com o usuário e a senha cadastrados no D1.
 4. Publique a alteração de migração apresentada pelo Portal.
 5. Saia e teste o acesso de Visitante e da Diretoria.
 

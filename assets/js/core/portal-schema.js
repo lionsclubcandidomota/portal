@@ -1,6 +1,6 @@
-import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.38.0';
-import { normalizeMemberRecord } from './portal-members.js?v=6.38.0';
-import { createPublicPortalState } from './portal-data-boundary.js?v=6.38.0';
+import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.39.0';
+import { normalizeMemberRecord } from './portal-members.js?v=6.39.0';
+import { createPublicPortalState } from './portal-data-boundary.js?v=6.39.0';
 
 export const PORTAL_APP_ID = 'Lions Clube de Cândido Mota Dashboard';
 export const CURRENT_SCHEMA_VERSION = 11;

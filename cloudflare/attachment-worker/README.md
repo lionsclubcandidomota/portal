@@ -1,103 +1,179 @@
-# Worker de dados privados — Portal Lions
+# Cloudflare Worker do Portal Lions — v1.5.0
 
-O Worker 1.4.0 usa dois serviços Cloudflare:
+O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
-- **D1 (`PORTAL_DB`)**: fonte principal dos dados privados estruturados após a migração;
-- **R2 (`ATTACHMENTS`)**: comprovantes, documentos, backups versionados e espelho de contingência.
+## Serviços vinculados
 
-Nenhum binding, chave R2 ou credencial D1 é enviado ao navegador.
+```text
+PORTAL_DB  → Cloudflare D1
+ATTACHMENTS → Cloudflare R2
+```
 
-## 1. Configuração
+O D1 armazena dados privados estruturados, usuários, sessões e auditoria. O R2 armazena documentos, comprovantes, backups e espelho de contingência.
 
-Copie `wrangler.toml.example` para `wrangler.toml`.
+## Preparação
 
-Configure o bucket existente:
+```bash
+npm ci
+cp wrangler.toml.example wrangler.toml
+```
+
+No `wrangler.toml`, informe o bucket e o UUID real do D1. Preserve:
 
 ```toml
 [[r2_buckets]]
 binding = "ATTACHMENTS"
 bucket_name = "lions-portal-documentos"
-```
 
-Crie o banco e use o `database_id` retornado:
-
-```bash
-npm install
-npx wrangler d1 create lions-portal-dados
-```
-
-```toml
 [[d1_databases]]
 binding = "PORTAL_DB"
 database_name = "lions-portal-dados"
-database_id = "UUID_RETORNADO_PELA_CLOUDFLARE"
+database_id = "UUID_REAL"
 migrations_dir = "migrations"
 ```
 
-O bucket deve permanecer privado, sem domínio público e sem `r2.dev`.
+## Variáveis públicas
 
-## 2. Aplicar as migrações D1
+```toml
+[vars]
+ALLOWED_ORIGINS = "https://lionsclubcandidomota.github.io,http://localhost:*,http://127.0.0.1:*"
+GITHUB_OWNER = "lionsclubcandidomota"
+GITHUB_REPO = "portal"
+GITHUB_BRANCH = "main"
+GITHUB_DATA_PATH = "data/dados.json"
+LEGACY_GITHUB_LOGIN_ENABLED = "false"
+PUBLIC_DATA_URL = "https://lionsclubcandidomota.github.io/portal/data/dados.json"
+SESSION_TTL_SECONDS = "1800"
+DOWNLOAD_TTL_SECONDS = "300"
+```
+
+## Segredos
+
+```bash
+npx wrangler secret put SESSION_SECRET
+npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put ADMIN_BOOTSTRAP_KEY
+```
+
+- `SESSION_SECRET`: mínimo de 32 caracteres; protege tickets de anexos.
+- `GITHUB_TOKEN`: usado somente pelo Worker para publicar conteúdo público.
+- `ADMIN_BOOTSTRAP_KEY`: mínimo de 24 caracteres; cria o primeiro Administrador.
+
+Não coloque esses valores em arquivos versionados.
+
+## Migrações
 
 ```bash
 npx wrangler d1 migrations apply lions-portal-dados --remote
 ```
 
-A migração `0001_portal_private_state.sql` cria o esquema inicial e mantém o banco inativo até que o Administrador faça o corte pela Central de Recuperação.
+Migrações atuais:
 
-## 3. Segredo de sessão
+- `0001_portal_private_state.sql`: estado privado e projeções relacionais;
+- `0002_admin_auth.sql`: usuários, sessões e auditoria de autenticação.
 
-```bash
-npx wrangler secret put SESSION_SECRET
-```
-
-Use uma sequência aleatória com pelo menos 32 caracteres. Não grave o segredo no Git.
-
-## 4. Verificação e publicação
+## Implantação
 
 ```bash
-npm ci
 npm run check
 npm run deploy
 ```
 
-O `wrangler.ci.toml` existe somente para `deploy --dry-run` e não deve ser usado em produção.
+A verificação local do Wrangler pode usar:
 
-## 5. Corte do R2 para o D1
+```bash
+npx wrangler deploy --dry-run --config wrangler.ci.toml
+```
 
-Depois de publicar o Worker e o Portal:
+## Autenticação
 
-1. entre como Administrador;
-2. abra **Recuperação e integridade**;
-3. confira **Banco pronto para receber os dados**;
-4. clique em **Migrar para o D1**.
+### Primeiro acesso
 
-O Worker cria um backup no R2, grava o snapshot canônico e as projeções relacionais em uma transação D1 e ativa o banco. O R2 permanece como espelho de contingência.
+`POST /api/auth/bootstrap` recebe `setupKey`, `displayName`, `username` e `password`. A operação só funciona enquanto não existe Administrador.
 
-## Rotas de armazenamento
+### Login
 
-- `GET /api/storage/status`: informa backend ativo, esquema e contagens;
-- `POST /api/storage/migrate-d1`: migra o estado atual do R2 para o D1;
-- `POST /api/storage/rollback-r2`: copia o estado D1 para o R2 e retorna temporariamente;
-- `GET /api/private-state`: lê da fonte ativa;
-- `PUT /api/private-state`: grava na fonte ativa;
-- `GET/POST /api/private-state/backups`: lista ou cria backups R2;
-- `POST /api/private-state/backups/restore`: restaura no backend ativo;
-- `GET /api/private-state/integrity`: confere dados e anexos.
+`POST /api/session`:
 
-## Segurança e continuidade
+```json
+{
+  "role": "admin",
+  "username": "administrador",
+  "password": "senha"
+}
+```
 
-- Administrador: token do GitHub é validado e trocado por uma sessão temporária.
-- Diretoria: senha validada pelo perfil privado, sem acesso de escrita.
-- Visitante: não recebe sessão nem dados privados.
-- D1: snapshot e projeções relacionais são executados pelo mesmo `batch()` transacional.
-- Escritas em massa usam lotes JSON compactos e um teto de 40 consultas por sincronização.
-- R2: mantém 20 backups versionados, anexos e espelho atual.
-- Gravações que removeriam todos os registros privados continuam bloqueadas.
+A resposta contém uma sessão opaca temporária. Somente o hash da sessão fica no D1.
 
-O roteiro completo está em `docs/cloudflare-d1-migration.md`.
+### Segurança
 
-## Salvamento automático do Portal 6.38.0
+- PBKDF2-HMAC-SHA-256 com salt individual e 150.000 iterações;
+- cinco falhas consecutivas provocam bloqueio de 15 minutos;
+- limite de tentativas por origem;
+- sessões revogáveis e expiráveis;
+- eventos em `portal_auth_audit`;
+- acesso legado por token desativado por padrão.
 
-O Portal envia alterações privadas diretamente para `PUT /api/private-state`. Quando o D1 está ativo, a resposta inclui `backend: "d1"`; durante um retorno controlado ao R2, inclui `backend: "r2"`.
+## Publicação pública
 
-O endpoint `/health` informa `privateAutosave: "available"`. A publicação no GitHub não participa mais do salvamento de Tesouraria, mensalidades, Mútuas, contas ou categorias.
+O navegador não acessa mais a API de gravação do GitHub. Uma sessão administrativa chama:
+
+```text
+POST /api/publication
+```
+
+O Worker usa `GITHUB_TOKEN`, valida a fronteira pública e cria um único commit com:
+
+- `data/dados.json`;
+- mídias públicas alteradas;
+- exclusões solicitadas;
+- `release-manifest.json` recalculado.
+
+## Rotas principais
+
+### Públicas
+
+- `GET /health`
+- `GET /api/auth/status`
+- `POST /api/auth/bootstrap`
+- `POST /api/session`
+- `GET /api/attachments/object` com ticket temporário
+
+### Administrador
+
+- `POST /api/session/logout`
+- `PUT /api/auth/password`
+- `GET/POST /api/auth/users`
+- `PATCH /api/auth/users/:id`
+- `PUT /api/auth/users/:id/password`
+- `GET /api/publication/status`
+- `POST /api/publication`
+- `GET/PUT /api/private-state`
+- rotas de backups, integridade, migração D1 e anexos
+
+### Diretoria
+
+- leitura do estado privado autorizado;
+- consulta de backups e integridade;
+- visualização e download de anexos;
+- nenhuma operação de escrita.
+
+## Health check
+
+Antes do primeiro usuário:
+
+```json
+{
+  "workerVersion": "1.5.0",
+  "privateState": "d1",
+  "authentication": {
+    "available": true,
+    "initialized": true,
+    "bootstrapRequired": true,
+    "passwordLogin": false,
+    "publicationAvailable": true
+  }
+}
+```
+
+Depois do primeiro usuário, `bootstrapRequired` muda para `false` e `passwordLogin` para `true`.

@@ -1,12 +1,12 @@
 {
   "name": "lions-portal-attachment-worker",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "node --check src/index.js && wrangler deploy --dry-run --config wrangler.ci.toml",
+    "check": "node --check src/index.js && node --check src/auth.js && node --check src/github-publication.js && node --check src/d1-storage.js && wrangler deploy --dry-run --config wrangler.ci.toml",
     "migrate:local": "wrangler d1 migrations apply PORTAL_DB --local",
     "migrate:remote": "wrangler d1 migrations apply lions-portal-dados --remote"
   },

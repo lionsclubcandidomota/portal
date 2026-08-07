@@ -1,5 +1,5 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.38.0';
-import { ACCESS_ROLES } from './authorization.js?v=6.38.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.39.0';
+import { ACCESS_ROLES } from './authorization.js?v=6.39.0';
 
 function attachmentIdentity(attachment = {}, index = 0) {
   return String(attachment.id || attachment.name || `index:${index}`);
@@ -65,14 +65,7 @@ export function createPrivateSyncActions(context) {
       throw new Error('O armazenamento privado ainda não está configurado para salvar automaticamente.');
     }
     if (!services.hasActiveSecureStorageSession?.(state, ACCESS_ROLES.ADMIN)) {
-      if (!model.githubToken) {
-        throw new Error('A sessão administrativa expirou. Entre novamente para salvar no banco.');
-      }
-      await services.connectSecureStorageSession?.({
-        state,
-        role: ACCESS_ROLES.ADMIN,
-        credential: model.githubToken
-      });
+      throw new Error('A sessão administrativa expirou. Entre novamente para salvar no banco.');
     }
     return profile;
   };

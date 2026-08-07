@@ -17,7 +17,7 @@ A migração não altera o JSON público do GitHub Pages e não expõe dados fin
 Portal no GitHub Pages
         │ sessão autenticada
         ▼
-Cloudflare Worker 1.4.0
+Cloudflare Worker 1.5.0
         ├── D1: dados privados estruturados
         └── R2: anexos, backups e espelho de contingência
 ```
@@ -97,7 +97,7 @@ A resposta de `/health` deve conter:
 
 O valor `privateState: "r2"` antes do corte é intencional.
 
-## 4. Publicar o Portal 6.38.0
+## 4. Publicar o Portal 6.39.0
 
 Depois do Worker, publique os arquivos do Portal. Entre como Administrador e abra:
 
@@ -179,3 +179,16 @@ O cabeçalho administrativo mostra um estado independente:
 - **Falha ao salvar**: a alteração permanece no navegador e o indicador permite tentar novamente.
 
 Antes de publicar conteúdo público, atualizar o Portal ou encerrar a sessão, a fila privada é finalizada. Se o Worker não confirmar a gravação, a ação é interrompida para evitar perda de dados.
+
+
+## Autenticação administrativa — versão 6.39.0
+
+A segunda migração D1 cria usuários e sessões:
+
+```bash
+npx wrangler d1 migrations apply lions-portal-dados --remote
+```
+
+Depois de aplicar `0002_admin_auth.sql`, configure os segredos `GITHUB_TOKEN` e `ADMIN_BOOTSTRAP_KEY`, publique o Worker 1.5.0 e crie o primeiro Administrador pela tela **Primeiro acesso**. O token do GitHub deixa de ser informado no navegador e passa a ser usado exclusivamente pelo endpoint de publicação do Worker.
+
+Consulte `docs/admin-authentication-d1.md` para o procedimento completo.

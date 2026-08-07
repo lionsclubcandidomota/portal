@@ -1,14 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { CURRENT_SCHEMA_VERSION } from '../assets/js/core/portal-schema.js';
+import { GITHUB_CONFIG, loadPublicGitHubPayload } from '../assets/js/github.js';
 import {
-  GITHUB_CONFIG,
-  loadPublicGitHubPayload,
-  saveGitHubState,
-  updateReleaseManifestForPublication
-} from '../assets/js/github.js';
+  publicationStatus,
+  publishPortalPublicState
+} from '../cloudflare/attachment-worker/src/github-publication.js';
 
-test('configuração do GitHub aponta para o repositório público correto', () => {
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const workerEnv = {
+  GITHUB_OWNER: 'lionsclubcandidomota',
+  GITHUB_REPO: 'portal',
+  GITHUB_BRANCH: 'main',
+  GITHUB_DATA_PATH: 'data/dados.json',
+  GITHUB_TOKEN: 'github-secret-only-in-worker'
+};
+
+function jsonResponse(payload, status = 200, headers = {}) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...headers }
+  });
+}
+
+test('configuração pública aponta para o repositório correto sem credencial no navegador', async () => {
   assert.deepEqual(GITHUB_CONFIG, {
     owner: 'lionsclubcandidomota',
     repo: 'portal',
@@ -16,46 +34,44 @@ test('configuração do GitHub aponta para o repositório público correto', () 
     path: 'data/dados.json',
     publicBaseUrl: 'https://lionsclubcandidomota.github.io/portal/'
   });
+  const browserModule = await readFile(path.join(projectRoot, 'assets/js/github.js'), 'utf8');
+  assert.doesNotMatch(browserModule, /saveGitHubState|connectGitHub|Authorization:\s*`Bearer|normalizeGitHubToken/);
+  assert.match(browserModule, /loadPublicGitHubPayload/);
 });
 
-test('carregamento público migra payload v2 antes de entregá-lo ao portal', async t => {
+test('carregamento público migra payload legado e remove coleções privadas', async t => {
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => ({
-    ok: true,
-    json: async () => ({
-      app: 'Lions',
-      version: 2,
-      updatedAt: '2026-01-01T00:00:00.000Z',
-      deploymentId: 'legacy-deploy',
-      data: { settings: { clubName: 'Remoto antigo' }, treasury: [] }
-    })
+  globalThis.fetch = async () => jsonResponse({
+    app: 'Lions',
+    version: 2,
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    deploymentId: 'legacy-deploy',
+    data: {
+      settings: { clubName: 'Remoto antigo', membershipMonthlyFee: 99 },
+      treasury: [{ id: 'private' }]
+    }
   });
   t.after(() => { globalThis.fetch = previousFetch; });
 
   const payload = await loadPublicGitHubPayload('https://example.test/dados.json');
   assert.equal(payload.state.settings.clubName, 'Remoto antigo');
   assert.deepEqual(payload.state.events, []);
+  assert.deepEqual(payload.state.treasury, []);
+  assert.equal('membershipMonthlyFee' in payload.state.settings, false);
   assert.equal(payload.deploymentId, 'legacy-deploy');
 });
 
-test('publicação cria um único commit com JSON versionado e ativos de mídia', async t => {
+test('Worker publica JSON, mídia e manifesto em um único commit usando o segredo', async t => {
   const previousFetch = globalThis.fetch;
   const requests = [];
   let blobIndex = 0;
   const currentManifest = {
     application: 'portal-lions-candido-mota',
     artifactType: 'source',
-    version: '6.34.2',
+    version: '6.39.0',
     schemaVersion: CURRENT_SCHEMA_VERSION,
-    generatedAt: '2026-08-04T23:50:00.000Z',
-    summary: {
-      files: 2,
-      javascript: 0,
-      css: 0,
-      tests: 0,
-      memberImages: 0,
-      totalBytes: 12
-    },
+    generatedAt: '2026-08-07T01:00:00.000Z',
+    summary: { files: 2, javascript: 0, css: 0, tests: 0, memberImages: 0, totalBytes: 12 },
     files: [
       { path: 'data/dados.json', bytes: 2, sha256: 'old-data' },
       { path: 'index.html', bytes: 10, sha256: 'static-index' }
@@ -63,110 +79,68 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
   };
 
   globalThis.fetch = async (url, options = {}) => {
+    const target = String(url);
     const method = options.method || 'GET';
     const body = options.body ? JSON.parse(options.body) : null;
-    requests.push({ url: String(url), method, body });
+    requests.push({ url: target, method, body, authorization: options.headers?.Authorization || '' });
 
-    if (String(url).includes('/contents/data/dados.json')) {
-      return { ok: true, status: 200, json: async () => ({ sha: 'old-sha' }) };
+    if (target.includes('/git/ref/heads/')) return jsonResponse({ object: { sha: 'head-sha' } });
+    if (target.includes('/contents/data/dados.json')) return jsonResponse({ sha: 'old-sha' });
+    if (target.includes('/contents/release-manifest.json')) {
+      return jsonResponse({
+        sha: 'manifest-old-sha',
+        content: Buffer.from(JSON.stringify(currentManifest)).toString('base64')
+      });
     }
-    if (String(url).includes('/contents/release-manifest.json')) {
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          sha: 'manifest-old-sha',
-          content: Buffer.from(JSON.stringify(currentManifest)).toString('base64')
-        })
-      };
-    }
-    if (String(url).includes('/git/ref/heads/')) {
-      return { ok: true, status: 200, json: async () => ({ object: { sha: 'head-sha' } }) };
-    }
-    if (String(url).includes('/git/commits/head-sha')) {
-      return { ok: true, status: 200, json: async () => ({ tree: { sha: 'base-tree-sha' } }) };
-    }
-    if (String(url).endsWith('/git/blobs')) {
+    if (target.includes('/git/commits/head-sha')) return jsonResponse({ tree: { sha: 'base-tree-sha' } });
+    if (target.endsWith('/git/blobs')) {
       blobIndex += 1;
-      return { ok: true, status: 201, json: async () => ({ sha: `blob-${blobIndex}` }) };
+      return jsonResponse({ sha: `blob-${blobIndex}` }, 201);
     }
-    if (String(url).endsWith('/git/trees')) {
-      return { ok: true, status: 201, json: async () => ({ sha: 'new-tree-sha' }) };
+    if (target.endsWith('/git/trees')) return jsonResponse({ sha: 'new-tree-sha' }, 201);
+    if (target.endsWith('/git/commits')) {
+      return jsonResponse({ sha: 'commit-sha', html_url: 'https://example.test/commit' }, 201);
     }
-    if (String(url).endsWith('/git/commits')) {
-      return {
-        ok: true,
-        status: 201,
-        json: async () => ({ sha: 'commit-sha', html_url: 'https://example.test/commit' })
-      };
-    }
-    if (String(url).includes('/git/refs/heads/')) {
-      return { ok: true, status: 200, json: async () => ({}) };
-    }
-    throw new Error(`Requisição inesperada: ${method} ${url}`);
+    if (target.includes('/git/refs/heads/')) return jsonResponse({});
+    throw new Error(`Requisição inesperada: ${method} ${target}`);
   };
   t.after(() => { globalThis.fetch = previousFetch; });
 
-  const result = await saveGitHubState('token-seguro', {
-    settings: {
-      clubName: 'Publicação',
-      initialized: true,
-      membershipMonthlyFee: 150,
-      accessProfiles: {
-        director: {
-          enabled: true,
-          label: 'Diretoria',
-          passwordHash: 'hash-privado',
-          salt: 'salt-privado'
-        }
-      }
+  const result = await publishPortalPublicState(workerEnv, {
+    expectedDataSha: 'old-sha',
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    commitMessage: 'Publica pelo Worker',
+    state: {
+      settings: { clubName: 'Publicação', initialized: true, accessProfiles: { director: { enabled: true, label: 'Diretoria' } } },
+      birthdays: [],
+      treasuryAccounts: [],
+      treasuryCategories: [],
+      familyGroups: [],
+      mutualGroups: [],
+      treasury: [],
+      events: [],
+      meetings: [],
+      notices: []
     },
-    birthdays: [],
-    treasuryAccounts: [{ id: 'acc-private', name: 'Conta privada' }],
-    treasuryCategories: ['Privada'],
-    familyGroups: [{ id: 'family-private' }],
-    mutualGroups: [{ id: 'mutual-private' }],
-    treasury: [{ id: 'movement-private', description: 'Movimentação privada' }],
-    events: [],
-    meetings: [],
-    notices: []
-  }, 'old-sha', 'Publica portal', [{
-    path: 'public/members/b1-foto.jpg',
-    content: '/9j/AA==',
-    encoding: 'base64'
-  }], [], { publicOnly: false });
+    mediaAssets: [{ path: 'public/members/b1-foto.jpg', content: '/9j/AA==', encoding: 'base64' }]
+  }, { sub: 'administrador' });
 
   const blobRequests = requests.filter(item => item.url.endsWith('/git/blobs'));
   assert.equal(blobRequests.length, 3);
-  const json = Buffer.from(blobRequests[1].body.content, 'base64').toString('utf8');
-  const payload = JSON.parse(json);
-  assert.equal(payload.schemaVersion, CURRENT_SCHEMA_VERSION);
-  assert.equal(payload.version, CURRENT_SCHEMA_VERSION);
-  assert.equal(payload.data.settings.clubName, 'Publicação');
-  assert.equal(payload.audience, 'public');
-  assert.deepEqual(payload.data.treasuryAccounts, []);
-  assert.deepEqual(payload.data.treasuryCategories, []);
-  assert.deepEqual(payload.data.familyGroups, []);
-  assert.deepEqual(payload.data.mutualGroups, []);
-  assert.deepEqual(payload.data.treasury, []);
-  assert.equal('membershipMonthlyFee' in payload.data.settings, false);
-  assert.equal('passwordHash' in payload.data.settings.accessProfiles.director, false);
-  assert.equal('salt' in payload.data.settings.accessProfiles.director, false);
-  assert.ok(payload.deploymentId);
+  assert.ok(requests.every(item => !item.url.includes('github.com') || item.authorization === `Bearer ${workerEnv.GITHUB_TOKEN}`));
+
+  const publicPayload = JSON.parse(Buffer.from(blobRequests[1].body.content, 'base64').toString('utf8'));
+  assert.equal(publicPayload.schemaVersion, CURRENT_SCHEMA_VERSION);
+  assert.equal(publicPayload.data.settings.clubName, 'Publicação');
+  assert.deepEqual(publicPayload.data.treasury, []);
+  assert.ok(publicPayload.deploymentId);
 
   const nextManifest = JSON.parse(Buffer.from(blobRequests[2].body.content, 'base64').toString('utf8'));
-  const manifestPaths = nextManifest.files.map(file => file.path);
-  assert.deepEqual(manifestPaths, [
+  assert.deepEqual(nextManifest.files.map(file => file.path), [
     'data/dados.json',
     'index.html',
     'public/members/b1-foto.jpg'
   ]);
-  assert.equal(nextManifest.files.find(file => file.path === 'data/dados.json').bytes, Buffer.byteLength(json));
-  assert.equal(nextManifest.files.find(file => file.path === 'public/members/b1-foto.jpg').bytes, 4);
-  assert.equal(nextManifest.summary.files, 3);
-  assert.equal(nextManifest.summary.memberImages, 1);
-  assert.ok(nextManifest.runtimeUpdatedAt);
-
   const treeRequest = requests.find(item => item.url.endsWith('/git/trees'));
   assert.deepEqual(treeRequest.body.tree.map(item => item.path), [
     'public/members/b1-foto.jpg',
@@ -177,176 +151,38 @@ test('publicação cria um único commit com JSON versionado e ativos de mídia'
   assert.equal(result.manifestSha, 'blob-3');
   assert.equal(result.commitSha, 'commit-sha');
   assert.equal(result.mediaCount, 1);
+  assert.equal(result.publishedBy, 'administrador');
 });
 
-test('atualização do manifesto remove arquivos excluídos e preserva hashes estáticos', async () => {
-  const manifest = await updateReleaseManifestForPublication({
-    application: 'portal',
-    summary: { files: 3, totalBytes: 30 },
-    files: [
-      { path: 'index.html', bytes: 10, sha256: 'static' },
-      { path: 'data/dados.json', bytes: 10, sha256: 'old-data' },
-      { path: 'public/treasury/old/file.jpg', bytes: 10, sha256: 'old-file' }
-    ]
-  }, {
-    dataContent: '{}\n',
-    deletedPaths: ['public/treasury/old/file.jpg'],
-    updatedAt: '2026-08-04T23:50:00.000Z'
-  });
-
-  assert.deepEqual(manifest.files.map(file => file.path), ['data/dados.json', 'index.html']);
-  assert.equal(manifest.files.find(file => file.path === 'index.html').sha256, 'static');
-  assert.equal(manifest.summary.files, 2);
-  assert.equal(manifest.runtimeUpdatedAt, '2026-08-04T23:50:00.000Z');
-});
-
-test('publicação bloqueia quando o JSON remoto mudou desde a conexão', async t => {
+test('Worker bloqueia publicação com dados privados antes de acessar o GitHub', async t => {
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = async url => {
-    const target = String(url);
-    if (target.includes('/git/ref/heads/')) {
-      return { ok: true, status: 200, json: async () => ({ object: { sha: 'head-sha' } }) };
-    }
-    if (target.includes('/contents/data/dados.json')) {
-      return { ok: true, status: 200, json: async () => ({ sha: 'sha-remoto-novo' }) };
-    }
-    if (target.includes('/contents/release-manifest.json')) {
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          sha: 'manifest-sha',
-          content: Buffer.from(JSON.stringify({ files: [], summary: {} })).toString('base64')
-        })
-      };
-    }
-    throw new Error(`Requisição inesperada: ${target}`);
-  };
+  let requests = 0;
+  globalThis.fetch = async () => { requests += 1; return jsonResponse({}); };
   t.after(() => { globalThis.fetch = previousFetch; });
 
   await assert.rejects(
-    saveGitHubState('token-seguro', {}, 'sha-antigo'),
-    /Conflito de edição/
+    publishPortalPublicState(workerEnv, {
+      state: { settings: {}, treasury: [{ id: 'private' }] }
+    }, { sub: 'administrador' }),
+    /dados privados/i
   );
+  assert.equal(requests, 0);
 });
 
-test('identificação do usuário autenticado preserva apenas dados públicos necessários', async t => {
-  const { loadAuthenticatedGitHubUser } = await import('../assets/js/github.js');
+test('status da publicação valida o segredo e a permissão do repositório', async t => {
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => ({
-    ok: true,
-    status: 200,
-    json: async () => ({
-      id: 42,
-      login: 'joao-lions',
-      name: 'João',
-      avatar_url: 'https://example.test/avatar.png',
-      email: 'privado@example.test'
-    })
-  });
-  t.after(() => { globalThis.fetch = previousFetch; });
-
-  const actor = await loadAuthenticatedGitHubUser('token-seguro');
-  assert.deepEqual(actor, {
-    id: '42',
-    login: 'joao-lions',
-    name: 'João',
-    avatarUrl: 'https://example.test/avatar.png'
-  });
-  assert.equal('email' in actor, false);
-});
-
-test('autorização do repositório confirma permissão de publicação', async t => {
-  const { loadRepositoryAuthorization } = await import('../assets/js/github.js');
-  const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => ({
-    ok: true,
-    status: 200,
-    json: async () => ({
-      full_name: 'lionsclubcandidomota/portal',
-      default_branch: 'main',
-      private: false,
-      archived: false,
-      disabled: false,
-      permissions: { pull: true, push: true }
-    })
-  });
-  t.after(() => { globalThis.fetch = previousFetch; });
-
-  const authorization = await loadRepositoryAuthorization('token-seguro');
-  assert.deepEqual(authorization, {
-    repository: 'lionsclubcandidomota/portal',
-    branch: 'main',
-    canPush: true,
-    verified: true,
-    warning: '',
-    private: false
-  });
-});
-
-test('autorização informa token sem permissão de gravação sem bloquear a homologação', async t => {
-  const { loadRepositoryAuthorization } = await import('../assets/js/github.js');
-  const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => ({
-    ok: true,
-    status: 200,
-    json: async () => ({
-      full_name: 'lionsclubcandidomota/portal',
-      permissions: { pull: true, push: false }
-    })
-  });
-  t.after(() => { globalThis.fetch = previousFetch; });
-
-  const authorization = await loadRepositoryAuthorization('token-seguro');
-  assert.equal(authorization.canPush, false);
-  assert.equal(authorization.verified, true);
-  assert.match(authorization.warning, /não confirmou permissão de escrita/i);
-});
-
-test('conexão administrativa exige a leitura do repositório, mas não falha por verificações auxiliares', async t => {
-  const { connectGitHub } = await import('../assets/js/github.js');
-  const previousFetch = globalThis.fetch;
-  const encoded = Buffer.from(JSON.stringify({
-    app: 'Lions',
-    schemaVersion: CURRENT_SCHEMA_VERSION,
-    version: CURRENT_SCHEMA_VERSION,
-    data: { settings: { clubName: 'Homologação', initialized: true } }
-  }), 'utf8').toString('base64');
-
-  globalThis.fetch = async url => {
-    const target = String(url);
-    if (target.includes('/contents/data/dados.json')) {
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({ sha: 'data-sha', content: encoded, encoding: 'base64' })
-      };
-    }
-    if (target.endsWith('/user')) {
-      return {
-        ok: false,
-        status: 403,
-        headers: { get: () => null },
-        json: async () => ({ message: 'Forbidden' })
-      };
-    }
-    if (target.endsWith('/repos/lionsclubcandidomota/portal')) {
-      return {
-        ok: false,
-        status: 403,
-        headers: { get: () => null },
-        json: async () => ({ message: 'Forbidden' })
-      };
-    }
-    throw new Error(`Requisição inesperada: ${target}`);
+  globalThis.fetch = async (_url, options = {}) => {
+    assert.equal(options.headers.Authorization, `Bearer ${workerEnv.GITHUB_TOKEN}`);
+    return jsonResponse({ archived: false, disabled: false, permissions: { push: true } });
   };
   t.after(() => { globalThis.fetch = previousFetch; });
 
-  const connection = await connectGitHub('token-seguro');
-  assert.equal(connection.sha, 'data-sha');
-  assert.equal(connection.state.settings.clubName, 'Homologação');
-  assert.equal(connection.actor, null);
-  assert.equal(connection.authorization.verified, false);
-  assert.equal(connection.authorization.canPush, null);
-  assert.match(connection.authorization.warning, /não foi possível confirmar antecipadamente/i);
+  const status = await publicationStatus(workerEnv);
+  assert.deepEqual(status, {
+    available: true,
+    repositoryReady: true,
+    repository: 'lionsclubcandidomota/portal',
+    branch: 'main',
+    warning: ''
+  });
 });

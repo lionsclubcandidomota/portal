@@ -213,7 +213,7 @@ test('cliente consulta o backend e executa migração e retorno com revisão oti
   };
 
   try {
-    await connectSecureStorageSession({ state, role: 'admin', credential: 'github-token' });
+    await connectSecureStorageSession({ state, role: 'admin', username: 'administrador', password: 'SenhaSegura123' });
     await loadPrivatePortalState(state);
     const status = await getPrivateStorageStatus(state);
     const migrated = await migratePrivateStorageToD1(state);
