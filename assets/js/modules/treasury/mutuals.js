@@ -153,99 +153,7 @@ export function buildMutualViewModel(state, treasury) {
     eventCount,
     search,
     statusFilter,
-    expanded: treasury.mutualExpanded !== false,
-    summary: {
-      groups: groups.filter(group => !group.closedDate).length,
-      events: eventCount, charges: charges.length, visibleCharges: visibleCharges.length,
-      paid: paidCharges.length, pending: pendingCharges.length, expectedTotal, receivedTotal
-    },
-    source: 'local', page: 1, pages: 1, total: eventCount, queryDurationMs: 0
-  };
-}
-
-
-export function buildOperationalMutualViewModel(state, treasury, remote) {
-  const groups = Array.isArray(remote?.groups) ? remote.groups : [];
-  const pageGroups = Array.isArray(remote?.pageGroups) ? remote.pageGroups : [];
-  const remoteEvents = Array.isArray(remote?.events) ? remote.events : [];
-  const selectedKeys = treasury.mutualSelectedCharges;
-  const requestedGroup = String(treasury.mutualGroup || 'all');
-  const groupFilter = requestedGroup === 'all' || !groups.some(group => String(group.id) === requestedGroup)
-    ? 'all'
-    : requestedGroup;
-  const allGroupsMode = groupFilter === 'all';
-  const eventsByGroup = new Map();
-  remoteEvents.forEach(section => {
-    const groupId = String(section?.group?.id || '');
-    if (!eventsByGroup.has(groupId)) eventsByGroup.set(groupId, []);
-    const group = section.group;
-    const event = section.event;
-    const charges = (Array.isArray(section.charges) ? section.charges : []).map(item => ({
-      ...item,
-      group,
-      event,
-      selected: !item.paid && selectedKeys.has(item.key),
-      visible: item.visible !== false
-    }));
-    eventsByGroup.get(groupId).push({
-      event,
-      amount: Number(event?.amountPerParticipant || 0),
-      charges,
-      visibleCharges: charges.filter(item => item.visible),
-      paidCharges: charges.filter(item => item.paid),
-      pendingCharges: charges.filter(item => !item.paid),
-      expectedTotal: Number(section.expectedTotal || 0),
-      receivedTotal: Number(section.receivedTotal || 0)
-    });
-  });
-  const groupSections = pageGroups.map(group => {
-    const eventSections = eventsByGroup.get(String(group.id)) || [];
-    const charges = eventSections.flatMap(section => section.charges);
-    const currentMembers = Array.isArray(group.currentMembers) ? group.currentMembers : [];
-    return {
-      group,
-      active: !group.closedDate,
-      expanded: allGroupsMode ? treasury.isMutualGroupExpanded(group.id) : true,
-      view: treasury.mutualGroupView(group.id, eventSections.length > 0),
-      members: currentMembers.map(member => ({ member, type: treasury.memberIsMutual(member) ? 'Mutuário' : 'Associado' })),
-      eventSections,
-      charges,
-      visibleCharges: charges.filter(item => item.visible),
-      paidCharges: charges.filter(item => item.paid),
-      pendingCharges: charges.filter(item => !item.paid),
-      expectedTotal: eventSections.reduce((sum, item) => sum + Number(item.expectedTotal || 0), 0),
-      receivedTotal: eventSections.reduce((sum, item) => sum + Number(item.receivedTotal || 0), 0)
-    };
-  });
-  const charges = groupSections.flatMap(section => section.charges);
-  const selectedCharges = charges.filter(item => !item.paid && selectedKeys.has(item.key));
-  const summary = remote?.summary || {};
-  return {
-    groups,
-    selectedGroups: groupFilter === 'all' ? groups : groups.filter(group => String(group.id) === groupFilter),
-    selectedStart: treasury.mutualStart || '',
-    selectedEnd: treasury.mutualEnd || '',
-    periodLabel: periodLabel(treasury.mutualStart || '', treasury.mutualEnd || ''),
-    groupFilter,
-    allGroupsMode,
-    groupSections,
-    charges,
-    visibleCharges: charges.filter(item => item.visible),
-    paidCharges: charges.filter(item => item.paid),
-    pendingCharges: charges.filter(item => !item.paid),
-    expectedTotal: Number(summary.expectedTotal || 0),
-    receivedTotal: Number(summary.receivedTotal || 0),
-    selectedCharges,
-    eventCount: Number(summary.events || 0),
-    search: String(treasury.mutualSearch || ''),
-    statusFilter: String(treasury.mutualStatus || 'pending'),
-    expanded: treasury.mutualExpanded !== false,
-    summary,
-    source: String(remote?.source || ''),
-    page: Math.max(1, Number(remote?.page || 1)),
-    pages: Math.max(1, Number(remote?.pages || 1)),
-    total: Math.max(0, Number(remote?.total || 0)),
-    queryDurationMs: Math.max(0, Number(remote?.queryDurationMs || 0))
+    expanded: treasury.mutualExpanded !== false
   };
 }
 
@@ -366,21 +274,10 @@ export function renderMutualSection({
     search,
     statusFilter,
     expanded,
-    allGroupsMode,
-    summary,
-    source,
-    page,
-    pages,
-    total,
-    queryDurationMs
+    allGroupsMode
   } = model;
   const selectedTotal = selectedCharges.reduce((sum, item) => sum + item.amount, 0);
   const activeGroups = groups.filter(group => !group.closedDate);
-  const summaryGroups = Number(summary?.groups ?? activeGroups.length);
-  const summaryEvents = Number(summary?.events ?? eventCount);
-  const summaryCharges = Number(summary?.charges ?? charges.length);
-  const summaryPending = Number(summary?.pending ?? pendingCharges.length);
-  const summaryVisible = Number(summary?.visibleCharges ?? visibleCharges.length);
 
   return `<section class="card membership-control-card mutual-control-card mutual-control-card-v2 ${expanded ? 'is-expanded' : 'is-collapsed'}">
     <button class="membership-control-toggle mutual-control-header" id="mutualControlToggle" type="button" aria-expanded="${expanded}">
@@ -397,9 +294,8 @@ export function renderMutualSection({
           <label><span>Situação</span><select id="mutualStatusFilter" ${groups.length ? '' : 'disabled'}><option value="pending" ${statusFilter === 'pending' ? 'selected' : ''}>Em aberto</option><option value="paid" ${statusFilter === 'paid' ? 'selected' : ''}>Pagas</option><option value="all" ${statusFilter === 'all' ? 'selected' : ''}>Todas</option></select></label>
         </div>
       </div>
-      <div class="mutual-period-banner"><div><span aria-hidden="true">🕊️</span><div><small>Período dos falecimentos</small><strong>${escapeHtml(selectedPeriodLabel)}</strong><p>${summaryEvents} evento(s) · ${summaryGroups} grupo(s) ativo(s)</p></div></div><div><small>Cobranças filtradas</small><strong id="mutualVisibleCount">${summaryVisible}</strong></div></div>
-      <div class="mutual-operational-source"><span class="badge ${String(source).startsWith('d1') ? 'badge-success' : 'badge-warning'}">${String(source).startsWith('d1') ? `D1 · eventos paginados${queryDurationMs ? ` · ${queryDurationMs} ms` : ''}` : 'Modo local de contingência'}</span></div>
-      <div class="membership-kpis mutual-kpis mutual-kpis-v2"><div><small>Grupos ativos</small><strong>${summaryGroups}</strong></div><div><small>Eventos</small><strong>${summaryEvents}</strong></div><div><small>Cobranças</small><strong>${summaryCharges}</strong></div><div><small>Em aberto</small><strong>${summaryPending}</strong></div><div><small>Recebido</small><strong class="sensitive-money">${money.format(receivedTotal)}</strong></div><div><small>Previsto</small><strong class="sensitive-money">${money.format(expectedTotal)}</strong></div></div>
+      <div class="mutual-period-banner"><div><span aria-hidden="true">🕊️</span><div><small>Período dos falecimentos</small><strong>${escapeHtml(selectedPeriodLabel)}</strong><p>${eventCount} evento(s) · ${activeGroups.length} grupo(s) ativo(s)</p></div></div><div><small>Cobranças filtradas</small><strong id="mutualVisibleCount">${visibleCharges.length}</strong></div></div>
+      <div class="membership-kpis mutual-kpis mutual-kpis-v2"><div><small>Grupos ativos</small><strong>${activeGroups.length}</strong></div><div><small>Eventos</small><strong>${eventCount}</strong></div><div><small>Cobranças</small><strong>${charges.length}</strong></div><div><small>Em aberto</small><strong>${pendingCharges.length}</strong></div><div><small>Recebido</small><strong class="sensitive-money">${money.format(receivedTotal)}</strong></div><div><small>Previsto</small><strong class="sensitive-money">${money.format(expectedTotal)}</strong></div></div>
       ${adminUnlocked && charges.length ? `<div class="mutual-selection-bar ${selectedCharges.length ? 'has-selection' : 'is-empty'}" id="mutualSelectionBar" role="status" aria-live="polite">
         <div><span aria-hidden="true">✓</span><div><small>Baixa de cobranças</small><strong><b id="mutualSelectedCount">${selectedCharges.length}</b> selecionada(s) · <span class="sensitive-money" id="mutualSelectedTotal">${money.format(selectedTotal)}</span></strong><p>${selectedCharges.length ? 'Revise a seleção antes de registrar os recebimentos.' : 'Selecione cobranças em aberto dentro de um evento.'}</p></div></div>
         <div class="mutual-selection-actions"><button class="btn btn-ghost btn-sm" id="mutualSelectVisible" type="button" ${visibleCharges.some(item => !item.paid) ? '' : 'disabled'}>Selecionar pendentes filtradas</button><button class="btn btn-ghost btn-sm" id="mutualClearSelection" type="button" ${selectedCharges.length ? '' : 'disabled'}>Limpar seleção</button><button class="btn btn-primary" id="mutualPaymentButton" type="button" ${selectedCharges.length ? '' : 'disabled'}>Registrar baixa</button></div>
@@ -407,7 +303,6 @@ export function renderMutualSection({
       <div class="mutual-groups-list" id="mutualChargeList">${!groups.length
         ? empty('🤲', 'Cadastre um grupo de mutuários. Nenhuma cobrança será criada até que um falecimento seja registrado.')
         : groupSections.map(section => renderGroupAccordion(section, allGroupsMode, adminUnlocked, avatar, empty)).join('')}</div>
-      ${pages > 1 ? `<nav class="list-pagination mutual-events-pagination" aria-label="Paginação dos eventos de Mútuas"><button class="btn btn-ghost btn-sm" type="button" data-mutual-event-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>← Anterior</button><span>Eventos · página <strong>${page}</strong> de ${pages} · ${total} resultado(s)</span><button class="btn btn-ghost btn-sm" type="button" data-mutual-event-page="${page + 1}" ${page === pages ? 'disabled' : ''}>Próxima →</button></nav>` : ''}
       <div id="mutualFilterEmpty" class="membership-filter-empty mutual-filter-empty-global" ${visibleCharges.length || !charges.length ? 'hidden' : ''}>🔎 Nenhuma cobrança encontrada com os filtros selecionados.</div>
     </div>
   </section>`;

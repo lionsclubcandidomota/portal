@@ -7,7 +7,7 @@ import {
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
-import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.47.2';
+import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.36.2';
 
 
 export function movementValueSummary(items = [], isProgrammed = () => false, mode = 'realized') {
@@ -155,27 +155,13 @@ export function categorySummaries(items, treasury) {
     ));
 }
 
-function dateReference(value) {
-  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return '';
-  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
-}
-
-function operationalPagination(section = {}, key = '') {
-  const page = Math.max(1, Number(section.page || 1));
-  const pages = Math.max(1, Number(section.pages || 1));
-  if (pages <= 1) return '';
-  return `<nav class="list-pagination" aria-label="Paginação dos lançamentos"><button class="btn btn-ghost btn-sm" type="button" data-treasury-page="${escapeHtml(key)}" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>← Anterior</button><span>Página <strong>${page}</strong> de ${pages}</span><button class="btn btn-ghost btn-sm" type="button" data-treasury-page="${escapeHtml(key)}" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>Próxima →</button></nav>`;
-}
-
 export function bindTreasuryMovementLists({ root, state, periodItems, treasury, helpers }) {
-  const { bindToolbar, bindRowActions, loadOperationalMovements } = helpers;
+  const { bindToolbar, bindRowActions } = helpers;
   let treasurySearchQuery = '';
   let movementFilter = 'all';
-  let requestGeneration = 0;
-  let fallbackNotified = false;
-  let renderedMovements = new Map();
 
-  const localModel = query => {
+  const draw = (query = treasurySearchQuery) => {
+    treasurySearchQuery = query;
     const searchMatched = periodItems.filter(item => {
       const account = treasury.accountFor(item);
       const members = treasury.membersFor(item);
@@ -199,59 +185,52 @@ export function bindTreasuryMovementLists({ root, state, periodItems, treasury, 
       .sort((first, second) => (parseLocalDate(second.date)?.getTime() || 0) - (parseLocalDate(first.date)?.getTime() || 0));
     const scheduledPage = treasury.pagination(scheduled, treasury.scheduledPage, 'scheduled');
     const completedPage = treasury.pagination(completed, treasury.completedPage, 'completed');
+    treasury.scheduledPage = scheduledPage.page;
+    treasury.completedPage = completedPage.page;
+
+    const lists = root.querySelector('#treasuryLists');
+    if (!lists) return;
+
+    const counts = {
+      all: searchMatched.length,
+      scheduled: searchMatched.filter(item => treasury.isProgrammed(item)).length,
+      completed: searchMatched.filter(item => !treasury.isProgrammed(item)).length,
+      entries: searchMatched.filter(item => Number(item.entry || 0) > 0).length,
+      exits: searchMatched.filter(item => Number(item.exit || 0) > 0).length
+    };
     const scheduledSummary = movementFilter === 'scheduled';
     const summary = movementValueSummary(
       filtered,
       item => treasury.isProgrammed(item),
       scheduledSummary ? 'scheduled' : 'realized'
     );
-    return {
-      source: 'local',
-      counts: {
-        all: searchMatched.length,
-        scheduled: searchMatched.filter(item => treasury.isProgrammed(item)).length,
-        completed: searchMatched.filter(item => !treasury.isProgrammed(item)).length,
-        entries: searchMatched.filter(item => Number(item.entry || 0) > 0).length,
-        exits: searchMatched.filter(item => Number(item.exit || 0) > 0).length
-      },
-      summary: { mode: scheduledSummary ? 'scheduled' : 'realized', ...summary },
-      scheduled: {
-        items: scheduledPage.visible,
-        total: scheduled.length,
-        page: scheduledPage.page,
-        pages: scheduledPage.totalPages,
-        html: scheduledPage.html
-      },
-      completed: {
-        items: completedPage.visible,
-        total: completed.length,
-        page: completedPage.page,
-        pages: completedPage.totalPages,
-        html: completedPage.html
-      }
-    };
-  };
+    const summaryEntries = summary.entries;
+    const summaryExits = summary.exits;
+    const summaryResult = summary.result;
+    const summaryModeLabel = scheduledSummary ? 'programado' : 'realizado';
+    const summaryEntriesLabel = scheduledSummary ? 'Entradas programadas' : 'Entradas realizadas';
+    const summaryExitsLabel = scheduledSummary ? 'Saídas programadas' : 'Saídas realizadas';
+    const summaryDescription = scheduledSummary
+      ? 'Os valores abaixo são previsões e ainda não alteram o saldo atual.'
+      : 'Use os filtros rápidos para localizar lançamentos e conferir valores realizados.';
+    const showScheduledSection = movementFilter !== 'completed';
+    const showCompletedSection = movementFilter !== 'scheduled';
+    const filterButton = (key, label) => `<button type="button" class="treasury-movement-filter ${movementFilter === key ? 'is-active' : ''}" data-movement-filter="${key}" aria-pressed="${String(movementFilter === key)}"><span>${label}</span><strong>${counts[key]}</strong></button>`;
+    const scheduledSection = showScheduledSection
+      ? `<section class="timeline-section">${timelineHeading('🗓️', 'Lançamentos programados', 'Receitas e despesas agendadas que ainda não impactam o saldo atual.', scheduled.length)}${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</section>`
+      : '';
+    const completedSection = showCompletedSection
+      ? `<section class="timeline-section is-history">${timelineHeading('🧾', 'Lançamentos realizados', 'Somente movimentações recebidas, pagas ou realizadas.', completed.length, true)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`
+      : '';
 
-  const loadD1Model = async query => {
-    if (typeof loadOperationalMovements !== 'function') return null;
-    const bounds = treasury.periodBounds();
-    return loadOperationalMovements({
-      start: dateReference(bounds.start),
-      end: dateReference(bounds.end),
-      query,
-      filter: movementFilter,
-      scheduledPage: treasury.scheduledPage,
-      completedPage: treasury.completedPage,
-      pageSize: 8
-    });
-  };
+    lists.innerHTML = `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Histórico financeiro</span><h3>Movimentações do período</h3><p>${summaryDescription}</p></div><div class="treasury-movement-balance ${summaryResult >= 0 ? 'is-positive' : 'is-negative'} ${scheduledSummary ? 'is-scheduled' : ''}"><small>Resultado ${summaryModeLabel}</small><strong class="sensitive-money">${money.format(summaryResult)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summaryEntriesLabel}</small><strong class="sensitive-money">${money.format(summaryEntries)}</strong></span><span><small>${summaryExitsLabel}</small><strong class="sensitive-money">${money.format(summaryExits)}</strong></span><span><small>Registros exibidos</small><strong>${filtered.length}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section>${scheduledSection}${completedSection}`;
 
-  const bindAttachmentActions = () => {
+    bindRowActions();
+
     root.querySelectorAll('[data-secure-attachment-action]').forEach(button => {
       button.addEventListener('click', async () => {
-        const movementId = String(button.dataset.movementId || '');
-        const movement = renderedMovements.get(movementId)
-          || (Array.isArray(state?.treasury) ? state.treasury : []).find(item => String(item?.id || '') === movementId);
+        const movement = (Array.isArray(state?.treasury) ? state.treasury : [])
+          .find(item => String(item?.id || '') === String(button.dataset.movementId || ''));
         const attachment = (Array.isArray(movement?.attachments) ? movement.attachments : [])
           .find(item => String(item?.id || '') === String(button.dataset.attachmentId || ''));
         if (!attachment) {
@@ -290,101 +269,37 @@ export function bindTreasuryMovementLists({ root, state, periodItems, treasury, 
         }
       });
     });
-  };
-
-  const renderModel = model => {
-    const lists = root.querySelector('#treasuryLists');
-    if (!lists) return;
-    treasury.scheduledPage = Math.max(1, Number(model.scheduled?.page || 1));
-    treasury.completedPage = Math.max(1, Number(model.completed?.page || 1));
-    const scheduledItems = Array.isArray(model.scheduled?.items) ? model.scheduled.items : [];
-    const completedItems = Array.isArray(model.completed?.items) ? model.completed.items : [];
-    renderedMovements = new Map([...scheduledItems, ...completedItems].map(item => [String(item?.id || ''), item]));
-
-    const summary = model.summary || {};
-    const scheduledSummary = summary.mode === 'scheduled';
-    const summaryEntries = Number(summary.entries || 0);
-    const summaryExits = Number(summary.exits || 0);
-    const summaryResult = Number(summary.result || 0);
-    const summaryModeLabel = scheduledSummary ? 'programado' : 'realizado';
-    const summaryEntriesLabel = scheduledSummary ? 'Entradas programadas' : 'Entradas realizadas';
-    const summaryExitsLabel = scheduledSummary ? 'Saídas programadas' : 'Saídas realizadas';
-    const summaryDescription = scheduledSummary
-      ? 'Os valores abaixo são previsões e ainda não alteram o saldo atual.'
-      : 'Use os filtros rápidos para localizar lançamentos e conferir valores realizados.';
-    const sourceD1 = String(model.source || '').startsWith('d1');
-    const sourceLabel = sourceD1 ? 'D1 · consulta paginada' : 'Modo local de contingência';
-    const showScheduledSection = movementFilter !== 'completed';
-    const showCompletedSection = movementFilter !== 'scheduled';
-    const counts = model.counts || {};
-    const filterButton = (key, label) => `<button type="button" class="treasury-movement-filter ${movementFilter === key ? 'is-active' : ''}" data-movement-filter="${key}" aria-pressed="${String(movementFilter === key)}"><span>${label}</span><strong>${Number(counts[key] || 0)}</strong></button>`;
-    const scheduledPagination = model.scheduled?.html ?? operationalPagination(model.scheduled, 'scheduled');
-    const completedPagination = model.completed?.html ?? operationalPagination(model.completed, 'completed');
-    const scheduledSection = showScheduledSection
-      ? `<section class="timeline-section">${timelineHeading('🗓️', 'Lançamentos programados', 'Receitas e despesas agendadas que ainda não impactam o saldo atual.', Number(model.scheduled?.total || 0))}${treasuryTable(scheduledItems, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPagination}</section>`
-      : '';
-    const completedSection = showCompletedSection
-      ? `<section class="timeline-section is-history">${timelineHeading('🧾', 'Lançamentos realizados', 'Somente movimentações recebidas, pagas ou realizadas.', Number(model.completed?.total || 0), true)}${treasuryTable(completedItems, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPagination}</section>`
-      : '';
-
-    lists.innerHTML = `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Histórico financeiro</span><h3>Movimentações do período</h3><p>${summaryDescription}</p><span class="badge ${sourceD1 ? 'badge-success' : 'badge-warning'}">${sourceLabel}</span></div><div class="treasury-movement-balance ${summaryResult >= 0 ? 'is-positive' : 'is-negative'} ${scheduledSummary ? 'is-scheduled' : ''}"><small>Resultado ${summaryModeLabel}</small><strong class="sensitive-money">${money.format(summaryResult)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summaryEntriesLabel}</small><strong class="sensitive-money">${money.format(summaryEntries)}</strong></span><span><small>${summaryExitsLabel}</small><strong class="sensitive-money">${money.format(summaryExits)}</strong></span><span><small>Registros exibidos</small><strong>${Number(summary.count || 0)}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section>${scheduledSection}${completedSection}`;
-
-    bindRowActions();
-    bindAttachmentActions();
 
     root.querySelectorAll('[data-movement-filter]').forEach(button => {
       button.addEventListener('click', () => {
         movementFilter = button.dataset.movementFilter || 'all';
         treasury.scheduledPage = 1;
         treasury.completedPage = 1;
-        void draw(treasurySearchQuery);
+        draw(treasurySearchQuery);
       });
     });
 
     root.querySelectorAll('[data-treasury-page]').forEach(button => {
       button.addEventListener('click', () => {
         const next = Number(button.dataset.page || 1);
-        if (button.dataset.treasuryPage === 'scheduled') treasury.scheduledPage = next;
-        else treasury.completedPage = next;
-        void draw(treasurySearchQuery).then(() => {
-          root.querySelector('#treasuryLists')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (button.dataset.treasuryPage === 'scheduled') {
+          treasury.scheduledPage = next;
+        } else {
+          treasury.completedPage = next;
+        }
+        draw(treasurySearchQuery);
+        root.querySelector('#treasuryLists')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
         });
       });
     });
   };
 
-  const draw = async (query = treasurySearchQuery) => {
-    treasurySearchQuery = query;
-    const generation = ++requestGeneration;
-    const lists = root.querySelector('#treasuryLists');
-    if (lists && typeof loadOperationalMovements === 'function') {
-      lists.classList.add('is-loading');
-      lists.setAttribute('aria-busy', 'true');
-    }
-    try {
-      const remote = await loadD1Model(query);
-      if (generation !== requestGeneration) return;
-      renderModel(remote || localModel(query));
-    } catch (error) {
-      if (generation !== requestGeneration) return;
-      renderModel(localModel(query));
-      if (!fallbackNotified) {
-        fallbackNotified = true;
-        console.warn('Consulta operacional do D1 indisponível; usando o estado local.', error);
-      }
-    } finally {
-      if (generation === requestGeneration && lists) {
-        lists.classList.remove('is-loading');
-        lists.removeAttribute('aria-busy');
-      }
-    }
-  };
-
   bindToolbar(query => {
     treasury.scheduledPage = 1;
     treasury.completedPage = 1;
-    void draw(query);
+    draw(query);
   });
-  void draw();
+  draw();
 }
-

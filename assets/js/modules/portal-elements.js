@@ -12,12 +12,6 @@ export function getPortalElements(documentRef = document) {
     pageTitle: requiredElement(documentRef, 'pageTitle'),
     pageDescription: requiredElement(documentRef, 'pageDescription'),
     modeChip: requiredElement(documentRef, 'modeChip'),
-    databaseSync: {
-      chip: requiredElement(documentRef, 'databaseSyncChip'),
-      icon: requiredElement(documentRef, 'databaseSyncIcon'),
-      label: requiredElement(documentRef, 'databaseSyncLabel'),
-      detail: requiredElement(documentRef, 'databaseSyncDetail')
-    },
     sidebar: requiredElement(documentRef, 'sidebar'),
     overlay: requiredElement(documentRef, 'sidebarOverlay'),
     modal: requiredElement(documentRef, 'modal'),

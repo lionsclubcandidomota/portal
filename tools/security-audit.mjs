@@ -2,6 +2,7 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { findSensitivePortalFields } from '../assets/js/core/portal-security.js';
+import { hasPrivatePortalData } from '../assets/js/core/portal-data-boundary.js';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const failures = [];
@@ -17,11 +18,14 @@ async function walk(directory, extension) {
   return result;
 }
 
-for (const relativePath of ['data/modelo.json']) {
+for (const relativePath of ['data/dados.json', 'data/modelo.json']) {
   const payload = JSON.parse(await readFile(path.join(projectRoot, relativePath), 'utf8'));
   const findings = findSensitivePortalFields(payload);
   if (findings.length) {
     failures.push(`${relativePath}: campos sensíveis encontrados em ${findings.join(', ')}.`);
+  }
+  if (relativePath === 'data/dados.json' && hasPrivatePortalData(payload.data || payload)) {
+    failures.push('data/dados.json: o arquivo público contém coleções ou configurações privadas.');
   }
 }
 
@@ -35,11 +39,8 @@ for (const [label, pattern] of requiredPolicies) {
   if (!pattern.test(index)) failures.push(`index.html: política ausente — ${label}.`);
 }
 if (!/object-src 'none'/.test(index)) failures.push("index.html: CSP deve bloquear object-src.");
-if (!/connect-src[^"]*https:\/\/\*\.workers\.dev/.test(index)) {
-  failures.push('index.html: CSP deve permitir a API do Worker em workers.dev.');
-}
-if (/api\.github\.com/.test(index)) {
-  failures.push('index.html: CSP ainda permite a API do GitHub sem necessidade.');
+if (!/connect-src[^\"]*https:\/\/api\.github\.com/.test(index)) {
+  failures.push('index.html: CSP deve permitir somente a API necessária do GitHub nas conexões externas.');
 }
 if (!/script-src 'self';/.test(index)) {
   failures.push("index.html: CSP deve permitir somente scripts externos da própria origem.");
@@ -68,4 +69,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Auditoria de segurança aprovada: modelo local e ${applicationFiles.length} módulos verificados; dados operacionais servidos pelo D1.`);
+console.log(`Auditoria de segurança aprovada: 2 arquivos de dados e ${applicationFiles.length} módulos verificados.`);

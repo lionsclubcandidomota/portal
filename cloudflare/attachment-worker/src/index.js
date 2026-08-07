@@ -1,54 +1,3 @@
-import {
-  D1_SCHEMA_VERSION,
-  applyD1GroupsMutation,
-  applyD1ReferenceMutation,
-  applyD1TreasuryMutation,
-  deactivateD1PrivateState,
-  getD1StorageStatus,
-  readD1Mutation,
-  readD1PrivateBootstrap,
-  readD1PrivateState,
-  writeD1PrivateState
-} from './d1-storage.js';
-import {
-  queryD1DashboardAnalytics,
-  queryD1ReportState
-} from './d1-analytics.js';
-import { queryD1OperationalTreasury } from './d1-operational.js';
-import {
-  queryD1OperationalMemberships,
-  queryD1OperationalMutuals,
-  syncMemberDirectory
-} from './d1-operational-memberships.js';
-import {
-  readD1GroupsModule,
-  readD1ModuleRevisions,
-  readD1ReferenceModule
-} from './d1-sync.js';
-import {
-  AUTH_PASSWORD_ITERATIONS,
-  authenticateAdministrator,
-  bootstrapAdministrator,
-  changeOwnPassword,
-  createAdministratorUser,
-  createDirectorSession,
-  getAuthenticationStatus,
-  listAdministratorUsers,
-  requireAuthenticationSession as requireSession,
-  resetAdministratorPassword,
-  revokeAuthenticationSession,
-  updateAdministratorUser
-} from './auth.js';
-import {
-  getD1PublicStatus,
-  handlePublicMedia,
-  migrateLegacyPublicStateToD1,
-  publicPublicationStatus,
-  readD1PublicState,
-  writeD1PublicState
-} from './d1-public.js';
-
-const WORKER_VERSION = '1.13.2';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -101,21 +50,6 @@ function errorResponse(error, status = 400, headers = {}) {
   return json({ error: message }, status, headers);
 }
 
-function publicJson(data, request, revision = '', headers = {}) {
-  const etag = revision ? `"${String(revision).replaceAll('\"', '')}"` : '';
-  const responseHeaders = {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Cache-Control': 'public, max-age=30, stale-while-revalidate=120',
-    'X-Content-Type-Options': 'nosniff',
-    ...headers
-  };
-  if (etag) responseHeaders.ETag = etag;
-  if (etag && request.headers.get('If-None-Match') === etag) {
-    return new Response(null, { status: 304, headers: responseHeaders });
-  }
-  return new Response(JSON.stringify(data), { status: 200, headers: responseHeaders });
-}
-
 function normalizeOriginList(value) {
   return String(value || '')
     .split(',')
@@ -138,8 +72,7 @@ function corsHeaders(request, env) {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Authorization,Content-Type,If-None-Match',
-    'Access-Control-Expose-Headers': 'ETag',
+    'Access-Control-Allow-Headers': 'Authorization,Content-Type',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin'
   };
@@ -148,13 +81,6 @@ function corsHeaders(request, env) {
 function requireAllowedOrigin(request, env) {
   const origin = request.headers.get('Origin') || '';
   if (!originAllowed(origin, env)) throw new Response('Origem não autorizada.', { status: 403 });
-}
-
-
-function downloadTtl(env) {
-  const configured = Number(env.DOWNLOAD_TTL_SECONDS || 300);
-  if (!Number.isFinite(configured)) return 300;
-  return Math.min(15 * 60, Math.max(60, Math.floor(configured)));
 }
 
 
@@ -231,6 +157,72 @@ async function verifySignedPayload(token, secret) {
   const payload = JSON.parse(base64UrlDecodeText(body));
   if (Number(payload.exp || 0) <= Math.floor(Date.now() / 1000)) throw new Error('Autorização expirada.');
   return payload;
+}
+
+function sessionTtl(env) {
+  return Math.min(8 * 60 * 60, Math.max(5 * 60, Number(env.SESSION_TTL_SECONDS || 1800)));
+}
+
+function downloadTtl(env) {
+  return Math.min(15 * 60, Math.max(60, Number(env.DOWNLOAD_TTL_SECONDS || 300)));
+}
+
+async function createSessionToken(role, subject, env) {
+  const now = Math.floor(Date.now() / 1000);
+  const exp = now + sessionTtl(env);
+  const token = await signPayload({
+    v: SESSION_VERSION,
+    type: 'session',
+    role,
+    sub: String(subject || role),
+    iat: now,
+    exp,
+    nonce: crypto.randomUUID()
+  }, env.SESSION_SECRET);
+  return { token, exp };
+}
+
+async function requireSession(request, env, roles = []) {
+  const header = request.headers.get('Authorization') || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) throw new Response('Sessão não informada.', { status: 401 });
+  let payload;
+  try {
+    payload = await verifySignedPayload(match[1], env.SESSION_SECRET);
+  } catch (error) {
+    throw new Response(error.message, { status: 401 });
+  }
+  if (payload.type !== 'session' || payload.v !== SESSION_VERSION) {
+    throw new Response('Sessão incompatível.', { status: 401 });
+  }
+  if (roles.length && !roles.includes(payload.role)) {
+    throw new Response('Este perfil não possui permissão para esta operação.', { status: 403 });
+  }
+  return payload;
+}
+
+async function validateAdminCredential(token, env) {
+  const safeToken = String(token || '').trim();
+  if (!safeToken || /\s/.test(safeToken)) throw new Error('Token administrativo inválido.');
+  const owner = encodeURIComponent(env.GITHUB_OWNER || '');
+  const repo = encodeURIComponent(env.GITHUB_REPO || '');
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    Authorization: `Bearer ${safeToken}`,
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'Lions-Portal-R2-Worker'
+  };
+  const [repositoryResponse, userResponse] = await Promise.all([
+    fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers }),
+    fetch('https://api.github.com/user', { headers })
+  ]);
+  if (!repositoryResponse.ok) throw new Error('O token não possui acesso ao repositório configurado.');
+  const repository = await repositoryResponse.json();
+  if (repository.archived || repository.disabled || repository.permissions?.push !== true) {
+    throw new Error('O token precisa possuir permissão de escrita no repositório do Portal.');
+  }
+  const user = userResponse.ok ? await userResponse.json() : null;
+  return String(user?.login || user?.name || 'administrador');
 }
 
 function hexToBytes(value) {
@@ -362,7 +354,7 @@ async function parsePrivateStateObject(object, label = 'estado privado') {
   return { state, revision, updatedAt, checksum, summary, objectKeys };
 }
 
-async function readR2PrivateStateRecord(env) {
+async function readPrivateStateRecord(env) {
   const object = await env.ATTACHMENTS.get(PRIVATE_STATE_KEY);
   if (!object) return null;
   return parsePrivateStateObject(object, 'armazenamento privado do Portal');
@@ -430,7 +422,7 @@ async function prunePrivateBackups(env) {
   return Math.min(ordered.length, MAX_PRIVATE_BACKUPS);
 }
 
-async function persistR2PrivateState(env, state, session, { reason = 'automatic', label = '' } = {}) {
+async function persistPrivateState(env, state, session, { reason = 'automatic', label = '' } = {}) {
   const revision = crypto.randomUUID();
   const updatedAt = new Date().toISOString();
   const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
@@ -452,226 +444,16 @@ async function persistR2PrivateState(env, state, session, { reason = 'automatic'
   return { revision, updatedAt, checksum: envelope.checksum, summary: envelope.summary, backup };
 }
 
-async function privateStorageBackend(env) {
-  const d1 = await getD1StorageStatus(env);
-  return { backend: d1.active ? 'd1' : 'r2', d1 };
-}
-
-async function readPrivateStateRecord(env, resolvedStorage = null) {
-  const storage = resolvedStorage || await privateStorageBackend(env);
-  if (storage.backend !== 'd1') return readR2PrivateStateRecord(env);
-  const record = await readD1PrivateState(env, { storageStatus: storage.d1 });
-  if (!record) return null;
-  const serializedState = JSON.stringify(record.state);
-  const checksum = await sha256Hex(encoder.encode(serializedState));
-  if (record.checksum && record.checksum !== checksum) {
-    throw new Error('O estado privado do D1 falhou na verificação de integridade.');
-  }
-  const { summary, objectKeys } = privateStateSummary(record.state);
-  return {
-    ...record,
-    checksum,
-    summary,
-    objectKeys,
-    backend: 'd1'
-  };
-}
-
-async function writeR2CurrentMirror(env, envelope, { updatedBy, reason, label }) {
-  await env.ATTACHMENTS.put(PRIVATE_STATE_KEY, envelope.serialized, {
-    httpMetadata: { contentType: 'application/json; charset=utf-8' },
-    customMetadata: privateStateMetadata({
-      revision: envelope.revision,
-      updatedAt: envelope.updatedAt,
-      updatedBy,
-      checksum: envelope.checksum,
-      summary: envelope.summary,
-      reason,
-      label
-    })
-  });
-}
-
-async function persistD1PrivateState(env, state, session, { reason = 'automatic', label = '', storageStatus = null } = {}) {
-  const revision = crypto.randomUUID();
-  const updatedAt = new Date().toISOString();
-  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
-  const envelope = await privateStateEnvelope(state, { revision, updatedAt });
-  envelope.revision = revision;
-  envelope.updatedAt = updatedAt;
-  const d1 = await writeD1PrivateState(env, state, {
-    revision,
-    updatedAt,
-    updatedBy,
-    checksum: envelope.checksum,
-    activate: true,
-    storageStatus
-  });
-  let mirrorWarning = '';
-  let backup = null;
-  try {
-    backup = await putPrivateBackup(env, envelope, { updatedBy, reason, label });
-    await writeR2CurrentMirror(env, envelope, { updatedBy, reason: 'd1-mirror', label: label || 'Espelho atual do D1' });
-    await prunePrivateBackups(env);
-  } catch (error) {
-    mirrorWarning = `Os dados foram salvos no D1, mas o espelho no R2 não pôde ser atualizado: ${error instanceof Error ? error.message : String(error)}`;
-    console.error(mirrorWarning);
-  }
-  return {
-    revision,
-    updatedAt,
-    checksum: envelope.checksum,
-    summary: envelope.summary,
-    backup,
-    backend: 'd1',
-    d1,
-    mirrorWarning
-  };
-}
-
-async function persistPrivateState(env, state, session, options = {}, resolvedStorage = null) {
-  const storage = resolvedStorage || await privateStorageBackend(env);
-  return storage.backend === 'd1'
-    ? persistD1PrivateState(env, state, session, { ...options, storageStatus: storage.d1 })
-    : persistR2PrivateState(env, state, session, options);
-}
-
-async function handleStorageStatus(env) {
-  const d1 = await getD1StorageStatus(env);
-  const r2 = await readR2PrivateStateRecord(env);
-  return {
-    backend: d1.active ? 'd1' : 'r2',
-    d1: {
-      available: d1.available,
-      initialized: d1.initialized,
-      active: d1.active,
-      schemaVersion: d1.schemaVersion,
-      requiredSchemaVersion: D1_SCHEMA_VERSION,
-      revision: d1.revision,
-      updatedAt: d1.updatedAt,
-      migratedAt: d1.migratedAt || '',
-      counts: d1.counts || {},
-      analyticsReadModels: Boolean(d1.analyticsReadModels),
-      relationalSource: Boolean(d1.relationalSource),
-      operationalReadModels: Boolean(d1.operationalReadModels),
-      snapshotStale: Boolean(d1.snapshotStale),
-      snapshotUpdatedAt: d1.snapshotUpdatedAt || '',
-      error: d1.error || ''
-    },
-    r2: r2 ? {
-      found: true,
-      revision: r2.revision,
-      updatedAt: r2.updatedAt,
-      checksum: r2.checksum,
-      summary: r2.summary
-    } : { found: false, revision: '', updatedAt: '', checksum: '', summary: null }
-  };
-}
-
-async function handleD1Migration(request, env, session) {
-  const status = await getD1StorageStatus(env);
-  if (!status.available) throw new Error('O binding PORTAL_DB ainda não foi configurado no Worker.');
-  if (!status.initialized) throw new Error('Aplique a migração 0001_portal_private_state.sql antes de iniciar a transferência.');
-  if (status.schemaVersion !== D1_SCHEMA_VERSION) {
-    throw new Error(`O banco D1 está na versão ${status.schemaVersion}; aplique as migrações até a versão ${D1_SCHEMA_VERSION}.`);
-  }
-  const source = await readR2PrivateStateRecord(env);
-  if (!source) throw new Response('O estado privado atual não foi encontrado no R2.', { status: 404 });
-  const body = await request.json().catch(() => ({}));
-  const expectedRevision = String(body.expectedRevision || '');
-  if (expectedRevision && expectedRevision !== source.revision) {
-    throw new Response('O estado privado mudou desde a última leitura. Atualize a Central de Recuperação antes de migrar.', { status: 409 });
-  }
-  const migratedAt = new Date().toISOString();
-  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
-  const envelope = await privateStateEnvelope(source.state, {
-    revision: source.revision || crypto.randomUUID(),
-    updatedAt: source.updatedAt || migratedAt
-  });
-  envelope.revision = source.revision || crypto.randomUUID();
-  envelope.updatedAt = source.updatedAt || migratedAt;
-  await putPrivateBackup(env, envelope, {
-    updatedBy,
-    reason: 'before-d1-migration',
-    label: 'Estado do R2 antes da migração para o D1'
-  });
-  const result = await writeD1PrivateState(env, source.state, {
-    revision: envelope.revision,
-    updatedAt: envelope.updatedAt,
-    updatedBy,
-    checksum: envelope.checksum,
-    migratedAt,
-    activate: true,
-    storageStatus: status
-  });
-  let mirrorWarning = '';
-  try {
-    await writeR2CurrentMirror(env, envelope, {
-      updatedBy,
-      reason: 'd1-source-mirror',
-      label: 'Espelho preservado após a migração para o D1'
-    });
-    await prunePrivateBackups(env);
-  } catch (error) {
-    mirrorWarning = `O D1 foi ativado, mas a manutenção do espelho no R2 apresentou falha: ${error instanceof Error ? error.message : String(error)}`;
-    console.error(mirrorWarning);
-  }
-  return {
-    migrated: true,
-    backend: 'd1',
-    revision: envelope.revision,
-    updatedAt: envelope.updatedAt,
-    checksum: envelope.checksum,
-    summary: envelope.summary,
-    d1: result,
-    mirrorWarning
-  };
-}
-
-async function handleD1Rollback(request, env, session) {
-  const current = await readD1PrivateState(env);
-  if (!current) throw new Response('O D1 não está ativo ou não possui dados para retornar ao R2.', { status: 409 });
-  const body = await request.json().catch(() => ({}));
-  const expectedRevision = String(body.expectedRevision || '');
-  if (expectedRevision && expectedRevision !== current.revision) {
-    throw new Response('O estado privado mudou desde a última leitura. Atualize a Central de Recuperação antes de retornar ao R2.', { status: 409 });
-  }
-  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
-  const envelope = await privateStateEnvelope(current.state, {
-    revision: current.revision || crypto.randomUUID(),
-    updatedAt: current.updatedAt || new Date().toISOString()
-  });
-  envelope.revision = current.revision || crypto.randomUUID();
-  envelope.updatedAt = current.updatedAt || new Date().toISOString();
-  await putPrivateBackup(env, envelope, {
-    updatedBy,
-    reason: 'before-d1-rollback',
-    label: 'Estado do D1 antes do retorno temporário ao R2'
-  });
-  await writeR2CurrentMirror(env, envelope, {
-    updatedBy,
-    reason: 'd1-rollback-mirror',
-    label: 'Estado atual copiado do D1 para o R2'
-  });
-  await deactivateD1PrivateState(env);
-  await prunePrivateBackups(env);
-  return {
-    rolledBack: true,
-    backend: 'r2',
-    revision: envelope.revision,
-    updatedAt: envelope.updatedAt,
-    checksum: envelope.checksum,
-    summary: envelope.summary
-  };
-}
-
 async function publishedDirectorProfile(env) {
-  try {
-    const record = await readD1PublicState(env, 'https://portal-public.local/');
-    return record?.envelope?.data?.settings?.accessProfiles?.director || null;
-  } catch {
-    return null;
-  }
+  if (!env.PUBLIC_DATA_URL) return null;
+  const response = await fetch(`${env.PUBLIC_DATA_URL}${String(env.PUBLIC_DATA_URL).includes('?') ? '&' : '?'}ts=${Date.now()}`, {
+    headers: { Accept: 'application/json' },
+    cf: { cacheTtl: 0, cacheEverything: false }
+  });
+  if (!response.ok) return null;
+  const payload = await response.json();
+  const state = payload?.data && typeof payload.data === 'object' ? payload.data : payload;
+  return state?.settings?.accessProfiles?.director || null;
 }
 
 async function directorProfileForAuthentication(env) {
@@ -728,35 +510,16 @@ async function sha256Hex(buffer) {
 async function handleSession(request, env) {
   const body = await request.json().catch(() => ({}));
   const role = String(body.role || '').toLowerCase();
-  if (role === 'admin') {
-    if (body.username || body.password) {
-      const session = await authenticateAdministrator(request, env, body);
-      try {
-        const publicStatus = await getD1PublicStatus(env);
-        if (
-          publicStatus.initialized
-          && (!publicStatus.active || Number(publicStatus.counts?.members || 0) === 0)
-          && (env.PUBLIC_DATA_URL || publicStatus.counts?.members !== undefined)
-        ) {
-          session.publicMigration = await migrateLegacyPublicStateToD1(env, {
-            sub: session.user?.username || 'administrador'
-          }, { repairEmpty: true });
-        }
-      } catch (error) {
-        session.publicMigration = {
-          migrated: false,
-          warning: error instanceof Error ? error.message : String(error)
-        };
-      }
-      return session;
-    }
-    throw new Error('Use usuário e senha para acessar o painel administrativo.');
-  }
-  if (role === 'director') {
-    const subject = await validateDirectorCredential(body.credential, env);
-    return createDirectorSession(request, env, subject);
-  }
-  throw new Error('Perfil de acesso não reconhecido.');
+  let subject;
+  if (role === 'admin') subject = await validateAdminCredential(body.credential, env);
+  else if (role === 'director') subject = await validateDirectorCredential(body.credential, env);
+  else throw new Error('Perfil de acesso não reconhecido.');
+  const session = await createSessionToken(role, subject, env);
+  return {
+    token: session.token,
+    role,
+    expiresAt: new Date(session.exp * 1000).toISOString()
+  };
 }
 
 
@@ -768,8 +531,6 @@ async function handlePrivateStateRead(env, session) {
     state: record.state,
     revision: record.revision,
     updatedAt: record.updatedAt,
-    source: String(record.source || record.backend || ''),
-    snapshotStale: Boolean(record.snapshotStale),
     integrity: { checksum: record.checksum, summary: record.summary }
   };
   if (session.role !== 'director') return response;
@@ -788,414 +549,6 @@ async function handlePrivateStateRead(env, session) {
   return { ...response, state };
 }
 
-
-function sanitizeDirectorPrivateState(state) {
-  const clean = JSON.parse(JSON.stringify(state || {}));
-  const profile = clean?.settings?.accessProfiles?.director;
-  if (profile && clean.settings?.accessProfiles) {
-    clean.settings.accessProfiles.director = {
-      version: Number(profile.version || 2),
-      credentialType: String(profile.credentialType || 'password'),
-      enabled: profile.enabled !== false,
-      label: String(profile.label || 'Diretoria'),
-      configuredAt: String(profile.configuredAt || '')
-    };
-  }
-  return clean;
-}
-
-async function handlePrivateStateBootstrapRead(env, session) {
-  const storage = await privateStorageBackend(env);
-  if (storage.backend !== 'd1' || !storage.d1.active) {
-    return handlePrivateStateRead(env, session);
-  }
-  const record = await readD1PrivateBootstrap(env, { storageStatus: storage.d1 });
-  if (!record) return { found: false, state: null, revision: '', updatedAt: '', integrity: null };
-  const state = session.role === 'director' ? sanitizeDirectorPrivateState(record.state) : record.state;
-  return {
-    found: true,
-    state,
-    revision: record.revision,
-    updatedAt: record.updatedAt,
-    source: String(record.source || 'relational-bootstrap'),
-    snapshotStale: Boolean(record.snapshotStale),
-    partial: Boolean(record.partial),
-    workingSetCount: Number(record.workingSetCount || 0),
-    totalMovementCount: Number(record.totalMovementCount || storage.d1.counts?.treasury || 0),
-    integrity: {
-      checksum: String(record.storedChecksum || record.checksum || ''),
-      summary: {
-        treasury: Number(storage.d1.counts?.treasury || 0),
-        accounts: Number(storage.d1.counts?.accounts || 0),
-        familyGroups: Number(storage.d1.counts?.familyGroups || 0),
-        mutualGroups: Number(storage.d1.counts?.mutualGroups || 0),
-        attachments: Number(storage.d1.counts?.attachments || 0),
-        workingSet: Number(record.workingSetCount || 0)
-      }
-    }
-  };
-}
-
-function referenceMutationState(currentState, body) {
-  const nextState = JSON.parse(JSON.stringify(currentState || {}));
-  if (!body?.reference || typeof body.reference !== 'object' || Array.isArray(body.reference)) {
-    throw new Error('A alteração das referências privadas é inválida.');
-  }
-  const reference = body.reference;
-  if (!reference.settings || typeof reference.settings !== 'object' || Array.isArray(reference.settings)) {
-    throw new Error('As configurações privadas informadas são inválidas.');
-  }
-  if (!Array.isArray(reference.treasuryAccounts) || reference.treasuryAccounts.length > 100) {
-    throw new Error('A lista de contas privadas é inválida.');
-  }
-  if (!Array.isArray(reference.treasuryCategories) || reference.treasuryCategories.length > 250) {
-    throw new Error('A lista de categorias privadas é inválida.');
-  }
-  nextState.settings = JSON.parse(JSON.stringify(reference.settings));
-  nextState.treasuryAccounts = JSON.parse(JSON.stringify(reference.treasuryAccounts));
-  nextState.treasuryCategories = [...new Set(reference.treasuryCategories.map(value => String(value || '').trim()).filter(Boolean))];
-  return nextState;
-}
-
-
-function treasuryMutationState(currentState, body) {
-  const nextState = JSON.parse(JSON.stringify(currentState || {}));
-  const currentMovements = Array.isArray(nextState.treasury) ? nextState.treasury : [];
-  const upserts = Array.isArray(body?.upserts) ? body.upserts : [];
-  const deletes = [...new Set((Array.isArray(body?.deletes) ? body.deletes : [])
-    .map(value => String(value || '').trim())
-    .filter(Boolean))];
-  if (upserts.length + deletes.length > 60) {
-    throw new Response('A alteração contém movimentações demais para o modo granular.', { status: 413 });
-  }
-
-  const positions = new Map();
-  const movements = new Map();
-  currentMovements.forEach((movement, index) => {
-    const id = String(movement?.id || '').trim();
-    if (!SAFE_IDENTIFIER.test(id) || movements.has(id)) {
-      throw new Error('O estado atual contém movimentações sem identificador único.');
-    }
-    movements.set(id, movement);
-    positions.set(id, index);
-  });
-
-  const deleteSet = new Set(deletes);
-  const normalizedUpserts = [];
-  for (const [index, itemValue] of upserts.entries()) {
-    const item = itemValue && typeof itemValue === 'object' ? itemValue : {};
-    const movement = item.movement && typeof item.movement === 'object' ? item.movement : item;
-    const id = String(movement?.id || '').trim();
-    if (!SAFE_IDENTIFIER.test(id)) throw new Error('Uma movimentação da alteração possui identificador inválido.');
-    if (deleteSet.has(id)) throw new Error('A mesma movimentação não pode ser atualizada e excluída na mesma operação.');
-    if (normalizedUpserts.some(entry => entry.movement.id === id)) {
-      throw new Error('A alteração contém a mesma movimentação mais de uma vez.');
-    }
-    const sortOrder = Number.isInteger(Number(item.sortOrder))
-      ? Math.max(0, Number(item.sortOrder))
-      : (positions.has(id) ? positions.get(id) : currentMovements.length + index);
-    const cleanMovement = JSON.parse(JSON.stringify(movement));
-    cleanMovement.id = id;
-    normalizedUpserts.push({ movement: cleanMovement, sortOrder });
-    movements.set(id, cleanMovement);
-    positions.set(id, sortOrder);
-  }
-
-  deletes.forEach(id => {
-    movements.delete(id);
-    positions.delete(id);
-  });
-
-  nextState.treasury = [...movements.entries()]
-    .sort((first, second) => {
-      const positionDifference = Number(positions.get(first[0]) || 0) - Number(positions.get(second[0]) || 0);
-      return positionDifference || first[0].localeCompare(second[0]);
-    })
-    .map(([, movement]) => movement);
-
-  return { nextState, upserts: normalizedUpserts, deletes };
-}
-
-
-function groupCollectionMutation(currentValues, payload, label) {
-  const current = Array.isArray(currentValues) ? currentValues : [];
-  const upserts = Array.isArray(payload?.upserts) ? payload.upserts : [];
-  const deletes = [...new Set((Array.isArray(payload?.deletes) ? payload.deletes : [])
-    .map(value => String(value || '').trim())
-    .filter(Boolean))];
-  const positions = new Map();
-  const values = new Map();
-  current.forEach((value, index) => {
-    const id = String(value?.id || '').trim();
-    if (!SAFE_IDENTIFIER.test(id) || values.has(id)) {
-      throw new Error(`O estado atual contém ${label} sem identificador único.`);
-    }
-    values.set(id, value);
-    positions.set(id, index);
-  });
-
-  const deleteSet = new Set(deletes);
-  const normalizedUpserts = [];
-  for (const [index, itemValue] of upserts.entries()) {
-    const item = itemValue && typeof itemValue === 'object' ? itemValue : {};
-    const group = item.group && typeof item.group === 'object' ? item.group : item;
-    const id = String(group?.id || '').trim();
-    if (!SAFE_IDENTIFIER.test(id)) throw new Error(`Um ${label} da alteração possui identificador inválido.`);
-    if (deleteSet.has(id)) throw new Error(`O mesmo ${label} não pode ser atualizado e excluído na mesma operação.`);
-    if (normalizedUpserts.some(entry => entry.group.id === id)) {
-      throw new Error(`A alteração contém o mesmo ${label} mais de uma vez.`);
-    }
-    const sortOrder = Number.isInteger(Number(item.sortOrder))
-      ? Math.max(0, Number(item.sortOrder))
-      : (positions.has(id) ? positions.get(id) : current.length + index);
-    const cleanGroup = JSON.parse(JSON.stringify(group));
-    cleanGroup.id = id;
-    normalizedUpserts.push({ group: cleanGroup, sortOrder });
-    values.set(id, cleanGroup);
-    positions.set(id, sortOrder);
-  }
-
-  deletes.forEach(id => {
-    if (!SAFE_IDENTIFIER.test(id)) throw new Error(`Um ${label} para exclusão possui identificador inválido.`);
-    values.delete(id);
-    positions.delete(id);
-  });
-
-  const nextValues = [...values.entries()]
-    .sort((first, second) => {
-      const positionDifference = Number(positions.get(first[0]) || 0) - Number(positions.get(second[0]) || 0);
-      return positionDifference || first[0].localeCompare(second[0]);
-    })
-    .map(([, value]) => value);
-  return { nextValues, upserts: normalizedUpserts, deletes };
-}
-
-function validateMutualGroupIdentifiers(groups) {
-  const membershipIds = new Set();
-  const eventIds = new Set();
-  for (const group of Array.isArray(groups) ? groups : []) {
-    for (const membership of Array.isArray(group?.memberships) ? group.memberships : []) {
-      const id = String(membership?.id || '').trim();
-      if (!SAFE_IDENTIFIER.test(id) || membershipIds.has(id)) {
-        throw new Error('Os vínculos dos grupos de Mútuas precisam possuir identificadores únicos.');
-      }
-      membershipIds.add(id);
-    }
-    for (const event of Array.isArray(group?.events) ? group.events : []) {
-      const id = String(event?.id || '').trim();
-      if (!SAFE_IDENTIFIER.test(id) || eventIds.has(id)) {
-        throw new Error('Os eventos de Mútuas precisam possuir identificadores únicos.');
-      }
-      eventIds.add(id);
-    }
-  }
-}
-
-function groupsMutationState(currentState, body) {
-  const nextState = JSON.parse(JSON.stringify(currentState || {}));
-  const family = groupCollectionMutation(nextState.familyGroups, body?.familyGroups, 'grupo familiar');
-  const mutual = groupCollectionMutation(nextState.mutualGroups, body?.mutualGroups, 'grupo de Mútua');
-  const changes = family.upserts.length + family.deletes.length + mutual.upserts.length + mutual.deletes.length;
-  if (!changes || changes > 40) {
-    throw new Response('A alteração granular de grupos está vazia ou excede o limite permitido.', { status: 413 });
-  }
-  nextState.familyGroups = family.nextValues;
-  nextState.mutualGroups = mutual.nextValues;
-  validateMutualGroupIdentifiers(nextState.mutualGroups);
-  return {
-    nextState,
-    familyGroups: { upserts: family.upserts, deletes: family.deletes },
-    mutualGroups: { upserts: mutual.upserts, deletes: mutual.deletes }
-  };
-}
-
-async function handlePrivateGroupsMutation(request, env, session) {
-  const contentLength = Number(request.headers.get('Content-Length') || 0);
-  if (contentLength > MAX_PRIVATE_STATE_BYTES) {
-    throw new Response('A alteração granular excede o limite permitido.', { status: 413 });
-  }
-  const body = await request.json().catch(() => ({}));
-  const mutationId = String(body.mutationId || '').trim();
-  if (!/^[a-z0-9_-]{8,120}$/i.test(mutationId)) {
-    throw new Error('O identificador da alteração granular é inválido.');
-  }
-
-  const storage = await privateStorageBackend(env);
-  if (storage.backend !== 'd1' || !storage.d1.active) {
-    throw new Response('As gravações granulares exigem que o D1 esteja ativo.', { status: 409 });
-  }
-  if (storage.d1.schemaVersion < 3 || storage.d1.schemaVersion > D1_SCHEMA_VERSION) {
-    throw new Response(`Aplique as migrações compatíveis do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
-  }
-
-  const previous = await readD1Mutation(env, mutationId);
-  if (previous) return { ...previous, idempotent: true };
-
-  const current = await readPrivateStateRecord(env, storage);
-  if (!current) throw new Response('O estado privado atual não foi encontrado.', { status: 404 });
-  const expectedRevision = String(body.expectedRevision || '');
-  if (!expectedRevision || expectedRevision !== current.revision) {
-    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.', { status: 409 });
-  }
-
-  const mutation = groupsMutationState(current.state, body);
-  const revision = crypto.randomUUID();
-  const updatedAt = new Date().toISOString();
-  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
-  const envelope = await privateStateEnvelope(mutation.nextState, { revision, updatedAt });
-  envelope.revision = revision;
-  envelope.updatedAt = updatedAt;
-
-  let applied;
-  try {
-    applied = await applyD1GroupsMutation(env, {
-      mutationId,
-      expectedRevision,
-      revision,
-      updatedAt,
-      updatedBy,
-      checksum: envelope.checksum,
-      nextState: mutation.nextState,
-      familyGroups: mutation.familyGroups,
-      mutualGroups: mutation.mutualGroups,
-      storageStatus: storage.d1
-    });
-  } catch (error) {
-    if (error?.code === 'REVISION_CONFLICT') {
-      throw new Response(error.message, { status: 409 });
-    }
-    throw error;
-  }
-
-  return {
-    ...applied,
-    summary: envelope.summary,
-    snapshotDeferred: true,
-    snapshotPolicy: 'recovery-only'
-  };
-}
-
-async function handlePrivateTreasuryMutation(request, env, session) {
-  const contentLength = Number(request.headers.get('Content-Length') || 0);
-  if (contentLength > MAX_PRIVATE_STATE_BYTES) {
-    throw new Response('A alteração granular excede o limite permitido.', { status: 413 });
-  }
-  const body = await request.json().catch(() => ({}));
-  const mutationId = String(body.mutationId || '').trim();
-  if (!/^[a-z0-9_-]{8,120}$/i.test(mutationId)) {
-    throw new Error('O identificador da alteração granular é inválido.');
-  }
-
-  const storage = await privateStorageBackend(env);
-  if (storage.backend !== 'd1' || !storage.d1.active) {
-    throw new Response('As gravações granulares exigem que o D1 esteja ativo.', { status: 409 });
-  }
-  if (storage.d1.schemaVersion < 3 || storage.d1.schemaVersion > D1_SCHEMA_VERSION) {
-    throw new Response(`Aplique as migrações compatíveis do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
-  }
-
-  const previous = await readD1Mutation(env, mutationId);
-  if (previous) return { ...previous, idempotent: true };
-
-  const current = await readPrivateStateRecord(env, storage);
-  if (!current) throw new Response('O estado privado atual não foi encontrado.', { status: 404 });
-  const expectedRevision = String(body.expectedRevision || '');
-  if (!expectedRevision || expectedRevision !== current.revision) {
-    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.', { status: 409 });
-  }
-
-  const mutation = treasuryMutationState(current.state, body);
-  const revision = crypto.randomUUID();
-  const updatedAt = new Date().toISOString();
-  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
-  const envelope = await privateStateEnvelope(mutation.nextState, { revision, updatedAt });
-  envelope.revision = revision;
-  envelope.updatedAt = updatedAt;
-
-  let applied;
-  try {
-    applied = await applyD1TreasuryMutation(env, {
-      mutationId,
-      expectedRevision,
-      revision,
-      updatedAt,
-      updatedBy,
-      checksum: envelope.checksum,
-      nextState: mutation.nextState,
-      upserts: mutation.upserts,
-      deletes: mutation.deletes,
-      storageStatus: storage.d1
-    });
-  } catch (error) {
-    if (error?.code === 'REVISION_CONFLICT') {
-      throw new Response(error.message, { status: 409 });
-    }
-    throw error;
-  }
-
-  return {
-    ...applied,
-    summary: envelope.summary,
-    snapshotDeferred: true,
-    snapshotPolicy: 'recovery-only'
-  };
-}
-
-
-async function handlePrivateReferenceMutation(request, env, session) {
-  const contentLength = Number(request.headers.get('Content-Length') || 0);
-  if (contentLength > 512 * 1024) {
-    throw new Response('A alteração de referências excede o limite permitido.', { status: 413 });
-  }
-  const body = await request.json().catch(() => ({}));
-  const mutationId = String(body.mutationId || '').trim();
-  if (!/^[a-z0-9_-]{8,120}$/i.test(mutationId)) {
-    throw new Error('O identificador da alteração granular é inválido.');
-  }
-  const storage = await privateStorageBackend(env);
-  if (storage.backend !== 'd1' || !storage.d1.active) {
-    throw new Response('As gravações granulares exigem que o D1 esteja ativo.', { status: 409 });
-  }
-  if (storage.d1.schemaVersion < 7 || storage.d1.schemaVersion > D1_SCHEMA_VERSION) {
-    throw new Response(`Aplique as migrações compatíveis do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
-  }
-  const previous = await readD1Mutation(env, mutationId);
-  if (previous) return { ...previous, idempotent: true };
-  const current = await readPrivateStateRecord(env, storage);
-  if (!current) throw new Response('O estado privado atual não foi encontrado.', { status: 404 });
-  const expectedRevision = String(body.expectedRevision || '');
-  if (!expectedRevision || expectedRevision !== current.revision) {
-    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.', { status: 409 });
-  }
-  const nextState = referenceMutationState(current.state, body);
-  const revision = crypto.randomUUID();
-  const updatedAt = new Date().toISOString();
-  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
-  const envelope = await privateStateEnvelope(nextState, { revision, updatedAt });
-  let applied;
-  try {
-    applied = await applyD1ReferenceMutation(env, {
-      mutationId,
-      expectedRevision,
-      revision,
-      updatedAt,
-      updatedBy,
-      checksum: envelope.checksum,
-      nextState,
-      storageStatus: storage.d1
-    });
-  } catch (error) {
-    if (error?.code === 'REVISION_CONFLICT') throw new Response(error.message, { status: 409 });
-    throw error;
-  }
-  return {
-    ...applied,
-    summary: envelope.summary,
-    snapshotDeferred: true,
-    snapshotPolicy: 'recovery-only'
-  };
-}
-
 async function handlePrivateStateWrite(request, env, session) {
   const contentLength = Number(request.headers.get('Content-Length') || 0);
   if (contentLength > MAX_PRIVATE_STATE_BYTES + 64 * 1024) {
@@ -1211,11 +564,10 @@ async function handlePrivateStateWrite(request, env, session) {
     throw new Response('O estado privado excede o limite permitido.', { status: 413 });
   }
 
-  const storage = await privateStorageBackend(env);
-  const current = await readPrivateStateRecord(env, storage);
+  const current = await readPrivateStateRecord(env);
   const expectedRevision = String(body.expectedRevision || '');
   if (current?.revision && expectedRevision !== current.revision) {
-    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.', { status: 409 });
+    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de publicar.', { status: 409 });
   }
 
   const incoming = privateStateSummary(state).summary;
@@ -1230,16 +582,16 @@ async function handlePrivateStateWrite(request, env, session) {
     });
     await putPrivateBackup(env, safetyEnvelope, {
       updatedBy: String(session.sub || 'administrador'),
-      reason: 'before-write',
-      label: 'Estado anterior à gravação automática'
+      reason: 'before-publication',
+      label: 'Estado anterior à publicação'
     });
   }
 
   const saved = await persistPrivateState(env, state, session, {
-    reason: current ? 'automatic-save' : 'migration',
-    label: current ? 'Estado salvo automaticamente' : 'Migração inicial do estado privado'
-  }, storage);
-  return { saved: true, backend: storage.backend, ...saved };
+    reason: current ? 'publication' : 'migration',
+    label: current ? 'Estado confirmado após a publicação' : 'Migração inicial para o R2'
+  });
+  return { saved: true, ...saved };
 }
 
 async function handlePrivateBackupList(env) {
@@ -1289,8 +641,7 @@ function requirePrivateBackupKey(value) {
 async function handlePrivateBackupRestore(request, env, session) {
   const body = await request.json().catch(() => ({}));
   const key = requirePrivateBackupKey(body.key);
-  const storage = await privateStorageBackend(env);
-  const current = await readPrivateStateRecord(env, storage);
+  const current = await readPrivateStateRecord(env);
   const expectedRevision = String(body.expectedRevision || '');
   if (current?.revision && expectedRevision !== current.revision) {
     throw new Response('Os dados privados foram atualizados em outra sessão. Atualize a Central de Recuperação antes de restaurar.', { status: 409 });
@@ -1314,7 +665,7 @@ async function handlePrivateBackupRestore(request, env, session) {
   const restored = await persistPrivateState(env, backupRecord.state, session, {
     reason: 'restored',
     label: `Restaurado de ${backupRecord.updatedAt || key.split('/').pop()}`
-  }, storage);
+  });
   return {
     restored: true,
     found: true,
@@ -1343,7 +694,7 @@ async function handlePrivateIntegrity(env) {
       status: 'error',
       found: false,
       checkedAt: new Date().toISOString(),
-      errors: ['O estado privado principal não existe na fonte de armazenamento ativa.'],
+      errors: ['O estado privado principal não existe no R2.'],
       warnings: [],
       current: null,
       attachments: { referenced: 0, existing: 0, missing: [], invalid: 0, duplicates: 0, orphaned: [] }
@@ -1373,16 +724,13 @@ async function handlePrivateIntegrity(env) {
   if (!backups.length) warnings.push('Nenhum backup versionado foi encontrado no R2.');
   if (current.objectKeys.length > MAX_INTEGRITY_REFERENCES) warnings.push(`A verificação detalhada foi limitada aos primeiros ${MAX_INTEGRITY_REFERENCES} anexos.`);
 
-  const storage = await handleStorageStatus(env);
   return {
     status: errors.length ? 'error' : warnings.length ? 'warning' : 'ok',
     found: true,
     checkedAt: new Date().toISOString(),
     errors,
     warnings,
-    storage,
     current: {
-      backend: storage.backend,
       revision: current.revision,
       updatedAt: current.updatedAt,
       checksum: current.checksum,
@@ -1501,140 +849,7 @@ export default {
       }
 
       if (url.pathname === '/health' && request.method === 'GET') {
-        const storage = await privateStorageBackend(env);
-        const authentication = await getAuthenticationStatus(env);
-        const publicData = await getD1PublicStatus(env);
-        return json({
-          status: 'ok',
-          storage: 'cloudflare-r2+d1',
-          version: SESSION_VERSION,
-          workerVersion: WORKER_VERSION,
-          directorPbkdf2Iterations: DIRECTOR_PASSWORD_ITERATIONS,
-          administratorPbkdf2Iterations: AUTH_PASSWORD_ITERATIONS,
-          authentication,
-          publicPublication: { available: publicData.initialized, via: 'cloudflare-d1' },
-          privateState: storage.backend,
-          d1: {
-            available: storage.d1.available,
-            initialized: storage.d1.initialized,
-            active: storage.d1.active,
-            schemaVersion: storage.d1.schemaVersion,
-            requiredSchemaVersion: D1_SCHEMA_VERSION
-          },
-          privateBackups: 'versioned-r2',
-          privateBackupRetention: MAX_PRIVATE_BACKUPS,
-          attachmentIntegrity: 'available',
-          privateAutosave: 'relational-lazy-bootstrap',
-          granularWrites: {
-            treasury: storage.d1.schemaVersion >= 2,
-            groups: storage.d1.schemaVersion >= 3,
-            reference: storage.d1.schemaVersion >= 7 && storage.d1.granularReference,
-            snapshotPerMutation: false
-          },
-          optimizedReads: {
-            dashboard: storage.d1.schemaVersion >= 4,
-            reports: storage.d1.schemaVersion >= 4,
-            treasuryPagination: storage.d1.schemaVersion >= 5,
-            memberships: storage.d1.schemaVersion >= 6 && storage.d1.operationalMemberships,
-            mutuals: storage.d1.schemaVersion >= 6 && storage.d1.operationalMutuals,
-            privateBootstrap: storage.d1.schemaVersion >= 7 && storage.d1.privateBootstrapReadModel
-          },
-          relationalSource: storage.d1.schemaVersion >= 5 && storage.d1.relationalSource,
-          memberDirectory: {
-            available: storage.d1.schemaVersion >= 6,
-            updatedAt: storage.d1.memberDirectoryUpdatedAt || ''
-          },
-          privateBootstrap: {
-            available: storage.d1.schemaVersion >= 7 && storage.d1.privateBootstrapReadModel,
-            strategy: 'reference-data-plus-payment-working-set'
-          },
-          automaticSync: {
-            available: storage.d1.schemaVersion >= 8 && storage.d1.moduleRevisionSync,
-            intervalSeconds: 60,
-            refreshOnFocus: true,
-            moduleRevisions: true,
-            lightweightRevisionCheck: true
-          },
-          publicData: {
-            source: publicData.active ? 'd1' : 'pending-migration',
-            active: publicData.active,
-            revision: publicData.revision || '',
-            updatedAt: publicData.updatedAt || '',
-            counts: publicData.counts || {},
-            media: 'cloudflare-r2'
-          },
-          structuredDataSource: storage.d1.schemaVersion >= 9 && publicData.active ? 'cloudflare-d1' : 'transition',
-          snapshotPolicy: storage.d1.schemaVersion >= 5 ? 'recovery-only' : 'operational-fallback'
-        }, 200, cors);
-      }
-
-      if (url.pathname === '/api/public/state' && request.method === 'GET') {
-        let record = await readD1PublicState(env, request.url, {
-          ifNoneMatch: request.headers.get('If-None-Match') || ''
-        });
-
-        // Durante a primeira implantação, tente importar automaticamente a fonte
-        // pública legada configurada. Isso evita que o Portal fique bloqueado em
-        // 503 antes mesmo de o Administrador conseguir entrar.
-        if (!record.found) {
-          try {
-            await migrateLegacyPublicStateToD1(env, { sub: 'public-bootstrap' }, { repairEmpty: true });
-            record = await readD1PublicState(env, request.url, {
-              ifNoneMatch: request.headers.get('If-None-Match') || ''
-            });
-          } catch (error) {
-            console.warn('Migração pública automática pendente:', error instanceof Error ? error.message : String(error));
-          }
-        }
-
-        if (!record.found) {
-          const workerUrl = new URL(request.url).origin;
-          return json({
-            schemaVersion: 11,
-            revision: '',
-            updatedAt: '',
-            migrationPending: true,
-            migrationMessage: 'O banco D1 está disponível, mas o conteúdo público inicial ainda precisa ser importado.',
-            settings: {
-              secureStorage: {
-                version: 1,
-                enabled: true,
-                workerUrl
-              }
-            },
-            birthdays: [],
-            events: [],
-            meetings: [],
-            notices: [],
-            treasury: [],
-            treasuryAccounts: [],
-            treasuryCategories: [],
-            familyGroups: [],
-            mutualGroups: []
-          }, 200, {
-            ...cors,
-            'Cache-Control': 'no-store',
-            'X-Public-Data-Status': 'migration-pending'
-          });
-        }
-        if (record.notModified) {
-          return new Response(null, {
-            status: 304,
-            headers: {
-              'Cache-Control': 'public, max-age=30, stale-while-revalidate=120',
-              'X-Content-Type-Options': 'nosniff',
-              ETag: record.etag,
-              ...cors
-            }
-          });
-        }
-        return publicJson(record.envelope, request, record.status.revision, cors);
-      }
-
-      if (url.pathname === '/api/public/media' && request.method === 'GET') {
-        const response = await handlePublicMedia(request, env);
-        for (const [name, value] of Object.entries(cors)) response.headers.set(name, value);
-        return response;
+        return json({ status: 'ok', storage: 'cloudflare-r2', version: SESSION_VERSION, directorPbkdf2Iterations: DIRECTOR_PASSWORD_ITERATIONS, privateState: 'r2', privateBackups: 'versioned', privateBackupRetention: MAX_PRIVATE_BACKUPS, attachmentIntegrity: 'available' }, 200, cors);
       }
 
       if (url.pathname === '/api/attachments/object' && request.method === 'GET') {
@@ -1643,205 +858,11 @@ export default {
 
       requireAllowedOrigin(request, env);
 
-      if (url.pathname === '/api/auth/status' && request.method === 'GET') {
-        return json(await getAuthenticationStatus(env), 200, cors);
-      }
-
-      if (url.pathname === '/api/auth/bootstrap' && request.method === 'POST') {
-        enforceSessionRateLimit(request);
-        const body = await request.json().catch(() => ({}));
-        const result = await bootstrapAdministrator(request, env, body);
-        clearSessionRateLimit(request);
-        return json(result, 201, cors);
-      }
-
       if (url.pathname === '/api/session' && request.method === 'POST') {
         enforceSessionRateLimit(request);
         const session = await handleSession(request, env);
         clearSessionRateLimit(request);
         return json(session, 200, cors);
-      }
-
-      if (url.pathname === '/api/session/logout' && request.method === 'POST') {
-        return json(await revokeAuthenticationSession(request, env), 200, cors);
-      }
-
-      if (url.pathname === '/api/auth/password' && request.method === 'PUT') {
-        const session = await requireSession(request, env, ['admin']);
-        const body = await request.json().catch(() => ({}));
-        return json(await changeOwnPassword(request, env, session, body), 200, cors);
-      }
-
-      if (url.pathname === '/api/auth/users' && request.method === 'GET') {
-        await requireSession(request, env, ['admin']);
-        return json({ users: await listAdministratorUsers(env) }, 200, cors);
-      }
-
-      if (url.pathname === '/api/auth/users' && request.method === 'POST') {
-        const session = await requireSession(request, env, ['admin']);
-        const body = await request.json().catch(() => ({}));
-        return json(await createAdministratorUser(request, env, session, body), 201, cors);
-      }
-
-      const userRoute = url.pathname.match(/^\/api\/auth\/users\/([^/]+)$/);
-      if (userRoute && request.method === 'PATCH') {
-        const session = await requireSession(request, env, ['admin']);
-        const body = await request.json().catch(() => ({}));
-        return json(await updateAdministratorUser(request, env, session, decodeURIComponent(userRoute[1]), body), 200, cors);
-      }
-
-      const passwordResetRoute = url.pathname.match(/^\/api\/auth\/users\/([^/]+)\/password$/);
-      if (passwordResetRoute && request.method === 'PUT') {
-        const session = await requireSession(request, env, ['admin']);
-        const body = await request.json().catch(() => ({}));
-        return json(await resetAdministratorPassword(request, env, session, decodeURIComponent(passwordResetRoute[1]), body), 200, cors);
-      }
-
-      if (url.pathname === '/api/publication/status' && request.method === 'GET') {
-        await requireSession(request, env, ['admin']);
-        return json(await publicPublicationStatus(env), 200, cors);
-      }
-
-      if (url.pathname === '/api/publication' && request.method === 'POST') {
-        const session = await requireSession(request, env, ['admin']);
-        const body = await request.json().catch(() => ({}));
-        return json(await writeD1PublicState(env, body, session), 200, cors);
-      }
-
-      if (url.pathname === '/api/storage/status' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        return json(await handleStorageStatus(env), 200, cors);
-      }
-
-      if (url.pathname === '/api/sync/revisions' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 8 || !storage.moduleRevisionSync) {
-          throw new Response('A sincronização automática por módulo ainda não está disponível.', { status: 503 });
-        }
-        return json(await readD1ModuleRevisions(env), 200, cors);
-      }
-
-      if (url.pathname === '/api/operational/reference' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 8 || !storage.moduleRevisionSync) {
-          throw new Response('O módulo relacional de referências ainda não está disponível.', { status: 503 });
-        }
-        return json(await readD1ReferenceModule(env), 200, cors);
-      }
-
-      if (url.pathname === '/api/operational/groups' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 8 || !storage.moduleRevisionSync) {
-          throw new Response('O módulo relacional de grupos ainda não está disponível.', { status: 503 });
-        }
-        return json(await readD1GroupsModule(env), 200, cors);
-      }
-
-      if (url.pathname === '/api/analytics/dashboard' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 4 || !storage.analyticsReadModels) {
-          throw new Response('As leituras otimizadas do D1 ainda não estão disponíveis.', { status: 503 });
-        }
-        return json(await queryD1DashboardAnalytics(env, {
-          start: url.searchParams.get('start') || '',
-          end: url.searchParams.get('end') || ''
-        }), 200, cors);
-      }
-
-      if (url.pathname === '/api/analytics/report' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 4 || !storage.analyticsReadModels) {
-          throw new Response('As leituras otimizadas do D1 ainda não estão disponíveis.', { status: 503 });
-        }
-        return json(await queryD1ReportState(env, url.searchParams.get('type') || '', {
-          start: url.searchParams.get('start') || '',
-          end: url.searchParams.get('end') || ''
-        }), 200, cors);
-      }
-
-      if (url.pathname === '/api/operational/treasury' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 5 || !storage.relationalSource || !storage.operationalReadModels) {
-          throw new Response('A paginação operacional do D1 ainda não está disponível.', { status: 503 });
-        }
-        return json(await queryD1OperationalTreasury(env, {
-          start: url.searchParams.get('start') || '',
-          end: url.searchParams.get('end') || '',
-          query: url.searchParams.get('query') || '',
-          filter: url.searchParams.get('filter') || 'all',
-          scheduledPage: url.searchParams.get('scheduledPage') || '1',
-          completedPage: url.searchParams.get('completedPage') || '1',
-          pageSize: url.searchParams.get('pageSize') || '8'
-        }), 200, cors);
-      }
-
-      if (url.pathname === '/api/operational/memberships' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 6 || !storage.relationalSource || !storage.operationalMemberships) {
-          throw new Response('A consulta operacional de mensalidades ainda não está disponível.', { status: 503 });
-        }
-        return json(await queryD1OperationalMemberships(env, {
-          start: url.searchParams.get('start') || '',
-          end: url.searchParams.get('end') || '',
-          query: url.searchParams.get('query') || '',
-          family: url.searchParams.get('family') || 'all',
-          status: url.searchParams.get('status') || 'all',
-          page: url.searchParams.get('page') || '1',
-          pageSize: url.searchParams.get('pageSize') || '12'
-        }), 200, cors);
-      }
-
-      if (url.pathname === '/api/operational/mutuals' && request.method === 'GET') {
-        await requireSession(request, env, ['admin', 'director']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 6 || !storage.relationalSource || !storage.operationalMutuals) {
-          throw new Response('A consulta operacional de Mútuas ainda não está disponível.', { status: 503 });
-        }
-        return json(await queryD1OperationalMutuals(env, {
-          group: url.searchParams.get('group') || 'all',
-          start: url.searchParams.get('start') || '',
-          end: url.searchParams.get('end') || '',
-          query: url.searchParams.get('query') || '',
-          status: url.searchParams.get('status') || 'pending',
-          page: url.searchParams.get('page') || '1',
-          pageSize: url.searchParams.get('pageSize') || '5'
-        }), 200, cors);
-      }
-
-      if (url.pathname === '/api/operational/member-directory/sync' && request.method === 'POST') {
-        await requireSession(request, env, ['admin']);
-        const storage = await getD1StorageStatus(env);
-        if (!storage.active || storage.schemaVersion < 6) {
-          throw new Response('O diretório relacional de associados ainda não está disponível.', { status: 503 });
-        }
-        return json(await syncMemberDirectory(env, { force: true }), 200, cors);
-      }
-
-      if (url.pathname === '/api/storage/migrate-public-d1' && request.method === 'POST') {
-        const session = await requireSession(request, env, ['admin']);
-        return json(await migrateLegacyPublicStateToD1(env, session), 200, cors);
-      }
-
-      if (url.pathname === '/api/storage/migrate-d1' && request.method === 'POST') {
-        const session = await requireSession(request, env, ['admin']);
-        return json(await handleD1Migration(request, env, session), 200, cors);
-      }
-
-      if (url.pathname === '/api/storage/rollback-r2' && request.method === 'POST') {
-        const session = await requireSession(request, env, ['admin']);
-        return json(await handleD1Rollback(request, env, session), 200, cors);
-      }
-
-      if (url.pathname === '/api/private-state/bootstrap' && request.method === 'GET') {
-        const session = await requireSession(request, env, ['admin', 'director']);
-        return json(await handlePrivateStateBootstrapRead(env, session), 200, cors);
       }
 
       if (url.pathname === '/api/private-state' && request.method === 'GET') {
@@ -1852,21 +873,6 @@ export default {
       if (url.pathname === '/api/private-state' && request.method === 'PUT') {
         const session = await requireSession(request, env, ['admin']);
         return json(await handlePrivateStateWrite(request, env, session), 200, cors);
-      }
-
-      if (url.pathname === '/api/private-state/treasury' && request.method === 'PUT') {
-        const session = await requireSession(request, env, ['admin']);
-        return json(await handlePrivateTreasuryMutation(request, env, session), 200, cors);
-      }
-
-      if (url.pathname === '/api/private-state/groups' && request.method === 'PUT') {
-        const session = await requireSession(request, env, ['admin']);
-        return json(await handlePrivateGroupsMutation(request, env, session), 200, cors);
-      }
-
-      if (url.pathname === '/api/private-state/reference' && request.method === 'PUT') {
-        const session = await requireSession(request, env, ['admin']);
-        return json(await handlePrivateReferenceMutation(request, env, session), 200, cors);
       }
 
       if (url.pathname === '/api/private-state/backups' && request.method === 'GET') {

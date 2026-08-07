@@ -85,8 +85,8 @@ test('atualização pendente oferece publicar, descartar ou cancelar antes de co
   ]);
 
   assert.match(html, /id="confirmSecondary"/);
-  assert.match(publicationFeature, /primaryText:\s*'Publicar conteúdo público'/);
-  assert.match(publicationFeature, /secondaryText:\s*'Descartar alterações públicas'/);
+  assert.match(publicationFeature, /primaryText:\s*'Publicar alterações'/);
+  assert.match(publicationFeature, /secondaryText:\s*'Descartar alterações'/);
   assert.match(publicationFeature, /cancelText:\s*'Cancelar atualização'/);
   assert.match(controller, /requestPendingDecision/);
   assert.match(controller, /publishPendingChanges/);

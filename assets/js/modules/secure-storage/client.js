@@ -1,67 +1,65 @@
 import {
   createPrivatePortalState,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.47.2';
-import {
-  getSecureStoragePrivateRevision,
-  readSecureStorageJson as readJson,
-  requireSecureStorageSession as requireSession,
-  secureStorageApiUrl as apiUrl,
-  secureStorageJsonHeaders as jsonHeaders,
-  secureStorageProfileFromState,
-  setSecureStoragePrivateRevision
-} from './session-store.js?v=6.47.2';
+} from '../../core/portal-data-boundary.js?v=6.36.2';
 
-export {
-  clearSecureStorageSession,
-  hasActiveSecureStorageSession,
-  normalizeSecureStorageWorkerUrl,
-  secureStorageProfileFromState,
-  secureStorageSessionSnapshot
-} from './session-store.js?v=6.47.2';
-export {
-  bootstrapAdministrator,
-  changeAdministratorPassword,
-  connectSecureStorageSession,
-  createAdministratorUser,
-  getAuthenticationStatus,
-  listAdministratorUsers,
-  logoutSecureStorageSession,
-  publishPublicPortalState,
-  resetAdministratorPassword,
-  testSecureStorageConnection,
-  updateAdministratorUser
-} from './auth-client.js?v=6.47.2';
-export {
-  createGroupsPrivateMutation,
-  createReferencePrivateMutation,
-  createTreasuryPrivateMutation,
-  savePrivateGroupsMutation,
-  savePrivateReferenceMutation,
-  savePrivateTreasuryMutation
-} from './private-mutations.js?v=6.47.2';
-export {
-  loadD1DashboardAnalytics,
-  loadD1ReportState
-} from './analytics-client.js?v=6.47.2';
-export { loadD1OperationalTreasury } from './operational-client.js?v=6.47.2';
-export {
-  loadD1OperationalMemberships,
-  loadD1OperationalMutuals
-} from './operational-memberships-client.js?v=6.47.2';
-export {
-  loadD1GroupsModule,
-  loadD1ModuleRevisions,
-  loadD1ReferenceModule
-} from './live-sync-client.js?v=6.47.2';
-
+const SESSION_REFRESH_MARGIN_MS = 60_000;
 const R2_STORAGE_KIND = 'r2';
 const LEGACY_PUBLIC_ATTACHMENT = /^\.\/public\/treasury\/[a-z0-9/_-]+\.[a-z0-9]+(?:\?[^\s]*)?$/i;
 const SAFE_OBJECT_KEY = /^treasury\/[a-z0-9/_-]+\.[a-z0-9]+$/i;
 
+let activeSession = {
+  workerUrl: '',
+  role: '',
+  token: '',
+  expiresAt: 0,
+  privateRevision: ''
+};
+
 function cloneValue(value) {
   if (typeof structuredClone === 'function') return structuredClone(value);
   return JSON.parse(JSON.stringify(value));
+}
+
+function jsonHeaders(token = '') {
+  return {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
+}
+
+function safeUrl(value) {
+  const text = String(value || '').trim().replace(/\/+$/, '');
+  if (!text) return '';
+  let parsed;
+  try {
+    parsed = new URL(text);
+  } catch {
+    return '';
+  }
+  const local = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(parsed.hostname);
+  const cloudflareWorker = parsed.hostname.endsWith('.workers.dev');
+  if (!cloudflareWorker && !local) return '';
+  if (parsed.protocol !== 'https:' && !(local && parsed.protocol === 'http:')) return '';
+  return parsed.origin + parsed.pathname.replace(/\/+$/, '');
+}
+
+async function readJson(response, fallback) {
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    // A resposta pode não possuir JSON em falhas de rede intermediárias.
+  }
+  if (!response.ok) {
+    throw new Error(payload?.error || payload?.message || `${fallback} (${response.status}).`);
+  }
+  return payload || {};
+}
+
+function apiUrl(workerUrl, path) {
+  return `${safeUrl(workerUrl)}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
 function base64ToBytes(value) {
@@ -103,6 +101,25 @@ function cleanR2Attachment(attachment) {
   };
 }
 
+export function secureStorageProfileFromState(state) {
+  const source = state?.settings?.secureStorage;
+  const workerUrl = safeUrl(source?.workerUrl);
+  return {
+    version: Math.max(1, Number(source?.version || 1)),
+    enabled: Boolean(source?.enabled && workerUrl),
+    workerUrl,
+    provider: 'cloudflare-r2'
+  };
+}
+
+export function normalizeSecureStorageWorkerUrl(value) {
+  const normalized = safeUrl(value);
+  if (!normalized) {
+    throw new Error('Informe uma URL HTTPS válida do Cloudflare Worker.');
+  }
+  return normalized;
+}
+
 export function isSecureTreasuryAttachment(attachment) {
   return String(attachment?.storage || '').toLowerCase() === R2_STORAGE_KIND
     && SAFE_OBJECT_KEY.test(String(attachment?.objectKey || '').trim());
@@ -124,34 +141,65 @@ export function collectSecureTreasuryObjectKeys(state) {
   return keys;
 }
 
+export function secureStorageSessionSnapshot() {
+  return { ...activeSession, token: activeSession.token ? 'configured' : '' };
+}
 
-export async function loadPrivatePortalBootstrap(state) {
-  const profile = secureStorageProfileFromState(state);
-  if (!profile.enabled) {
-    return { enabled: false, found: false, state: null, revision: '', partial: false };
-  }
-  const { token } = requireSession(state, ['admin', 'director']);
-  const response = await fetch(apiUrl(profile.workerUrl, '/api/private-state/bootstrap'), {
-    method: 'GET',
-    headers: jsonHeaders(token),
+export function clearSecureStorageSession() {
+  activeSession = { workerUrl: '', role: '', token: '', expiresAt: 0, privateRevision: '' };
+}
+
+export async function testSecureStorageConnection(workerUrl) {
+  const normalized = normalizeSecureStorageWorkerUrl(workerUrl);
+  const response = await fetch(apiUrl(normalized, '/health'), {
+    headers: { Accept: 'application/json' },
     cache: 'no-store'
   });
-  const payload = await readJson(response, 'Não foi possível carregar a base operacional privada do Portal');
-  setSecureStoragePrivateRevision(payload.revision || '');
-  return {
-    enabled: true,
-    found: Boolean(payload.found && payload.state),
-    state: payload.state && typeof payload.state === 'object' ? payload.state : null,
-    revision: getSecureStoragePrivateRevision(),
-    updatedAt: String(payload.updatedAt || ''),
-    integrity: payload.integrity && typeof payload.integrity === 'object' ? payload.integrity : null,
-    source: String(payload.source || ''),
-    snapshotStale: Boolean(payload.snapshotStale),
-    partial: Boolean(payload.partial),
-    workingSetCount: Math.max(0, Number(payload.workingSetCount || 0)),
-    totalMovementCount: Math.max(0, Number(payload.totalMovementCount || 0))
-  };
+  const payload = await readJson(response, 'Não foi possível consultar o Cloudflare Worker');
+  if (payload.status !== 'ok' || payload.storage !== 'cloudflare-r2') {
+    throw new Error('O endereço respondeu, mas não corresponde ao Worker de anexos do Portal.');
+  }
+  return payload;
 }
+
+export async function connectSecureStorageSession({ state, role, credential }) {
+  const profile = secureStorageProfileFromState(state);
+  if (!profile.enabled) {
+    clearSecureStorageSession();
+    return { enabled: false, role: '' };
+  }
+
+  if (String(role || '').toLowerCase() === 'director') {
+    const iterations = Number(state?.settings?.accessProfiles?.director?.iterations || 0);
+    if (iterations > 100000) {
+      throw new Error('A senha da Diretoria utiliza uma configuração anterior incompatível com o Cloudflare Worker. Entre como Administrador, defina novamente a senha da Diretoria e publique a alteração.');
+    }
+  }
+
+  const previousRevision = activeSession.workerUrl === profile.workerUrl
+    && activeSession.role === String(role || '')
+    ? activeSession.privateRevision
+    : '';
+
+  const response = await fetch(apiUrl(profile.workerUrl, '/api/session'), {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify({ role, credential: String(credential || '') }),
+    cache: 'no-store'
+  });
+  const payload = await readJson(response, 'Não foi possível criar a sessão do armazenamento privado');
+  const expiresAt = Date.parse(payload.expiresAt || '') || (Date.now() + 25 * 60_000);
+  activeSession = {
+    workerUrl: profile.workerUrl,
+    role: String(payload.role || role || ''),
+    token: String(payload.token || ''),
+    expiresAt,
+    privateRevision: previousRevision
+  };
+  if (!activeSession.token) throw new Error('O Worker não retornou uma sessão segura válida.');
+  return { enabled: true, role: activeSession.role, expiresAt: payload.expiresAt || '' };
+}
+
 
 export async function loadPrivatePortalState(state) {
   const profile = secureStorageProfileFromState(state);
@@ -165,16 +213,14 @@ export async function loadPrivatePortalState(state) {
     cache: 'no-store'
   });
   const payload = await readJson(response, 'Não foi possível carregar os dados privados do Portal');
-  setSecureStoragePrivateRevision(payload.revision || '');
+  activeSession.privateRevision = String(payload.revision || '');
   return {
     enabled: true,
     found: Boolean(payload.found && payload.state),
     state: payload.state && typeof payload.state === 'object' ? payload.state : null,
-    revision: getSecureStoragePrivateRevision(),
+    revision: activeSession.privateRevision,
     updatedAt: String(payload.updatedAt || ''),
-    integrity: payload.integrity && typeof payload.integrity === 'object' ? payload.integrity : null,
-    source: String(payload.source || ''),
-    snapshotStale: Boolean(payload.snapshotStale)
+    integrity: payload.integrity && typeof payload.integrity === 'object' ? payload.integrity : null
   };
 }
 
@@ -185,55 +231,17 @@ export async function savePrivatePortalState(state) {
     headers: jsonHeaders(token),
     body: JSON.stringify({
       state: createPrivatePortalState(state),
-      expectedRevision: getSecureStoragePrivateRevision()
+      expectedRevision: activeSession.privateRevision
     }),
     cache: 'no-store'
   });
   const payload = await readJson(response, 'Não foi possível salvar os dados privados do Portal');
-  setSecureStoragePrivateRevision(payload.revision || '');
+  activeSession.privateRevision = String(payload.revision || '');
   return {
     saved: true,
-    revision: getSecureStoragePrivateRevision(),
-    updatedAt: String(payload.updatedAt || ''),
-    backend: String(payload.backend || '')
+    revision: activeSession.privateRevision,
+    updatedAt: String(payload.updatedAt || '')
   };
-}
-
-
-export async function getPrivateStorageStatus(state) {
-  const { profile, token } = requireSession(state, ['admin', 'director']);
-  const response = await fetch(apiUrl(profile.workerUrl, '/api/storage/status'), {
-    method: 'GET',
-    headers: jsonHeaders(token),
-    cache: 'no-store'
-  });
-  return readJson(response, 'Não foi possível consultar o banco de dados privado');
-}
-
-export async function migratePrivateStorageToD1(state) {
-  const { profile, token } = requireSession(state, ['admin']);
-  const response = await fetch(apiUrl(profile.workerUrl, '/api/storage/migrate-d1'), {
-    method: 'POST',
-    headers: jsonHeaders(token),
-    body: JSON.stringify({ expectedRevision: getSecureStoragePrivateRevision() }),
-    cache: 'no-store'
-  });
-  const payload = await readJson(response, 'Não foi possível migrar os dados privados para o D1');
-  setSecureStoragePrivateRevision(payload.revision || getSecureStoragePrivateRevision() || '');
-  return payload;
-}
-
-export async function rollbackPrivateStorageToR2(state) {
-  const { profile, token } = requireSession(state, ['admin']);
-  const response = await fetch(apiUrl(profile.workerUrl, '/api/storage/rollback-r2'), {
-    method: 'POST',
-    headers: jsonHeaders(token),
-    body: JSON.stringify({ expectedRevision: getSecureStoragePrivateRevision() }),
-    cache: 'no-store'
-  });
-  const payload = await readJson(response, 'Não foi possível retornar temporariamente ao R2');
-  setSecureStoragePrivateRevision(payload.revision || getSecureStoragePrivateRevision() || '');
-  return payload;
 }
 
 export async function listPrivateStateBackups(state) {
@@ -267,15 +275,15 @@ export async function restorePrivateStateBackup(state, key) {
   const response = await fetch(apiUrl(profile.workerUrl, '/api/private-state/backups/restore'), {
     method: 'POST',
     headers: jsonHeaders(token),
-    body: JSON.stringify({ key: String(key || ''), expectedRevision: getSecureStoragePrivateRevision() }),
+    body: JSON.stringify({ key: String(key || ''), expectedRevision: activeSession.privateRevision }),
     cache: 'no-store'
   });
   const payload = await readJson(response, 'Não foi possível restaurar o backup privado');
-  setSecureStoragePrivateRevision(payload.revision || '');
+  activeSession.privateRevision = String(payload.revision || '');
   return {
     found: Boolean(payload.found && payload.state),
     state: payload.state && typeof payload.state === 'object' ? payload.state : null,
-    revision: getSecureStoragePrivateRevision(),
+    revision: activeSession.privateRevision,
     updatedAt: String(payload.updatedAt || ''),
     integrity: payload.integrity && typeof payload.integrity === 'object' ? payload.integrity : null
   };
@@ -294,6 +302,31 @@ export async function diagnosePrivateStorageIntegrity(state) {
 export function mergePrivatePortalState(publicState, privatePayload) {
   if (!privatePayload?.found || !privatePayload.state) return cloneValue(publicState || {});
   return mergePublicAndPrivatePortalState(publicState, privatePayload.state);
+}
+
+export function hasActiveSecureStorageSession(state, role = '') {
+  const profile = secureStorageProfileFromState(state);
+  if (!profile.enabled) return false;
+  return activeSession.workerUrl === profile.workerUrl
+    && activeSession.token
+    && (!role || activeSession.role === role)
+    && activeSession.expiresAt > Date.now() + SESSION_REFRESH_MARGIN_MS;
+}
+
+function requireSession(state, allowedRoles = []) {
+  const profile = secureStorageProfileFromState(state);
+  if (!profile.enabled) throw new Error('O armazenamento privado de anexos ainda não foi configurado.');
+  if (
+    activeSession.workerUrl !== profile.workerUrl
+    || !activeSession.token
+    || activeSession.expiresAt <= Date.now()
+  ) {
+    throw new Error('A sessão dos anexos privados expirou. Saia e entre novamente no painel.');
+  }
+  if (allowedRoles.length && !allowedRoles.includes(activeSession.role)) {
+    throw new Error('Este perfil não possui permissão para executar esta operação nos anexos.');
+  }
+  return { profile, token: activeSession.token };
 }
 
 async function uploadAttachmentBlob(state, movement, attachment, blob) {

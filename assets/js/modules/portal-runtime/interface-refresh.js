@@ -1,12 +1,12 @@
-import { cloneState } from '../../core/portal-state.js?v=6.47.2';
-import { remotePayloadVersion } from './domain.js?v=6.47.2';
+import { cloneState } from '../../core/portal-state.js?v=6.36.2';
+import { remotePayloadVersion } from './domain.js?v=6.36.2';
 import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   roleHasCapability
-} from './authorization.js?v=6.47.2';
+} from './authorization.js?v=6.36.2';
 
-export function createInterfaceRefreshActions(context, privateSync = null) {
+export function createInterfaceRefreshActions(context) {
   const { dependencies, services, model } = context;
   let running = false;
 
@@ -21,25 +21,32 @@ export function createInterfaceRefreshActions(context, privateSync = null) {
     if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.REFRESH_PANEL)) {
       return { ok: false, reason: 'unauthenticated' };
     }
-    if (model.pendingChanges > 0) return blockedResult();
-    if (model.privateSavePending > 0) {
-      const saved = await privateSync?.flush?.();
-      if (saved && !saved.ok) return { ok: false, reason: 'private-save-failed', error: saved.error };
+    if (model.accessRole === ACCESS_ROLES.ADMIN && !model.githubToken) {
+      return { ok: false, reason: 'unauthenticated' };
     }
+    if (model.pendingChanges > 0) return blockedResult();
 
     running = true;
     const activeRole = model.accessRole;
+    const activeToken = model.githubToken;
 
     try {
-      const remote = await services.loadPublicGitHubPayload();
-      if (remote?.migrationPending) {
-        throw new Error(remote.migrationMessage || 'A recuperação dos dados públicos ainda está em andamento.');
-      }
+      const remote = activeRole === ACCESS_ROLES.DIRECTOR
+        ? await services.loadPublicGitHubPayload()
+        : await services.connectGitHub(activeToken);
 
       const secureProfile = services.secureStorageProfileFromState?.(remote.state);
       if (secureProfile?.enabled && services.loadPrivatePortalState) {
         if (!services.hasActiveSecureStorageSession?.(remote.state, activeRole)) {
-          throw new Error('A sessão segura expirou. Entre novamente no painel.');
+          if (activeRole === ACCESS_ROLES.ADMIN) {
+            await services.connectSecureStorageSession?.({
+              state: remote.state,
+              role: activeRole,
+              credential: activeToken
+            });
+          } else {
+            throw new Error('A sessão privada da Diretoria expirou. Entre novamente.');
+          }
         }
         const privatePayload = await services.loadPrivatePortalState(remote.state);
         if (privatePayload?.found) {
@@ -53,12 +60,20 @@ export function createInterfaceRefreshActions(context, privateSync = null) {
       if (
         !model.adminUnlocked
         || model.accessRole !== activeRole
+        || (activeRole === ACCESS_ROLES.ADMIN && model.githubToken !== activeToken)
       ) {
         return { ok: false, reason: 'session-changed' };
       }
 
-      const version = remotePayloadVersion(remote);
-      if (version) context.setRemoteVersion(version);
+      if (activeRole === ACCESS_ROLES.ADMIN) {
+        model.githubFileSha = remote.sha || model.githubFileSha;
+        model.githubAuthorization = remote.authorization || model.githubAuthorization;
+        model.auditActor = remote.actor || model.auditActor;
+        dependencies.auditLog?.setActor?.(model.auditActor);
+      } else {
+        const version = remotePayloadVersion(remote);
+        if (version) context.setRemoteVersion(version);
+      }
 
       context.replaceCurrentState(cloneState(remote.state));
       services.saveState(context.currentState());

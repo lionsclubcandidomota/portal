@@ -1,5 +1,5 @@
-import { cloneState } from '../../core/portal-state.js?v=6.47.2';
-import { REMOTE_REFRESH_INTERVALS } from './constants.js?v=6.47.2';
+import { cloneState } from '../../core/portal-state.js?v=6.36.2';
+import { REMOTE_REFRESH_INTERVALS } from './constants.js?v=6.36.2';
 
 export function normalizePendingChanges(value) {
   const parsed = Number(value);
@@ -7,16 +7,12 @@ export function normalizePendingChanges(value) {
 }
 
 export function mergePortalStates(localState = {}, remoteState = {}) {
-  const {
-    publicMigrationPending: _publicMigrationPending,
-    ...remote
-  } = remoteState || {};
   return {
     ...localState,
-    ...remote,
+    ...remoteState,
     settings: {
       ...(localState?.settings || {}),
-      ...(remote?.settings || {})
+      ...(remoteState?.settings || {})
     }
   };
 }

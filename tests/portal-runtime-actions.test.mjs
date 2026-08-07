@@ -23,7 +23,6 @@ function setup(overrides = {}) {
     events: [],
     meetings: []
   };
-  let persistedState = JSON.parse(JSON.stringify(state));
   const calls = [];
   const dependencies = {
     getState: () => state,
@@ -40,49 +39,13 @@ function setup(overrides = {}) {
   };
   const saved = [];
   const services = {
-    loadState: () => JSON.parse(JSON.stringify(persistedState)),
-    saveState: value => {
-      persistedState = JSON.parse(JSON.stringify(value));
-      saved.push(JSON.parse(JSON.stringify(value)));
-    },
-    loadPublicGitHubPayload: async () => ({
+    loadState: () => state,
+    saveState: value => saved.push(JSON.parse(JSON.stringify(value))),
+    connectGitHub: async () => ({
       sha: 'sha-1',
-      deploymentId: 'deploy-public',
-      state: {
-        settings: { clubName: 'Remoto' },
-        birthdays: [],
-        treasuryAccounts: [],
-        treasuryCategories: [],
-        familyGroups: [],
-        mutualGroups: [],
-        treasury: [],
-        events: [],
-        meetings: [],
-        notices: [{ id: 'n1' }]
-      }
+      state: { settings: { clubName: 'Remoto' }, notices: [{ id: 'n1' }] }
     }),
-    connectSecureStorageSession: async () => ({
-      enabled: true,
-      user: { id: 'usr-1', username: 'administrador', displayName: 'Administrador' },
-      publication: { available: true }
-    }),
-    logoutSecureStorageSession: async () => ({ ok: true }),
-    loadPrivatePortalState: async () => ({ found: false }),
-    mergePrivatePortalState: (publicState, privatePayload) => ({ ...publicState, ...(privatePayload?.data || {}) }),
-    hasActiveSecureStorageSession: () => true,
-    createPublicPortalState: value => JSON.parse(JSON.stringify(value)),
-    createPrivatePortalState: () => ({}),
-    mergePublicAndPrivatePortalState: (publicState, privateState) => ({ ...publicState, ...privateState }),
-    publishPublicPortalState: async (_privateState, publicState, options = {}) => ({
-      sha: `${options.expectedDataSha || 'sha'}-novo`,
-      commitSha: 'commit-default',
-      commitUrl: 'https://example.invalid/commit-default',
-      committedAt: '2026-08-07T01:00:00.000Z',
-      deploymentId: 'deploy-default',
-      mediaCount: options.mediaAssets?.length || 0,
-      state: publicState
-    }),
-    waitForPagesDeployment: async () => ({ publishedAt: '2026-08-07T01:01:00.000Z' }),
+    loadPublicGitHubPayload: async () => ({ state: {}, deploymentId: '' }),
     ...overrides.services
   };
   const context = createPortalRuntimeContext(dependencies, services, {
@@ -127,65 +90,70 @@ test('persistência registra pendência, salva estado sanitizado e abre a Centra
   assert.equal(fixture.context.model.pendingChanges, 1);
   assert.equal(fixture.saved.length, 1);
   assert.equal('responsible' in fixture.saved[0].events[0], false);
-  assert.ok(fixture.calls.some(call => Array.isArray(call) && call[0] === 'openCenter' && call[1]?.autoCloseAfter === 4800));
+  assert.deepEqual(fixture.calls[0], ['openCenter', { autoCloseAfter: 4800 }]);
   assert.ok(fixture.calls.some(call => Array.isArray(call) && call[0] === 'status' && call[1] === 'pending'));
 });
 
-test('conexão administrativa combina o estado remoto e cria sessão por usuário e senha', async () => {
+test('conexão administrativa combina o estado remoto e atualiza o acesso', async () => {
   const fixture = setup();
   const actions = createAdminSessionActions(fixture.context);
 
-  const session = await actions.connectAdminSession({
-    username: 'administrador',
-    password: 'SenhaSegura123'
-  });
+  await actions.connectAdminSession('token-seguro');
 
   assert.equal(fixture.context.model.adminUnlocked, true);
-  assert.equal(fixture.context.model.githubToken, 'worker-session');
+  assert.equal(fixture.context.model.githubToken, 'token-seguro');
   assert.equal(fixture.getState().settings.clubName, 'Remoto');
   assert.equal(fixture.getState().settings.primaryColor, '#00529B');
   assert.deepEqual(fixture.getState().notices, [{ id: 'n1' }]);
-  assert.equal(session.actor.login, 'administrador');
-  assert.equal(session.authorization.credentialType, 'password');
-  assert.equal(session.authorization.canPush, true);
   assert.ok(fixture.calls.includes('access'));
 });
 
-test('login administrativo continua disponível quando o segredo de publicação ainda não foi configurado', async () => {
+test('homologação local permite entrar quando a escrita não pôde ser confirmada', async () => {
   const fixture = setup({
+    environment: {
+      window: { location: { hostname: '127.0.0.1', protocol: 'http:' } }
+    },
     services: {
-      connectSecureStorageSession: async () => ({
-        enabled: true,
-        user: { id: 'usr-2', username: 'admin-local', displayName: 'Administrador local' },
-        publication: { available: false }
+      connectGitHub: async () => ({
+        sha: 'sha-local',
+        state: { settings: { clubName: 'Homologação' } },
+        authorization: {
+          canPush: false,
+          warning: 'Permissão de escrita não confirmada.'
+        }
       })
     }
   });
   const actions = createAdminSessionActions(fixture.context);
 
-  const session = await actions.connectAdminSession({
-    username: 'admin-local',
-    password: 'SenhaSegura123'
-  });
+  const session = await actions.connectAdminSession('token-seguro');
 
   assert.equal(fixture.context.model.adminUnlocked, true);
+  assert.equal(session.localHomologation, true);
   assert.equal(session.authorization.canPush, false);
-  assert.match(session.authorization.warning, /módulo público do D1/i);
 });
 
-test('credenciais administrativas inválidas não liberam o painel', async () => {
+test('ambiente publicado continua exigindo permissão de escrita confirmada', async () => {
   const fixture = setup({
+    environment: {
+      window: { location: { hostname: 'lionsclubcandidomota.github.io', protocol: 'https:' } }
+    },
     services: {
-      connectSecureStorageSession: async () => {
-        throw new Error('Usuário ou senha inválidos.');
-      }
+      connectGitHub: async () => ({
+        sha: 'sha-remoto',
+        state: { settings: { clubName: 'Produção' } },
+        authorization: {
+          canPush: false,
+          warning: 'O token não possui permissão para publicar.'
+        }
+      })
     }
   });
   const actions = createAdminSessionActions(fixture.context);
 
   await assert.rejects(
-    actions.connectAdminSession({ username: 'administrador', password: 'incorreta123' }),
-    /Usuário ou senha inválidos/i
+    actions.connectAdminSession('token-seguro'),
+    /não possui permissão para publicar/i
   );
   assert.equal(fixture.context.model.adminUnlocked, false);
 });
@@ -223,22 +191,21 @@ test('payload remoto preserva edição local e atualiza apenas a base sincroniza
 });
 
 
-test('publicação grava o estado no D1 e zera as pendências', async () => {
+test('publicação envia o estado, zera pendências e confirma a propagação', async () => {
   const fixture = setup({
     dependencies: {
       getCurrentView: () => 'admin',
       renderAdmin: () => fixture?.calls.push('renderAdmin')
     },
     services: {
-      publishPublicPortalState: async (_privateState, state, options) => ({
-        sha: `${options.expectedDataSha}-novo`,
-        revision: 'pub-3',
+      saveGitHubState: async (_token, state, sha, message) => ({
+        sha: `${sha}-novo`,
         commitSha: 'commit-1',
         commitUrl: 'https://example.invalid/commit-1',
         committedAt: '2026-07-30T20:00:00.000Z',
         deploymentId: 'deploy-3',
         state,
-        message: options.commitMessage
+        message
       }),
       waitForPagesDeployment: async () => ({
         publishedAt: '2026-07-30T20:01:00.000Z',
@@ -247,7 +214,7 @@ test('publicação grava o estado no D1 e zera as pendências', async () => {
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token';
   fixture.context.model.githubFileSha = 'sha';
   fixture.context.model.pendingChanges = 2;
   const actions = createPublicationActions(fixture.context);
@@ -256,10 +223,10 @@ test('publicação grava o estado no D1 e zera as pendências', async () => {
   await Promise.resolve();
 
   assert.equal(fixture.context.model.pendingChanges, 0);
-  assert.equal(fixture.context.model.githubFileSha, 'pub-3');
-  assert.equal(fixture.context.model.lastRemoteVersion, 'pub-3');
+  assert.equal(fixture.context.model.githubFileSha, 'sha-novo');
+  assert.equal(fixture.context.model.lastRemoteVersion, 'deploy-3');
   assert.equal(fixture.context.model.awaitingPublicDeploymentId, '');
-  assert.equal(fixture.context.model.latestCommitInfo.sha, 'pub-3');
+  assert.equal(fixture.context.model.latestCommitInfo.sha, 'commit-1');
   assert.ok(fixture.calls.some(call => Array.isArray(call) && call[0] === 'status' && call[1] === 'published'));
 });
 
@@ -270,7 +237,7 @@ test('descarte restaura exatamente a última cópia sincronizada', async () => {
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token';
   fixture.context.model.pendingChanges = 3;
   fixture.context.model.lastSyncedState = {
     settings: { clubName: 'Última versão' },
@@ -305,22 +272,21 @@ test('publicação converte foto incorporada e atualiza o estado somente após o
       notices: []
     },
     services: {
-      publishPublicPortalState: async (_privateState, state, options) => {
+      saveGitHubState: async (_token, state, _sha, _message, assets) => {
         publishedState = state;
-        publishedAssets = options.mediaAssets;
+        publishedAssets = assets;
         return {
           sha: 'data-blob',
           commitSha: 'commit-media',
           deploymentId: 'deploy-media',
-          mediaCount: options.mediaAssets.length
+          mediaCount: assets.length
         };
       },
-      waitForPagesDeployment: async () => ({ publishedAt: '2026-07-30T20:01:00.000Z' }),
-      loadPublicGitHubPayload: async () => ({ state: publishedState, revision: 'pub-media' })
+      waitForPagesDeployment: async () => ({ publishedAt: '2026-07-30T20:01:00.000Z' })
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token';
   fixture.context.model.githubFileSha = 'old-data-blob';
   fixture.context.model.pendingChanges = 1;
   const actions = createPublicationActions(fixture.context);
@@ -371,7 +337,7 @@ test('publicação vincula e confirma o lote de auditoria', async () => {
       }
     },
     services: {
-      publishPublicPortalState: async () => ({
+      saveGitHubState: async () => ({
         sha: 'new-data',
         commitSha: 'commit-audit',
         commitUrl: 'https://example.test/commit-audit',
@@ -383,7 +349,7 @@ test('publicação vincula e confirma o lote de auditoria', async () => {
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token';
   fixture.context.model.githubFileSha = 'data-old';
   fixture.context.model.pendingChanges = 1;
   fixture.context.model.pendingAuditBatchId = 'batch-1';
@@ -395,7 +361,7 @@ test('publicação vincula e confirma o lote de auditoria', async () => {
   assert.equal(auditCalls[0][0], 'link');
   assert.equal(auditCalls[0][1], 'batch-1');
   assert.equal(auditCalls[0][2].commitSha, 'commit-audit');
-  assert.deepEqual(auditCalls[1], ['confirm', 'deploy-audit', '2026-07-30T21:00:00.000Z']);
+  assert.deepEqual(auditCalls[1], ['confirm', 'deploy-audit', '2026-07-30T21:01:00.000Z']);
 });
 
 test('importação cria ponto automático antes de substituir o estado', async () => {
@@ -422,7 +388,7 @@ test('importação cria ponto automático antes de substituir o estado', async (
   assert.equal(fixture.getState().settings.clubName, 'Importado');
 });
 
-test('publicação cria ponto de segurança antes da gravação no D1', async () => {
+test('publicação cria ponto de segurança antes do envio ao GitHub', async () => {
   const order = [];
   const fixture = setup({
     dependencies: {
@@ -431,7 +397,7 @@ test('publicação cria ponto de segurança antes da gravação no D1', async ()
       }
     },
     services: {
-      publishPublicPortalState: async () => {
+      saveGitHubState: async () => {
         order.push(['publish']);
         return { sha: 'new', commitSha: 'commit', deploymentId: 'deploy', mediaCount: 0 };
       },
@@ -439,7 +405,7 @@ test('publicação cria ponto de segurança antes da gravação no D1', async ()
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token';
   fixture.context.model.pendingChanges = 1;
 
   await createPublicationActions(fixture.context).commitPendingChanges();
@@ -457,11 +423,11 @@ test('falha no ponto de segurança cancela a publicação', async () => {
       }
     },
     services: {
-      publishPublicPortalState: async () => { published = true; }
+      saveGitHubState: async () => { published = true; }
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token';
   fixture.context.model.pendingChanges = 1;
 
   await createPublicationActions(fixture.context).commitPendingChanges();
@@ -475,57 +441,60 @@ test('atualização da interface é bloqueada antes de consultar o GitHub quando
   let connections = 0;
   const fixture = setup({
     services: {
-      loadPublicGitHubPayload: async () => {
+      connectGitHub: async () => {
         connections += 1;
-        return { deploymentId: 'remote', state: { settings: { clubName: 'Remoto' } } };
+        return { sha: 'remote', state: { settings: { clubName: 'Remoto' } } };
       }
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token-mantido';
   fixture.context.model.pendingChanges = 2;
 
   const result = await createInterfaceRefreshActions(fixture.context).refreshPortalInterface();
 
   assert.deepEqual(result, { ok: false, reason: 'pending', pendingChanges: 2 });
   assert.equal(connections, 0);
-  assert.equal(fixture.context.model.githubToken, 'worker-session');
+  assert.equal(fixture.context.model.githubToken, 'token-mantido');
   assert.equal(fixture.getState().settings.clubName, 'Local');
 });
 
-test('atualização segura restaura a interface inicial e preserva a sessão administrativa', async () => {
+test('atualização segura restaura a interface inicial e preserva o token administrativo', async () => {
   const fixture = setup({
     dependencies: {
       resetInterfaceState: () => fixture?.calls.push('resetInterface'),
-      refreshPublishCenter: () => fixture?.calls.push('refreshCenter')
+      refreshPublishCenter: () => fixture?.calls.push('refreshCenter'),
+      auditLog: { setActor: actor => fixture?.calls.push(['actor', actor?.login || '']) }
     },
     services: {
-      loadPublicGitHubPayload: async () => ({
-        deploymentId: 'deploy-atualizado',
+      connectGitHub: async token => ({
+        sha: 'sha-atualizado',
+        actor: { login: 'admin-lions' },
+        authorization: { canPush: true },
         state: {
           settings: { clubName: 'Portal atualizado' },
           birthdays: [],
           treasuryAccounts: [],
           treasuryCategories: [],
           familyGroups: [],
-          mutualGroups: [],
           treasury: [],
           events: [],
           meetings: [],
           notices: []
-        }
+        },
+        receivedToken: token
       })
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token-em-memoria';
   fixture.context.model.pendingChanges = 0;
 
   const result = await createInterfaceRefreshActions(fixture.context).refreshPortalInterface();
 
   assert.deepEqual(result, { ok: true, reason: 'refreshed' });
-  assert.equal(fixture.context.model.githubToken, 'worker-session');
-  assert.equal(fixture.context.model.lastRemoteVersion, 'deploy-atualizado');
+  assert.equal(fixture.context.model.githubToken, 'token-em-memoria');
+  assert.equal(fixture.context.model.githubFileSha, 'sha-atualizado');
   assert.equal(fixture.getState().settings.clubName, 'Portal atualizado');
   assert.ok(fixture.calls.includes('resetInterface'));
   assert.ok(fixture.calls.includes('refreshCenter'));
@@ -535,17 +504,17 @@ test('atualização segura restaura a interface inicial e preserva a sessão adm
 test('atualização não substitui o estado quando surge uma pendência durante a consulta remota', async () => {
   const fixture = setup({
     services: {
-      loadPublicGitHubPayload: async () => {
+      connectGitHub: async () => {
         fixture.context.model.pendingChanges = 1;
         return {
-          deploymentId: 'deploy-remoto',
+          sha: 'sha-remoto',
           state: { settings: { clubName: 'Não deve substituir' } }
         };
       }
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token';
 
   const result = await createInterfaceRefreshActions(fixture.context).refreshPortalInterface();
 
@@ -553,7 +522,7 @@ test('atualização não substitui o estado quando surge uma pendência durante 
   assert.equal(fixture.getState().settings.clubName, 'Local');
 });
 
-test('logout limpa a sessão e retorna ao Dashboard sem falhar ao remover o ator de auditoria', async () => {
+test('logout limpa a sessão e retorna ao Dashboard sem falhar ao remover o ator de auditoria', () => {
   const actorUpdates = [];
   const fixture = setup({
     dependencies: {
@@ -567,12 +536,11 @@ test('logout limpa a sessão e retorna ao Dashboard sem falhar ao remover o ator
     }
   });
   grantAdminAccess(fixture);
-  fixture.context.model.githubToken = 'worker-session';
+  fixture.context.model.githubToken = 'token-temporario';
   fixture.context.model.auditActor = { login: 'admin' };
   const actions = createAdminSessionActions(fixture.context);
 
-  const result = await actions.logoutAdmin();
-  assert.deepEqual(result, { ok: true });
+  assert.doesNotThrow(() => actions.logoutAdmin());
   assert.equal(fixture.context.model.adminUnlocked, false);
   assert.equal(fixture.context.model.githubToken, '');
   assert.equal(fixture.context.model.auditActor, null);

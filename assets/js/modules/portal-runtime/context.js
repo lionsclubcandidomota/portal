@@ -1,11 +1,11 @@
-import { buildPublicationReview } from '../publication-review.js?v=6.47.2';
+import { buildPublicationReview } from '../publication-review.js?v=6.36.2';
 import {
   cloneState,
   normalizeTreasuryStatuses,
   sanitizePortalState
-} from '../../core/portal-state.js?v=6.47.2';
-import { createRuntimeMetadataStore } from './storage.js?v=6.47.2';
-import { ACCESS_ROLES } from './authorization.js?v=6.47.2';
+} from '../../core/portal-state.js?v=6.36.2';
+import { createRuntimeMetadataStore } from './storage.js?v=6.36.2';
+import { ACCESS_ROLES } from './authorization.js?v=6.36.2';
 
 const REQUIRED_DEPENDENCIES = [
   'getState',
@@ -57,12 +57,7 @@ export function createPortalRuntimeContext(dependencies, services, environment =
       remoteRefreshRunning: false,
       refreshScheduled: false,
       bootstrapped: false,
-      privateMigrationPending: false,
-      privateStateMode: 'public',
-      privateSaveStatus: 'idle',
-      privateSaveMessage: '',
-      privateSavePending: 0,
-      pendingDeletedPublicPaths: new Set(metadata.pendingDeletedPublicPaths || [])
+      privateMigrationPending: false
     }
   };
 
@@ -75,8 +70,8 @@ export function createPortalRuntimeContext(dependencies, services, environment =
   };
 
   context.pendingPublicationReview = () => buildPublicationReview(
-    services.createPublicPortalState?.(context.model.lastSyncedState || {}) || context.model.lastSyncedState,
-    services.createPublicPortalState?.(context.currentState()) || context.currentState()
+    context.model.lastSyncedState,
+    context.currentState()
   );
 
   context.publishStatus = (status, message = '') => {

@@ -32,19 +32,19 @@ export const SITE_ROOTS = Object.freeze([
 
 export const SITE_FILES = Object.freeze([
   'index.html',
-  'assets/css/app.css'
+  'assets/css/app.css',
+  'data/dados.json'
 ]);
 
 export const WORKER_ROOT = 'cloudflare/attachment-worker';
 export const WORKER_FILES = Object.freeze([
-  'ATUALIZACAO-D1.md',
   'README.md',
   'package-lock.json',
   'package.json',
   'wrangler.toml.example',
   'wrangler.ci.toml'
 ]);
-export const WORKER_ROOTS = Object.freeze(['src', 'migrations']);
+export const WORKER_ROOTS = Object.freeze(['src']);
 
 const EXCLUDED_NAMES = new Set([
   'node_modules',

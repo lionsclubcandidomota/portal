@@ -90,7 +90,6 @@ test('Worker usa binding R2, segredo de sessão e autorização por perfil', asy
   const worker = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/src/index.js'), 'utf8');
   const wrangler = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/wrangler.toml.example'), 'utf8');
   const publication = await readFile(path.join(projectRoot, 'assets/js/modules/portal-runtime/publication.js'), 'utf8');
-  const privateSync = await readFile(path.join(projectRoot, 'assets/js/modules/portal-runtime/private-sync.js'), 'utf8');
 
   assert.match(wrangler, /\[\[r2_buckets\]\]/);
   assert.match(wrangler, /binding = "ATTACHMENTS"/);
@@ -104,10 +103,9 @@ test('Worker usa binding R2, segredo de sessão e autorização por perfil', asy
   assert.match(worker, /env\.ATTACHMENTS\.put/);
   assert.match(worker, /attachment-access/);
   assert.doesNotMatch(worker, /(?:ghp_|github_pat_)[A-Za-z0-9_]+/);
-  assert.match(privateSync, /prepareSecureTreasuryAttachmentsForPublication/);
-  assert.match(privateSync, /deleteSecureTreasuryObjects/);
+  assert.match(publication, /prepareSecureTreasuryAttachmentsForPublication/);
+  assert.match(publication, /deleteSecureTreasuryObjects/);
   assert.match(publication, /deletedPublicPaths/);
-  assert.match(publication, /createPublicPortalState/);
-  assert.match(publication, /pendingDeletedPublicPaths/);
-  assert.doesNotMatch(publication, /savePrivatePortalState/);
+  assert.match(publication, /lostSecureKeys/);
+  assert.match(publication, /referências de anexos privados seriam removidas/);
 });

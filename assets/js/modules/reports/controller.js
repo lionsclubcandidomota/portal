@@ -37,7 +37,7 @@ function reportHtml(report) {
     <header class="header"><div><span class="eyebrow">${escapeHtml(report.clubName)}</span><h1>${escapeHtml(report.title)}</h1><p>${escapeHtml(report.description)}</p></div><div class="meta"><strong>Período</strong><br>${escapeHtml(report.periodText)}<br><br>Gerado em ${escapeHtml(report.generatedAt)}<br><button class="print-btn" type="button" id="printReportButton">Imprimir / salvar em PDF</button></div></header>
     <section class="summary">${report.summary.map(item => `<div><small>${escapeHtml(item.label)}</small><strong>${escapeHtml(item.value)}</strong></div>`).join('')}</section>
     <section class="table-shell"><table><thead><tr>${report.columns.map(column => `<th>${escapeHtml(column)}</th>`).join('')}</tr></thead><tbody>${tableRows}</tbody></table></section>
-    <footer class="footer">Relatório gerado pelo Portal Administrativo.${report.dataSource === 'd1' ? ` Dados financeiros consultados diretamente no D1 em ${Math.max(0, Number(report.queryDurationMs || 0))} ms.` : ''}</footer>
+    <footer class="footer">Relatório gerado pelo Portal Administrativo.</footer>
   </main>
 </body>
 </html>`;
@@ -77,40 +77,14 @@ export function createReportsController({
   getState,
   toast,
   browserWindow = window,
-  browserDocument = document,
-  loadReportState = null
+  browserDocument = document
 }) {
   if (typeof getState !== 'function') throw new TypeError('createReportsController requer getState().');
 
-  const privateReportTypes = new Set(['movements', 'memberships', 'mutuals']);
+  const create = (type, options) => buildReport(type, getState(), options);
 
-  const create = async (type, options) => {
-    const localState = getState();
-    let reportState = localState;
-    let dataSource = 'local';
-    let queryDurationMs = 0;
-    if (privateReportTypes.has(type) && typeof loadReportState === 'function') {
-      try {
-        const payload = await loadReportState(localState, type, options?.bounds || {});
-        if (payload?.state && typeof payload.state === 'object') {
-          reportState = { ...localState, ...payload.state };
-          dataSource = payload.source === 'd1' ? 'd1' : 'local';
-          queryDurationMs = Math.max(0, Number(payload.queryDurationMs || 0));
-        }
-      } catch {
-        // Mantém a geração local como contingência se a leitura SQL estiver indisponível.
-      }
-    }
-    return {
-      ...buildReport(type, reportState, options),
-      dataSource,
-      queryDurationMs
-    };
-  };
-
-  const loadingHtml = () => `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Preparando relatório</title><style>body{font-family:Inter,Arial,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f5f7fa;color:#172033}.loading{padding:28px 34px;border:1px solid #dfe5ec;border-radius:18px;background:#fff;box-shadow:0 12px 36px rgba(23,32,51,.08);text-align:center}.loading span{display:block;font-size:32px;margin-bottom:10px}.loading small{color:#69758a}</style></head><body><div class="loading"><span>📊</span><strong>Consultando o banco de dados…</strong><small>O relatório será aberto em instantes.</small></div></body></html>`;
-
-  const openPrintView = async (type, options) => {
+  const openPrintView = (type, options) => {
+    const report = create(type, options);
     const reportWindow = browserWindow.open('', '_blank');
     if (!reportWindow) {
       toast?.('O navegador bloqueou a janela do relatório. Permita pop-ups e tente novamente.');
@@ -118,23 +92,14 @@ export function createReportsController({
     }
     reportWindow.opener = null;
     reportWindow.document.open();
-    reportWindow.document.write(loadingHtml());
+    reportWindow.document.write(reportHtml(report));
     reportWindow.document.close();
-    try {
-      const report = await create(type, options);
-      reportWindow.document.open();
-      reportWindow.document.write(reportHtml(report));
-      reportWindow.document.close();
-      reportWindow.document.getElementById('printReportButton')?.addEventListener('click', () => reportWindow.print());
-      return true;
-    } catch (error) {
-      reportWindow.close();
-      throw error;
-    }
+    reportWindow.document.getElementById('printReportButton')?.addEventListener('click', () => reportWindow.print());
+    return true;
   };
 
-  const downloadCsv = async (type, options) => {
-    const report = await create(type, options);
+  const downloadCsv = (type, options) => {
+    const report = create(type, options);
     const blob = new Blob([reportCsv(report)], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const anchor = browserDocument.createElement('a');
@@ -145,24 +110,17 @@ export function createReportsController({
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
-    toast?.(report.dataSource === 'd1' ? 'Relatório CSV gerado a partir do D1.' : 'Relatório CSV gerado.');
+    toast?.('Relatório CSV gerado.');
     return true;
   };
 
   const bindDashboard = (root, options) => {
     const reportType = root?.querySelector?.('#adminReportType');
-    const buttons = [
-      root?.querySelector?.('#generateReportPrint'),
-      root?.querySelector?.('#generateReportCsv')
-    ].filter(Boolean);
-    const run = async action => {
-      buttons.forEach(button => { button.disabled = true; });
+    const run = action => {
       try {
-        await action(reportType?.value || 'movements', options);
+        action(reportType?.value || 'movements', options);
       } catch (error) {
         toast?.(error.message || 'Não foi possível gerar o relatório.');
-      } finally {
-        buttons.forEach(button => { button.disabled = false; });
       }
     };
     root?.querySelector?.('#generateReportPrint')?.addEventListener('click', () => run(openPrintView));

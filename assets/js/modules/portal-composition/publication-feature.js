@@ -1,6 +1,6 @@
-import { createPublishCenterController } from '../publish-center.js?v=6.47.2';
-import { createPortalRefreshController } from '../portal-refresh.js?v=6.47.2';
-import { createPublicationReviewController } from '../publication-review-controller.js?v=6.47.2';
+import { createPublishCenterController } from '../publish-center.js?v=6.36.2';
+import { createPortalRefreshController } from '../portal-refresh.js?v=6.36.2';
+import { createPublicationReviewController } from '../publication-review-controller.js?v=6.36.2';
 
 export function createPublicationFeature({
   elements,
@@ -28,12 +28,12 @@ export function createPublicationFeature({
     getPendingChanges: () => runtime.pendingChanges,
     refreshPortal: runtime.refreshPortalInterface,
     requestPendingDecision: ({ count, message }) => confirmation.askChoice({
-      title: count === 1 ? 'Existe uma alteração pública pendente' : `Existem ${count} alterações públicas pendentes`,
+      title: count === 1 ? 'Existe uma alteração pendente' : `Existem ${count} alterações pendentes`,
       message,
       icon: '☁️',
-      primaryText: 'Publicar conteúdo público',
+      primaryText: 'Publicar alterações',
       primaryTone: 'primary',
-      secondaryText: 'Descartar alterações públicas',
+      secondaryText: 'Descartar alterações',
       secondaryTone: 'danger-soft',
       cancelText: 'Cancelar atualização',
       tone: 'warning'

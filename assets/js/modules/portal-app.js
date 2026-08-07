@@ -14,8 +14,8 @@ import {
 import { createFinancePrivacyController } from './finance-privacy.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createAuditLogController } from './audit-log.js?v=6.47.2';
-import { createRecoveryCenterController } from './recovery-center.js?v=6.47.2';
+import { createAuditLogController } from './audit-log.js?v=6.36.2';
+import { createRecoveryCenterController } from './recovery-center.js?v=6.36.2';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
@@ -36,16 +36,15 @@ import {
   getAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.47.2';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.47.2';
-import { getPortalElements } from './portal-elements.js?v=6.47.2';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.47.2';
-import { createTreasuryFeature } from './portal-composition/treasury-feature.js?v=6.47.2';
-import { createAdministrationFeature } from './portal-composition/administration-feature.js?v=6.47.2';
-import { createPublicationFeature } from './portal-composition/publication-feature.js?v=6.47.2';
-import { createNavigationFeature } from './portal-composition/navigation-feature.js?v=6.47.2';
-import { createPortalViewRendererOptions } from './portal-composition/view-dependencies.js?v=6.47.2';
-import { createDatabaseSyncIndicator } from './database-sync-indicator.js?v=6.47.2';
+} from './appointments.js?v=6.36.2';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.36.2';
+import { getPortalElements } from './portal-elements.js?v=6.36.2';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.36.2';
+import { createTreasuryFeature } from './portal-composition/treasury-feature.js?v=6.36.2';
+import { createAdministrationFeature } from './portal-composition/administration-feature.js?v=6.36.2';
+import { createPublicationFeature } from './portal-composition/publication-feature.js?v=6.36.2';
+import { createNavigationFeature } from './portal-composition/navigation-feature.js?v=6.36.2';
+import { createPortalViewRendererOptions } from './portal-composition/view-dependencies.js?v=6.36.2';
 
 export function bootstrapPortal() {
   let state = loadState();
@@ -57,7 +56,6 @@ export function bootstrapPortal() {
   let viewRenderer = null;
 
   const elements = getPortalElements();
-  const databaseSync = createDatabaseSyncIndicator(elements.databaseSync);
   const confirmation = createConfirmationController({
     confirmModal: elements.confirmModal,
     confirmTitle: elements.confirmTitle,
@@ -79,8 +77,7 @@ export function bootstrapPortal() {
     parseLocalDate,
     normalize,
     todayStart,
-    sumTreasury,
-    hydrateOperationalTreasury: records => runtime?.hydrateOperationalTreasury?.(records)
+    sumTreasury
   });
   const auditLog = createAuditLogController({
     storage: localStorage,
@@ -96,13 +93,10 @@ export function bootstrapPortal() {
     remoteRecovery: {
       isAvailable: () => Boolean(runtime?.hasActiveSecureStorageSession?.(state)),
       canWrite: () => Boolean(runtime?.isWriteAllowed?.()),
-      status: () => runtime.getPrivateStorageStatus(state),
       listBackups: () => runtime.listPrivateStateBackups(state),
       createBackup: label => runtime.createPrivateStateBackup(state, label),
       diagnose: () => runtime.diagnosePrivateStorageIntegrity(state),
       restoreBackup: key => runtime.restorePrivateStateBackup(state, key),
-      migrateToD1: () => runtime.migratePrivateStorageToD1(state),
-      rollbackToR2: () => runtime.rollbackPrivateStorageToR2(state),
       applyRestoredState: (payload, details) => runtime.applyRemotePrivateState(payload, details)
     },
     onSummaryChange: () => {
@@ -128,10 +122,7 @@ export function bootstrapPortal() {
     closePublishCenter: options => publicationFeature.publishCenter.close(options),
     refreshPublishCenter: () => publicationFeature.publishCenter.refresh(),
     setPublishStatus: (status, message) => publicationFeature.publishCenter.setStatus(status, message),
-    setDatabaseSyncStatus: databaseSync.setStatus,
     resetInterfaceState,
-    isModalOpen: () => modalController.isOpen(),
-    invalidateOperationalReads: modules => treasuryFeature.invalidateOperationalReads(modules),
     getCurrentView: () => navigationFeature.navigation.currentView,
     renderAdmin,
     updateAccessUI,
@@ -140,8 +131,6 @@ export function bootstrapPortal() {
     auditLog,
     recoveryCenter
   });
-
-  databaseSync.bindRetry(() => runtime.retryPrivateStateSave());
 
   publicationFeature = createPublicationFeature({
     elements: elements.publishCenter,
@@ -275,7 +264,6 @@ export function bootstrapPortal() {
 
   function setView(view) {
     navigationFeature.navigation.setView(view);
-    void runtime?.checkForDatabaseUpdates?.({ reason: 'navigation' });
   }
 
   function updateAccessUI() {
@@ -311,10 +299,7 @@ export function bootstrapPortal() {
       else item.removeAttribute('aria-current');
     });
     if (navigationFeature.navigation.currentView !== 'treasury') setView('treasury');
-    else {
-      renderTreasuryView();
-      void runtime?.checkForDatabaseUpdates?.({ reason: 'treasury-section' });
-    }
+    else renderTreasuryView();
   }
 
   function resetInterfaceState() {

@@ -44,7 +44,6 @@ function baseState(overrides = {}) {
 
 function setup({ state = baseState(), services = {}, dependencies = {}, location } = {}) {
   let currentState = state;
-  let persistedState = structuredClone(state);
   const calls = [];
   const saved = [];
   const context = createPortalRuntimeContext({
@@ -61,11 +60,8 @@ function setup({ state = baseState(), services = {}, dependencies = {}, location
     getCurrentView: () => 'dashboard',
     ...dependencies
   }, {
-    loadState: () => structuredClone(persistedState),
-    saveState: value => {
-      persistedState = structuredClone(value);
-      saved.push(structuredClone(value));
-    },
+    loadState: () => currentState,
+    saveState: value => saved.push(structuredClone(value)),
     connectGitHub: async () => ({
       sha: 'remote-sha',
       actor: { login: 'admin-lions', name: 'Administrador Lions' },
@@ -279,26 +275,25 @@ test('camadas de persistência e publicação bloqueiam escrita da Diretoria', a
   assert.ok(fixture.calls.some(call => Array.isArray(call) && /somente leitura/i.test(call[1])));
 });
 
-test('tela de entrada usa usuário e senha do D1 sem solicitar token GitHub no navegador', () => {
+test('tela de entrada mantém apenas a escolha do perfil e os campos necessários', () => {
   const html = adminLoginHtml();
-  assert.match(html, /Entre com a credencial correspondente ao seu perfil/);
-  assert.match(html, /id="adminUsername"/);
-  assert.match(html, /name="username"/);
-  assert.match(html, /id="adminPassword"/);
-  assert.match(html, /autocomplete="username"/);
-  assert.match(html, /autocomplete="current-password"/);
-  assert.match(html, /Primeiro acesso: criar Administrador/);
-  assert.match(html, /id="adminBootstrapForm"/);
-  assert.match(html, /ADMIN_BOOTSTRAP_KEY/);
-  assert.doesNotMatch(html, /Token de acesso do GitHub/);
-  assert.doesNotMatch(html, /adminGithubToken/);
+  assert.match(html, /<p>Escolha o perfil de acesso\.<\/p>/);
+  assert.match(html, /Token de acesso do GitHub/);
   assert.match(html, /Senha da Diretoria/);
   assert.match(html, /placeholder="Informe a senha da Diretoria"/);
   assert.match(html, /name="directorAccessPassword"/);
+  assert.match(html, /autocomplete="new-password"/);
   assert.match(html, /id="directorPassword"[^>]*disabled/);
+  assert.doesNotMatch(html, /autocomplete="current-password"/);
   assert.match(html, /id="adminLoginForm"/);
   assert.match(html, /id="directorLoginForm"/);
   assert.doesNotMatch(html, /token Diretoria/i);
+  assert.doesNotMatch(html, /Gestão completa/i);
+  assert.doesNotMatch(html, /Somente leitura/i);
+  assert.doesNotMatch(html, /Credencial administrativa/i);
+  assert.doesNotMatch(html, /permissão de leitura e gravação/i);
+  assert.doesNotMatch(html, /sessão é bloqueada/i);
+  assert.doesNotMatch(html, /todas as consultas e relatórios/i);
 });
 
 test('Dashboard Diretoria mantém relatórios e consultas, mas remove ações de alteração', () => {

@@ -4,13 +4,13 @@ import {
   mergeRecoveryAreas,
   summarizePortalState,
   verifyRecoverySnapshot
-} from './domain.js?v=6.47.2';
-import { createRecoverySnapshotStore } from './storage.js?v=6.47.2';
+} from './domain.js?v=6.36.2';
+import { createRecoverySnapshotStore } from './storage.js?v=6.36.2';
 import {
   recoveryCenterHtml,
   recoveryLoadingHtml,
   recoveryRestoreHtml
-} from './view.js?v=6.47.2';
+} from './view.js?v=6.36.2';
 
 function snapshotDownload(snapshot) {
   const blob = new Blob([JSON.stringify(snapshot.payload, null, 2)], { type: 'application/json' });
@@ -50,7 +50,6 @@ export function createRecoveryCenterController({
     retention: 0,
     current: null,
     diagnostic: null,
-    storage: null,
     error: ''
   };
 
@@ -70,13 +69,12 @@ export function createRecoveryCenterController({
 
   const loadRemote = async () => {
     if (!remoteAvailable()) {
-      remote = { ...remote, available: false, loading: false, canWrite: false, backups: [], current: null, diagnostic: null, storage: null, error: '' };
+      remote = { ...remote, available: false, loading: false, canWrite: false, backups: [], current: null, diagnostic: null, error: '' };
       return remote;
     }
     remote = { ...remote, available: true, loading: true, canWrite: Boolean(remoteRecovery?.canWrite?.()), error: '' };
     try {
-      const [storage, backupPayload, diagnostic] = await Promise.all([
-        Promise.resolve(remoteRecovery.status?.() || null).catch(() => null),
+      const [backupPayload, diagnostic] = await Promise.all([
         remoteRecovery.listBackups(),
         remoteRecovery.diagnose()
       ]);
@@ -88,7 +86,6 @@ export function createRecoveryCenterController({
         retention: Math.max(0, Number(backupPayload?.retention || 0)),
         current: backupPayload?.current || null,
         diagnostic: diagnostic || null,
-        storage: storage || null,
         error: ''
       };
     } catch (error) {
@@ -284,49 +281,6 @@ export function createRecoveryCenterController({
     }
   };
 
-
-  const migrateRemoteToD1 = async () => {
-    if (!remote.canWrite || !remoteRecovery?.migrateToD1) return;
-    const approved = await confirmation?.askConfirmation({
-      title: 'Migrar o estado privado para o D1?',
-      message: 'O Portal criará um backup no R2, copiará contas, movimentações, grupos, mútuas e configurações para o banco D1 e passará a utilizá-lo como fonte principal. O R2 continuará como espelho e armazenamento dos anexos.',
-      icon: '🗄️',
-      confirmText: 'Criar backup e migrar',
-      tone: 'warning'
-    });
-    if (!approved) return;
-    try {
-      const result = await remoteRecovery.migrateToD1();
-      await loadRemote();
-      renderOverview();
-      toast?.(result?.mirrorWarning
-        ? `Migração concluída no D1. Atenção: ${result.mirrorWarning}`
-        : 'Migração concluída. O D1 agora é a fonte principal dos dados privados.');
-    } catch (error) {
-      toast?.(error?.message || 'Não foi possível migrar os dados privados para o D1.');
-    }
-  };
-
-  const rollbackRemoteToR2 = async () => {
-    if (!remote.canWrite || !remoteRecovery?.rollbackToR2) return;
-    const approved = await confirmation?.askConfirmation({
-      title: 'Retornar temporariamente ao R2?',
-      message: 'O estado atual do D1 será copiado para o R2 antes da troca. O banco não será apagado e poderá ser ativado novamente por uma nova migração.',
-      icon: '↩️',
-      confirmText: 'Copiar estado e retornar',
-      tone: 'danger'
-    });
-    if (!approved) return;
-    try {
-      await remoteRecovery.rollbackToR2();
-      await loadRemote();
-      renderOverview();
-      toast?.('O Portal voltou temporariamente a utilizar o estado privado do R2.');
-    } catch (error) {
-      toast?.(error?.message || 'Não foi possível retornar ao armazenamento do R2.');
-    }
-  };
-
   function bindOverview(body) {
     body.querySelector('#refreshPrivateRecoveryBtn')?.addEventListener('click', async () => {
       await loadRemote();
@@ -334,8 +288,6 @@ export function createRecoveryCenterController({
       if (!remote.error) toast?.('Integridade do armazenamento privado atualizada.');
     });
     body.querySelector('#createPrivateBackupBtn')?.addEventListener('click', createRemoteBackup);
-    body.querySelector('#migratePrivateStorageD1Btn')?.addEventListener('click', migrateRemoteToD1);
-    body.querySelector('#rollbackPrivateStorageR2Btn')?.addEventListener('click', rollbackRemoteToR2);
     body.querySelectorAll('[data-private-backup-restore]').forEach(button => {
       button.addEventListener('click', () => restoreRemoteBackup(button.dataset.privateBackupRestore));
     });

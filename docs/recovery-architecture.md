@@ -70,27 +70,3 @@ O relatório mostra:
 - quantidade de backups disponíveis.
 
 A Central de Recuperação apresenta esse resultado sem expor o conteúdo dos arquivos ou credenciais do bucket.
-
-
-## Continuidade com D1 — versão 6.37.0
-
-A Central de Recuperação consulta `GET /api/storage/status` e apresenta claramente a fonte principal. O corte para D1 cria um backup `before-d1-migration`; o retorno ao R2 cria `before-d1-rollback`. Em operação normal, cada gravação D1 mantém um espelho atual no objeto `__portal/private-state-v1.json`, além da linha do tempo de backups.
-
-## Fila privada e continuidade — versão 6.38.0
-
-A fila serial consolida alterações rápidas e mantém a geração ainda não confirmada. Em falha de rede, o Portal conserva os dados no navegador, sinaliza o erro e tenta novamente quando a conexão retorna ou quando o Administrador aciona o indicador. Publicação, atualização e logout são bloqueados enquanto a gravação privada não puder ser confirmada.
-
-## Snapshot somente para recuperação — versão 6.43.0
-
-Com o esquema D1 5, as tabelas relacionais passam a ser a fonte operacional oficial. Gravações granulares de movimentações e grupos não regravam o snapshot a cada ação; elas marcam `snapshot_stale = 1`.
-
-Quando a Central de Recuperação cria um backup, restaura uma versão ou retorna temporariamente ao R2, o Worker reconstrói o estado privado atual a partir das tabelas relacionais antes de materializar o JSON. Assim, o snapshot permanece um artefato de contingência, não uma dependência das operações diárias.
-
-O endpoint de status informa `relationalSource`, `snapshotStale` e `snapshotUpdatedAt`, permitindo distinguir o banco operacional do último snapshot materializado.
-
-
-## Conteúdo público e recuperação — versão 6.47.0
-
-`portal_members` e as demais tabelas públicas são a fonte oficial do conteúdo estruturado. O histórico de publicações mantém as revisões recentes, enquanto as mídias ficam no R2. `PUBLIC_DATA_URL` é usada somente na importação inicial da versão 6.46.0 e não participa da operação normal.
-
-Backups integrais podem materializar os módulos públicos e privados diretamente das tabelas do D1, preservando o R2 como segunda camada de continuidade.

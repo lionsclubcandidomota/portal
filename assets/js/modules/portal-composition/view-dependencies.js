@@ -116,10 +116,7 @@ export function createPortalViewRendererOptions({
       openMutualGroupsManager: treasuryAdministration.openMutualGroupsManager,
       openMutualEvent: treasuryAdministration.openMutualEvent,
       openMutualPayment: treasuryAdministration.openMutualPayment,
-      shareMembershipCharge: treasuryAdministration.shareMembershipCharge,
-      loadOperationalMovements: treasuryFeature.loadOperationalMovements,
-      loadOperationalMemberships: treasuryFeature.loadOperationalMemberships,
-      loadOperationalMutuals: treasuryFeature.loadOperationalMutuals
+      shareMembershipCharge: treasuryAdministration.shareMembershipCharge
     }
   };
 }

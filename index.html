@@ -7,16 +7,16 @@
   <meta name="description" content="Dashboard interno do Lions Clube de Cândido Mota">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.workers.dev; connect-src 'self' https://*.workers.dev; font-src 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://avatars.githubusercontent.com; connect-src 'self' https://api.github.com https://lionsclubcandidomota.github.io https://*.workers.dev; font-src 'self'; form-action 'self'; frame-src 'none'; worker-src 'none'">
   <title>Portal Lions • Cândido Mota</title>
   <link rel="icon" type="image/png" href="./public/favicon.png">
   <link rel="apple-touch-icon" href="./public/apple-touch-icon.png">
-  <link rel="stylesheet" href="./assets/css/app.css?v=6.47.2">
-  <link rel="modulepreload" href="./assets/js/app.js?v=6.47.2">
-  <link rel="modulepreload" href="./assets/js/modules/portal-app.js?v=6.47.2">
+  <link rel="stylesheet" href="./assets/css/app.css?v=6.36.2">
+  <link rel="modulepreload" href="./assets/js/app.js?v=6.36.2">
+  <link rel="modulepreload" href="./assets/js/modules/portal-app.js?v=6.36.2">
   <link rel="modulepreload" href="./assets/js/storage.js">
   <link rel="modulepreload" href="./assets/js/utils.js">
-  <link rel="modulepreload" href="./assets/js/public-data.js?v=6.47.2">
+  <link rel="modulepreload" href="./assets/js/github.js?v=6.36.2">
 </head>
 <body class="app-loading visitor-mode">
   <a class="skip-link" href="#mainContent">Pular para o conteúdo principal</a>
@@ -63,10 +63,6 @@
             <span data-portal-refresh-label>Atualizar painel</span>
           </button>
           <span class="mode-chip" id="modeChip">Modo visitante</span>
-          <button class="database-sync-chip" id="databaseSyncChip" type="button" hidden aria-live="polite" title="Situação do salvamento dos dados privados">
-            <span class="database-sync-icon" id="databaseSyncIcon" aria-hidden="true">✓</span>
-            <span class="database-sync-copy"><strong id="databaseSyncLabel">Banco sincronizado</strong><small id="databaseSyncDetail">Dados privados salvos</small></span>
-          </button>
           <div class="clock" id="clock">00:00:00</div>
           <div class="sync-header" id="publishProgressNotice" aria-live="polite" hidden>
             <button class="sync-header-trigger" id="publishCenterToggle" type="button" aria-expanded="false" aria-controls="publishCenterBody">
@@ -78,9 +74,9 @@
               <span class="publish-center-count" id="publishCenterCount" hidden>0</span>
               <span class="publish-center-chevron" aria-hidden="true"></span>
             </button>
-            <div class="sync-header-popover" id="publishCenterBody" role="dialog" aria-label="Publicação do conteúdo público">
+            <div class="sync-header-popover" id="publishCenterBody" role="dialog" aria-label="Portal de Sincronização">
               <div class="sync-popover-heading">
-                <div class="sync-popover-heading-copy"><span class="sync-popover-brand-icon" aria-hidden="true">☁</span><div><span class="sync-popover-eyebrow">Conteúdo público</span><strong>Publicação no site</strong></div></div>
+                <div class="sync-popover-heading-copy"><span class="sync-popover-brand-icon" aria-hidden="true">☁</span><div><span class="sync-popover-eyebrow">Portal de Sincronização</span><strong>Publicação e segurança dos dados</strong></div></div>
                 <button class="sync-popover-close" id="publishCenterClose" type="button" aria-label="Minimizar central de sincronização" title="Minimizar">×</button>
               </div>
               <div class="sync-popover-status">
@@ -99,9 +95,9 @@
               </button>
               <div class="publish-center-actions">
                 <button class="btn btn-danger-soft btn-sm" id="publishCenterDiscard" type="button">Descartar</button>
-                <button class="btn btn-primary btn-sm" id="publishCenterSend" type="button">Publicar conteúdo público</button>
+                <button class="btn btn-primary btn-sm" id="publishCenterSend" type="button">Publicar alterações</button>
               </div>
-              <p class="sync-popover-footnote"><span aria-hidden="true">🛡️</span>Dados financeiros e administrativos são salvos no banco. Esta etapa publica somente o conteúdo visível aos visitantes.</p>
+              <p class="sync-popover-footnote"><span aria-hidden="true">🛡️</span>As alterações locais permanecem protegidas até a confirmação da publicação.</p>
             </div>
           </div>
         </div>
@@ -150,6 +146,6 @@
   <input type="file" id="jsonImportInput" accept="application/json" hidden>
   <input type="file" id="imageInput" accept="image/*" hidden>
 
-  <script type="module" src="./assets/js/app.js?v=6.47.2"></script>
+  <script type="module" src="./assets/js/app.js?v=6.36.2"></script>
 </body>
 </html>

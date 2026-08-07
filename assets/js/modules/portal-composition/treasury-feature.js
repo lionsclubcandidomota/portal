@@ -1,10 +1,5 @@
-import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.47.2';
-import { createTreasuryAdminController } from '../treasury-admin.js?v=6.47.2';
-import {
-  loadD1OperationalMemberships,
-  loadD1OperationalMutuals,
-  loadD1OperationalTreasury
-} from '../secure-storage/client.js?v=6.47.2';
+import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.36.2';
+import { createTreasuryAdminController } from '../treasury-admin.js?v=6.36.2';
 
 export function createTreasuryFeature({
   getState,
@@ -12,7 +7,6 @@ export function createTreasuryFeature({
   normalize,
   todayStart,
   sumTreasury,
-  hydrateOperationalTreasury = () => {},
   storage = sessionStorage
 }) {
   const treasury = createTreasuryController({
@@ -41,10 +35,7 @@ export function createTreasuryFeature({
       treasury,
       modalController,
       confirmation,
-      persist: (...args) => {
-        treasury.invalidateOperationalReads();
-        return persist(...args);
-      },
+      persist,
       renderTreasuryView,
       renderCurrentView,
       closeModal,
@@ -61,17 +52,6 @@ export function createTreasuryFeature({
     parseCurrencyInput: treasury.parseCurrencyInput,
     currencyInputValue: treasury.currencyInputValue,
     memberIsActive: treasury.memberIsActive,
-    invalidateOperationalReads: modules => treasury.invalidateOperationalReads(modules),
-    loadOperationalMovements: async options => {
-      const result = await loadD1OperationalTreasury(getState(), options);
-      hydrateOperationalTreasury([
-        ...(Array.isArray(result?.scheduled?.items) ? result.scheduled.items : []),
-        ...(Array.isArray(result?.completed?.items) ? result.completed.items : [])
-      ]);
-      return result;
-    },
-    loadOperationalMemberships: options => loadD1OperationalMemberships(getState(), options),
-    loadOperationalMutuals: options => loadD1OperationalMutuals(getState(), options),
     accountSummaries: treasury.accountSummaries,
     accountTypeIcon: treasury.accountTypeIcon
   };

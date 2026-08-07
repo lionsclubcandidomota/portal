@@ -1,125 +1,93 @@
-# Cloudflare Worker do Portal Lions — v1.13.2
+# Worker de dados privados — Portal Lions
 
-O Worker é a API do Portal. Todo dado estruturado, público ou privado, utiliza o Cloudflare D1 como fonte principal. O Cloudflare R2 guarda somente arquivos binários e cópias de recuperação.
+Este Worker mantém comprovantes e o estado financeiro/administrativo em um bucket Cloudflare R2 privado.
+Nenhuma chave R2 é enviada ao navegador: o Worker utiliza um binding direto ao bucket.
 
-## Arquitetura
+## 1. Criar o arquivo de configuração
 
-```text
-PORTAL_DB   → usuários, sessões, configurações, associados, agenda, avisos,
-              grupos, movimentações, relatórios e revisões
-ATTACHMENTS → fotos públicas, anexos financeiros e backups
-GitHub Pages → somente HTML, CSS e JavaScript do front-end
+Copie `wrangler.toml.example` para `wrangler.toml` e substitua `SEU_BUCKET_R2` pelo nome exato do bucket.
+
+Confira também:
+
+- `ALLOWED_ORIGINS`: origem do Portal e endereços locais de homologação;
+- `GITHUB_OWNER` e `GITHUB_REPO`;
+- `PUBLIC_DATA_URL`: endereço público de `data/dados.json`.
+
+O bucket deve continuar **privado**, sem domínio público e sem `r2.dev` habilitado.
+
+## 2. Definir o segredo de assinatura
+
+Na pasta deste Worker:
+
+```bash
+npm install
+npx wrangler secret put SESSION_SECRET
 ```
 
-## Preparação
+Informe uma sequência aleatória com pelo menos 32 caracteres. Não grave esse segredo no Git.
+
+## Validação local e no CI
 
 ```bash
 npm ci
-cp wrangler.toml.example wrangler.toml
+npm run check
 ```
 
-Informe no `wrangler.toml` o bucket e o UUID real do D1. Preserve os bindings `ATTACHMENTS` e `PORTAL_DB`.
+O comando de verificação usa `wrangler.toml.example` e `wrangler deploy --dry-run`. Ele valida o bundle sem publicar, sem acessar o R2 e sem exigir `SESSION_SECRET`.
 
-`PUBLIC_DATA_URL` é temporária: ela aponta para o `data/dados.json` da versão antiga e é usada uma única vez para importar o conteúdo público e suas mídias. Depois de confirmar a migração, a variável pode ser removida.
-
-## Segredos necessários
+## 3. Publicar
 
 ```bash
-npx wrangler secret put SESSION_SECRET
-npx wrangler secret put ADMIN_BOOTSTRAP_KEY
+npm run deploy
 ```
 
-- `SESSION_SECRET`: mínimo de 32 caracteres; protege sessões e tickets temporários.
-- `ADMIN_BOOTSTRAP_KEY`: mínimo de 24 caracteres; permite criar o primeiro Administrador.
-
-`GITHUB_TOKEN` não é mais utilizado pelo Portal.
-
-## Migrações
-
-```bash
-npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
-```
-
-As migrações mais recentes são:
-
-- `0010_public_portal_d1.sql`: conteúdo público relacional, histórico de publicações, mídias no R2 e esquema D1 9;
-- `0011_recover_public_members_20260804.sql`: recuperação aditiva dos 32 cadastros públicos do backup de 04/08/2026, sem alteração do esquema.
-
-As migrações anteriores, `0001` a `0009`, preservam autenticação, dados privados, gravações granulares, consultas operacionais e revisões por módulo.
-
-## Migração inicial do conteúdo público
-
-Depois de publicar o Worker e aplicar `0010`, faça login administrativo enquanto a versão anterior do Portal ainda estiver no ar. O Worker detecta que o módulo público está vazio e importa automaticamente:
-
-- associados;
-- configurações públicas;
-- agenda e eventos;
-- reuniões;
-- avisos;
-- logotipo e fotos públicas para o R2.
-
-Também é possível executar manualmente, já autenticado:
+O Wrangler exibirá a URL final, semelhante a:
 
 ```text
-POST /api/storage/migrate-public-d1
+https://lions-portal-anexos.<sua-conta>.workers.dev
 ```
 
-A importação é idempotente: depois da primeira revisão pública, novas execuções não duplicam registros.
+## 4. Conectar o Portal
+
+Entre como Administrador e abra:
+
+**Configurações → Armazenamento privado de anexos**
+
+Cole a URL do Worker, teste a conexão e salve. Na próxima publicação:
+
+- anexos novos são enviados ao R2;
+- anexos antigos em `public/treasury/` são migrados automaticamente;
+- os arquivos públicos antigos são removidos do mesmo commit;
+- o estado financeiro completo é gravado no objeto privado `__portal/private-state-v1.json`;
+- o JSON do GitHub Pages passa a conter somente informações públicas.
+
+## Segurança
+
+- Administrador: token do GitHub é validado pelo Worker e usado apenas para criar uma sessão temporária.
+- Diretoria: após a migração, a senha é validada contra o perfil armazenado no estado privado do R2. O JSON legado é usado somente como compatibilidade da primeira migração.
+- Visitante: não recebe sessão, não acessa anexos nem recebe os dados financeiros.
+- Links de visualização expiram automaticamente.
+- O segredo `SESSION_SECRET` e o binding R2 existem somente no Worker.
+
+O roteiro completo, incluindo homologação e migração, está em `docs/cloudflare-r2-setup.md` na raiz do Portal.
+
+## Senha da Diretoria
+
+O Worker valida perfis da Diretoria criados com PBKDF2-SHA-256 e 100.000 iterações. Depois de atualizar o Portal e o Worker, faça a publicação de migração uma única vez. O hash deixa de permanecer no JSON público.
+## Validação no GitHub Actions
+
+O arquivo `wrangler.ci.toml` existe somente para `wrangler deploy --dry-run`. Ele usa um nome de bucket fictício, porém sintaticamente válido, e não acessa o R2 nem publica o Worker. Não use esse arquivo para implantação em produção.
 
 
-## Recuperação da implantação 6.47.0
+## Continuidade operacional
 
-A versão 1.13.2 inclui a migração corretiva `0011`, produzida a partir do backup público de 04/08/2026. Ela restaura 32 cadastros por `UPSERT`, preserva registros atuais e não altera Tesouraria, grupos, mensalidades, anexos ou backups.
+O Worker 1.2.0 cria backups privados versionados em `__portal/backups/private-state-v1/` e mantém as 20 versões mais recentes.
 
-A versão também mantém a tolerância a fotos antigas ausentes, identifica corretamente registros com status Mútua e bloqueia uma publicação vazia quando o D1 já contém associados.
+Endpoints autenticados:
 
-A migração `0011` é somente de dados; o esquema permanece na versão 9.
+- `GET /api/private-state/backups`: lista as versões e o resumo atual;
+- `POST /api/private-state/backups`: cria um backup manual, somente Administrador;
+- `POST /api/private-state/backups/restore`: restaura uma versão, somente Administrador;
+- `GET /api/private-state/integrity`: verifica checksum, referências e objetos de anexos.
 
-## Rotas públicas
-
-- `GET /health`
-- `GET /api/public/state`
-- `GET /api/public/media?key=public/...`
-- `GET /api/auth/status`
-- `POST /api/auth/bootstrap`
-- `POST /api/session`
-- `GET /api/attachments/object` com ticket temporário
-
-## Rotas autenticadas principais
-
-- `GET /api/publication/status`
-- `POST /api/publication`
-- `GET /api/sync/revisions`
-- `GET /api/private-state/bootstrap`
-- `GET/PUT /api/private-state`
-- `PUT /api/private-state/treasury`
-- `PUT /api/private-state/groups`
-- `PUT /api/private-state/reference`
-- `GET /api/operational/treasury`
-- `GET /api/operational/memberships`
-- `GET /api/operational/mutuals`
-- `GET /api/analytics/dashboard`
-- `GET /api/analytics/report`
-- rotas de anexos, backups e integridade
-
-## Sincronização
-
-`GET /api/sync/revisions` lê somente as revisões dos módulos em uma consulta leve. O navegador verifica a cada 60 segundos apenas enquanto a sessão está ativa e a aba está visível. Os dados de um módulo só são consultados novamente quando sua revisão muda.
-
-## Implantação
-
-```bash
-npm run check
-npx wrangler deploy --config wrangler.toml
-```
-
-O `/health` deve informar:
-
-```json
-{
-  "workerVersion": "1.13.2",
-  "structuredDataSource": "cloudflare-d1",
-  "d1": { "schemaVersion": 9, "requiredSchemaVersion": 9 },
-  "publicData": { "source": "d1", "active": true, "media": "cloudflare-r2" }
-}
-```
+Uma gravação que removeria todos os registros privados é bloqueada. Toda restauração cria antes um backup de segurança do estado atual.

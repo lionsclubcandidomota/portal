@@ -1,8 +1,8 @@
 const STATUS_LABELS = {
   offline: 'Somente local',
-  pending: 'Alterações públicas pendentes',
-  syncing: 'Gravando no banco…',
-  publishing: 'Atualizando portal…',
+  pending: 'Alterações pendentes',
+  syncing: 'Criando commit…',
+  publishing: 'Publicando no site…',
   published: 'Disponível no site',
   synced: 'Sincronizado',
   error: 'Falha na sincronização'
@@ -148,7 +148,7 @@ export function createPublishCenterController({
     } else if (status === 'syncing') {
       percent = 35;
       title.textContent = 'Salvando alterações';
-      detail.textContent = 'Gravando a nova revisão pública no Cloudflare D1…';
+      detail.textContent = 'Criando a atualização no GitHub…';
       if (statusIcon) statusIcon.textContent = '↻';
     } else if (status === 'publishing') {
       percent = 88;
@@ -175,7 +175,7 @@ export function createPublishCenterController({
     } else if (pendingChanges > 0) {
       percent = 12;
       title.textContent = `${displayCount} alteraç${displayCount === 1 ? 'ão' : 'ões'} pendente${displayCount === 1 ? '' : 's'}`;
-      detail.textContent = attentionMessage || 'Publique somente o conteúdo público quando estiver pronto.';
+      detail.textContent = attentionMessage || 'Publique as alterações antes de concluir o trabalho.';
       if (statusIcon) statusIcon.textContent = '•';
     } else {
       percent = 100;
@@ -204,17 +204,17 @@ export function createPublishCenterController({
       reviewSummary.textContent = reviewCount > 0
         ? `${reviewCount} alteraç${reviewCount === 1 ? 'ão' : 'ões'} em ${reviewAreaCount} área${reviewAreaCount === 1 ? '' : 's'}`
         : pendingChanges > 0
-          ? 'Revise apenas o conteúdo que ficará público'
-          : 'Nenhuma alteração pública para revisar';
+          ? 'Verifique as diferenças antes de publicar'
+          : 'Nenhuma alteração para revisar';
     }
 
     if (sendButton) {
       sendButton.disabled = !githubToken || pendingChanges === 0 || isBusy;
       sendButton.textContent = status === 'syncing'
-        ? 'Gravando…'
+        ? 'Salvando…'
         : status === 'publishing'
           ? 'Publicando…'
-          : 'Publicar conteúdo público';
+          : 'Publicar alterações';
     }
     if (discardButton) discardButton.disabled = pendingChanges === 0 || isBusy;
   };
