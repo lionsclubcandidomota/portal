@@ -1,4 +1,4 @@
-# Homologação — v6.43.0
+# Homologação — v6.44.0
 
 ## Fluxos prioritários do Portal
 
@@ -159,3 +159,15 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 6. Abra Movimentações e confirme `D1 · consulta paginada`.
 7. Teste pesquisa, filtros e páginas independentes.
 8. Faça uma alteração privada e confirme que `snapshot_stale` fica ativo sem impedir leitura, backup ou rollback.
+
+## Mensalidades e Mútuas paginadas — versão 6.44.0
+
+1. Publique o Worker 1.10.0.
+2. Aplique `0007_operational_memberships_mutuals.sql`.
+3. Confirme esquema D1 6 e `optimizedReads.memberships/mutuals: true` no `/health`.
+4. Publique o Portal 6.44.0.
+5. Em Mensalidades, teste período, família, situação, pesquisa e páginas.
+6. Em Mútuas, teste grupo, período, situação, pesquisa, páginas e limpeza da seleção ao trocar de página.
+7. Registre uma mensalidade e uma baixa de Mútua e valide a atualização após recarregar.
+8. Confirme que o fallback local continua disponível ao simular indisponibilidade da rota operacional.
+

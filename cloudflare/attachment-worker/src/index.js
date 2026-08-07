@@ -14,6 +14,11 @@ import {
 } from './d1-analytics.js';
 import { queryD1OperationalTreasury } from './d1-operational.js';
 import {
+  queryD1OperationalMemberships,
+  queryD1OperationalMutuals,
+  syncMemberDirectory
+} from './d1-operational-memberships.js';
+import {
   AUTH_PASSWORD_ITERATIONS,
   authenticateAdministrator,
   bootstrapAdministrator,
@@ -33,7 +38,7 @@ import {
   publishPortalPublicState
 } from './github-publication.js';
 
-const WORKER_VERSION = '1.9.0';
+const WORKER_VERSION = '1.10.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -1383,8 +1388,18 @@ export default {
           attachmentIntegrity: 'available',
           privateAutosave: 'relational-operational',
           granularWrites: { treasury: storage.d1.schemaVersion >= 2, groups: storage.d1.schemaVersion >= 3, snapshotPerMutation: false },
-          optimizedReads: { dashboard: storage.d1.schemaVersion >= 4, reports: storage.d1.schemaVersion >= 4, treasuryPagination: storage.d1.schemaVersion >= 5 },
+          optimizedReads: {
+            dashboard: storage.d1.schemaVersion >= 4,
+            reports: storage.d1.schemaVersion >= 4,
+            treasuryPagination: storage.d1.schemaVersion >= 5,
+            memberships: storage.d1.schemaVersion >= 6 && storage.d1.operationalMemberships,
+            mutuals: storage.d1.schemaVersion >= 6 && storage.d1.operationalMutuals
+          },
           relationalSource: storage.d1.schemaVersion >= 5 && storage.d1.relationalSource,
+          memberDirectory: {
+            available: storage.d1.schemaVersion >= 6,
+            updatedAt: storage.d1.memberDirectoryUpdatedAt || ''
+          },
           snapshotPolicy: storage.d1.schemaVersion >= 5 ? 'recovery-only' : 'operational-fallback'
         }, 200, cors);
       }
@@ -1504,6 +1519,49 @@ export default {
           completedPage: url.searchParams.get('completedPage') || '1',
           pageSize: url.searchParams.get('pageSize') || '8'
         }), 200, cors);
+      }
+
+      if (url.pathname === '/api/operational/memberships' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 6 || !storage.relationalSource || !storage.operationalMemberships) {
+          throw new Response('A consulta operacional de mensalidades ainda não está disponível.', { status: 503 });
+        }
+        return json(await queryD1OperationalMemberships(env, {
+          start: url.searchParams.get('start') || '',
+          end: url.searchParams.get('end') || '',
+          query: url.searchParams.get('query') || '',
+          family: url.searchParams.get('family') || 'all',
+          status: url.searchParams.get('status') || 'all',
+          page: url.searchParams.get('page') || '1',
+          pageSize: url.searchParams.get('pageSize') || '12'
+        }), 200, cors);
+      }
+
+      if (url.pathname === '/api/operational/mutuals' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 6 || !storage.relationalSource || !storage.operationalMutuals) {
+          throw new Response('A consulta operacional de Mútuas ainda não está disponível.', { status: 503 });
+        }
+        return json(await queryD1OperationalMutuals(env, {
+          group: url.searchParams.get('group') || 'all',
+          start: url.searchParams.get('start') || '',
+          end: url.searchParams.get('end') || '',
+          query: url.searchParams.get('query') || '',
+          status: url.searchParams.get('status') || 'pending',
+          page: url.searchParams.get('page') || '1',
+          pageSize: url.searchParams.get('pageSize') || '5'
+        }), 200, cors);
+      }
+
+      if (url.pathname === '/api/operational/member-directory/sync' && request.method === 'POST') {
+        await requireSession(request, env, ['admin']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 6) {
+          throw new Response('O diretório relacional de associados ainda não está disponível.', { status: 503 });
+        }
+        return json(await syncMemberDirectory(env, { force: true }), 200, cors);
       }
 
       if (url.pathname === '/api/storage/migrate-d1' && request.method === 'POST') {

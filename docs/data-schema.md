@@ -145,3 +145,16 @@ Novos metadados em `portal_meta`:
 - `snapshot_updated_at`: registra a última materialização integral.
 
 A rota `GET /api/operational/treasury` aplica período, pesquisa, situação, tipo e paginação diretamente em SQL. Ela retorna somente as páginas solicitadas e agregados do filtro, sem alterar o contrato de recuperação do estado completo.
+
+
+## Leituras operacionais de Mensalidades e Mútuas — esquema D1 6
+
+A migração `0007_operational_memberships_mutuals.sql` adiciona `portal_members`, uma projeção do cadastro público necessária para relacionar nomes, números, situação e identificação de mutuários às tabelas financeiras privadas. O `payload` preserva o contrato público completo do associado sem incluir credenciais ou dados financeiros.
+
+Metadados adicionados em `portal_meta`:
+
+- `operational_memberships`: habilita a leitura paginada de mensalidades;
+- `operational_mutuals`: habilita a leitura paginada de eventos e cobranças de Mútuas;
+- `member_directory_updated_at`: registra a última atualização do diretório relacional.
+
+A rota de mensalidades combina `portal_members`, `family_groups`, `family_group_members` e `treasury_movements`. A rota de Mútuas combina `portal_members`, `mutual_groups`, `mutual_memberships`, `mutual_events`, `mutual_event_participants` e os pagamentos em `treasury_movements`.

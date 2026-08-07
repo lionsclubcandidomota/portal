@@ -1,6 +1,6 @@
 {
   "name": "portal-lions-candido-mota",
-  "version": "6.43.0",
+  "version": "6.44.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -25,5 +25,5 @@
     "release:dist:verify": "node tools/release-dist-verify.mjs",
     "release:build": "npm run build:css && npm run version:sync && npm run release:manifest && npm run release:check && node tools/release-build.mjs && npm run release:dist:verify"
   },
-  "releaseTimestamp": "2026-08-07T11:48:01.000Z"
+  "releaseTimestamp": "2026-08-07T20:30:00.000Z"
 }

@@ -1,1 +1,1 @@
-export { createPortalRuntimeController } from './portal-runtime/controller.js?v=6.43.0';
+export { createPortalRuntimeController } from './portal-runtime/controller.js?v=6.44.0';

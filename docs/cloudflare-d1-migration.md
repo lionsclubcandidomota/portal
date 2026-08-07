@@ -243,3 +243,19 @@ Após a migração, confirme no `/health`:
   "optimizedReads": { "treasuryPagination": true }
 }
 ```
+
+
+## Mensalidades e Mútuas operacionais — versão 6.44.0
+
+Publique primeiro o Worker 1.10.0 e aplique `0007_operational_memberships_mutuals.sql`. A migração eleva o esquema para 6 e cria o diretório relacional de associados usado pelas consultas paginadas.
+
+```json
+{
+  "workerVersion": "1.10.0",
+  "d1": { "schemaVersion": 6, "requiredSchemaVersion": 6, "active": true },
+  "optimizedReads": { "memberships": true, "mutuals": true },
+  "memberDirectory": { "available": true }
+}
+```
+
+Depois da migração, publique o Portal 6.44.0 e valide Mensalidades e Mútuas. Se `memberDirectory.updatedAt` estiver vazio no primeiro acesso, a primeira consulta autenticada tenta sincronizar os associados a partir de `PUBLIC_DATA_URL`.

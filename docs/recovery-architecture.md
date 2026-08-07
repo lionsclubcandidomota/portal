@@ -87,3 +87,8 @@ Com o esquema D1 5, as tabelas relacionais passam a ser a fonte operacional ofic
 Quando a Central de Recuperação cria um backup, restaura uma versão ou retorna temporariamente ao R2, o Worker reconstrói o estado privado atual a partir das tabelas relacionais antes de materializar o JSON. Assim, o snapshot permanece um artefato de contingência, não uma dependência das operações diárias.
 
 O endpoint de status informa `relationalSource`, `snapshotStale` e `snapshotUpdatedAt`, permitindo distinguir o banco operacional do último snapshot materializado.
+
+
+## Diretório de associados e recuperação — versão 6.44.0
+
+`portal_members` é uma projeção reconstruível do conteúdo público. Ela não substitui o cadastro público nem entra como fonte exclusiva de recuperação. Após restauração ou publicação pública, o Worker pode reconstruí-la pelo `PUBLIC_DATA_URL` ou pela rota administrativa de sincronização.

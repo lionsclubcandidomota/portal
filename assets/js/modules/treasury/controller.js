@@ -36,7 +36,6 @@ import {
   periodBounds as getPeriodBounds,
   referenceMonth as getReferenceMonth
 } from './domain.js';
-
 export function createTreasuryController({
   getState,
   parseLocalDate,
@@ -50,7 +49,6 @@ export function createTreasuryController({
   if (typeof getState !== 'function') {
     throw new TypeError('createTreasuryController requer getState().');
   }
-
   let section = normalizeTreasurySection(initialSection);
   let period = 'all';
   let customStart = '';
@@ -64,19 +62,25 @@ export function createTreasuryController({
   let membershipSearch = '';
   let membershipFamily = 'all';
   let membershipStatus = 'all';
-  let mutualExpanded = true;
-  let mutualSearch = '';
-  let mutualGroup = 'all';
-  let mutualStart = '';
-  let mutualEnd = '';
-  let mutualStatus = 'pending';
+  let membershipPage = 1, membershipOperational = null, membershipOperationalKey = '';
+  let mutualExpanded = true, mutualSearch = '', mutualGroup = 'all', mutualStart = '', mutualEnd = '';
+  let mutualStatus = 'pending', mutualEventPage = 1, mutualOperational = null, mutualOperationalKey = '';
   const mutualSelectedCharges = new Set();
   const expandedMutualGroups = new Set();
   const mutualGroupViews = new Map();
   let chartToken = null;
   const collapsedCharts = new Set(['finance', 'cash-flow', 'category', 'account']);
-
   const state = () => getState();
+  const clearMembershipOperational = () => { membershipOperational = null; membershipOperationalKey = ''; };
+  const clearMutualOperational = () => { mutualOperational = null; mutualOperationalKey = ''; };
+  const invalidateOperationalReads = () => { clearMembershipOperational(); clearMutualOperational(); };
+  const memberDirectoryKey = () => (Array.isArray(state().birthdays) ? state().birthdays : []).map(member =>
+    `${String(member?.id || '')}:${String(member?.name || '')}:${String(member?.status || '')}:${member?.active === false ? '0' : '1'}`).join('|');
+  const membershipReadKey = () => JSON.stringify({ start: membershipStart || membershipMonth || currentMonth(),
+    end: membershipEnd || membershipStart || membershipMonth || currentMonth(), query: membershipSearch,
+    family: membershipFamily, status: membershipStatus, page: membershipPage, members: memberDirectoryKey() });
+  const mutualReadKey = () => JSON.stringify({ group: mutualGroup, start: mutualStart, end: mutualEnd,
+    query: mutualSearch, status: mutualStatus, page: mutualEventPage, members: memberDirectoryKey() });
   const isMembershipEntry = item => checkMembershipEntry(item, normalize);
   const isMutualEntry = item => checkMutualEntry(item, normalize);
   const referenceMonth = item => getReferenceMonth(item, parseLocalDate);
@@ -88,7 +92,6 @@ export function createTreasuryController({
   const mutualEventDate = item => getMutualEventDate(item, parseLocalDate);
   const mutualReferenceMonth = item => getMutualReferenceMonth(item, parseLocalDate);
   const status = createStatusHelpers({ parseDate: parseLocalDate, todayStart });
-
   const accounts = () => {
     const current = state();
     if (!Array.isArray(current.treasuryAccounts)) current.treasuryAccounts = [];
@@ -97,33 +100,27 @@ export function createTreasuryController({
     }
     return current.treasuryAccounts;
   };
-
   const categories = () => {
     const current = state();
     if (!Array.isArray(current.treasuryCategories)) {
       current.treasuryCategories = [...DEFAULT_CATEGORIES];
     }
-
     const usedCategories = (current.treasury || [])
       .filter(item => !isMembershipEntry(item) && !isMutualEntry(item))
       .map(item => String(item?.category || '').trim())
       .filter(Boolean);
-
     usedCategories.forEach(category => {
       if (!current.treasuryCategories.some(item => normalize(item) === normalize(category))) {
         current.treasuryCategories.push(category);
       }
     });
-
     return [...new Set(current.treasuryCategories)]
       .sort((first, second) => first.localeCompare(second, 'pt-BR'));
   };
-
   const accountFor = item => {
     const availableAccounts = accounts();
     return availableAccounts.find(account => account.id === item?.accountId) || availableAccounts[0];
   };
-
   const membersFor = item => memberIds(item)
     .map(id => state().birthdays.find(member => member.id === id))
     .filter(Boolean);
@@ -349,12 +346,16 @@ export function createTreasuryController({
     membershipSearch = '';
     membershipFamily = 'all';
     membershipStatus = 'all';
+    membershipPage = 1;
+    clearMembershipOperational();
     mutualExpanded = true;
     mutualSearch = '';
     mutualGroup = 'all';
     mutualStart = '';
     mutualEnd = '';
     mutualStatus = 'pending';
+    mutualEventPage = 1;
+    clearMutualOperational();
     mutualSelectedCharges.clear();
     expandedMutualGroups.clear();
     mutualGroupViews.clear();
@@ -393,6 +394,12 @@ export function createTreasuryController({
     set membershipFamily(value) { membershipFamily = String(value || 'all'); },
     get membershipStatus() { return membershipStatus; },
     set membershipStatus(value) { membershipStatus = String(value || 'all'); },
+    get membershipPage() { return membershipPage; },
+    set membershipPage(value) { membershipPage = Math.max(1, Number(value) || 1); },
+    get membershipOperational() { return membershipOperationalKey === membershipReadKey() ? membershipOperational : null; },
+    setMembershipOperational(value, key = membershipReadKey()) { membershipOperational = value; membershipOperationalKey = key; return value; },
+    clearMembershipOperational,
+    membershipReadKey,
     get mutualExpanded() { return mutualExpanded; },
     set mutualExpanded(value) { mutualExpanded = value !== false; },
     get mutualSearch() { return mutualSearch; },
@@ -420,6 +427,12 @@ export function createTreasuryController({
     },
     get mutualStatus() { return mutualStatus; },
     set mutualStatus(value) { mutualStatus = String(value || 'pending'); },
+    get mutualEventPage() { return mutualEventPage; },
+    set mutualEventPage(value) { mutualEventPage = Math.max(1, Number(value) || 1); },
+    get mutualOperational() { return mutualOperationalKey === mutualReadKey() ? mutualOperational : null; },
+    setMutualOperational(value, key = mutualReadKey()) { mutualOperational = value; mutualOperationalKey = key; return value; },
+    clearMutualOperational,
+    mutualReadKey,
     get mutualSelectedCharges() { return new Set(mutualSelectedCharges); },
     get chartToken() { return chartToken; },
     set chartToken(value) { chartToken = value; },
@@ -428,6 +441,7 @@ export function createTreasuryController({
     toggleChart,
     expandAllCharts,
     collapseAllCharts,
+    invalidateOperationalReads,
     reset,
     accounts,
     categories,

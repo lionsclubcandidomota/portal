@@ -1,5 +1,20 @@
 # Changelog
 
+## 6.44.0 — Mensalidades e Mútuas com leituras operacionais paginadas no D1
+
+- Cria a migração `0007_operational_memberships_mutuals.sql` e eleva o esquema D1 para a versão 6.
+- Adiciona a projeção relacional `portal_members` para associar os dados públicos dos associados às consultas financeiras privadas.
+- Cria `GET /api/operational/memberships` com período, pesquisa, grupo familiar, situação, paginação e totais calculados no banco.
+- Cria `GET /api/operational/mutuals` com grupo, período, pesquisa, situação e paginação por evento de falecimento.
+- A tela de Mensalidades passa a identificar `D1 · consulta paginada` e carrega somente os associados da página atual.
+- A tela de Mútuas passa a identificar `D1 · eventos paginados` e carrega somente os eventos necessários, preservando participantes e cobranças do recorte.
+- O diretório de associados é atualizado após publicações públicas e possui sincronização diária/fallback protegido pelo Worker.
+- Mantém fallback local automático quando uma consulta operacional estiver temporariamente indisponível.
+- Preserva a seleção de cobranças somente dentro do recorte válido e limpa seleções ao mudar a página de eventos.
+- Adiciona índices restritos às consultas reais de mensalidades, eventos e pagamentos de Mútuas e executa `PRAGMA optimize`.
+- Atualiza o Worker para 1.10.0 e o `/health` passa a informar leituras operacionais de Mensalidades, Mútuas e estado do diretório de associados.
+- Adiciona testes reais em SQLite para paginação, totais, filtros, eventos, pagamentos e cliente autenticado.
+
 ## 6.43.0 — Tabelas relacionais como fonte operacional e paginação no D1
 
 - Cria a migração `0006_relational_operational_source.sql` e eleva o esquema D1 para a versão 5.

@@ -153,3 +153,18 @@ Concluída na versão 6.43.0:
 - snapshot preservado exclusivamente para recuperação, importação e rollback;
 - marcação explícita de snapshot desatualizado após mutações granulares;
 - preparação para eliminar o carregamento completo das movimentações nas próximas etapas.
+
+
+## Evolução D1 — Mensalidades e Mútuas operacionais paginadas
+
+Concluída na versão 6.44.0:
+
+- diretório relacional de associados sincronizado com o conteúdo público;
+- mensalidades consultadas por período, família, situação e página diretamente no D1;
+- Mútuas consultadas por grupo, evento, período, situação e página diretamente no D1;
+- agregados financeiros e contagens devolvidos junto ao recorte operacional;
+- seleção de cobranças protegida contra mudança de página;
+- atualização automática do diretório após publicação pública;
+- fallback local preservado para continuidade;
+- índices específicos e `PRAGMA optimize` aplicados no esquema 6;
+- preparação para retirar o estado completo das demais telas compatíveis.

@@ -1,3 +1,5 @@
+import { replaceMemberDirectory } from './d1-operational-memberships.js';
+
 const API_VERSION = '2022-11-28';
 const RELEASE_MANIFEST_PATH = 'release-manifest.json';
 const PORTAL_APP_ID = 'Lions Clube de Cândido Mota Dashboard';
@@ -358,6 +360,15 @@ export async function publishPortalPublicState(env, body = {}, actor = {}) {
   const commit = await createCommit(env, message, treeSha, headSha);
   await updateBranch(env, commit.sha);
 
+  let memberDirectory = null;
+  if (env?.PORTAL_DB?.prepare && Array.isArray(cleanState.birthdays) && cleanState.birthdays.length) {
+    try {
+      memberDirectory = await replaceMemberDirectory(env, cleanState.birthdays);
+    } catch (error) {
+      memberDirectory = { refreshed: false, warning: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
   return {
     sha: dataBlobSha,
     manifestSha: manifestBlobSha,
@@ -368,6 +379,7 @@ export async function publishPortalPublicState(env, body = {}, actor = {}) {
     mediaCount: assets.length,
     deletedMediaCount: deletedPaths.length,
     publishedBy: String(actor.sub || actor.name || 'administrador'),
+    memberDirectory,
     branch
   };
 }

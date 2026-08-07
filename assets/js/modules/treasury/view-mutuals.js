@@ -92,7 +92,8 @@ export function bindMutualSection({ root, treasury, helpers, mutualModel, rerend
     openMutualGroupsManager,
     openMutualEvent,
     openMutualPayment,
-    toast
+    toast,
+    loadOperationalMutuals
   } = helpers;
   const controls = {
     search: root.querySelector('#mutualSearch'),
@@ -102,12 +103,31 @@ export function bindMutualSection({ root, treasury, helpers, mutualModel, rerend
     status: root.querySelector('#mutualStatusFilter')
   };
 
-  controls.search?.addEventListener('input', () => applyMutualFilters(root, treasury, controls));
-  controls.status?.addEventListener('change', () => applyMutualFilters(root, treasury, controls));
+  let remoteSearchTimer = null;
+  controls.search?.addEventListener('input', () => {
+    applyMutualFilters(root, treasury, controls);
+    if (typeof loadOperationalMutuals !== 'function') return;
+    clearTimeout(remoteSearchTimer);
+    remoteSearchTimer = setTimeout(() => {
+      treasury.mutualSearch = controls.search.value || '';
+      treasury.mutualEventPage = 1;
+      treasury.clearMutualOperational();
+      rerender();
+    }, 320);
+  });
+  controls.status?.addEventListener('change', () => {
+    treasury.mutualStatus = controls.status.value || 'pending';
+    treasury.mutualEventPage = 1;
+    treasury.clearMutualOperational();
+    treasury.clearMutualSelection();
+    rerender();
+  });
   controls.group?.addEventListener('change', () => {
     treasury.mutualGroup = controls.group.value;
     treasury.collapseMutualGroups();
     treasury.clearMutualSelection();
+    treasury.mutualEventPage = 1;
+    treasury.clearMutualOperational();
     rerender();
   });
   controls.start?.addEventListener('change', () => {
@@ -115,12 +135,16 @@ export function bindMutualSection({ root, treasury, helpers, mutualModel, rerend
     treasury.mutualEnd = controls.end?.value || controls.start.value;
     treasury.collapseMutualGroups();
     treasury.clearMutualSelection();
+    treasury.mutualEventPage = 1;
+    treasury.clearMutualOperational();
     rerender();
   });
   controls.end?.addEventListener('change', () => {
     treasury.mutualEnd = controls.end.value;
     treasury.collapseMutualGroups();
     treasury.clearMutualSelection();
+    treasury.mutualEventPage = 1;
+    treasury.clearMutualOperational();
     rerender();
   });
 
@@ -196,5 +220,40 @@ export function bindMutualSection({ root, treasury, helpers, mutualModel, rerend
     openMutualPayment(selected);
   });
 
-  applyMutualFilters(root, treasury, controls);
+  root.querySelectorAll('[data-mutual-event-page]').forEach(button => {
+    button.addEventListener('click', () => {
+      treasury.mutualEventPage = Number(button.dataset.mutualEventPage || 1);
+      treasury.clearMutualOperational();
+      treasury.clearMutualSelection();
+      rerender();
+    });
+  });
+
+  if (!String(mutualModel.source || '').startsWith('d1')) {
+    applyMutualFilters(root, treasury, controls);
+  }
+
+  if (!treasury.mutualOperational && typeof loadOperationalMutuals === 'function') {
+    const requestKey = treasury.mutualReadKey();
+    const section = root.querySelector('.mutual-control-card');
+    section?.classList.add('is-loading');
+    section?.setAttribute('aria-busy', 'true');
+    void loadOperationalMutuals({
+      group: treasury.mutualGroup,
+      start: treasury.mutualStart,
+      end: treasury.mutualEnd,
+      query: treasury.mutualSearch,
+      status: treasury.mutualStatus,
+      page: treasury.mutualEventPage,
+      pageSize: 5
+    }).then(result => {
+      if (requestKey !== treasury.mutualReadKey()) return;
+      treasury.setMutualOperational(result, requestKey);
+      rerender();
+    }).catch(error => {
+      console.warn('Consulta operacional de Mútuas indisponível; usando o estado local.', error);
+      section?.classList.remove('is-loading');
+      section?.removeAttribute('aria-busy');
+    });
+  }
 }

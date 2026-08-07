@@ -1,6 +1,6 @@
-import { ADMIN_PERIOD_STORAGE, applyD1TreasuryAnalytics, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.43.0';
-import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.43.0';
-import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.43.0';
+import { ADMIN_PERIOD_STORAGE, applyD1TreasuryAnalytics, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.44.0';
+import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.44.0';
+import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.44.0';
 export function createAdminPanelController({
   root,
   getState,

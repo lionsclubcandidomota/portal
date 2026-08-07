@@ -15,7 +15,7 @@ import { loadD1OperationalTreasury } from '../assets/js/modules/secure-storage/o
 import {
   clearSecureStorageSession,
   setActiveSecureStorageSession
-} from '../assets/js/modules/secure-storage/session-store.js?v=6.43.0';
+} from '../assets/js/modules/secure-storage/session-store.js?v=6.44.0';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 

@@ -1,6 +1,10 @@
-import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.43.0';
-import { createTreasuryAdminController } from '../treasury-admin.js?v=6.43.0';
-import { loadD1OperationalTreasury } from '../secure-storage/client.js?v=6.43.0';
+import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.44.0';
+import { createTreasuryAdminController } from '../treasury-admin.js?v=6.44.0';
+import {
+  loadD1OperationalMemberships,
+  loadD1OperationalMutuals,
+  loadD1OperationalTreasury
+} from '../secure-storage/client.js?v=6.44.0';
 
 export function createTreasuryFeature({
   getState,
@@ -36,7 +40,10 @@ export function createTreasuryFeature({
       treasury,
       modalController,
       confirmation,
-      persist,
+      persist: (...args) => {
+        treasury.invalidateOperationalReads();
+        return persist(...args);
+      },
       renderTreasuryView,
       renderCurrentView,
       closeModal,
@@ -54,6 +61,8 @@ export function createTreasuryFeature({
     currencyInputValue: treasury.currencyInputValue,
     memberIsActive: treasury.memberIsActive,
     loadOperationalMovements: options => loadD1OperationalTreasury(getState(), options),
+    loadOperationalMemberships: options => loadD1OperationalMemberships(getState(), options),
+    loadOperationalMutuals: options => loadD1OperationalMutuals(getState(), options),
     accountSummaries: treasury.accountSummaries,
     accountTypeIcon: treasury.accountTypeIcon
   };

@@ -1,13 +1,13 @@
 import { sumTreasury } from '../../utils.js';
 import { destroyTreasuryCharts } from './charts.js';
-import { buildMembershipViewModel } from './memberships.js';
-import { buildMutualViewModel } from './mutuals.js';
+import { buildMembershipViewModel, buildOperationalMembershipViewModel } from './memberships.js?v=6.44.0';
+import { buildMutualViewModel, buildOperationalMutualViewModel } from './mutuals.js?v=6.44.0';
 import { bindTreasuryMovementLists, categorySummaries } from './movements.js';
-import { renderTreasuryShell } from './view-shell.js?v=6.43.0';
-import { bindTreasuryOverview } from './view-overview.js?v=6.43.0';
-import { bindMembershipSection } from './view-memberships.js?v=6.43.0';
-import { bindMutualSection } from './view-mutuals.js?v=6.43.0';
-import { bindTreasuryCharts } from './view-charts.js?v=6.43.0';
+import { renderTreasuryShell } from './view-shell.js?v=6.44.0';
+import { bindTreasuryOverview } from './view-overview.js?v=6.44.0';
+import { bindMembershipSection } from './view-memberships.js?v=6.44.0';
+import { bindMutualSection } from './view-mutuals.js?v=6.44.0';
+import { bindTreasuryCharts } from './view-charts.js?v=6.44.0';
 
 export function renderTreasury(state, treasury, helpers) {
   const { root, isTreasuryView } = helpers;
@@ -20,8 +20,12 @@ export function renderTreasury(state, treasury, helpers) {
   const periodItems = treasury.itemsForPeriod();
   const totals = sumTreasury(periodItems);
   const accountSummaries = treasury.accountSummaries(periodItems);
-  const membershipModel = buildMembershipViewModel(state, treasury);
-  const mutualModel = buildMutualViewModel(state, treasury);
+  const membershipModel = treasury.membershipOperational
+    ? buildOperationalMembershipViewModel(state, treasury, treasury.membershipOperational)
+    : buildMembershipViewModel(state, treasury);
+  const mutualModel = treasury.mutualOperational
+    ? buildOperationalMutualViewModel(state, treasury, treasury.mutualOperational)
+    : buildMutualViewModel(state, treasury);
   const categories = categorySummaries(periodItems, treasury);
 
   root.innerHTML = renderTreasuryShell({

@@ -8,7 +8,7 @@ import { queryD1DashboardAnalytics, queryD1ReportState } from '../cloudflare/att
 import { D1_SCHEMA_VERSION, getD1StorageStatus, writeD1PrivateState } from '../cloudflare/attachment-worker/src/d1-storage.js';
 import { applyD1TreasuryAnalytics, createAdminDashboardModel } from '../assets/js/modules/admin-dashboard/domain.js';
 import { loadD1DashboardAnalytics, loadD1ReportState } from '../assets/js/modules/secure-storage/analytics-client.js';
-import { clearSecureStorageSession, setActiveSecureStorageSession } from '../assets/js/modules/secure-storage/session-store.js?v=6.43.0';
+import { clearSecureStorageSession, setActiveSecureStorageSession } from '../assets/js/modules/secure-storage/session-store.js?v=6.44.0';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -107,7 +107,7 @@ async function databaseFixture() {
 
 test('migração 0005 ativa modelos de leitura e eleva o esquema D1', async () => {
   const migration = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0005_analytics_read_models.sql'), 'utf8');
-  assert.equal(D1_SCHEMA_VERSION, 5);
+  assert.equal(D1_SCHEMA_VERSION, 6);
   assert.match(migration, /analytics_read_models/);
   assert.match(migration, /idx_treasury_movements_category_status_date/);
   assert.match(migration, /schema_version', '4'/);

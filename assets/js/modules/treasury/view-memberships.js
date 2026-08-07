@@ -45,7 +45,8 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
     adminUnlocked,
     openFamilyGroupsManager,
     openMembershipPayment,
-    shareMembershipCharge
+    shareMembershipCharge,
+    loadOperationalMemberships
   } = helpers;
   const membershipStartInput = root.querySelector('#membershipStart');
   const membershipEndInput = root.querySelector('#membershipEnd');
@@ -65,6 +66,8 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
     treasury.membershipStart = start;
     treasury.membershipEnd = end;
     treasury.membershipMonth = start;
+    treasury.membershipPage = 1;
+    treasury.clearMembershipOperational();
     rerender();
   };
 
@@ -102,9 +105,30 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
     if (emptyState) emptyState.hidden = visible > 0;
   };
 
-  membershipSearchInput?.addEventListener('input', applyMembershipFilters);
-  membershipFamilyInput?.addEventListener('change', applyMembershipFilters);
-  membershipStatusInput?.addEventListener('change', applyMembershipFilters);
+  let remoteSearchTimer = null;
+  membershipSearchInput?.addEventListener('input', () => {
+    applyMembershipFilters();
+    if (typeof loadOperationalMemberships !== 'function') return;
+    clearTimeout(remoteSearchTimer);
+    remoteSearchTimer = setTimeout(() => {
+      treasury.membershipSearch = membershipSearchInput.value || '';
+      treasury.membershipPage = 1;
+      treasury.clearMembershipOperational();
+      rerender();
+    }, 320);
+  });
+  membershipFamilyInput?.addEventListener('change', () => {
+    treasury.membershipFamily = membershipFamilyInput.value || 'all';
+    treasury.membershipPage = 1;
+    treasury.clearMembershipOperational();
+    rerender();
+  });
+  membershipStatusInput?.addEventListener('change', () => {
+    treasury.membershipStatus = membershipStatusInput.value || 'all';
+    treasury.membershipPage = 1;
+    treasury.clearMembershipOperational();
+    rerender();
+  });
 
   root.querySelector('#membershipControlToggle')?.addEventListener('click', () => {
     treasury.membershipExpanded = !membershipExpanded;
@@ -151,4 +175,36 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
       shareMembershipCharge(button.dataset.membershipCharge, months);
     });
   });
+
+  root.querySelectorAll('[data-membership-page]').forEach(button => {
+    button.addEventListener('click', () => {
+      treasury.membershipPage = Number(button.dataset.membershipPage || 1);
+      treasury.clearMembershipOperational();
+      rerender();
+    });
+  });
+
+  if (!treasury.membershipOperational && typeof loadOperationalMemberships === 'function') {
+    const requestKey = treasury.membershipReadKey();
+    const section = root.querySelector('.membership-control-card:not(.mutual-control-card)');
+    section?.classList.add('is-loading');
+    section?.setAttribute('aria-busy', 'true');
+    void loadOperationalMemberships({
+      start: membershipStart,
+      end: membershipModel.membershipEnd,
+      query: treasury.membershipSearch,
+      family: treasury.membershipFamily,
+      status: treasury.membershipStatus,
+      page: treasury.membershipPage,
+      pageSize: 12
+    }).then(result => {
+      if (requestKey !== treasury.membershipReadKey()) return;
+      treasury.setMembershipOperational(result, requestKey);
+      rerender();
+    }).catch(error => {
+      console.warn('Consulta operacional de mensalidades indisponível; usando o estado local.', error);
+      section?.classList.remove('is-loading');
+      section?.removeAttribute('aria-busy');
+    });
+  }
 }

@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.9.0
+# Cloudflare Worker do Portal Lions — v1.10.0
 
 O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
@@ -284,5 +284,46 @@ Health esperado:
     "reports": true,
     "treasuryPagination": true
   }
+}
+```
+
+
+## Otimização v1.10.0
+
+A migração `0007_operational_memberships_mutuals.sql` cria o diretório relacional `portal_members`, eleva o esquema para 6 e habilita consultas operacionais paginadas para Mensalidades e Mútuas.
+
+Novas rotas autenticadas:
+
+```text
+GET  /api/operational/memberships
+GET  /api/operational/mutuals
+POST /api/operational/member-directory/sync
+```
+
+O diretório de associados é atualizado depois de publicações públicas e, como contingência, pelo `PUBLIC_DATA_URL` quando estiver vazio ou com mais de 24 horas.
+
+Ordem de implantação:
+
+```bash
+npm ci
+npx wrangler deploy --config wrangler.toml
+npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
+```
+
+Health esperado:
+
+```json
+{
+  "workerVersion": "1.10.0",
+  "privateState": "d1",
+  "d1": { "schemaVersion": 6, "requiredSchemaVersion": 6, "active": true },
+  "optimizedReads": {
+    "dashboard": true,
+    "reports": true,
+    "treasuryPagination": true,
+    "memberships": true,
+    "mutuals": true
+  },
+  "memberDirectory": { "available": true, "updatedAt": "..." }
 }
 ```

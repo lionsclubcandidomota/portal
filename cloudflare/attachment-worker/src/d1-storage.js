@@ -1,4 +1,4 @@
-export const D1_SCHEMA_VERSION = 5;
+export const D1_SCHEMA_VERSION = 6;
 export const D1_MIN_OPERATIONAL_SCHEMA_VERSION = 3;
 
 const encoder = new TextEncoder();
@@ -241,6 +241,9 @@ export async function getD1StorageStatus(env) {
       (SELECT value FROM portal_meta WHERE key = 'analytics_read_models') AS analytics_read_models,
       (SELECT value FROM portal_meta WHERE key = 'relational_source') AS relational_source,
       (SELECT value FROM portal_meta WHERE key = 'operational_read_models') AS operational_read_models,
+      (SELECT value FROM portal_meta WHERE key = 'operational_memberships') AS operational_memberships,
+      (SELECT value FROM portal_meta WHERE key = 'operational_mutuals') AS operational_mutuals,
+      (SELECT value FROM portal_meta WHERE key = 'member_directory_updated_at') AS member_directory_updated_at,
       (SELECT value FROM portal_meta WHERE key = 'snapshot_stale') AS snapshot_stale,
       (SELECT value FROM portal_meta WHERE key = 'snapshot_updated_at') AS snapshot_updated_at,
       (SELECT COUNT(*) FROM treasury_movements) AS treasury,
@@ -263,6 +266,9 @@ export async function getD1StorageStatus(env) {
       analyticsReadModels: text(row?.analytics_read_models) === '1',
       relationalSource: text(row?.relational_source) === '1',
       operationalReadModels: text(row?.operational_read_models) === '1',
+      operationalMemberships: text(row?.operational_memberships) === '1',
+      operationalMutuals: text(row?.operational_mutuals) === '1',
+      memberDirectoryUpdatedAt: text(row?.member_directory_updated_at),
       snapshotStale: text(row?.snapshot_stale) === '1',
       snapshotUpdatedAt: text(row?.snapshot_updated_at),
       counts: {
@@ -288,6 +294,9 @@ export async function getD1StorageStatus(env) {
       analyticsReadModels: false,
       relationalSource: false,
       operationalReadModels: false,
+      operationalMemberships: false,
+      operationalMutuals: false,
+      memberDirectoryUpdatedAt: '',
       snapshotStale: false,
       snapshotUpdatedAt: '',
       error: /no such table/i.test(message) ? '' : message
