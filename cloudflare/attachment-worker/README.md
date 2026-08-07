@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.10.0
+# Cloudflare Worker do Portal Lions — v1.11.0
 
 O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
@@ -75,6 +75,8 @@ Migrações atuais:
 - `0004_group_granular_writes.sql`: grupos familiares, Mútuas e esquema D1 3.
 - `0005_analytics_read_models.sql`: índices de leitura, analytics e esquema D1 4.
 - `0006_relational_operational_source.sql`: fonte relacional, paginação operacional e esquema D1 5.
+- `0007_operational_memberships_mutuals.sql`: diretório de associados, Mensalidades/Mútuas paginadas e esquema D1 6.
+- `0008_private_bootstrap_reference.sql`: bootstrap privado reduzido, referências granulares e esquema D1 7.
 
 ## Implantação
 
@@ -153,8 +155,10 @@ O Worker usa `GITHUB_TOKEN`, valida a fronteira pública e cria um único commit
 - `GET /api/publication/status`
 - `POST /api/publication`
 - `GET/PUT /api/private-state`
+- `GET /api/private-state/bootstrap` para o conjunto operacional reduzido do login
 - `PUT /api/private-state/treasury` para movimentações e anexos granulares
 - `PUT /api/private-state/groups` para grupos familiares, Mútuas, vínculos e eventos
+- `PUT /api/private-state/reference` para configurações privadas, contas e categorias
 - `GET /api/analytics/dashboard` para agregações financeiras por período
 - `GET /api/analytics/report` para recortes de Movimentações, Mensalidades e Mútuas
 - `GET /api/operational/treasury` para paginação, pesquisa e filtros das movimentações
@@ -327,3 +331,10 @@ Health esperado:
   "memberDirectory": { "available": true, "updatedAt": "..." }
 }
 ```
+
+
+## Otimização v1.11.0
+
+O login usa `GET /api/private-state/bootstrap`, que retorna as referências privadas, grupos e somente pagamentos de Mensalidades/Mútuas necessários aos formulários. Movimentações ordinárias são carregadas pelas rotas paginadas.
+
+A rota `PUT /api/private-state/reference` atualiza configurações, contas e categorias em lote transacional, com revisão otimista e idempotência, sem reconstruir movimentações ou grupos.

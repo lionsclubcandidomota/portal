@@ -1,4 +1,4 @@
-# Homologação — v6.44.0
+# Homologação — v6.45.0
 
 ## Fluxos prioritários do Portal
 
@@ -171,3 +171,16 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 7. Registre uma mensalidade e uma baixa de Mútua e valide a atualização após recarregar.
 8. Confirme que o fallback local continua disponível ao simular indisponibilidade da rota operacional.
 
+
+
+## Bootstrap privado reduzido — versão 6.45.0
+
+1. Publique o Worker 1.11.0 e aplique `0008_private_bootstrap_reference.sql`.
+2. Abra `/health` e confirme esquema 7, `optimizedReads.privateBootstrap: true`, `granularWrites.reference: true` e política de snapshot para recuperação.
+3. Publique o Portal 6.45.0, entre como Administrador e confirme que o login apresenta o carregamento privado reduzido.
+4. Abra **Tesouraria → Movimentações** e confirme que a lista é carregada sob demanda pelo D1, com paginação e totais corretos.
+5. Edite e exclua uma movimentação visível, recarregue a página e confirme que registros não carregados não foram removidos.
+6. Abra **Mensalidades** e **Mútuas** e confirme que o conjunto de pagamentos necessário permanece disponível após o login.
+7. Crie ou edite conta, categoria e configuração financeira privada e confirme **Banco sincronizado**, sem publicação pública pendente.
+8. Crie um backup manual e confirme que o snapshot completo é materializado para recuperação.
+9. Confirme que avisos, agenda e associados continuam seguindo o fluxo de publicação pública no GitHub.

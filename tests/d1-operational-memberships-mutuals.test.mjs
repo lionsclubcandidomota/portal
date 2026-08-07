@@ -16,7 +16,7 @@ import {
 import {
   clearSecureStorageSession,
   setActiveSecureStorageSession
-} from '../assets/js/modules/secure-storage/session-store.js?v=6.44.0';
+} from '../assets/js/modules/secure-storage/session-store.js?v=6.45.0';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 

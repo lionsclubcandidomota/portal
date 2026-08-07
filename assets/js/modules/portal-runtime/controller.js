@@ -2,8 +2,8 @@ import { loadState, saveState } from '../../storage.js';
 import {
   loadPublicGitHubPayload,
   waitForPagesDeployment
-} from '../../github.js?v=6.44.0';
-import { createPortalRuntimeContext } from './context.js?v=6.44.0';
+} from '../../github.js?v=6.45.0';
+import { createPortalRuntimeContext } from './context.js?v=6.45.0';
 import {
   bootstrapAdministrator,
   clearSecureStorageSession,
@@ -11,6 +11,7 @@ import {
   connectSecureStorageSession,
   createPrivateStateBackup,
   createGroupsPrivateMutation,
+  createReferencePrivateMutation,
   createTreasuryPrivateMutation,
   diagnosePrivateStorageIntegrity,
   getAuthenticationStatus,
@@ -19,6 +20,7 @@ import {
   getPrivateStorageStatus,
   listPrivateStateBackups,
   logoutSecureStorageSession,
+  loadPrivatePortalBootstrap,
   loadPrivatePortalState,
   mergePrivatePortalState,
   migratePrivateStorageToD1,
@@ -28,29 +30,30 @@ import {
   rollbackPrivateStorageToR2,
   savePrivatePortalState,
   savePrivateGroupsMutation,
+  savePrivateReferenceMutation,
   savePrivateTreasuryMutation,
   secureStorageProfileFromState
-} from '../secure-storage/client.js?v=6.44.0';
+} from '../secure-storage/client.js?v=6.45.0';
 import {
   createPrivatePortalState,
   createPublicPortalState,
   hasPrivatePortalData,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.44.0';
-import { createPersistenceActions } from './persistence.js?v=6.44.0';
-import { createPrivateSyncActions } from './private-sync.js?v=6.44.0';
-import { createAdminSessionActions } from './session.js?v=6.44.0';
-import { createPublicationActions } from './publication.js?v=6.44.0';
-import { createRemoteSyncActions } from './remote-sync.js?v=6.44.0';
-import { createBootstrapAction } from './bootstrap.js?v=6.44.0';
-import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.44.0';
-import { createAccessProfileActions } from './access-profile.js?v=6.44.0';
+} from '../../core/portal-data-boundary.js?v=6.45.0';
+import { createPersistenceActions } from './persistence.js?v=6.45.0';
+import { createPrivateSyncActions } from './private-sync.js?v=6.45.0';
+import { createAdminSessionActions } from './session.js?v=6.45.0';
+import { createPublicationActions } from './publication.js?v=6.45.0';
+import { createRemoteSyncActions } from './remote-sync.js?v=6.45.0';
+import { createBootstrapAction } from './bootstrap.js?v=6.45.0';
+import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.45.0';
+import { createAccessProfileActions } from './access-profile.js?v=6.45.0';
 import {
   ACCESS_CAPABILITIES,
   accessSnapshot,
   canAccessView,
   roleHasCapability
-} from './authorization.js?v=6.44.0';
+} from './authorization.js?v=6.45.0';
 
 export function createPortalRuntimeController(dependencies) {
   const services = {
@@ -60,6 +63,7 @@ export function createPortalRuntimeController(dependencies) {
     connectSecureStorageSession,
     createPrivateStateBackup,
     createGroupsPrivateMutation,
+    createReferencePrivateMutation,
     createTreasuryPrivateMutation,
     diagnosePrivateStorageIntegrity,
     getAuthenticationStatus,
@@ -69,7 +73,8 @@ export function createPortalRuntimeController(dependencies) {
     hasPrivatePortalData,
     listPrivateStateBackups,
     logoutSecureStorageSession,
-    loadPrivatePortalState,
+    loadPrivatePortalBootstrap,
+  loadPrivatePortalState,
     loadPublicGitHubPayload,
     mergePrivatePortalState,
     migratePrivateStorageToD1,
@@ -80,6 +85,7 @@ export function createPortalRuntimeController(dependencies) {
     rollbackPrivateStorageToR2,
     savePrivatePortalState,
     savePrivateGroupsMutation,
+    savePrivateReferenceMutation,
     savePrivateTreasuryMutation,
     saveState,
     createPrivatePortalState,
@@ -169,6 +175,23 @@ export function createPortalRuntimeController(dependencies) {
     migratePrivateStorageToD1: services.migratePrivateStorageToD1,
     rollbackPrivateStorageToR2: services.rollbackPrivateStorageToR2,
     diagnosePrivateStorageIntegrity: services.diagnosePrivateStorageIntegrity,
+    hydrateOperationalTreasury: records => {
+      const values = Array.isArray(records) ? records.filter(item => item && item.id) : [];
+      if (!values.length) return { hydrated: 0 };
+      const merge = source => {
+        const next = structuredClone(source || {});
+        const map = new Map((Array.isArray(next.treasury) ? next.treasury : []).map(item => [String(item?.id || ''), item]));
+        values.forEach(item => map.set(String(item.id), structuredClone(item)));
+        next.treasury = [...map.values()];
+        return next;
+      };
+      const current = merge(context.currentState());
+      context.replaceCurrentState(current);
+      const baseline = merge(model.lastSyncedState || current);
+      context.storeSyncedState(baseline);
+      services.saveState(current);
+      return { hydrated: values.length };
+    },
     hasActiveSecureStorageSession: services.hasActiveSecureStorageSession
   };
 }

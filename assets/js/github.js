@@ -1,5 +1,5 @@
-import { migratePortalPayload } from './core/portal-schema.js?v=6.44.0';
-import { createPublicPortalState } from './core/portal-data-boundary.js?v=6.44.0';
+import { migratePortalPayload } from './core/portal-schema.js?v=6.45.0';
+import { createPublicPortalState } from './core/portal-data-boundary.js?v=6.45.0';
 
 export const GITHUB_CONFIG = Object.freeze({
   owner: 'lionsclubcandidomota',

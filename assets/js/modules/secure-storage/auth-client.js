@@ -1,4 +1,4 @@
-import { CURRENT_SCHEMA_VERSION } from '../../core/portal-schema.js?v=6.44.0';
+import { CURRENT_SCHEMA_VERSION } from '../../core/portal-schema.js?v=6.45.0';
 import {
   clearSecureStorageSession,
   getActiveSecureStorageSession,
@@ -9,7 +9,7 @@ import {
   secureStorageJsonHeaders as jsonHeaders,
   secureStorageProfileFromState,
   setActiveSecureStorageSession
-} from './session-store.js?v=6.44.0';
+} from './session-store.js?v=6.45.0';
 
 export async function testSecureStorageConnection(workerUrl) {
   const normalized = normalizeSecureStorageWorkerUrl(workerUrl);

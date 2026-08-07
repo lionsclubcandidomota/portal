@@ -1,10 +1,10 @@
-import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.44.0';
-import { createTreasuryAdminController } from '../treasury-admin.js?v=6.44.0';
+import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.45.0';
+import { createTreasuryAdminController } from '../treasury-admin.js?v=6.45.0';
 import {
   loadD1OperationalMemberships,
   loadD1OperationalMutuals,
   loadD1OperationalTreasury
-} from '../secure-storage/client.js?v=6.44.0';
+} from '../secure-storage/client.js?v=6.45.0';
 
 export function createTreasuryFeature({
   getState,
@@ -12,6 +12,7 @@ export function createTreasuryFeature({
   normalize,
   todayStart,
   sumTreasury,
+  hydrateOperationalTreasury = () => {},
   storage = sessionStorage
 }) {
   const treasury = createTreasuryController({
@@ -60,7 +61,14 @@ export function createTreasuryFeature({
     parseCurrencyInput: treasury.parseCurrencyInput,
     currencyInputValue: treasury.currencyInputValue,
     memberIsActive: treasury.memberIsActive,
-    loadOperationalMovements: options => loadD1OperationalTreasury(getState(), options),
+    loadOperationalMovements: async options => {
+      const result = await loadD1OperationalTreasury(getState(), options);
+      hydrateOperationalTreasury([
+        ...(Array.isArray(result?.scheduled?.items) ? result.scheduled.items : []),
+        ...(Array.isArray(result?.completed?.items) ? result.completed.items : [])
+      ]);
+      return result;
+    },
     loadOperationalMemberships: options => loadD1OperationalMemberships(getState(), options),
     loadOperationalMutuals: options => loadD1OperationalMutuals(getState(), options),
     accountSummaries: treasury.accountSummaries,

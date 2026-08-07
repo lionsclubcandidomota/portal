@@ -1,4 +1,4 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.44.0';
+import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.45.0';
 import {
   escapeHtml,
   normalize,

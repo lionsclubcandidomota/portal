@@ -1,14 +1,14 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.44.0';
-import { RESTRICTED_VIEWS } from './constants.js?v=6.44.0';
-import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.44.0';
-import { createAdminSessionGuard } from './session-guard.js?v=6.44.0';
-import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.44.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.45.0';
+import { RESTRICTED_VIEWS } from './constants.js?v=6.45.0';
+import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.45.0';
+import { createAdminSessionGuard } from './session-guard.js?v=6.45.0';
+import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.45.0';
 import {
   ACCESS_ROLES,
   accessSnapshot,
   applyAccessRole,
   clearAccessRole
-} from './authorization.js?v=6.44.0';
+} from './authorization.js?v=6.45.0';
 
 function isLocalHomologation(environment) {
   const location = environment?.window?.location;
@@ -32,6 +32,7 @@ export function createAdminSessionActions(context, privateSync = null) {
     model.githubFileSha = '';
     model.githubAuthorization = null;
     model.auditActor = null;
+    model.privateStateMode = 'public';
     dependencies.auditLog?.setActor?.(null);
     services.clearSecureStorageSession?.();
     context.metadataStore?.clearPrivateState?.();
@@ -122,15 +123,28 @@ export function createAdminSessionActions(context, privateSync = null) {
     });
     if (!secureSession?.enabled) throw new Error('A autenticação por banco de dados ainda não está disponível.');
 
-    if (services.loadPrivatePortalState) {
-      const privatePayload = await services.loadPrivatePortalState(context.currentState());
+    if (services.loadPrivatePortalBootstrap || services.loadPrivatePortalState) {
+      let privatePayload = null;
+      try {
+        privatePayload = services.loadPrivatePortalBootstrap
+          ? await services.loadPrivatePortalBootstrap(context.currentState())
+          : await services.loadPrivatePortalState(context.currentState());
+      } catch (error) {
+        console.warn('A base operacional reduzida não está disponível; carregando o estado privado completo.', error);
+        privatePayload = await services.loadPrivatePortalState?.(context.currentState());
+      }
       if (privatePayload?.found) {
         const hydrated = services.mergePrivatePortalState?.(context.currentState(), privatePayload);
         if (hydrated) {
+          model.privateStateMode = privatePayload.partial ? 'bootstrap' : 'full';
           context.replaceCurrentState(hydrated);
           context.storeSyncedState(hydrated);
           if (model.pendingChanges === 0) services.saveState(hydrated);
-          privateSync?.markLoaded?.('Dados privados carregados e sincronizados com o banco.');
+          privateSync?.markLoaded?.(
+            privatePayload.partial
+              ? `Base operacional carregada do D1 (${privatePayload.workingSetCount || 0} de ${privatePayload.totalMovementCount || 0} movimentações no conjunto de trabalho).`
+              : 'Dados privados carregados e sincronizados com o banco.'
+          );
         }
       } else if (services.hasPrivatePortalData?.(payload.state)) {
         model.pendingChanges = Math.max(1, Number(model.pendingChanges || 0));
@@ -143,6 +157,7 @@ export function createAdminSessionActions(context, privateSync = null) {
           message: 'Conclua a migração pela Central de Recuperação antes de usar o salvamento automático.'
         });
       } else {
+        model.privateStateMode = 'full';
         privateSync?.markLoaded?.('Banco conectado e pronto para receber dados privados.');
       }
     }

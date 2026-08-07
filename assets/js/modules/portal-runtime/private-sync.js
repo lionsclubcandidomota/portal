@@ -1,5 +1,5 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.44.0';
-import { ACCESS_ROLES } from './authorization.js?v=6.44.0';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.45.0';
+import { ACCESS_ROLES } from './authorization.js?v=6.45.0';
 
 function attachmentIdentity(attachment = {}, index = 0) {
   return String(attachment.id || attachment.name || `index:${index}`);
@@ -114,12 +114,20 @@ export function createPrivateSyncActions(context) {
       const groupsMutation = treasuryMutation
         ? null
         : services.createGroupsPrivateMutation?.(baseline, securePublication.state);
-      const granularMutation = treasuryMutation || groupsMutation;
+      const referenceMutation = treasuryMutation || groupsMutation
+        ? null
+        : services.createReferencePrivateMutation?.(baseline, securePublication.state);
+      const granularMutation = treasuryMutation || groupsMutation || referenceMutation;
       const granularSave = granularMutation?.scope === 'treasury'
         ? services.savePrivateTreasuryMutation
         : granularMutation?.scope === 'groups'
           ? services.savePrivateGroupsMutation
-          : null;
+          : granularMutation?.scope === 'reference'
+            ? services.savePrivateReferenceMutation
+            : null;
+      if (!granularMutation && model.privateStateMode === 'bootstrap') {
+        throw new Error('Esta alteração não pode usar a sincronização completa enquanto o Portal opera com carregamento reduzido. Recarregue a página e tente novamente.');
+      }
       const result = granularMutation && granularSave
         ? await granularSave(
           securePublication.state,

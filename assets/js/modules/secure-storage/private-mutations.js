@@ -1,5 +1,5 @@
-import { createPrivatePortalState } from '../../core/portal-data-boundary.js?v=6.44.0';
-import { statesAreEquivalent } from '../../core/portal-state.js?v=6.44.0';
+import { createPrivatePortalState } from '../../core/portal-data-boundary.js?v=6.45.0';
+import { statesAreEquivalent } from '../../core/portal-state.js?v=6.45.0';
 import {
   getSecureStoragePrivateRevision,
   readSecureStorageJson as readJson,
@@ -7,7 +7,7 @@ import {
   secureStorageApiUrl as apiUrl,
   secureStorageJsonHeaders as jsonHeaders,
   setSecureStoragePrivateRevision
-} from './session-store.js?v=6.44.0';
+} from './session-store.js?v=6.45.0';
 
 const MAX_GRANULAR_TREASURY_CHANGES = 60;
 const MAX_GRANULAR_GROUP_CHANGES = 40;
@@ -83,6 +83,27 @@ export function createGroupsPrivateMutation(previousState, nextState) {
   };
 }
 
+
+export function createReferencePrivateMutation(previousState, nextState) {
+  const previousPrivate = createPrivatePortalState(previousState || {});
+  const nextPrivate = createPrivatePortalState(nextState || {});
+  if (!statesAreEquivalent(previousPrivate.treasury, nextPrivate.treasury)) return null;
+  if (!statesAreEquivalent(previousPrivate.familyGroups, nextPrivate.familyGroups)) return null;
+  if (!statesAreEquivalent(previousPrivate.mutualGroups, nextPrivate.mutualGroups)) return null;
+  const changed = !statesAreEquivalent(previousPrivate.settings, nextPrivate.settings)
+    || !statesAreEquivalent(previousPrivate.treasuryAccounts, nextPrivate.treasuryAccounts)
+    || !statesAreEquivalent(previousPrivate.treasuryCategories, nextPrivate.treasuryCategories);
+  if (!changed) return null;
+  return {
+    scope: 'reference',
+    reference: {
+      settings: clone(nextPrivate.settings || {}),
+      treasuryAccounts: clone(nextPrivate.treasuryAccounts || []),
+      treasuryCategories: clone(nextPrivate.treasuryCategories || [])
+    }
+  };
+}
+
 async function savePrivateMutation(state, mutation, {
   mutationId = '',
   endpoint,
@@ -140,6 +161,21 @@ export function savePrivateGroupsMutation(state, mutation, options = {}) {
         upserts: Array.isArray(value?.mutualGroups?.upserts) ? value.mutualGroups.upserts : [],
         deletes: Array.isArray(value?.mutualGroups?.deletes) ? value.mutualGroups.deletes : []
       }
+    })
+  });
+}
+
+
+export function savePrivateReferenceMutation(state, mutation, options = {}) {
+  return savePrivateMutation(state, mutation, {
+    ...options,
+    endpoint: '/api/private-state/reference',
+    fallbackMode: 'granular-reference',
+    errorMessage: 'Não foi possível salvar as configurações privadas no D1',
+    body: value => ({
+      reference: value?.reference && typeof value.reference === 'object'
+        ? value.reference
+        : { settings: {}, treasuryAccounts: [], treasuryCategories: [] }
     })
   });
 }

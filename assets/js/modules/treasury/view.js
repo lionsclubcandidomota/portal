@@ -1,13 +1,13 @@
 import { sumTreasury } from '../../utils.js';
 import { destroyTreasuryCharts } from './charts.js';
-import { buildMembershipViewModel, buildOperationalMembershipViewModel } from './memberships.js?v=6.44.0';
-import { buildMutualViewModel, buildOperationalMutualViewModel } from './mutuals.js?v=6.44.0';
+import { buildMembershipViewModel, buildOperationalMembershipViewModel } from './memberships.js?v=6.45.0';
+import { buildMutualViewModel, buildOperationalMutualViewModel } from './mutuals.js?v=6.45.0';
 import { bindTreasuryMovementLists, categorySummaries } from './movements.js';
-import { renderTreasuryShell } from './view-shell.js?v=6.44.0';
-import { bindTreasuryOverview } from './view-overview.js?v=6.44.0';
-import { bindMembershipSection } from './view-memberships.js?v=6.44.0';
-import { bindMutualSection } from './view-mutuals.js?v=6.44.0';
-import { bindTreasuryCharts } from './view-charts.js?v=6.44.0';
+import { renderTreasuryShell } from './view-shell.js?v=6.45.0';
+import { bindTreasuryOverview } from './view-overview.js?v=6.45.0';
+import { bindMembershipSection } from './view-memberships.js?v=6.45.0';
+import { bindMutualSection } from './view-mutuals.js?v=6.45.0';
+import { bindTreasuryCharts } from './view-charts.js?v=6.45.0';
 
 export function renderTreasury(state, treasury, helpers) {
   const { root, isTreasuryView } = helpers;

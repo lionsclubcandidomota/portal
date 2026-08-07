@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.45.0 — Login privado reduzido e referências granulares no D1
+
+- Cria a migração `0008_private_bootstrap_reference.sql` e eleva o esquema D1 para a versão 7.
+- Adiciona `GET /api/private-state/bootstrap`, que carrega configurações, contas, categorias, grupos e somente o conjunto financeiro necessário para Mensalidades e Mútuas.
+- O login administrativo deixa de reconstruir e transferir todas as movimentações ordinárias do banco para o navegador.
+- Movimentações exibidas nas páginas operacionais são hidratadas sob demanda e incorporadas ao cache seguro da sessão para edição e exclusão.
+- Adiciona `PUT /api/private-state/reference` para gravar configurações privadas, contas e categorias sem regravar grupos ou movimentações.
+- O salvamento automático passa a cobrir granularmente Tesouraria, grupos e referências; sincronização completa fica restrita a importação, restauração e contingência.
+- Mantém no conjunto inicial os pagamentos de Mensalidades e Mútuas necessários para validação de duplicidade e formulários de baixa.
+- Preserva fallback para o estado privado completo durante a implantação enquanto o esquema 7 ainda não estiver ativo.
+- Atualiza o Worker para 1.11.0 e o `/health` passa a informar `privateBootstrap`, `optimizedReads.privateBootstrap` e `granularWrites.reference`.
+- Adiciona testes reais em SQLite para o bootstrap reduzido, preservação das tabelas não alteradas e gravação granular das referências.
+
 ## 6.44.0 — Mensalidades e Mútuas com leituras operacionais paginadas no D1
 
 - Cria a migração `0007_operational_memberships_mutuals.sql` e eleva o esquema D1 para a versão 6.

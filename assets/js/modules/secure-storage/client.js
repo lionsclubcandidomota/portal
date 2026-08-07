@@ -1,7 +1,7 @@
 import {
   createPrivatePortalState,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.44.0';
+} from '../../core/portal-data-boundary.js?v=6.45.0';
 import {
   getSecureStoragePrivateRevision,
   readSecureStorageJson as readJson,
@@ -10,7 +10,7 @@ import {
   secureStorageJsonHeaders as jsonHeaders,
   secureStorageProfileFromState,
   setSecureStoragePrivateRevision
-} from './session-store.js?v=6.44.0';
+} from './session-store.js?v=6.45.0';
 
 export {
   clearSecureStorageSession,
@@ -18,7 +18,7 @@ export {
   normalizeSecureStorageWorkerUrl,
   secureStorageProfileFromState,
   secureStorageSessionSnapshot
-} from './session-store.js?v=6.44.0';
+} from './session-store.js?v=6.45.0';
 export {
   bootstrapAdministrator,
   changeAdministratorPassword,
@@ -31,22 +31,24 @@ export {
   resetAdministratorPassword,
   testSecureStorageConnection,
   updateAdministratorUser
-} from './auth-client.js?v=6.44.0';
+} from './auth-client.js?v=6.45.0';
 export {
   createGroupsPrivateMutation,
+  createReferencePrivateMutation,
   createTreasuryPrivateMutation,
   savePrivateGroupsMutation,
+  savePrivateReferenceMutation,
   savePrivateTreasuryMutation
-} from './private-mutations.js?v=6.44.0';
+} from './private-mutations.js?v=6.45.0';
 export {
   loadD1DashboardAnalytics,
   loadD1ReportState
-} from './analytics-client.js?v=6.44.0';
-export { loadD1OperationalTreasury } from './operational-client.js?v=6.44.0';
+} from './analytics-client.js?v=6.45.0';
+export { loadD1OperationalTreasury } from './operational-client.js?v=6.45.0';
 export {
   loadD1OperationalMemberships,
   loadD1OperationalMutuals
-} from './operational-memberships-client.js?v=6.44.0';
+} from './operational-memberships-client.js?v=6.45.0';
 
 const R2_STORAGE_KIND = 'r2';
 const LEGACY_PUBLIC_ATTACHMENT = /^\.\/public\/treasury\/[a-z0-9/_-]+\.[a-z0-9]+(?:\?[^\s]*)?$/i;
@@ -115,6 +117,35 @@ export function collectSecureTreasuryObjectKeys(state) {
     }
   }
   return keys;
+}
+
+
+export async function loadPrivatePortalBootstrap(state) {
+  const profile = secureStorageProfileFromState(state);
+  if (!profile.enabled) {
+    return { enabled: false, found: false, state: null, revision: '', partial: false };
+  }
+  const { token } = requireSession(state, ['admin', 'director']);
+  const response = await fetch(apiUrl(profile.workerUrl, '/api/private-state/bootstrap'), {
+    method: 'GET',
+    headers: jsonHeaders(token),
+    cache: 'no-store'
+  });
+  const payload = await readJson(response, 'Não foi possível carregar a base operacional privada do Portal');
+  setSecureStoragePrivateRevision(payload.revision || '');
+  return {
+    enabled: true,
+    found: Boolean(payload.found && payload.state),
+    state: payload.state && typeof payload.state === 'object' ? payload.state : null,
+    revision: getSecureStoragePrivateRevision(),
+    updatedAt: String(payload.updatedAt || ''),
+    integrity: payload.integrity && typeof payload.integrity === 'object' ? payload.integrity : null,
+    source: String(payload.source || ''),
+    snapshotStale: Boolean(payload.snapshotStale),
+    partial: Boolean(payload.partial),
+    workingSetCount: Math.max(0, Number(payload.workingSetCount || 0)),
+    totalMovementCount: Math.max(0, Number(payload.totalMovementCount || 0))
+  };
 }
 
 export async function loadPrivatePortalState(state) {

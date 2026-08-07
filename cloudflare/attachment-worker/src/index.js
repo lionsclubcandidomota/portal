@@ -1,10 +1,12 @@
 import {
   D1_SCHEMA_VERSION,
   applyD1GroupsMutation,
+  applyD1ReferenceMutation,
   applyD1TreasuryMutation,
   deactivateD1PrivateState,
   getD1StorageStatus,
   readD1Mutation,
+  readD1PrivateBootstrap,
   readD1PrivateState,
   writeD1PrivateState
 } from './d1-storage.js';
@@ -38,7 +40,7 @@ import {
   publishPortalPublicState
 } from './github-publication.js';
 
-const WORKER_VERSION = '1.10.0';
+const WORKER_VERSION = '1.11.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -776,6 +778,75 @@ async function handlePrivateStateRead(env, session) {
 }
 
 
+function sanitizeDirectorPrivateState(state) {
+  const clean = JSON.parse(JSON.stringify(state || {}));
+  const profile = clean?.settings?.accessProfiles?.director;
+  if (profile && clean.settings?.accessProfiles) {
+    clean.settings.accessProfiles.director = {
+      version: Number(profile.version || 2),
+      credentialType: String(profile.credentialType || 'password'),
+      enabled: profile.enabled !== false,
+      label: String(profile.label || 'Diretoria'),
+      configuredAt: String(profile.configuredAt || '')
+    };
+  }
+  return clean;
+}
+
+async function handlePrivateStateBootstrapRead(env, session) {
+  const storage = await privateStorageBackend(env);
+  if (storage.backend !== 'd1' || !storage.d1.active) {
+    return handlePrivateStateRead(env, session);
+  }
+  const record = await readD1PrivateBootstrap(env, { storageStatus: storage.d1 });
+  if (!record) return { found: false, state: null, revision: '', updatedAt: '', integrity: null };
+  const state = session.role === 'director' ? sanitizeDirectorPrivateState(record.state) : record.state;
+  return {
+    found: true,
+    state,
+    revision: record.revision,
+    updatedAt: record.updatedAt,
+    source: String(record.source || 'relational-bootstrap'),
+    snapshotStale: Boolean(record.snapshotStale),
+    partial: Boolean(record.partial),
+    workingSetCount: Number(record.workingSetCount || 0),
+    totalMovementCount: Number(record.totalMovementCount || storage.d1.counts?.treasury || 0),
+    integrity: {
+      checksum: String(record.storedChecksum || record.checksum || ''),
+      summary: {
+        treasury: Number(storage.d1.counts?.treasury || 0),
+        accounts: Number(storage.d1.counts?.accounts || 0),
+        familyGroups: Number(storage.d1.counts?.familyGroups || 0),
+        mutualGroups: Number(storage.d1.counts?.mutualGroups || 0),
+        attachments: Number(storage.d1.counts?.attachments || 0),
+        workingSet: Number(record.workingSetCount || 0)
+      }
+    }
+  };
+}
+
+function referenceMutationState(currentState, body) {
+  const nextState = JSON.parse(JSON.stringify(currentState || {}));
+  if (!body?.reference || typeof body.reference !== 'object' || Array.isArray(body.reference)) {
+    throw new Error('A alteração das referências privadas é inválida.');
+  }
+  const reference = body.reference;
+  if (!reference.settings || typeof reference.settings !== 'object' || Array.isArray(reference.settings)) {
+    throw new Error('As configurações privadas informadas são inválidas.');
+  }
+  if (!Array.isArray(reference.treasuryAccounts) || reference.treasuryAccounts.length > 100) {
+    throw new Error('A lista de contas privadas é inválida.');
+  }
+  if (!Array.isArray(reference.treasuryCategories) || reference.treasuryCategories.length > 250) {
+    throw new Error('A lista de categorias privadas é inválida.');
+  }
+  nextState.settings = JSON.parse(JSON.stringify(reference.settings));
+  nextState.treasuryAccounts = JSON.parse(JSON.stringify(reference.treasuryAccounts));
+  nextState.treasuryCategories = [...new Set(reference.treasuryCategories.map(value => String(value || '').trim()).filter(Boolean))];
+  return nextState;
+}
+
+
 function treasuryMutationState(currentState, body) {
   const nextState = JSON.parse(JSON.stringify(currentState || {}));
   const currentMovements = Array.isArray(nextState.treasury) ? nextState.treasury : [];
@@ -1051,6 +1122,61 @@ async function handlePrivateTreasuryMutation(request, env, session) {
     throw error;
   }
 
+  return {
+    ...applied,
+    summary: envelope.summary,
+    snapshotDeferred: true,
+    snapshotPolicy: 'recovery-only'
+  };
+}
+
+
+async function handlePrivateReferenceMutation(request, env, session) {
+  const contentLength = Number(request.headers.get('Content-Length') || 0);
+  if (contentLength > 512 * 1024) {
+    throw new Response('A alteração de referências excede o limite permitido.', { status: 413 });
+  }
+  const body = await request.json().catch(() => ({}));
+  const mutationId = String(body.mutationId || '').trim();
+  if (!/^[a-z0-9_-]{8,120}$/i.test(mutationId)) {
+    throw new Error('O identificador da alteração granular é inválido.');
+  }
+  const storage = await privateStorageBackend(env);
+  if (storage.backend !== 'd1' || !storage.d1.active) {
+    throw new Response('As gravações granulares exigem que o D1 esteja ativo.', { status: 409 });
+  }
+  if (storage.d1.schemaVersion < 7 || storage.d1.schemaVersion > D1_SCHEMA_VERSION) {
+    throw new Response(`Aplique as migrações compatíveis do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
+  }
+  const previous = await readD1Mutation(env, mutationId);
+  if (previous) return { ...previous, idempotent: true };
+  const current = await readPrivateStateRecord(env, storage);
+  if (!current) throw new Response('O estado privado atual não foi encontrado.', { status: 404 });
+  const expectedRevision = String(body.expectedRevision || '');
+  if (!expectedRevision || expectedRevision !== current.revision) {
+    throw new Response('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.', { status: 409 });
+  }
+  const nextState = referenceMutationState(current.state, body);
+  const revision = crypto.randomUUID();
+  const updatedAt = new Date().toISOString();
+  const updatedBy = String(session?.sub || 'administrador').slice(0, 120);
+  const envelope = await privateStateEnvelope(nextState, { revision, updatedAt });
+  let applied;
+  try {
+    applied = await applyD1ReferenceMutation(env, {
+      mutationId,
+      expectedRevision,
+      revision,
+      updatedAt,
+      updatedBy,
+      checksum: envelope.checksum,
+      nextState,
+      storageStatus: storage.d1
+    });
+  } catch (error) {
+    if (error?.code === 'REVISION_CONFLICT') throw new Response(error.message, { status: 409 });
+    throw error;
+  }
   return {
     ...applied,
     summary: envelope.summary,
@@ -1386,19 +1512,29 @@ export default {
           privateBackups: 'versioned-r2',
           privateBackupRetention: MAX_PRIVATE_BACKUPS,
           attachmentIntegrity: 'available',
-          privateAutosave: 'relational-operational',
-          granularWrites: { treasury: storage.d1.schemaVersion >= 2, groups: storage.d1.schemaVersion >= 3, snapshotPerMutation: false },
+          privateAutosave: 'relational-lazy-bootstrap',
+          granularWrites: {
+            treasury: storage.d1.schemaVersion >= 2,
+            groups: storage.d1.schemaVersion >= 3,
+            reference: storage.d1.schemaVersion >= 7 && storage.d1.granularReference,
+            snapshotPerMutation: false
+          },
           optimizedReads: {
             dashboard: storage.d1.schemaVersion >= 4,
             reports: storage.d1.schemaVersion >= 4,
             treasuryPagination: storage.d1.schemaVersion >= 5,
             memberships: storage.d1.schemaVersion >= 6 && storage.d1.operationalMemberships,
-            mutuals: storage.d1.schemaVersion >= 6 && storage.d1.operationalMutuals
+            mutuals: storage.d1.schemaVersion >= 6 && storage.d1.operationalMutuals,
+            privateBootstrap: storage.d1.schemaVersion >= 7 && storage.d1.privateBootstrapReadModel
           },
           relationalSource: storage.d1.schemaVersion >= 5 && storage.d1.relationalSource,
           memberDirectory: {
             available: storage.d1.schemaVersion >= 6,
             updatedAt: storage.d1.memberDirectoryUpdatedAt || ''
+          },
+          privateBootstrap: {
+            available: storage.d1.schemaVersion >= 7 && storage.d1.privateBootstrapReadModel,
+            strategy: 'reference-data-plus-payment-working-set'
           },
           snapshotPolicy: storage.d1.schemaVersion >= 5 ? 'recovery-only' : 'operational-fallback'
         }, 200, cors);
@@ -1574,6 +1710,11 @@ export default {
         return json(await handleD1Rollback(request, env, session), 200, cors);
       }
 
+      if (url.pathname === '/api/private-state/bootstrap' && request.method === 'GET') {
+        const session = await requireSession(request, env, ['admin', 'director']);
+        return json(await handlePrivateStateBootstrapRead(env, session), 200, cors);
+      }
+
       if (url.pathname === '/api/private-state' && request.method === 'GET') {
         const session = await requireSession(request, env, ['admin', 'director']);
         return json(await handlePrivateStateRead(env, session), 200, cors);
@@ -1592,6 +1733,11 @@ export default {
       if (url.pathname === '/api/private-state/groups' && request.method === 'PUT') {
         const session = await requireSession(request, env, ['admin']);
         return json(await handlePrivateGroupsMutation(request, env, session), 200, cors);
+      }
+
+      if (url.pathname === '/api/private-state/reference' && request.method === 'PUT') {
+        const session = await requireSession(request, env, ['admin']);
+        return json(await handlePrivateReferenceMutation(request, env, session), 200, cors);
       }
 
       if (url.pathname === '/api/private-state/backups' && request.method === 'GET') {

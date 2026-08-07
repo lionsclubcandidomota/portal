@@ -3,7 +3,7 @@ import {
   requireSecureStorageSession as requireSession,
   secureStorageApiUrl as apiUrl,
   secureStorageJsonHeaders as jsonHeaders
-} from './session-store.js?v=6.44.0';
+} from './session-store.js?v=6.45.0';
 
 function queryString(values = {}) {
   const params = new URLSearchParams();

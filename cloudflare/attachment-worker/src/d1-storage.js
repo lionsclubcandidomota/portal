@@ -1,4 +1,4 @@
-export const D1_SCHEMA_VERSION = 6;
+export const D1_SCHEMA_VERSION = 7;
 export const D1_MIN_OPERATIONAL_SCHEMA_VERSION = 3;
 
 const encoder = new TextEncoder();
@@ -243,6 +243,8 @@ export async function getD1StorageStatus(env) {
       (SELECT value FROM portal_meta WHERE key = 'operational_read_models') AS operational_read_models,
       (SELECT value FROM portal_meta WHERE key = 'operational_memberships') AS operational_memberships,
       (SELECT value FROM portal_meta WHERE key = 'operational_mutuals') AS operational_mutuals,
+      (SELECT value FROM portal_meta WHERE key = 'private_bootstrap_read_model') AS private_bootstrap_read_model,
+      (SELECT value FROM portal_meta WHERE key = 'reference_granular_writes') AS reference_granular_writes,
       (SELECT value FROM portal_meta WHERE key = 'member_directory_updated_at') AS member_directory_updated_at,
       (SELECT value FROM portal_meta WHERE key = 'snapshot_stale') AS snapshot_stale,
       (SELECT value FROM portal_meta WHERE key = 'snapshot_updated_at') AS snapshot_updated_at,
@@ -268,6 +270,8 @@ export async function getD1StorageStatus(env) {
       operationalReadModels: text(row?.operational_read_models) === '1',
       operationalMemberships: text(row?.operational_memberships) === '1',
       operationalMutuals: text(row?.operational_mutuals) === '1',
+      privateBootstrapReadModel: text(row?.private_bootstrap_read_model) === '1',
+      granularReference: text(row?.reference_granular_writes) === '1',
       memberDirectoryUpdatedAt: text(row?.member_directory_updated_at),
       snapshotStale: text(row?.snapshot_stale) === '1',
       snapshotUpdatedAt: text(row?.snapshot_updated_at),
@@ -296,6 +300,8 @@ export async function getD1StorageStatus(env) {
       operationalReadModels: false,
       operationalMemberships: false,
       operationalMutuals: false,
+      privateBootstrapReadModel: false,
+      granularReference: false,
       memberDirectoryUpdatedAt: '',
       snapshotStale: false,
       snapshotUpdatedAt: '',
@@ -402,6 +408,122 @@ async function readRelationalPrivateState(env) {
     schemaVersion: Number(meta.schema_version || 0),
     source: 'relational',
     snapshotStale: text(meta.snapshot_stale) === '1'
+  };
+}
+
+
+export async function readD1PrivateBootstrap(env, { storageStatus = null } = {}) {
+  const status = storageStatus || await getD1StorageStatus(env);
+  if (!status.available || !status.initialized || !status.active) return null;
+  if (!status.relationalSource || Number(status.schemaVersion || 0) < 7) {
+    const full = await readD1PrivateState(env, { storageStatus: status });
+    if (!full) return null;
+    return {
+      ...full,
+      partial: false,
+      workingSetCount: Array.isArray(full.state?.treasury) ? full.state.treasury.length : 0,
+      totalMovementCount: Number(status.counts?.treasury || 0)
+    };
+  }
+
+  const db = env.PORTAL_DB;
+  const [metaRows, settings, extras, accountRows, categoryRows, familyRows, familyMemberRows,
+    mutualRows, membershipRows, eventRows, participantRows, movementRows, attachmentRows] = await Promise.all([
+    d1Rows(db, `SELECT key, value FROM portal_meta
+      WHERE key IN ('state_version', 'revision', 'updated_at', 'updated_by', 'checksum', 'migrated_at', 'schema_version', 'snapshot_stale')`),
+    db.prepare('SELECT payload FROM portal_settings WHERE id = 1').first(),
+    d1Rows(db, 'SELECT key, payload FROM portal_extras ORDER BY key'),
+    d1Rows(db, 'SELECT id, payload FROM treasury_accounts ORDER BY sort_order, id'),
+    d1Rows(db, 'SELECT name FROM treasury_categories ORDER BY sort_order, name'),
+    d1Rows(db, 'SELECT id, payload FROM family_groups ORDER BY sort_order, id'),
+    d1Rows(db, 'SELECT group_id, member_id FROM family_group_members ORDER BY group_id, sort_order, member_id'),
+    d1Rows(db, 'SELECT id, payload FROM mutual_groups ORDER BY sort_order, id'),
+    d1Rows(db, 'SELECT id, group_id, payload FROM mutual_memberships ORDER BY group_id, sort_order, id'),
+    d1Rows(db, 'SELECT id, group_id, payload FROM mutual_events ORDER BY group_id, sort_order, id'),
+    d1Rows(db, 'SELECT event_id, member_id FROM mutual_event_participants ORDER BY event_id, sort_order, member_id'),
+    d1Rows(db, `SELECT id, payload FROM treasury_movements
+      WHERE mutual_group_id <> ''
+        OR LOWER(category) LIKE '%mensalidade%'
+        OR json_type(payload, '$.coveredMonths') IS NOT NULL
+        OR json_type(payload, '$.membershipPlan') IS NOT NULL
+      ORDER BY sort_order, movement_date, id`),
+    d1Rows(db, `SELECT a.id, a.movement_id, a.payload
+      FROM treasury_attachments a
+      INNER JOIN treasury_movements m ON m.id = a.movement_id
+      WHERE m.mutual_group_id <> ''
+        OR LOWER(m.category) LIKE '%mensalidade%'
+        OR json_type(m.payload, '$.coveredMonths') IS NOT NULL
+        OR json_type(m.payload, '$.membershipPlan') IS NOT NULL
+      ORDER BY a.movement_id, a.sort_order, a.id`)
+  ]);
+
+  const meta = Object.fromEntries(metaRows.map(row => [text(row.key), text(row.value)]));
+  const familyMembers = new Map();
+  for (const row of familyMemberRows) {
+    const key = text(row.group_id);
+    if (!familyMembers.has(key)) familyMembers.set(key, []);
+    familyMembers.get(key).push(text(row.member_id));
+  }
+  const memberships = new Map();
+  for (const row of membershipRows) {
+    const key = text(row.group_id);
+    if (!memberships.has(key)) memberships.set(key, []);
+    memberships.get(key).push(parsePayload(row.payload, `vínculo de mútua ${text(row.id)}`));
+  }
+  const participants = new Map();
+  for (const row of participantRows) {
+    const key = text(row.event_id);
+    if (!participants.has(key)) participants.set(key, []);
+    participants.get(key).push(text(row.member_id));
+  }
+  const events = new Map();
+  for (const row of eventRows) {
+    const groupId = text(row.group_id);
+    if (!events.has(groupId)) events.set(groupId, []);
+    events.get(groupId).push(payloadWith(row.payload, `evento de mútua ${text(row.id)}`, {
+      participantIds: participants.get(text(row.id)) || []
+    }));
+  }
+  const attachments = new Map();
+  for (const row of attachmentRows) {
+    const key = text(row.movement_id);
+    if (!attachments.has(key)) attachments.set(key, []);
+    attachments.get(key).push(parsePayload(row.payload, `anexo ${text(row.id)}`));
+  }
+  const state = {};
+  for (const row of extras) {
+    try { state[text(row.key)] = JSON.parse(text(row.payload || 'null')); }
+    catch { throw new Error(`O campo adicional ${text(row.key)} contém JSON inválido no D1.`); }
+  }
+  state.version = Math.max(1, Number(meta.state_version || 1));
+  state.settings = settings?.payload ? parsePayload(settings.payload, 'configurações') : {};
+  state.treasuryAccounts = accountRows.map(row => parsePayload(row.payload, `conta ${text(row.id)}`));
+  state.treasuryCategories = categoryRows.map(row => text(row.name));
+  state.familyGroups = familyRows.map(row => payloadWith(row.payload, `grupo familiar ${text(row.id)}`, {
+    memberIds: familyMembers.get(text(row.id)) || []
+  }));
+  state.mutualGroups = mutualRows.map(row => payloadWith(row.payload, `grupo de mútua ${text(row.id)}`, {
+    memberships: memberships.get(text(row.id)) || [],
+    events: events.get(text(row.id)) || []
+  }));
+  state.treasury = movementRows.map(row => payloadWith(row.payload, `movimentação ${text(row.id)}`, {
+    attachments: attachments.get(text(row.id)) || []
+  }));
+
+  return {
+    state,
+    revision: text(meta.revision),
+    updatedAt: text(meta.updated_at),
+    updatedBy: text(meta.updated_by),
+    checksum: '',
+    storedChecksum: text(meta.checksum),
+    migratedAt: text(meta.migrated_at),
+    schemaVersion: Number(meta.schema_version || 0),
+    source: 'relational-bootstrap',
+    snapshotStale: text(meta.snapshot_stale) === '1',
+    partial: true,
+    workingSetCount: movementRows.length,
+    totalMovementCount: Number(status.counts?.treasury || 0)
   };
 }
 
@@ -778,6 +900,115 @@ export async function applyD1TreasuryMutation(env, {
     db.prepare(`INSERT INTO portal_mutations
       (mutation_id, scope, expected_revision, applied_revision, response_json, actor, created_at)
       SELECT ?, 'treasury', ?, ?, ?, ?, ?
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(normalizedMutationId, text(expectedRevision), guardRevision, JSON.stringify(response), text(updatedBy), text(updatedAt), guardRevision),
+    db.prepare(`DELETE FROM portal_mutations
+      WHERE mutation_id IN (
+        SELECT mutation_id FROM portal_mutations ORDER BY created_at DESC LIMIT -1 OFFSET 250
+      ) AND EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(guardRevision)
+  ];
+
+  await db.batch(statements);
+  const applied = await readD1Mutation(env, normalizedMutationId);
+  if (!applied || applied.revision !== guardRevision) {
+    const conflict = new Error('Os dados privados foram atualizados em outra sessão. Recarregue o painel antes de salvar novamente.');
+    conflict.code = 'REVISION_CONFLICT';
+    throw conflict;
+  }
+  return { ...applied, idempotent: false, statements: statements.length };
+}
+
+
+export async function applyD1ReferenceMutation(env, {
+  mutationId,
+  expectedRevision,
+  revision,
+  updatedAt,
+  updatedBy,
+  checksum,
+  nextState,
+  storageStatus = null
+} = {}) {
+  if (!hasD1Binding(env)) throw new Error('O binding PORTAL_DB não está configurado no Worker.');
+  const status = storageStatus || await getD1StorageStatus(env);
+  if (!status.initialized || !status.active) throw new Error('O banco D1 ainda não está ativo para gravações granulares.');
+  assertSupportedOperationalSchema(status);
+  if (Number(status.schemaVersion || 0) < 7) throw new Error('Aplique a migração de referências privadas do D1.');
+
+  const normalizedMutationId = text(mutationId).trim();
+  if (!/^[a-z0-9_-]{8,120}$/i.test(normalizedMutationId)) {
+    throw new Error('O identificador da alteração granular é inválido.');
+  }
+  const previousResult = await readD1Mutation(env, normalizedMutationId);
+  if (previousResult) return { ...previousResult, idempotent: true };
+  if (!nextState || typeof nextState !== 'object' || Array.isArray(nextState)) {
+    throw new Error('O estado resultante da alteração de referências é inválido.');
+  }
+
+  const model = decomposePrivateState(nextState);
+  const db = env.PORTAL_DB;
+  const guardRevision = text(revision);
+  const accounts = model.accounts.map(row => ({ ...row, updatedAt: text(updatedAt) }));
+  const response = {
+    saved: true,
+    mode: 'granular-reference',
+    backend: 'd1',
+    revision: guardRevision,
+    updatedAt: text(updatedAt),
+    checksum: text(checksum),
+    mutationId: normalizedMutationId,
+    changes: {
+      settings: 1,
+      accounts: accounts.length,
+      categories: model.categories.length
+    }
+  };
+
+  const statements = [
+    db.prepare(`UPDATE portal_meta SET value = ?
+      WHERE key = 'revision' AND value = ?`).bind(guardRevision, text(expectedRevision)),
+    db.prepare(`INSERT INTO portal_settings (id, payload, updated_at)
+      SELECT 1, ?, ? WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)
+      ON CONFLICT(id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at`)
+      .bind(model.settings, text(updatedAt), guardRevision),
+    db.prepare(`DELETE FROM treasury_accounts
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(guardRevision),
+    db.prepare(`INSERT INTO treasury_accounts
+      (id, sort_order, name, type, active, payload, updated_at)
+      SELECT json_extract(value, '$.id'), json_extract(value, '$.sortOrder'),
+        json_extract(value, '$.name'), json_extract(value, '$.type'),
+        json_extract(value, '$.active'), json_extract(value, '$.payload'),
+        json_extract(value, '$.updatedAt')
+      FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(accounts), guardRevision),
+    db.prepare(`DELETE FROM treasury_categories
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(guardRevision),
+    db.prepare(`INSERT INTO treasury_categories (name, sort_order)
+      SELECT json_extract(value, '$.name'), json_extract(value, '$.sortOrder')
+      FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
+      .bind(JSON.stringify(model.categories), guardRevision),
+    db.prepare(`INSERT INTO portal_meta (key, value)
+      SELECT json_extract(value, '$.key'), json_extract(value, '$.value')
+      FROM json_each(?)
+      WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+      .bind(JSON.stringify([
+        { key: 'updated_at', value: text(updatedAt) },
+        { key: 'updated_by', value: text(updatedBy) },
+        { key: 'checksum', value: text(checksum) },
+        { key: 'last_granular_mutation_at', value: text(updatedAt) },
+        { key: 'reference_granular_writes', value: '1' },
+        { key: 'relational_source', value: '1' },
+        { key: 'snapshot_stale', value: '1' }
+      ]), guardRevision),
+    db.prepare(`INSERT INTO portal_mutations
+      (mutation_id, scope, expected_revision, applied_revision, response_json, actor, created_at)
+      SELECT ?, 'reference', ?, ?, ?, ?, ?
       WHERE EXISTS (SELECT 1 FROM portal_meta WHERE key = 'revision' AND value = ?)`)
       .bind(normalizedMutationId, text(expectedRevision), guardRevision, JSON.stringify(response), text(updatedBy), text(updatedAt), guardRevision),
     db.prepare(`DELETE FROM portal_mutations
