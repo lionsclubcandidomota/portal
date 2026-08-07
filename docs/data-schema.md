@@ -132,3 +132,16 @@ A senha original e o token de sessão não entram no snapshot privado. O fronten
 ### Mutações granulares da Tesouraria
 
 A migração `0003_treasury_granular_writes.sql` adiciona `portal_mutations`. Movimentações e anexos são atualizados por `UPSERT`/`DELETE` específicos, protegidos pela revisão global. O snapshot continua sincronizado para recuperação e compatibilidade, mas as demais projeções não são apagadas ou reconstruídas durante uma alteração exclusivamente financeira.
+
+## Fonte relacional operacional — esquema D1 5
+
+A migração `0006_relational_operational_source.sql` torna as projeções relacionais a fonte principal do estado privado. O Worker reconstrói o contrato compatível do Portal consultando as tabelas de configurações, contas, categorias, movimentações, anexos, grupos familiares e Mútuas.
+
+Novos metadados em `portal_meta`:
+
+- `relational_source`: indica que as tabelas são a fonte oficial;
+- `operational_read_models`: habilita consultas operacionais paginadas;
+- `snapshot_stale`: indica que o snapshot não contém necessariamente a última mutação granular;
+- `snapshot_updated_at`: registra a última materialização integral.
+
+A rota `GET /api/operational/treasury` aplica período, pesquisa, situação, tipo e paginação diretamente em SQL. Ela retorna somente as páginas solicitadas e agregados do filtro, sem alterar o contrato de recuperação do estado completo.

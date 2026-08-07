@@ -12,6 +12,7 @@ import {
   queryD1DashboardAnalytics,
   queryD1ReportState
 } from './d1-analytics.js';
+import { queryD1OperationalTreasury } from './d1-operational.js';
 import {
   AUTH_PASSWORD_ITERATIONS,
   authenticateAdministrator,
@@ -32,7 +33,7 @@ import {
   publishPortalPublicState
 } from './github-publication.js';
 
-const WORKER_VERSION = '1.8.0';
+const WORKER_VERSION = '1.9.0';
 const MAX_STORED_BYTES = 1250 * 1024;
 const MAX_DELETE_KEYS = 25;
 const MAX_PRIVATE_STATE_BYTES = 2 * 1024 * 1024;
@@ -544,6 +545,10 @@ async function handleStorageStatus(env) {
       migratedAt: d1.migratedAt || '',
       counts: d1.counts || {},
       analyticsReadModels: Boolean(d1.analyticsReadModels),
+      relationalSource: Boolean(d1.relationalSource),
+      operationalReadModels: Boolean(d1.operationalReadModels),
+      snapshotStale: Boolean(d1.snapshotStale),
+      snapshotUpdatedAt: d1.snapshotUpdatedAt || '',
       error: d1.error || ''
     },
     r2: r2 ? {
@@ -745,6 +750,8 @@ async function handlePrivateStateRead(env, session) {
     state: record.state,
     revision: record.revision,
     updatedAt: record.updatedAt,
+    source: String(record.source || record.backend || ''),
+    snapshotStale: Boolean(record.snapshotStale),
     integrity: { checksum: record.checksum, summary: record.summary }
   };
   if (session.role !== 'director') return response;
@@ -930,8 +937,8 @@ async function handlePrivateGroupsMutation(request, env, session) {
   if (storage.backend !== 'd1' || !storage.d1.active) {
     throw new Response('As gravações granulares exigem que o D1 esteja ativo.', { status: 409 });
   }
-  if (storage.d1.schemaVersion !== D1_SCHEMA_VERSION) {
-    throw new Response(`Aplique as migrações do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
+  if (storage.d1.schemaVersion < 3 || storage.d1.schemaVersion > D1_SCHEMA_VERSION) {
+    throw new Response(`Aplique as migrações compatíveis do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
   }
 
   const previous = await readD1Mutation(env, mutationId);
@@ -973,19 +980,12 @@ async function handlePrivateGroupsMutation(request, env, session) {
     throw error;
   }
 
-  let mirrorWarning = '';
-  try {
-    await writeR2CurrentMirror(env, envelope, {
-      updatedBy,
-      reason: 'granular-d1-mirror',
-      label: 'Espelho após alteração granular de grupos'
-    });
-  } catch (error) {
-    mirrorWarning = `A alteração foi salva no D1, mas o espelho no R2 não pôde ser atualizado: ${error instanceof Error ? error.message : String(error)}`;
-    console.error(mirrorWarning);
-  }
-
-  return { ...applied, summary: envelope.summary, mirrorWarning };
+  return {
+    ...applied,
+    summary: envelope.summary,
+    snapshotDeferred: true,
+    snapshotPolicy: 'recovery-only'
+  };
 }
 
 async function handlePrivateTreasuryMutation(request, env, session) {
@@ -1003,8 +1003,8 @@ async function handlePrivateTreasuryMutation(request, env, session) {
   if (storage.backend !== 'd1' || !storage.d1.active) {
     throw new Response('As gravações granulares exigem que o D1 esteja ativo.', { status: 409 });
   }
-  if (storage.d1.schemaVersion !== D1_SCHEMA_VERSION) {
-    throw new Response(`Aplique as migrações do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
+  if (storage.d1.schemaVersion < 3 || storage.d1.schemaVersion > D1_SCHEMA_VERSION) {
+    throw new Response(`Aplique as migrações compatíveis do D1 até a versão ${D1_SCHEMA_VERSION}.`, { status: 409 });
   }
 
   const previous = await readD1Mutation(env, mutationId);
@@ -1046,22 +1046,11 @@ async function handlePrivateTreasuryMutation(request, env, session) {
     throw error;
   }
 
-  let mirrorWarning = '';
-  try {
-    await writeR2CurrentMirror(env, envelope, {
-      updatedBy,
-      reason: 'granular-d1-mirror',
-      label: 'Espelho após alteração granular da Tesouraria'
-    });
-  } catch (error) {
-    mirrorWarning = `A alteração foi salva no D1, mas o espelho no R2 não pôde ser atualizado: ${error instanceof Error ? error.message : String(error)}`;
-    console.error(mirrorWarning);
-  }
-
   return {
     ...applied,
     summary: envelope.summary,
-    mirrorWarning
+    snapshotDeferred: true,
+    snapshotPolicy: 'recovery-only'
   };
 }
 
@@ -1392,9 +1381,11 @@ export default {
           privateBackups: 'versioned-r2',
           privateBackupRetention: MAX_PRIVATE_BACKUPS,
           attachmentIntegrity: 'available',
-          privateAutosave: 'granular-treasury-groups',
-          granularWrites: { treasury: storage.d1.schemaVersion >= 2, groups: storage.d1.schemaVersion >= 3, snapshotFallback: true },
-          optimizedReads: { dashboard: storage.d1.schemaVersion >= 4, reports: storage.d1.schemaVersion >= 4 }
+          privateAutosave: 'relational-operational',
+          granularWrites: { treasury: storage.d1.schemaVersion >= 2, groups: storage.d1.schemaVersion >= 3, snapshotPerMutation: false },
+          optimizedReads: { dashboard: storage.d1.schemaVersion >= 4, reports: storage.d1.schemaVersion >= 4, treasuryPagination: storage.d1.schemaVersion >= 5 },
+          relationalSource: storage.d1.schemaVersion >= 5 && storage.d1.relationalSource,
+          snapshotPolicy: storage.d1.schemaVersion >= 5 ? 'recovery-only' : 'operational-fallback'
         }, 200, cors);
       }
 
@@ -1495,6 +1486,23 @@ export default {
         return json(await queryD1ReportState(env, url.searchParams.get('type') || '', {
           start: url.searchParams.get('start') || '',
           end: url.searchParams.get('end') || ''
+        }), 200, cors);
+      }
+
+      if (url.pathname === '/api/operational/treasury' && request.method === 'GET') {
+        await requireSession(request, env, ['admin', 'director']);
+        const storage = await getD1StorageStatus(env);
+        if (!storage.active || storage.schemaVersion < 5 || !storage.relationalSource || !storage.operationalReadModels) {
+          throw new Response('A paginação operacional do D1 ainda não está disponível.', { status: 503 });
+        }
+        return json(await queryD1OperationalTreasury(env, {
+          start: url.searchParams.get('start') || '',
+          end: url.searchParams.get('end') || '',
+          query: url.searchParams.get('query') || '',
+          filter: url.searchParams.get('filter') || 'all',
+          scheduledPage: url.searchParams.get('scheduledPage') || '1',
+          completedPage: url.searchParams.get('completedPage') || '1',
+          pageSize: url.searchParams.get('pageSize') || '8'
         }), 200, cors);
       }
 

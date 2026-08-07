@@ -1,59 +1,93 @@
-# Release 6.42.0
+# Release 6.43.0
 
-Esta etapa move **leituras gerenciais e relatórios financeiros** para consultas SQL no Cloudflare D1.
+Data: 07/08/2026
 
-## Componentes
+## Escopo
 
-- Portal 6.42.0: consulta indicadores do Dashboard Administrativo no D1 e usa recortes SQL para relatórios privados.
-- Worker 1.8.0: adiciona endpoints autenticados de analytics e mantém compatibilidade operacional temporária com o esquema D1 3 durante a implantação.
-- Migração D1 `0005_analytics_read_models.sql`: novos índices, ativação de `analytics_read_models` e esquema D1 4.
-- R2: continua armazenando anexos, backups e o espelho de contingência.
+- Portal 6.43.0: movimentações passam a usar paginação e pesquisa diretamente no D1, com fallback local automático.
+- Worker 1.9.0: tabelas relacionais tornam-se a fonte principal do estado privado e o snapshot sai das gravações granulares diárias.
+- D1 esquema 5: ativa a fonte relacional, os modelos operacionais e a política de snapshot somente para recuperação.
 
-## Ordem de implantação sem interrupção
+## Ordem obrigatória de implantação
 
-1. Atualizar o Worker para 1.8.0, preservando `wrangler.toml` e os segredos.
-2. Publicar o Worker com `npx wrangler deploy --config wrangler.toml`.
-3. Confirmar que o Portal continua operacional com o esquema D1 3; as leituras otimizadas ainda aparecerão como indisponíveis.
-4. Executar `npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml`.
-5. Confirmar a aplicação de `0005_analytics_read_models.sql`.
-6. Confirmar `/health` com `workerVersion: 1.8.0`, esquema D1 4 e `optimizedReads.dashboard/reports: true`.
-7. Publicar o Portal 6.42.0 no GitHub Pages.
-8. Abrir o Dashboard Administrativo e confirmar o selo **D1 · consulta otimizada** na Tesouraria.
-9. Gerar os relatórios de Movimentações, Mensalidades e Mútuas em PDF/CSV.
+1. Extrair o Worker 1.9.0.
+2. Copiar para a nova pasta o `wrangler.toml` já configurado do Worker anterior.
+3. Executar `npm ci`.
+4. Publicar primeiro o Worker 1.9.0:
 
-## Leituras otimizadas
+   ```bash
+   npx wrangler deploy --config wrangler.toml
+   ```
 
-### Dashboard
+5. Aplicar a migração:
 
-`GET /api/analytics/dashboard`
+   ```bash
+   npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
+   ```
 
-Executa uma agregação SQL por período e retorna:
+6. Confirmar a aplicação de `0006_relational_operational_source.sql`.
+7. Conferir o `/health` com Worker 1.9.0, esquema D1 5, `relationalSource: true` e paginação operacional ativa.
+8. Publicar o Portal 6.43.0 no GitHub Pages.
 
-- quantidade de movimentações;
-- quantidade e valor de entradas;
-- quantidade e valor de saídas;
-- saldo do período;
-- totais realizados;
-- totais programados.
+O Worker 1.9.0 mantém compatibilidade temporária com os esquemas operacionais 3 e 4. O Portal 6.43.0 somente ativa a paginação remota quando o esquema 5 estiver disponível; antes disso, usa o estado local como contingência.
 
-Agenda, compromissos, avisos e aniversariantes continuam sendo calculados a partir do estado público, pois não pertencem ao banco privado.
+## Fonte oficial dos dados
 
-### Relatórios
+Após a migração 0006:
 
-`GET /api/analytics/report?type=...`
+```text
+Tabelas relacionais D1 → fonte operacional oficial
+Snapshot D1/R2          → recuperação, importação e contingência
+R2                      → anexos e backups versionados
+GitHub Pages            → conteúdo público
+```
 
-Tipos privados suportados:
+O login administrativo reconstrói o estado privado a partir das tabelas relacionais. Participantes familiares, vínculos e eventos de Mútuas e anexos são reagrupados pelos relacionamentos do banco.
 
-- `movements`: carrega somente movimentações dentro do período;
-- `memberships`: carrega apenas lançamentos de mensalidades e grupos familiares;
-- `mutuals`: carrega somente pagamentos de Mútuas, grupos e eventos relacionados.
+## Movimentações paginadas
 
-Relatórios públicos — Aniversariantes, Agenda e Avisos — permanecem locais.
+A nova rota autenticada:
 
-## Fallback
+```text
+GET /api/operational/treasury
+```
 
-Se a consulta SQL falhar ou o esquema 4 ainda não estiver ativo, o Portal mantém os cálculos locais e a geração de relatórios a partir do estado já carregado. Nenhuma função administrativa fica indisponível.
+recebe período, pesquisa, filtro e páginas independentes para programados e realizados. O D1 devolve somente os registros da página, além de:
 
-## Limite desta etapa
+- contagens dos filtros;
+- entradas e saídas do resumo selecionado;
+- resultado realizado ou programado;
+- total de páginas;
+- revisão do banco.
 
-O snapshot privado completo ainda é carregado após o login porque as telas operacionais continuam dependendo dele. Esta versão reduz processamento e recortes de relatórios, mas a remoção do snapshot do fluxo diário será feita na etapa final da otimização.
+A tela identifica a origem com `D1 · consulta paginada`. Em falha temporária, utiliza `Modo local de contingência` sem bloquear a Tesouraria.
+
+## Política de snapshot
+
+Movimentações e grupos salvos granularmente não regravam mais:
+
+- `portal_state_snapshot`;
+- espelho JSON atual no R2.
+
+Essas operações atualizam apenas as tabelas afetadas e marcam `snapshot_stale = 1`. O estado completo continua sendo materializado em:
+
+- migração ou sincronização completa;
+- importação e restauração;
+- rollback seguro para o R2;
+- backups criados pela Central de Recuperação.
+
+## Testes recomendados
+
+1. Entrar como Administrador e confirmar os dados privados existentes.
+2. Abrir **Tesouraria → Movimentações** e conferir o selo `D1 · consulta paginada`.
+3. Testar Todos, Realizados, Programados, Entradas e Saídas.
+4. Pesquisar por descrição e categoria.
+5. Navegar entre páginas de realizados e programados.
+6. Criar, editar e excluir uma movimentação de teste.
+7. Recarregar o Portal e confirmar a persistência.
+8. Criar um backup manual e testar a Central de Recuperação.
+9. Conferir que nenhuma operação privada criou commit no GitHub.
+
+## Retorno seguro
+
+Se a paginação operacional estiver indisponível, a tela usa o estado privado já carregado. Se for necessário retornar ao backend R2, a Central de Recuperação reconstrói o estado atual pelas tabelas relacionais antes do rollback, evitando perda das alterações feitas depois do último snapshot.

@@ -139,3 +139,17 @@ Concluída na versão 6.42.0:
 - fallback local sem interrupção do fluxo;
 - implantação compatível entre os esquemas 3 e 4;
 - preparação para remover o snapshot do fluxo operacional na etapa seguinte.
+
+## Evolução D1 — Fonte relacional e operação paginada
+
+Concluída na versão 6.43.0:
+
+- tabelas relacionais promovidas a fonte oficial do estado privado;
+- reconstrução do estado por relacionamentos, sem depender do snapshot operacional;
+- paginação, pesquisa e filtros da tela de Movimentações executados no D1;
+- contagens e somatórias devolvidas junto ao recorte paginado;
+- fallback local automático para continuidade da interface;
+- remoção do snapshot e do espelho R2 das gravações granulares diárias;
+- snapshot preservado exclusivamente para recuperação, importação e rollback;
+- marcação explícita de snapshot desatualizado após mutações granulares;
+- preparação para eliminar o carregamento completo das movimentações nas próximas etapas.

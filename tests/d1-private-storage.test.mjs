@@ -47,6 +47,10 @@ class SQLitePreparedStatement {
     return this.database.prepare(this.sql).get(...this.values) || null;
   }
 
+  all() {
+    return { results: this.database.prepare(this.sql).all(...this.values) };
+  }
+
   run() {
     return this.database.prepare(this.sql).run(...this.values);
   }
@@ -118,7 +122,7 @@ test('adaptador D1 preserva o estado privado e cria coleções relacionais', () 
     futurePrivateField: { enabled: true }
   };
   const model = decomposePrivateState(original);
-  assert.equal(D1_SCHEMA_VERSION, 4);
+  assert.equal(D1_SCHEMA_VERSION, 5);
   assert.equal(model.treasury.length, 1);
   assert.equal(model.treasury[0].attachments.length, 1);
   assert.equal(model.familyGroups[0].members.length, 2);
@@ -158,6 +162,11 @@ test('migração SQL cria tabelas, vínculos e índices do Portal', async () => 
   const analyticsMigration = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0005_analytics_read_models.sql'), 'utf8');
   assert.match(analyticsMigration, /analytics_read_models/);
   assert.match(analyticsMigration, /schema_version', '4'/);
+  const relationalMigration = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0006_relational_operational_source.sql'), 'utf8');
+  assert.match(relationalMigration, /relational_source/);
+  assert.match(relationalMigration, /operational_read_models/);
+  assert.match(relationalMigration, /snapshot_stale/);
+  assert.match(relationalMigration, /schema_version', '5'/);
 });
 
 test('gravação D1 é transacional, compacta e preserva o snapshot exato', async () => {
@@ -167,6 +176,7 @@ test('gravação D1 é transacional, compacta e preserva o snapshot exato', asyn
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8'));
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0004_group_granular_writes.sql'), 'utf8'));
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0005_analytics_read_models.sql'), 'utf8'));
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0006_relational_operational_source.sql'), 'utf8'));
   const env = { PORTAL_DB: new SQLiteD1Database(database) };
   const privateState = {
     version: 11,
@@ -211,6 +221,7 @@ test('movimentação e anexos são atualizados granularmente sem reconstruir as 
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8'));
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0004_group_granular_writes.sql'), 'utf8'));
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0005_analytics_read_models.sql'), 'utf8'));
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0006_relational_operational_source.sql'), 'utf8'));
   const env = { PORTAL_DB: new SQLiteD1Database(database) };
   const initial = {
     version: 11,
@@ -262,7 +273,7 @@ test('movimentação e anexos são atualizados granularmente sem reconstruir as 
 
   assert.equal(saved.mode, 'granular-treasury');
   assert.equal(saved.changes.upserted, 1);
-  assert.equal(saved.statements, 9);
+  assert.equal(saved.statements, 8);
   assert.equal(database.prepare('SELECT COUNT(*) AS total FROM family_groups').get().total, 1);
   assert.equal(database.prepare('SELECT exit_amount FROM treasury_movements WHERE id = ?').get('mov-1').exit_amount, 30);
   assert.equal(database.prepare('SELECT COUNT(*) AS total FROM treasury_attachments').get().total, 1);
@@ -303,6 +314,7 @@ test('grupos familiares e de Mútuas são atualizados granularmente sem regravar
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8'));
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0004_group_granular_writes.sql'), 'utf8'));
   database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0005_analytics_read_models.sql'), 'utf8'));
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0006_relational_operational_source.sql'), 'utf8'));
   const env = { PORTAL_DB: new SQLiteD1Database(database) };
   const initial = {
     version: 11, settings: {},

@@ -227,3 +227,19 @@ O `/health` deve informar:
 ```
 
 O Dashboard Administrativo consulta as somatórias financeiras no D1. Movimentações, Mensalidades e Mútuas usam recortes SQL na Central de Relatórios. O snapshot permanece como contingência e para compatibilidade das telas operacionais nesta etapa.
+
+## Fonte relacional operacional — versão 6.43.0
+
+Publique primeiro o Worker 1.9.0 e depois aplique `0006_relational_operational_source.sql`. A migração eleva o esquema para 5, ativa `relational_source` e `operational_read_models` e preserva o snapshot atual como ponto de recuperação.
+
+Após a migração, confirme no `/health`:
+
+```json
+{
+  "workerVersion": "1.9.0",
+  "d1": { "schemaVersion": 5, "active": true },
+  "relationalSource": true,
+  "snapshotPolicy": "recovery-only",
+  "optimizedReads": { "treasuryPagination": true }
+}
+```

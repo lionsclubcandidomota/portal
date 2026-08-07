@@ -1,0 +1,102 @@
+{
+  "application": "lions-portal-attachment-worker",
+  "artifactType": "cloudflare-worker",
+  "version": "1.9.0",
+  "schemaVersion": 5,
+  "generatedAt": "2026-08-07T11:48:01.000Z",
+  "summary": {
+    "files": 17,
+    "javascript": 6,
+    "css": 0,
+    "tests": 0,
+    "memberImages": 0,
+    "totalBytes": 236187
+  },
+  "files": [
+    {
+      "path": "migrations/0001_portal_private_state.sql",
+      "bytes": 5602,
+      "sha256": "4f6dc62a53800f8c25d1d334eb285f33f50f36a27a933ce833b4ef88d7a07e48"
+    },
+    {
+      "path": "migrations/0002_admin_auth.sql",
+      "bytes": 2274,
+      "sha256": "1e628f8846e512beafcb8f0e68e54723b44959c35d92de8f47ace324aee5fee7"
+    },
+    {
+      "path": "migrations/0003_treasury_granular_writes.sql",
+      "bytes": 785,
+      "sha256": "6b08adcf86a8cfe7b37dda685d2ae0926efa7a61cad37b3fc91f7d6a496f25b6"
+    },
+    {
+      "path": "migrations/0004_group_granular_writes.sql",
+      "bytes": 839,
+      "sha256": "e25a8c4f449bdac56f9c91e71b6346471b5007e6a4b1feeb08d49d87c63940cf"
+    },
+    {
+      "path": "migrations/0005_analytics_read_models.sql",
+      "bytes": 847,
+      "sha256": "a7d7fb538a680d2922e7a356141ce77280cda8a70384d704beacf7fc8e9ef101"
+    },
+    {
+      "path": "migrations/0006_relational_operational_source.sql",
+      "bytes": 1010,
+      "sha256": "ebf1625e6be7aacf4b73bde54895dcfe97a84f8f6103c177114d1e07e2b4d03e"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 49383,
+      "sha256": "c4fb487deda05c575b429ba5ff1b5d1d93615ecd6d0dbad3b644df156ad48226"
+    },
+    {
+      "path": "package.json",
+      "bytes": 669,
+      "sha256": "8c9de59b58f825bb253790a4d2f26d2e8d16ea42e02465e33a82f1f9fe8a4b1f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 8291,
+      "sha256": "675bea776543554fc82aabd1738b56e3e5e9df3d9a00fa5986e7ff8a98c21517"
+    },
+    {
+      "path": "src/auth.js",
+      "bytes": 22914,
+      "sha256": "1965267ab342da4b5f7e48d8d1169e2a8aaa05e6330d832402196d7f3a206ae4"
+    },
+    {
+      "path": "src/d1-analytics.js",
+      "bytes": 7569,
+      "sha256": "6b1f866884f0faa0dfec1a16a59d3310e17e1ac2c768023f602d2871e881feb9"
+    },
+    {
+      "path": "src/d1-operational.js",
+      "bytes": 6883,
+      "sha256": "c07cb216a0074b8cc36096f1df610c40c4d830a95f727a05562ad8006ee94ddc"
+    },
+    {
+      "path": "src/d1-storage.js",
+      "bytes": 46337,
+      "sha256": "c7634cc397bbf93aa6148920631ac873e64e3f830f191e7b203824b55749a109"
+    },
+    {
+      "path": "src/github-publication.js",
+      "bytes": 15764,
+      "sha256": "fba8df682ef80d6e0a42f31ded48a13123e608b4777c6a7791df099720a7c0b0"
+    },
+    {
+      "path": "src/index.js",
+      "bytes": 65565,
+      "sha256": "309fb9b348d6dfbfd68a03bb6c95a4ce709744a6f886f8af789515bedf48ec94"
+    },
+    {
+      "path": "wrangler.ci.toml",
+      "bytes": 735,
+      "sha256": "5859d7e005d2a0113c66fc8a4804a1d7f615c1c4d526c29bd1faefc84597cd4a"
+    },
+    {
+      "path": "wrangler.toml.example",
+      "bytes": 720,
+      "sha256": "0f15818ae42eccd6ecf2ceee517fbf14e34cfb85df3bc04987d26846460aea59"
+    }
+  ]
+}

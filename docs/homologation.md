@@ -1,4 +1,4 @@
-# Homologação — v6.42.0
+# Homologação — v6.43.0
 
 ## Fluxos prioritários do Portal
 
@@ -148,3 +148,14 @@ Antes da homologação funcional, publique o Worker atualizado e execute a migra
 8. Gere Mensalidades e Mútuas em PDF e CSV e confira nomes, valores, baixas e totais.
 9. Interrompa temporariamente a rede e confirme que o Dashboard e os relatórios continuam pelo fallback local.
 10. No painel D1, confirme aumento de linhas lidas compatível com as consultas, sem aumento de linhas gravadas causado apenas pela visualização.
+
+## Fonte relacional e paginação — versão 6.43.0
+
+1. Publique o Worker 1.9.0 antes da migração 0006.
+2. Confirme que o login e as gravações continuam funcionando no esquema anterior.
+3. Aplique `0006_relational_operational_source.sql`.
+4. Confirme `/health` com esquema 5, `relationalSource: true` e `treasuryPagination: true`.
+5. Publique o Portal 6.43.0.
+6. Abra Movimentações e confirme `D1 · consulta paginada`.
+7. Teste pesquisa, filtros e páginas independentes.
+8. Faça uma alteração privada e confirme que `snapshot_stale` fica ativo sem impedir leitura, backup ou rollback.

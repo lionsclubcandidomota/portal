@@ -1,5 +1,6 @@
-import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.42.0';
-import { createTreasuryAdminController } from '../treasury-admin.js?v=6.42.0';
+import { createTreasuryController, destroyTreasuryCharts } from '../treasury.js?v=6.43.0';
+import { createTreasuryAdminController } from '../treasury-admin.js?v=6.43.0';
+import { loadD1OperationalTreasury } from '../secure-storage/client.js?v=6.43.0';
 
 export function createTreasuryFeature({
   getState,
@@ -52,6 +53,7 @@ export function createTreasuryFeature({
     parseCurrencyInput: treasury.parseCurrencyInput,
     currencyInputValue: treasury.currencyInputValue,
     memberIsActive: treasury.memberIsActive,
+    loadOperationalMovements: options => loadD1OperationalTreasury(getState(), options),
     accountSummaries: treasury.accountSummaries,
     accountTypeIcon: treasury.accountTypeIcon
   };

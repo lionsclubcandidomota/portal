@@ -79,3 +79,11 @@ A Central de Recuperação consulta `GET /api/storage/status` e apresenta claram
 ## Fila privada e continuidade — versão 6.38.0
 
 A fila serial consolida alterações rápidas e mantém a geração ainda não confirmada. Em falha de rede, o Portal conserva os dados no navegador, sinaliza o erro e tenta novamente quando a conexão retorna ou quando o Administrador aciona o indicador. Publicação, atualização e logout são bloqueados enquanto a gravação privada não puder ser confirmada.
+
+## Snapshot somente para recuperação — versão 6.43.0
+
+Com o esquema D1 5, as tabelas relacionais passam a ser a fonte operacional oficial. Gravações granulares de movimentações e grupos não regravam o snapshot a cada ação; elas marcam `snapshot_stale = 1`.
+
+Quando a Central de Recuperação cria um backup, restaura uma versão ou retorna temporariamente ao R2, o Worker reconstrói o estado privado atual a partir das tabelas relacionais antes de materializar o JSON. Assim, o snapshot permanece um artefato de contingência, não uma dependência das operações diárias.
+
+O endpoint de status informa `relationalSource`, `snapshotStale` e `snapshotUpdatedAt`, permitindo distinguir o banco operacional do último snapshot materializado.

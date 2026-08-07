@@ -1,5 +1,19 @@
 # Changelog
 
+## 6.43.0 — Tabelas relacionais como fonte operacional e paginação no D1
+
+- Cria a migração `0006_relational_operational_source.sql` e eleva o esquema D1 para a versão 5.
+- Tabelas relacionais passam a ser a fonte principal do estado privado carregado após o login.
+- Reconstrói grupos familiares, vínculos de Mútuas, eventos, participantes e anexos a partir de seus relacionamentos no banco.
+- Cria `GET /api/operational/treasury` com pesquisa, filtros, somatórias e páginas independentes para programados e realizados.
+- A tela de Movimentações passa a consultar somente a página necessária e identifica a origem `D1 · consulta paginada`.
+- Mantém fallback local automático quando a consulta operacional estiver temporariamente indisponível.
+- Gravações granulares deixam de atualizar `portal_state_snapshot` e o espelho JSON do R2 a cada operação.
+- O snapshot passa a ter política `recovery-only` e é marcado como desatualizado após mutações granulares.
+- Backups, restauração, sincronização completa e rollback continuam materializando o estado atual com segurança.
+- Worker 1.9.0 mantém compatibilidade temporária com os esquemas 3 e 4 durante a implantação.
+- Adiciona testes reais em SQLite para paginação, pesquisa, somatórias, fonte relacional e preservação do snapshot de recuperação.
+
 ## 6.42.0 — Dashboard e relatórios com leituras SQL no D1
 
 - Cria a migração `0005_analytics_read_models.sql` e eleva o esquema D1 para a versão 4.

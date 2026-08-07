@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.8.0
+# Cloudflare Worker do Portal Lions — v1.9.0
 
 O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
@@ -74,6 +74,7 @@ Migrações atuais:
 - `0003_treasury_granular_writes.sql`: mutações idempotentes da Tesouraria e esquema D1 2.
 - `0004_group_granular_writes.sql`: grupos familiares, Mútuas e esquema D1 3.
 - `0005_analytics_read_models.sql`: índices de leitura, analytics e esquema D1 4.
+- `0006_relational_operational_source.sql`: fonte relacional, paginação operacional e esquema D1 5.
 
 ## Implantação
 
@@ -156,6 +157,7 @@ O Worker usa `GITHUB_TOKEN`, valida a fronteira pública e cria um único commit
 - `PUT /api/private-state/groups` para grupos familiares, Mútuas, vínculos e eventos
 - `GET /api/analytics/dashboard` para agregações financeiras por período
 - `GET /api/analytics/report` para recortes de Movimentações, Mensalidades e Mútuas
+- `GET /api/operational/treasury` para paginação, pesquisa e filtros das movimentações
 - rotas de backups, integridade, migração D1 e anexos
 
 ### Diretoria
@@ -247,6 +249,40 @@ Health esperado:
   "optimizedReads": {
     "dashboard": true,
     "reports": true
+  }
+}
+```
+
+
+## Otimização v1.9.0
+
+A migração `0006_relational_operational_source.sql` promove as tabelas relacionais a fonte oficial do estado privado. O endpoint `GET /api/private-state` reconstrói as coleções a partir dos relacionamentos do D1 e deixa o snapshot somente para recuperação.
+
+A rota autenticada `GET /api/operational/treasury` recebe período, busca, filtro e páginas independentes para programados e realizados. Ela retorna apenas os registros das páginas, contagens e somatórias.
+
+Gravações granulares não atualizam mais o snapshot nem o espelho JSON no R2. Elas marcam `snapshot_stale = 1`; backups, restaurações, sincronizações completas e rollback materializam o estado atual quando necessário.
+
+Ordem de implantação:
+
+```bash
+npm ci
+npx wrangler deploy --config wrangler.toml
+npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
+```
+
+Health esperado:
+
+```json
+{
+  "workerVersion": "1.9.0",
+  "privateAutosave": "relational-operational",
+  "d1": { "schemaVersion": 5, "active": true },
+  "relationalSource": true,
+  "snapshotPolicy": "recovery-only",
+  "optimizedReads": {
+    "dashboard": true,
+    "reports": true,
+    "treasuryPagination": true
   }
 }
 ```
