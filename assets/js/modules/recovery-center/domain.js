@@ -3,11 +3,11 @@ import {
   createPortalEnvelope,
   migratePortalPayload,
   validatePortalState
-} from '../../core/portal-schema.js?v=6.26.0';
+} from '../../core/portal-schema.js?v=6.28.0';
 import {
   findSensitivePortalFields,
   stripSensitivePortalFields
-} from '../../core/portal-security.js?v=6.26.0';
+} from '../../core/portal-security.js?v=6.28.0';
 
 export const RECOVERY_SNAPSHOT_VERSION = 1;
 export const MAX_RECOVERY_SNAPSHOTS = 12;
@@ -18,7 +18,7 @@ export const RECOVERY_AREAS = Object.freeze([
   { key: 'treasuryAccounts', label: 'Contas da Tesouraria', icon: '🏦', description: 'Contas bancárias, caixa e saldos iniciais.' },
   { key: 'treasuryCategories', label: 'Categorias financeiras', icon: '🏷️', description: 'Categorias usadas nos lançamentos.' },
   { key: 'familyGroups', label: 'Grupos familiares', icon: '🏠', description: 'Titulares e integrantes das mensalidades familiares.' },
-  { key: 'mutualGroups', label: 'Grupos de mútuas', icon: '🤲', description: 'Cobranças individuais e associados vinculados às mútuas.' },
+  { key: 'mutualGroups', label: 'Grupos de mútuas', icon: '🤲', description: 'Participantes e cobranças geradas por ocorrências de falecimento.' },
   { key: 'treasury', label: 'Movimentações', icon: '💰', description: 'Entradas, saídas e baixas de mensalidades e mútuas.' },
   { key: 'events', label: 'Agenda', icon: '🗓️', description: 'Eventos e agendamentos cadastrados.' },
   { key: 'meetings', label: 'Compromissos', icon: '🤝', description: 'Reuniões e compromissos.' },
@@ -47,7 +47,6 @@ const COLLECTIONS_WITH_IDS = Object.freeze([
 
 const DATE_FIELDS = Object.freeze({
   birthdays: ['birthDate'],
-  mutualGroups: ['referenceDate'],
   treasury: ['date'],
   events: ['date', 'endDate'],
   meetings: ['date'],
@@ -259,20 +258,48 @@ export function diagnosePortalIntegrity(inputState) {
 
   const mutualIssues = [];
   for (const group of state.mutualGroups || []) {
-    const seenMembers = new Set();
-    for (const charge of group.memberCharges || []) {
-      const reference = String(charge?.memberId || '');
-      if (!reference || !memberIds.has(reference)) mutualIssues.push(`${group.name || group.id}: ${reference || 'sem associado'}`);
-      if (seenMembers.has(reference)) mutualIssues.push(`${group.name || group.id}: cobrança duplicada para ${reference}`);
-      seenMembers.add(reference);
-      if (!(Number(charge?.amount || 0) > 0)) mutualIssues.push(`${group.name || group.id}: valor inválido para ${reference}`);
+    const groupLabel = group.name || group.id || 'Grupo sem nome';
+    const activeMembers = new Set();
+    const membershipIds = new Set();
+    for (const membership of group.memberships || []) {
+      const memberId = String(membership?.memberId || '');
+      const membershipId = String(membership?.id || '');
+      if (!memberId || !memberIds.has(memberId)) mutualIssues.push(`${groupLabel}: participante ${memberId || 'sem associado'} inválido`);
+      if (membershipId && membershipIds.has(membershipId)) mutualIssues.push(`${groupLabel}: vínculo duplicado ${membershipId}`);
+      if (membershipId) membershipIds.add(membershipId);
+      if (!membership?.endedMonth && memberId) {
+        if (activeMembers.has(memberId)) mutualIssues.push(`${groupLabel}: participante ativo duplicado ${memberId}`);
+        activeMembers.add(memberId);
+      }
+    }
+
+    const eventIds = new Set();
+    for (const event of group.events || []) {
+      const eventId = String(event?.id || '');
+      const eventLabel = event?.deceasedName || eventId || 'ocorrência sem identificação';
+      if (!eventId) mutualIssues.push(`${groupLabel}: ocorrência sem identificador`);
+      else if (eventIds.has(eventId)) mutualIssues.push(`${groupLabel}: ocorrência duplicada ${eventId}`);
+      else eventIds.add(eventId);
+      if (!String(event?.deceasedName || '').trim()) mutualIssues.push(`${groupLabel}: falecimento sem nome informado`);
+      if (!isIsoDate(event?.occurrenceDate)) mutualIssues.push(`${groupLabel}: data inválida em ${eventLabel}`);
+      if (!(Number(event?.amount || 0) > 0)) mutualIssues.push(`${groupLabel}: valor inválido em ${eventLabel}`);
+      const participantIds = Array.isArray(event?.participantIds) ? event.participantIds.map(String) : [];
+      if (!participantIds.length) mutualIssues.push(`${groupLabel}: nenhum participante em ${eventLabel}`);
+      const uniqueParticipants = new Set();
+      participantIds.forEach(memberId => {
+        if (!memberIds.has(memberId)) mutualIssues.push(`${groupLabel}: participante ${memberId} inexistente em ${eventLabel}`);
+        if (uniqueParticipants.has(memberId)) mutualIssues.push(`${groupLabel}: participante duplicado ${memberId} em ${eventLabel}`);
+        uniqueParticipants.add(memberId);
+      });
     }
   }
   checks.push(createCheck(
     'mutuals',
-    'Vínculos e valores das mútuas',
+    'Grupos e ocorrências de mútuas',
     mutualIssues.length ? 'error' : 'ok',
-    mutualIssues.length ? `${mutualIssues.length} inconsistência(s) encontrada(s) nas cobranças de mútuas.` : 'Todas as cobranças de mútuas são individuais e apontam para associados válidos.',
+    mutualIssues.length
+      ? `${mutualIssues.length} inconsistência(s) encontrada(s) nos grupos ou falecimentos registrados.`
+      : 'Os participantes e as cobranças por falecimento apontam para cadastros válidos.',
     mutualIssues.length
   ));
 

@@ -46,14 +46,20 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
     const membership = treasury.isMembershipEntry(item);
     const mutual = treasury.isMutualEntry(item);
     const mutualGroup = mutual ? treasury.mutualGroupFor(item.mutualGroupId) : null;
+    const mutualEvent = mutual && item.mutualEventId
+      ? treasury.mutualEventFor(item.mutualGroupId, item.mutualEventId)
+      : null;
     const mutualMonth = mutual ? treasury.mutualReferenceMonth(item) : '';
+    const mutualDate = mutual ? treasury.mutualReferenceDate(item) : '';
     const coveredMonthText = treasury.coveredMonths(item)
       .map(treasury.monthLabel)
       .join(', ');
     const secondaryText = membership
       ? `Mensalidade · ${coveredMonthText || 'referência não informada'}`
       : mutual
-        ? `Mútua · ${mutualGroup?.name || 'grupo não informado'} · ${treasury.monthLabel(mutualMonth)}`
+        ? mutualEvent
+          ? `Mútua · ${mutualGroup?.name || 'grupo não informado'} · falecimento de ${mutualEvent.deceasedName} em ${formatDate(mutualDate)}`
+          : `Mútua histórica · ${mutualGroup?.name || 'grupo não informado'} · ${treasury.monthLabel(mutualMonth)}`
         : (item.notes || 'Sem observações adicionais');
     const movementLabel = item.entry ? 'Entrada financeira' : 'Saída financeira';
     const attachmentCount = Array.isArray(item.attachments) ? item.attachments.length : 0;
@@ -91,7 +97,7 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${treasury.accountTypeIcon(account?.type)}</span><div><small>Conta</small><strong>${escapeHtml(account?.name || 'Conta principal')}</strong></div></div>
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">🏷️</span><div><small>Categoria</small><strong>${escapeHtml(item.category)}</strong></div></div>
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${item.entry ? '↗' : '↘'}</span><div><small>Tipo</small><strong>${item.entry ? 'Entrada' : 'Saída'}</strong></div></div>
-          ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">👥</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🗓️</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🤲</span><div><small>Grupo / competência</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
+          ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">👥</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🗓️</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🤲</span><div><small>${mutualEvent ? 'Grupo / ocorrência' : 'Grupo / referência histórica'}</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${mutualEvent ? `Falecimento de ${escapeHtml(mutualEvent.deceasedName)} em ${escapeHtml(formatDate(mutualDate))}` : escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
         </div>
         ${treasuryAttachmentGallery(item)}
         <div class="treasury-expanded-footer">
@@ -128,6 +134,27 @@ export function categorySummaries(items, treasury) {
     ) - (
       first[1].entries + first[1].exits
     ));
+}
+
+export function summarizeMovementFilter(items, movementFilter, treasury) {
+  const visibleItems = Array.isArray(items) ? items : [];
+  const summaryItems = movementFilter === 'all'
+    ? visibleItems.filter(item => !treasury.isProgrammed(item))
+    : visibleItems;
+  const entries = summaryItems.reduce((sum, item) => sum + Number(item.entry || 0), 0);
+  const exits = summaryItems.reduce((sum, item) => sum + Number(item.exit || 0), 0);
+  const scheduled = movementFilter === 'scheduled';
+  const completed = movementFilter === 'completed' || movementFilter === 'all';
+
+  return {
+    entries,
+    exits,
+    result: entries - exits,
+    count: summaryItems.length,
+    entryLabel: scheduled ? 'Entradas programadas' : completed ? 'Entradas realizadas' : 'Entradas exibidas',
+    exitLabel: scheduled ? 'Saídas programadas' : completed ? 'Saídas realizadas' : 'Saídas exibidas',
+    resultLabel: scheduled ? 'Saldo previsto' : completed ? 'Resultado realizado' : 'Resultado exibido'
+  };
 }
 
 export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers }) {
@@ -173,15 +200,16 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
       entries: searchMatched.filter(item => Number(item.entry || 0) > 0).length,
       exits: searchMatched.filter(item => Number(item.exit || 0) > 0).length
     };
-    const realizedEntries = filtered
-      .filter(item => !treasury.isProgrammed(item))
-      .reduce((sum, item) => sum + Number(item.entry || 0), 0);
-    const realizedExits = filtered
-      .filter(item => !treasury.isProgrammed(item))
-      .reduce((sum, item) => sum + Number(item.exit || 0), 0);
+    const summary = summarizeMovementFilter(filtered, movementFilter, treasury);
     const filterButton = (key, label) => `<button type="button" class="treasury-movement-filter ${movementFilter === key ? 'is-active' : ''}" data-movement-filter="${key}" aria-pressed="${String(movementFilter === key)}"><span>${label}</span><strong>${counts[key]}</strong></button>`;
+    const scheduledSection = movementFilter === 'completed'
+      ? ''
+      : `<section class="timeline-section">${timelineHeading('🗓️', 'Programados', 'Valores previstos que ainda não alteram o saldo.', scheduled.length)}${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</section>`;
+    const completedSection = movementFilter === 'scheduled'
+      ? ''
+      : `<section class="timeline-section is-history">${timelineHeading('🧾', 'Realizados', 'Entradas recebidas e despesas pagas.', completed.length, true)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
 
-    lists.innerHTML = `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Histórico financeiro</span><h3>Movimentações do período</h3><p>Use os filtros rápidos para localizar lançamentos e conferir valores realizados.</p></div><div class="treasury-movement-balance ${realizedEntries - realizedExits >= 0 ? 'is-positive' : 'is-negative'}"><small>Resultado exibido</small><strong class="sensitive-money">${money.format(realizedEntries - realizedExits)}</strong></div></div><div class="treasury-movement-stats"><span><small>Entradas realizadas</small><strong class="sensitive-money">${money.format(realizedEntries)}</strong></span><span><small>Saídas realizadas</small><strong class="sensitive-money">${money.format(realizedExits)}</strong></span><span><small>Registros exibidos</small><strong>${filtered.length}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section><section class="timeline-section">${timelineHeading('🗓️', 'Lançamentos programados', 'Receitas e despesas agendadas que ainda não impactam o saldo atual.', scheduled.length)}${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</section><section class="timeline-section is-history">${timelineHeading('🧾', 'Lançamentos realizados', 'Somente movimentações recebidas, pagas ou realizadas.', completed.length, true)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
+    lists.innerHTML = `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Movimentações</span><h3>Histórico financeiro</h3><p>Filtre os lançamentos para conferir os valores.</p></div><div class="treasury-movement-balance ${summary.result >= 0 ? 'is-positive' : 'is-negative'}"><small>${summary.resultLabel}</small><strong class="sensitive-money">${money.format(summary.result)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summary.entryLabel}</small><strong class="sensitive-money">${money.format(summary.entries)}</strong></span><span><small>${summary.exitLabel}</small><strong class="sensitive-money">${money.format(summary.exits)}</strong></span><span><small>Registros</small><strong>${summary.count}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section>${scheduledSection}${completedSection}`;
 
     bindRowActions();
 

@@ -7,6 +7,7 @@ const WRITE_CONTROL_SELECTOR = [
   '#manageTreasuryAccounts',
   '#manageFamilyGroups',
   '#manageMutualGroups',
+  '#registerMutualEvent',
   '#mutualPaymentButton',
   '.mutual-charge-checkbox',
   '[data-membership-member]',
@@ -23,6 +24,7 @@ const WRITE_FORM_SELECTOR = [
   '#treasuryEntryForm',
   '#membershipPaymentForm',
   '#mutualPaymentForm',
+  '#mutualEventForm',
   '#settingsForm',
   '#directorAccessForm'
 ].join(',');

@@ -1,5 +1,5 @@
-import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.26.0';
-import { normalizeGitHubToken } from './core/portal-security.js?v=6.26.0';
+import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.28.0';
+import { normalizeGitHubToken } from './core/portal-security.js?v=6.28.0';
 
 export const GITHUB_CONFIG = Object.freeze({
   owner: 'lionsclubcandidomota',

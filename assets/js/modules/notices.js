@@ -62,7 +62,7 @@ export function renderNotices(state, helpers) {
     bindRowActions
   } = helpers;
 
-  root.innerHTML = `${pageToolbar('Pesquisar avisos...', 'Novo aviso', 'notice')}<div id="noticeLists"></div>`;
+  root.innerHTML = `${pageToolbar('Buscar avisos...', 'Adicionar aviso', 'notice')}<div id="noticeLists"></div>`;
 
   const draw = (query = '') => {
     const visible = state.notices.filter(item => {
@@ -81,7 +81,7 @@ export function renderNotices(state, helpers) {
 
     if (!lists) return;
 
-    lists.innerHTML = `<section class="timeline-section">${timelineHeading('📢', 'Avisos ativos e programados', 'Comunicados disponíveis ou com publicação futura.', current.length)}<div class="expandable-record-list">${noticeCards(current, 'Nenhum aviso ativo ou programado.', helpers)}</div></section>${adminUnlocked ? `<section class="timeline-section is-history">${timelineHeading('🗂️', 'Histórico de avisos', 'Comunicados encerrados, do mais recente para o mais antigo.', history.length, true)}<div class="expandable-record-list">${noticeCards(history, 'Nenhum aviso encerrado.', helpers)}</div></section>` : ''}`;
+    lists.innerHTML = `<section class="timeline-section">${timelineHeading('📢', 'Avisos atuais', 'Comunicados disponíveis e programados.', current.length)}<div class="expandable-record-list">${noticeCards(current, 'Nenhum aviso ativo ou programado.', helpers)}</div></section>${adminUnlocked ? `<section class="timeline-section is-history">${timelineHeading('🗂️', 'Histórico', 'Avisos encerrados.', history.length, true)}<div class="expandable-record-list">${noticeCards(history, 'Nenhum aviso encerrado.', helpers)}</div></section>` : ''}`;
 
     bindRowActions();
   };

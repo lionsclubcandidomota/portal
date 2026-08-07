@@ -151,5 +151,15 @@ export function downloadAppointmentCalendar(item) {
 }
 
 export function appointmentListItem(item) {
-  return `<div class="list-item appointment-home-item"><div class="appointment-home-icon ${item.appointmentType}">${item.appointmentType === 'meeting' ? '🤝' : '📅'}</div><div class="list-item-main"><strong>${escapeHtml(item.title)}</strong><small>${formatDate(item.date)} às ${escapeHtml(item.time || 'Sem horário')}</small><small class="appointment-home-location">${renderLocation(item, { compact: true })}</small></div>${appointmentTypeBadge(item)}</div>`;
+  return `<article class="appointment-home-item">
+    <span class="appointment-home-icon ${item.appointmentType}" aria-hidden="true">${item.appointmentType === 'meeting' ? '🤝' : '📅'}</span>
+    <div class="appointment-home-content">
+      <strong>${escapeHtml(item.title)}</strong>
+      <div class="appointment-home-details">
+        <span class="appointment-home-date">${formatDate(item.date)} · ${escapeHtml(item.time || 'Sem horário')}</span>
+        <span class="appointment-home-location">${renderLocation(item, { compact: true })}</span>
+      </div>
+    </div>
+    <div class="appointment-home-type">${appointmentTypeBadge(item)}</div>
+  </article>`;
 }

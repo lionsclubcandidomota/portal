@@ -41,7 +41,7 @@ test('pesquisa financeira recebe componente de destaque próprio', async () => {
 
   assert.match(view, /class="treasury-search-panel"/);
   assert.match(view, /type="search"/);
-  assert.match(view, /Digite para pesquisar no histórico financeiro/);
+  assert.match(view, /Buscar no histórico/);
   assert.match(css, /\.treasury-search-panel\s*\{/);
   assert.match(css, /\.treasury-search-control input\s*\{/);
 });
@@ -196,7 +196,7 @@ test('menu Configurações e sua rota ficam exclusivos do perfil Administrador',
 });
 
 
-test('acesso da Diretoria inicia vazio e o menu usa Acesso Administrativo', async () => {
+test('acesso da Diretoria inicia vazio e o menu usa Área administrativa', async () => {
   const [html, view, controller, loginState, navigation, css] = await Promise.all([
     source('index.html'),
     source('assets/js/modules/admin-dashboard/view.js'),
@@ -206,8 +206,8 @@ test('acesso da Diretoria inicia vazio e o menu usa Acesso Administrativo', asyn
     source('assets/css/pages/admin-dashboard.css')
   ]);
 
-  assert.match(html, /<span class="nav-label">Acesso Administrativo<\/span>/);
-  assert.match(navigation, /: 'Acesso Administrativo';/);
+  assert.match(html, /<span class="nav-label">Área administrativa<\/span>/);
+  assert.match(navigation, /: 'Área administrativa';/);
   assert.match(view, /placeholder="Informe a senha da Diretoria"/);
   assert.match(view, /name="directorAccessPassword"/);
   assert.match(view, /autocomplete="new-password"/);

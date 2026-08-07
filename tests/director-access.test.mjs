@@ -280,10 +280,10 @@ test('Dashboard Diretoria mantém relatórios e consultas, mas remove ações de
   });
   const html = adminDashboardHtml(model, { canWrite: false, accessRole: ACCESS_ROLES.DIRECTOR });
 
-  assert.match(html, /Dashboard Diretoria/);
-  assert.match(html, /Central de relatórios/);
+  assert.match(html, /Área da Diretoria/);
+  assert.match(html, /Gerar relatório/);
   assert.match(html, /Histórico de alterações/);
-  assert.match(html, /Exportar JSON/);
+  assert.match(html, /Baixar backup/);
   assert.doesNotMatch(html, /data-add=/);
   assert.doesNotMatch(html, /id="importBtn"/);
   assert.doesNotMatch(html, /id="openRecoveryCenterBtn"/);

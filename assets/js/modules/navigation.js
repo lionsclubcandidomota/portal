@@ -1,23 +1,23 @@
-import { accessSnapshot, canAccessView } from './portal-runtime/authorization.js?v=6.26.0';
+import { accessSnapshot, canAccessView } from './portal-runtime/authorization.js?v=6.28.0';
 
 const DEFAULT_TITLES = {
-  dashboard: 'Dashboard',
+  dashboard: 'Início',
   birthdays: 'Aniversariantes',
   treasury: 'Tesouraria',
   agenda: 'Agenda',
   notices: 'Avisos',
-  admin: 'Dashboard Administrativo',
-  settings: 'Configurações'
+  admin: 'Área administrativa',
+  settings: 'Ajustes'
 };
 
 const DEFAULT_DESCRIPTIONS = {
-  dashboard: 'Visão geral e atalhos para as informações do clube',
-  birthdays: 'Consulte e organize os próximos aniversários',
-  treasury: 'Acompanhe entradas, saídas, saldo e categorias',
-  agenda: 'Eventos e reuniões reunidos em um único calendário',
-  notices: 'Comunicados importantes e histórico de publicações',
-  admin: 'Indicadores gerenciais, cadastros e manutenção do portal',
-  settings: 'Personalize a identidade visual do painel'
+  dashboard: 'O essencial do clube em um só lugar',
+  birthdays: 'Consulte datas e pessoas',
+  treasury: 'Acompanhe saldos e movimentações',
+  agenda: 'Eventos e reuniões do clube',
+  notices: 'Comunicados do clube',
+  admin: 'Cadastros, relatórios e administração',
+  settings: 'Aparência e preferências do portal'
 };
 
 const DEFAULT_DESKTOP_BREAKPOINT = 900;
@@ -124,12 +124,12 @@ export function createNavigationController({
         : '🔐 Acesso ao painel';
     }
     if (adminLabel) adminLabel.textContent = access.authenticated
-      ? (directorMode ? 'Dashboard Diretoria' : 'Dashboard Administrativo')
-      : 'Acesso Administrativo';
+      ? (directorMode ? 'Área da Diretoria' : 'Área administrativa')
+      : 'Área administrativa';
     if (adminIcon) adminIcon.textContent = directorMode ? '👁️' : access.authenticated ? '🛠️' : '🔐';
     if (modeChip) modeChip.textContent = directorMode
-      ? '● Diretoria · somente leitura'
-      : access.authenticated ? '● Modo administrativo' : 'Modo visitante';
+      ? 'Diretoria · leitura'
+      : access.authenticated ? 'Administrador' : 'Visitante';
 
     refreshGlobalControls?.();
   };

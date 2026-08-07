@@ -57,15 +57,17 @@ export function renderDashboard(state, helpers) {
     0
   );
   const mutualGroups = adminUnlocked ? treasury.mutualGroups() : [];
+  const mutualEvents = adminUnlocked ? treasury.mutualEvents() : [];
   const mutualCharges = adminUnlocked
-    ? mutualGroups.flatMap(group => treasury.mutualMembersForMonth(group.id, currentMembershipMonth).map(member => {
-        const payments = treasury.mutualPaymentsFor(group.id, member.id, currentMembershipMonth);
+    ? mutualEvents.flatMap(({ group, event }) => treasury.mutualMembersForEvent(group.id, event.id).map(member => {
+        const payments = treasury.mutualPaymentsFor(group.id, member.id, event.id);
         const payment = [...payments].sort((first, second) => String(second.paymentDate || second.date || '')
           .localeCompare(String(first.paymentDate || first.date || '')))[0] || null;
         return {
           group,
+          event,
           member,
-          expected: Number(treasury.mutualAmountForMonth(group, currentMembershipMonth) || 0),
+          expected: Number(event.amount || 0),
           payment
         };
       }))
@@ -76,9 +78,7 @@ export function renderDashboard(state, helpers) {
     (sum, charge) => sum + Number(charge.payment?.entry || charge.expected || 0),
     0
   );
-  const mutualActiveGroupCount = mutualGroups.filter(group =>
-    treasury.mutualMembersForMonth(group.id, currentMembershipMonth).length > 0
-  ).length;
+  const mutualActiveGroupCount = mutualGroups.filter(group => treasury.mutualActiveMembers(group.id).length > 0).length;
   const overdueMovements = adminUnlocked
     ? state.treasury.filter(item => treasury.isOverdue(item)).length
     : 0;
@@ -104,37 +104,37 @@ export function renderDashboard(state, helpers) {
     || lastSyncInfo?.publishedAt
     || '';
   const lastUpdateText = lastUpdateValue
-    ? `Últimas atualizações recebidas no dia ${new Intl.DateTimeFormat('pt-BR', {
+    ? `Atualizado em ${new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
-      }).format(new Date(lastUpdateValue))} às ${new Intl.DateTimeFormat('pt-BR', {
+      }).format(new Date(lastUpdateValue))}, ${new Intl.DateTimeFormat('pt-BR', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
-      }).format(new Date(lastUpdateValue))} horas`
-    : 'Informações do portal carregadas';
+      }).format(new Date(lastUpdateValue))}`
+    : 'Informações atualizadas';
 
   root.innerHTML = `
     <section class="hero dashboard-hero ${adminUnlocked ? 'is-admin-compact' : ''}">
       <div class="hero-content">
-        <h2>${greeting()}, seja bem-vindo(a)!</h2>
-        <p>Informações atualizadas do ${escapeHtml(state.settings.clubName)}.</p>
+        <h2>${greeting()}!</h2>
+        <p>${adminUnlocked ? 'Veja o que precisa da sua atenção hoje.' : `Acompanhe as novidades do ${escapeHtml(state.settings.clubName)}.`}</p>
         <div class="hero-meta"><span class="pill update-pill"><span aria-hidden="true">↻</span> ${lastUpdateText}</span></div>
       </div>
     </section>
     <section class="grid grid-kpis dashboard-kpis ${adminUnlocked ? 'is-admin-compact' : 'visitor-kpis'}">
       ${adminUnlocked ? kpi('💳', 'Saldo atual', money.format(finance.balance), 'treasury') : ''}
-      ${kpi('🗓️', 'Próximos compromissos', nextAppointments.length, 'agenda')}
+      ${kpi('🗓️', 'Agenda', nextAppointments.length, 'agenda')}
       ${kpi('📢', 'Avisos ativos', state.notices.filter(notice => noticeIsActive(notice)).length, 'notices')}
     </section>
     <section class="grid grid-main dashboard-main-grid ${adminUnlocked ? 'is-admin-compact' : 'is-visitor'}">
-      <article class="card ${adminUnlocked ? 'col-3 dashboard-summary-card dashboard-birthdays-card' : 'col-12'}"><div class="card-header"><div><h3>🎂 Próximos aniversariantes</h3><div class="card-subtitle">Datas mais próximas</div></div><button class="btn btn-ghost btn-sm" data-go="birthdays" type="button">Ver todos</button></div>
+      <article class="card ${adminUnlocked ? 'col-3 dashboard-summary-card dashboard-birthdays-card' : 'col-12'}"><div class="card-header"><div><h3>🎂 Aniversários</h3><div class="card-subtitle">Próximas datas</div></div><button class="btn btn-ghost btn-sm" data-go="birthdays" type="button">Ver todos</button></div>
       <div class="list">${birthdays.length ? birthdays.map(member => {
         const status = birthdayStatus(daysUntil(member.next));
         return `<div class="list-item dashboard-birthday-item">${avatar(member)}<div class="list-item-main"><strong>${escapeHtml(member.name)}</strong><small>${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(member.next)}</small></div><span class="birthday-status ${status.className}">${status.icon} ${status.text}</span></div>`;
       }).join('') : empty('🎂', 'Nenhum aniversariante cadastrado.')}</div></article>
-      ${adminUnlocked ? `<article class="card col-3 dashboard-summary-card dashboard-treasury-card"><div class="card-header"><div><h3>💰 Tesouraria</h3><div class="card-subtitle">Resumo financeiro</div></div><div class="card-header-actions">${financePrivacy.buttonHtml({ compact: true })}<button class="btn btn-ghost btn-sm" data-go="treasury" type="button">Detalhes</button></div></div>
+      ${adminUnlocked ? `<article class="card col-3 dashboard-summary-card dashboard-treasury-card"><div class="card-header"><div><h3>💰 Finanças</h3><div class="card-subtitle">Resumo do período</div></div><div class="card-header-actions">${financePrivacy.buttonHtml({ compact: true })}<button class="btn btn-ghost btn-sm" data-go="treasury" type="button">Detalhes</button></div></div>
         <div class="dashboard-finance-summary">
           <div class="is-primary"><small>Saldo atual</small><strong class="sensitive-money">${money.format(finance.balance)}</strong></div>
           <div><small>Saldo futuro</small><strong class="sensitive-money">${money.format(finance.projectedBalance)}</strong></div>
@@ -142,9 +142,9 @@ export function renderDashboard(state, helpers) {
           <div><small>Contas ativas</small><strong>${treasuryAccountSummaries().filter(account => account.active !== false).length}</strong></div>
         </div>
       </article><article class="card col-3 dashboard-summary-card dashboard-membership-card"><div class="card-header"><div><h3>🧾 Mensalidades</h3><div class="card-subtitle">${escapeHtml(treasury.monthLabel(currentMembershipMonth))}</div></div><button class="btn btn-ghost btn-sm" type="button" data-open-memberships>Ver controle</button></div><div class="dashboard-membership-summary"><div><small>Associados ativos</small><strong>${activeMembers.length}</strong></div><div class="is-paid"><small>Em dia</small><strong>${membershipPaidIds.size}</strong></div><div class="is-pending"><small>Pendentes</small><strong>${Math.max(0, activeMembers.length - membershipPaidIds.size)}</strong></div><div class="is-total"><small>Total recebido</small><strong class="sensitive-money">${money.format(membershipTotal)}</strong></div></div><div class="dashboard-membership-progress"><span style="width:${activeMembers.length ? Math.min(100, (membershipPaidIds.size / activeMembers.length) * 100) : 0}%"></span></div></article>
-      <article class="card col-3 dashboard-summary-card dashboard-mutual-card"><div class="card-header"><div><h3>🤲 Mútuas</h3><div class="card-subtitle">${escapeHtml(treasury.monthLabel(currentMembershipMonth))}</div></div><button class="btn btn-ghost btn-sm" type="button" data-open-mutuals>Ver controle</button></div><div class="dashboard-membership-summary dashboard-mutual-summary"><div><small>Grupos ativos</small><strong>${mutualActiveGroupCount}</strong></div><div class="is-paid"><small>Pagas</small><strong>${mutualPaidCharges.length}</strong></div><div class="is-pending"><small>Pendentes</small><strong>${Math.max(0, mutualCharges.length - mutualPaidCharges.length)}</strong></div><div class="is-total"><small>Total recebido</small><strong class="sensitive-money">${money.format(mutualReceivedTotal)}</strong></div></div><div class="dashboard-membership-progress dashboard-mutual-progress" title="Previsto: ${money.format(mutualExpectedTotal)}"><span style="width:${mutualCharges.length ? Math.min(100, (mutualPaidCharges.length / mutualCharges.length) * 100) : 0}%"></span></div></article>` : ''}
-      <article class="card ${adminUnlocked ? 'col-6' : 'col-12'} dashboard-agenda-card"><div class="card-header"><div><h3>🗓️ Próximos compromissos</h3><div class="card-subtitle">Eventos e reuniões em uma única agenda</div></div><button class="btn btn-ghost btn-sm" data-go="agenda" type="button">Abrir agenda</button></div><div class="dashboard-appointments-grid">${nextAppointments.length ? nextAppointments.map(appointmentListItem).join('') : empty('🗓️', 'Nenhum compromisso próximo.')}</div></article>
-      <article class="card ${adminUnlocked ? 'col-6' : 'col-12'} dashboard-notices-card"><div class="card-header"><div><h3>📢 Avisos importantes</h3><div class="card-subtitle">Comunicados recentes</div></div><button class="btn btn-ghost btn-sm" data-go="notices" type="button">Ver avisos</button></div><div class="dashboard-notices-grid">${notices.length ? notices.map(notice => `<div class="notice ${notice.priority.toLowerCase()}"><h4>${escapeHtml(notice.title)}</h4><div class="markdown-body markdown-compact">${markdownToHtml(notice.text)}</div><small>${escapeHtml(noticePeriodText(notice))} · Prioridade ${escapeHtml(notice.priority)}</small></div>`).join('') : empty('📢', 'Nenhum aviso cadastrado.')}</div></article>
+      <article class="card col-3 dashboard-summary-card dashboard-mutual-card"><div class="card-header"><div><h3>🤲 Mútuas</h3><div class="card-subtitle">Cobranças por ocorrência</div></div><button class="btn btn-ghost btn-sm" type="button" data-open-mutuals>Ver controle</button></div><div class="dashboard-membership-summary dashboard-mutual-summary"><div><small>Ocorrências</small><strong>${mutualEvents.length}</strong></div><div class="is-paid"><small>Pagas</small><strong>${mutualPaidCharges.length}</strong></div><div class="is-pending"><small>Pendentes</small><strong>${Math.max(0, mutualCharges.length - mutualPaidCharges.length)}</strong></div><div class="is-total"><small>Total recebido</small><strong class="sensitive-money">${money.format(mutualReceivedTotal)}</strong></div></div><div class="dashboard-membership-progress dashboard-mutual-progress" title="Grupos ativos: ${mutualActiveGroupCount} · Previsto: ${money.format(mutualExpectedTotal)}"><span style="width:${mutualCharges.length ? Math.min(100, (mutualPaidCharges.length / mutualCharges.length) * 100) : 0}%"></span></div></article>` : ''}
+      <article class="card ${adminUnlocked ? 'col-6' : 'col-12'} dashboard-agenda-card"><div class="card-header"><div><h3>🗓️ Agenda</h3><div class="card-subtitle">Próximos eventos e reuniões</div></div><button class="btn btn-ghost btn-sm" data-go="agenda" type="button">Ver agenda</button></div><div class="dashboard-appointments-grid">${nextAppointments.length ? nextAppointments.map(appointmentListItem).join('') : empty('🗓️', 'Nenhum compromisso próximo.')}</div></article>
+      <article class="card ${adminUnlocked ? 'col-6' : 'col-12'} dashboard-notices-card"><div class="card-header"><div><h3>📢 Avisos</h3><div class="card-subtitle">Comunicados em destaque</div></div><button class="btn btn-ghost btn-sm" data-go="notices" type="button">Ver avisos</button></div><div class="dashboard-notices-grid">${notices.length ? notices.map(notice => `<div class="notice ${notice.priority.toLowerCase()}"><h4>${escapeHtml(notice.title)}</h4><div class="markdown-body markdown-compact">${markdownToHtml(notice.text)}</div><small>${escapeHtml(noticePeriodText(notice))} · Prioridade ${escapeHtml(notice.priority)}</small></div>`).join('') : empty('📢', 'Nenhum aviso cadastrado.')}</div></article>
     </section>`;
 
   root.querySelectorAll('.treasury-dashboard-summary > .list-item > strong')

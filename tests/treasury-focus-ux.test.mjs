@@ -43,7 +43,7 @@ test('tesouraria remove a seção redundante e destaca o novo lançamento em mov
 
   assert.doesNotMatch(view, /data-treasury-section="launches"/);
   assert.match(view, /data-treasury-section="movements"/);
-  assert.match(view, /Registrar nova movimentação/);
+  assert.match(view, /Adicionar movimentação/);
   assert.match(view, /treasury-primary-action-button/);
   assert.doesNotMatch(view, /manageTreasuryCategoriesLaunch|id="manageTreasuryCategories"/);
 });
@@ -67,7 +67,7 @@ test('dashboard financeiro mantém os quatro gráficos com controles de expansã
     assert.match(view, new RegExp(`hostId: '${chartId}'`));
   }
   assert.match(view, /data-treasury-chart-toggle/);
-  assert.match(view, /Os gráficos iniciam recolhidos/);
+  assert.match(view, /Abra somente os gráficos/);
   assert.match(view, /id="treasuryExpandCharts"/);
   assert.match(view, /id="treasuryCollapseCharts"/);
 });

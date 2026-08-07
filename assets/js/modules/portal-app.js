@@ -1,21 +1,21 @@
 import { loadState, exportState, parseImportFile } from '../storage.js';
 import { fullDateFormat, parseLocalDate, formatDate, nextBirthdayDate, daysUntil, escapeHtml, normalize, fileToDataUrl, sumTreasury, toInputDate } from '../utils.js';
 import { createFinancePrivacyController } from './finance-privacy.js';
-import { createTreasuryController, destroyTreasuryCharts } from './treasury.js?v=6.26.0';
-import { createTreasuryAdminController } from './treasury-admin.js?v=6.26.0';
-import { createEntityFormsController } from './entity-forms.js?v=6.26.0';
-import { createAdminPanelController } from './admin-panel.js?v=6.26.0';
-import { createReportsController } from './reports/controller.js?v=6.26.0';
+import { createTreasuryController, destroyTreasuryCharts } from './treasury.js?v=6.28.0';
+import { createTreasuryAdminController } from './treasury-admin.js?v=6.28.0';
+import { createEntityFormsController } from './entity-forms.js?v=6.28.0';
+import { createAdminPanelController } from './admin-panel.js?v=6.28.0';
+import { createReportsController } from './reports/controller.js?v=6.28.0';
 import { createSettingsController } from './settings.js';
-import { createNavigationController } from './navigation.js?v=6.26.0';
+import { createNavigationController } from './navigation.js?v=6.28.0';
 import { createUiShellController } from './ui-shell.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createPublishCenterController } from './publish-center.js?v=6.26.0';
-import { createPortalRefreshController } from './portal-refresh.js?v=6.26.0';
-import { createAuditLogController } from './audit-log.js?v=6.26.0';
-import { createRecoveryCenterController } from './recovery-center.js?v=6.26.0';
-import { createPublicationReviewController } from './publication-review-controller.js?v=6.26.0';
+import { createPublishCenterController } from './publish-center.js?v=6.28.0';
+import { createPortalRefreshController } from './portal-refresh.js?v=6.28.0';
+import { createAuditLogController } from './audit-log.js?v=6.28.0';
+import { createRecoveryCenterController } from './recovery-center.js?v=6.28.0';
+import { createPublicationReviewController } from './publication-review-controller.js?v=6.28.0';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
@@ -39,11 +39,11 @@ import {
   getAppointments as buildAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.26.0';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.26.0';
-import { getPortalElements } from './portal-elements.js?v=6.26.0';
-import { createReadOnlyGuard } from './read-only-guard.js?v=6.26.0';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.26.0';
+} from './appointments.js?v=6.28.0';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.28.0';
+import { getPortalElements } from './portal-elements.js?v=6.28.0';
+import { createReadOnlyGuard } from './read-only-guard.js?v=6.28.0';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.28.0';
 
 export function bootstrapPortal() {
   let state = loadState();
@@ -182,6 +182,7 @@ export function bootstrapPortal() {
     openFamilyGroupsManager,
     openMembershipPayment,
     openMutualGroupsManager,
+    openMutualEventManager,
     openMutualPayment,
     openTreasuryAccountsManager,
     shareMembershipCharge,
@@ -482,6 +483,7 @@ export function bootstrapPortal() {
       openFamilyGroupsManager,
       openMembershipPayment,
       openMutualGroupsManager,
+      openMutualEventManager,
       openMutualPayment,
       shareMembershipCharge
     }

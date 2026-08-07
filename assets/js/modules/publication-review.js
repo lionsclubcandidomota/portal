@@ -42,7 +42,12 @@ const FIELD_LABELS = {
   referenceMonth: 'Mês de referência',
   familyGroupId: 'Grupo familiar',
   amount: 'Valor',
-  monthlyAmount: 'Valor mensal',
+  memberships: 'Participantes do grupo',
+  events: 'Falecimentos registrados',
+  deceasedName: 'Pessoa falecida',
+  occurrenceDate: 'Data do falecimento',
+  participantIds: 'Participantes cobrados',
+  createdAt: 'Registrado em',
   time: 'Horário',
   location: 'Local',
   locationType: 'Tipo de local',
@@ -90,6 +95,14 @@ const COLLECTIONS = [
     itemTitle: item => item?.name || 'Grupo sem nome'
   },
   {
+    key: 'mutualGroups',
+    title: 'Grupos e falecimentos de mútuas',
+    icon: '🤲',
+    singular: 'grupo de mútua',
+    fields: ['name', 'memberships', 'events', 'notes'],
+    itemTitle: item => item?.name || 'Grupo de mútua sem nome'
+  },
+  {
     key: 'treasury',
     title: 'Movimentações da Tesouraria',
     icon: '💰',
@@ -134,11 +147,10 @@ const MONEY_FIELDS = new Set([
   'membershipFamilyAdditionalFee',
   'entry',
   'exit',
-  'amount',
-  'monthlyAmount'
+  'amount'
 ]);
 
-const DATE_FIELDS = new Set(['date', 'endDate', 'birthDate']);
+const DATE_FIELDS = new Set(['date', 'endDate', 'birthDate', 'occurrenceDate', 'createdAt']);
 const IMAGE_FIELDS = new Set(['photo', 'logo']);
 const LONG_TEXT_FIELDS = new Set(['notes', 'description', 'text']);
 
@@ -231,6 +243,25 @@ function formatValue(field, value, lookups, position = 'after') {
     return values.length
       ? values.map(id => lookups.members.get(String(id)) || 'Associado removido').join(', ')
       : 'Nenhum integrante';
+  }
+  if (field === 'participantIds') {
+    const values = Array.isArray(value) ? value : [];
+    return values.length
+      ? values.map(id => lookups.members.get(String(id)) || 'Participante removido').join(', ')
+      : 'Nenhum participante';
+  }
+  if (field === 'memberships') {
+    const values = Array.isArray(value) ? value : [];
+    const active = values.filter(item => !item?.endedMonth);
+    return active.length
+      ? `${active.length} participante(s) ativo(s): ${active.map(item => lookups.members.get(String(item?.memberId || '')) || 'Participante removido').join(', ')}`
+      : 'Nenhum participante ativo';
+  }
+  if (field === 'events') {
+    const values = Array.isArray(value) ? value : [];
+    return values.length
+      ? `${values.length} falecimento(s): ${values.map(item => `${item?.deceasedName || 'Sem nome'} (${item?.occurrenceDate || 'sem data'})`).join(', ')}`
+      : 'Nenhum falecimento registrado';
   }
   if (field === 'memberId' || field === 'primaryMemberId') {
     return lookups.members.get(String(value || '')) || (value ? 'Associado removido' : 'Não informado');

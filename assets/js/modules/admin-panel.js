@@ -1,6 +1,6 @@
-import { ADMIN_PERIOD_STORAGE, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.26.0';
-import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.26.0.1';
-import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.26.0';
+import { ADMIN_PERIOD_STORAGE, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.28.0';
+import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.28.0.1';
+import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.28.0';
 export function createAdminPanelController({
   root,
   getState,

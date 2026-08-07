@@ -28,21 +28,21 @@ function chartCard(treasury, {
 function renderTreasuryHub(treasury, financePrivacy) {
   return `<section class="treasury-hub card">
     <div class="treasury-hub-heading">
-      <div><span class="section-eyebrow">Central financeira</span><h2>Gestão da Tesouraria</h2><p>Movimentações, contas, mensalidades e mútuas em um fluxo simples e direto.</p></div>
+      <div><span class="section-eyebrow">Tesouraria</span><h2>Visão financeira</h2><p>Saldos, cobranças e movimentações em um só lugar.</p></div>
       ${financePrivacy.buttonHtml()}
     </div>
     <div class="treasury-hub-grid is-simplified">
       <button type="button" class="treasury-hub-card is-primary ${treasury.section === 'movements' ? 'is-active' : ''}" data-treasury-section="movements" ${treasury.section === 'movements' ? 'aria-current="page"' : ''}>
-        <span>⇄</span><strong>Movimentações</strong><small>Registrar, pesquisar e conferir entradas e saídas</small>
+        <span>⇄</span><strong>Movimentações</strong><small>Entradas, saídas e valores programados</small>
       </button>
       <button type="button" class="treasury-hub-card ${treasury.section === 'overview' ? 'is-active' : ''}" data-treasury-section="overview" ${treasury.section === 'overview' ? 'aria-current="page"' : ''}>
-        <span>🏦</span><strong>Contas e saldos</strong><small>Saldos, projeções e situação financeira</small>
+        <span>🏦</span><strong>Contas</strong><small>Saldos atuais e previstos</small>
       </button>
       <button type="button" class="treasury-hub-card ${treasury.section === 'memberships' ? 'is-active' : ''}" data-treasury-section="memberships" ${treasury.section === 'memberships' ? 'aria-current="page"' : ''}>
-        <span>👥</span><strong>Mensalidades</strong><small>Baixas e grupos familiares</small>
+        <span>👥</span><strong>Mensalidades</strong><small>Pagamentos e grupos familiares</small>
       </button>
       <button type="button" class="treasury-hub-card ${treasury.section === 'mutuals' ? 'is-active' : ''}" data-treasury-section="mutuals" ${treasury.section === 'mutuals' ? 'aria-current="page"' : ''}>
-        <span>🤲</span><strong>Mútuas</strong><small>Cobranças e pagamentos individuais por grupo</small>
+        <span>🤲</span><strong>Mútuas</strong><small>Cobranças por ocorrência</small>
       </button>
     </div>
   </section>`;
@@ -53,11 +53,11 @@ function renderPrimaryMovementAction(canWrite) {
   return `<section class="treasury-primary-action card" data-treasury-panel="movements" aria-labelledby="newMovementTitle">
     <div class="treasury-primary-action-icon" aria-hidden="true">＋</div>
     <div class="treasury-primary-action-copy">
-      <span class="section-eyebrow">Ação principal</span>
-      <h3 id="newMovementTitle">Registrar nova movimentação</h3>
-      <p>Cadastre uma entrada, saída ou valor programado diretamente no histórico financeiro.</p>
+      <span class="section-eyebrow">Novo registro</span>
+      <h3 id="newMovementTitle">Adicionar movimentação</h3>
+      <p>Registre uma entrada, saída ou valor programado.</p>
     </div>
-    <button class="btn btn-primary treasury-primary-action-button" type="button" data-new="treasury">＋ Novo lançamento</button>
+    <button class="btn btn-primary treasury-primary-action-button" type="button" data-new="treasury">＋ Adicionar</button>
   </section>`;
 }
 
@@ -88,7 +88,7 @@ export function renderTreasuryShell({
     : null;
   const chartIds = ['finance', 'cash-flow', 'category', 'account'];
 
-  return `${renderTreasuryHub(treasury, financePrivacy)}${renderPrimaryMovementAction(adminUnlocked)}<section class="treasury-period-card card"><div class="treasury-period-copy"><span class="treasury-period-icon">📆</span><div><strong>Filtrar por período</strong><small>Escolha um período pronto ou defina as datas e confirme para atualizar os indicadores.</small></div></div><div class="treasury-period-controls"><select id="treasuryPeriod" aria-label="Período da tesouraria"><option value="all" ${treasury.period === 'all' ? 'selected' : ''}>Todo o período</option><option value="month" ${treasury.period === 'month' ? 'selected' : ''}>Mês atual</option><option value="30days" ${treasury.period === '30days' ? 'selected' : ''}>Últimos 30 dias</option><option value="year" ${treasury.period === 'year' ? 'selected' : ''}>Ano atual</option><option value="custom" ${treasury.period === 'custom' ? 'selected' : ''}>Personalizado</option></select><div class="treasury-custom-period ${treasury.period === 'custom' ? 'is-visible' : ''}"><label><span>De</span><input id="treasuryStart" type="date" value="${treasury.customStart}" aria-label="Data inicial"></label><span class="treasury-date-separator">até</span><label><span>Até</span><input id="treasuryEnd" type="date" value="${treasury.customEnd}" aria-label="Data final"></label><button class="btn btn-primary btn-sm treasury-apply-period" id="treasuryApplyPeriod" type="button">Aplicar período</button></div></div></section>
+  return `${renderTreasuryHub(treasury, financePrivacy)}${renderPrimaryMovementAction(adminUnlocked)}<section class="treasury-period-card card"><div class="treasury-period-copy"><span class="treasury-period-icon">📆</span><div><strong>Período</strong><small>Escolha as datas que deseja consultar.</small></div></div><div class="treasury-period-controls"><select id="treasuryPeriod" aria-label="Período da tesouraria"><option value="all" ${treasury.period === 'all' ? 'selected' : ''}>Todo o período</option><option value="month" ${treasury.period === 'month' ? 'selected' : ''}>Mês atual</option><option value="30days" ${treasury.period === '30days' ? 'selected' : ''}>Últimos 30 dias</option><option value="year" ${treasury.period === 'year' ? 'selected' : ''}>Ano atual</option><option value="custom" ${treasury.period === 'custom' ? 'selected' : ''}>Personalizado</option></select><div class="treasury-custom-period ${treasury.period === 'custom' ? 'is-visible' : ''}"><label><span>De</span><input id="treasuryStart" type="date" value="${treasury.customStart}" aria-label="Data inicial"></label><span class="treasury-date-separator">até</span><label><span>Até</span><input id="treasuryEnd" type="date" value="${treasury.customEnd}" aria-label="Data final"></label><button class="btn btn-primary btn-sm treasury-apply-period" id="treasuryApplyPeriod" type="button">Aplicar</button></div></div></section>
   <div class="treasury-period-summary">Exibindo: <strong>${treasury.periodLabel()}</strong></div>
   <section class="grid grid-kpis treasury-realized-kpis">
     ${kpi('💳', 'Saldo atual', money.format(totals.balance))}
@@ -97,15 +97,15 @@ export function renderTreasuryShell({
     ${kpi('✅', 'Movimentações realizadas', totals.realizedCount)}
   </section>
   <section class="card treasury-projection-card">
-    <div class="card-header"><div><h3>📅 Valores programados e projeção</h3><div class="card-subtitle">Lançamentos programados não alteram o saldo atual.</div></div></div>
+    <div class="card-header"><div><h3>📅 Valores programados</h3><div class="card-subtitle">Previsões que ainda não alteram o saldo.</div></div></div>
     <div class="treasury-projection-grid">
-      <div class="projection-metric is-income"><small>Receitas programadas</small><strong>${money.format(totals.programmedEntries)}</strong></div>
-      <div class="projection-metric is-expense"><small>Despesas programadas</small><strong>${money.format(totals.programmedExits)}</strong></div>
-      <div class="projection-metric is-future"><small>Saldo futuro projetado</small><strong>${money.format(totals.projectedBalance)}</strong><span>Saldo atual + receitas programadas − despesas programadas</span></div>
+      <div class="projection-metric is-income"><small>Entradas previstas</small><strong>${money.format(totals.programmedEntries)}</strong></div>
+      <div class="projection-metric is-expense"><small>Saídas previstas</small><strong>${money.format(totals.programmedExits)}</strong></div>
+      <div class="projection-metric is-future"><small>Saldo previsto</small><strong>${money.format(totals.projectedBalance)}</strong><span>Saldo atual com os valores programados</span></div>
     </div>
   </section>
   <section class="card treasury-accounts-card">
-    <div class="card-header"><div><h3>🏦 Saldos por conta</h3><div class="card-subtitle">Saldo realizado e projeção de cada conta financeira.</div></div>${adminUnlocked ? '<div class="card-header-actions"><button class="btn btn-ghost btn-sm" id="manageTreasuryAccounts" type="button">Gerenciar contas</button></div>' : ''}</div>
+    <div class="card-header"><div><h3>🏦 Contas</h3><div class="card-subtitle">Saldo atual e previsto.</div></div>${adminUnlocked ? '<div class="card-header-actions"><button class="btn btn-ghost btn-sm" id="manageTreasuryAccounts" type="button">Editar contas</button></div>' : ''}</div>
     <div class="treasury-account-grid">${accountSummaries.map(account => {
       const showType = normalize(account.name) !== normalize(account.type || '');
       return `<article class="treasury-account-card ${account.active === false ? 'is-inactive' : ''}" ${account.active === false ? 'aria-label="Conta inativa"' : ''}><span class="treasury-account-icon">${treasury.accountTypeIcon(account.type)}</span><div class="treasury-account-copy">${showType ? `<small>${escapeHtml(account.type || 'Conta')}</small>` : ''}<strong>${escapeHtml(account.name)}</strong>${account.active === false ? '<span class="treasury-account-status">Conta inativa</span>' : ''}</div><div class="treasury-account-balance"><small>Saldo atual</small><strong>${money.format(account.balance)}</strong><span>Projetado: ${money.format(account.projectedBalance)}</span></div></article>`;
@@ -126,7 +126,7 @@ export function renderTreasuryShell({
   })}
   <section class="grid grid-main treasury-chart-grid">
     <div class="treasury-chart-section-heading col-12">
-      <div><span class="section-eyebrow">Análise financeira</span><h3>Movimentações realizadas</h3><p>Os gráficos iniciam recolhidos. Expanda somente as análises que desejar consultar.</p></div>
+      <div><span class="section-eyebrow">Análises</span><h3>Resumo visual</h3><p>Abra somente os gráficos que deseja consultar.</p></div>
       <div class="treasury-chart-heading-actions"><div class="treasury-chart-period-badge"><span>Período analisado</span><strong>${treasury.periodLabel()}</strong></div><div class="treasury-chart-bulk-actions" aria-label="Controles dos gráficos"><button class="btn btn-ghost btn-sm" id="treasuryExpandCharts" type="button" ${treasury.collapsedChartCount ? '' : 'hidden'}>Expandir todos</button><button class="btn btn-ghost btn-sm" id="treasuryCollapseCharts" type="button" ${treasury.collapsedChartCount < chartIds.length ? '' : 'hidden'}>Recolher todos</button></div></div>
     </div>
     <div class="treasury-analysis-kpis col-12" aria-label="Indicadores de análise financeira">
@@ -139,7 +139,7 @@ export function renderTreasuryShell({
     ${chartCard(treasury, { id: chartIds[1], icon: '⌁', title: 'Evolução do fluxo de caixa', subtitle: 'Entradas, saídas e resultado acumulado ao longo do período.', hostId: 'cashFlowChart', wrapClass: 'cash-flow-chart-wrap' })}
     ${chartCard(treasury, { id: chartIds[2], icon: '▥', title: 'Movimentação por categoria', subtitle: 'Categorias com maior impacto financeiro no período.', hostId: 'categoryChart', wrapClass: 'category-chart-wrap' })}
     ${chartCard(treasury, { id: chartIds[3], icon: '◉', title: 'Saldo por conta', subtitle: 'Participação de cada conta no saldo positivo atual.', hostId: 'accountChart' })}
-    <article class="col-12 treasury-movements-area"><section class="treasury-search-panel" aria-labelledby="treasurySearchTitle"><div class="treasury-search-heading"><span aria-hidden="true">⌕</span><div><strong id="treasurySearchTitle">Pesquisar movimentações</strong><small>Localize rapidamente por descrição, categoria, conta ou associado.</small></div></div><div class="search treasury-search-control"><input id="searchInput" type="search" placeholder="Digite para pesquisar no histórico financeiro..." aria-label="Pesquisar movimentações" autocomplete="off"></div></section><div id="treasuryLists"></div></article>
+    <article class="col-12 treasury-movements-area"><section class="treasury-search-panel" aria-labelledby="treasurySearchTitle"><div class="treasury-search-heading"><span aria-hidden="true">⌕</span><div><strong id="treasurySearchTitle">Buscar movimentações</strong><small>Pesquise por nome, categoria, conta ou associado.</small></div></div><div class="search treasury-search-control"><input id="searchInput" type="search" placeholder="Buscar no histórico..." aria-label="Pesquisar movimentações" autocomplete="off"></div></section><div id="treasuryLists"></div></article>
   </section>`;
 }
 

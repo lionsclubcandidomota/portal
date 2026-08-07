@@ -144,7 +144,7 @@ test('período personalizado possui aplicação explícita sem recriar os campos
     .then(({ readFile }) => readFile(new URL('../assets/js/modules/admin-panel.js', import.meta.url), 'utf8'));
 
   assert.match(html, /id="adminPeriodApply"/);
-  assert.match(html, /Aplicar período/);
+  assert.match(html, />Aplicar<\/button>/);
   assert.match(controllerSource, /addEventListener\('input', clearCustomPeriodValidity\)/);
   assert.match(controllerSource, /periodApplyButton\?\.addEventListener\('click', applyCustomPeriod\)/);
   assert.doesNotMatch(controllerSource, /adminPeriodStart'\)\?\.addEventListener\('change'[\s\S]{0,220}renderPanel\(\)/);

@@ -1,4 +1,4 @@
-# Arquitetura da Tesouraria — v6.26.0
+# Arquitetura da Tesouraria — v6.27.2
 
 A Tesouraria mantém **Movimentações** como centro da gestão financeira e separa regras, composição visual e eventos em módulos especializados.
 
@@ -7,7 +7,7 @@ A Tesouraria mantém **Movimentações** como centro da gestão financeira e sep
 - `domain.js`: datas, competências, moeda, status, paginação e identificação de cobranças.
 - `controller.js`: navegação, filtros, seleção e serviços financeiros.
 - `memberships.js`: modelo e HTML do controle de mensalidades.
-- `mutuals.js`: modelo e HTML das cobranças mensais de mútuas.
+- `mutuals.js`: modelo e HTML das cobranças eventuais geradas por falecimento.
 - `movements.js`: histórico, pesquisa, paginação e origem dos movimentos.
 - `charts.js`: renderização e ciclo de vida dos gráficos nativos.
 
@@ -42,7 +42,7 @@ portal-app.js
 - O controlador não deve gerar HTML.
 - `view.js` deve apenas montar o modelo e coordenar os módulos de tela.
 - Estado visual transitório não deve ser persistido no banco.
-- Mensalidades e mútuas devem permanecer classificadas separadamente.
+- Mensalidades e mútuas devem permanecer classificadas separadamente. Mútuas nunca devem gerar cobranças pela passagem do mês; apenas eventos de falecimento podem originá-las.
 
 ## Contrato público
 
@@ -53,3 +53,8 @@ createTreasuryController
 renderTreasury
 destroyTreasuryCharts
 ```
+
+
+- Cobranças em aberto exibem a data em que foram geradas, não a data do falecimento.
+- A data do falecimento permanece no cabeçalho da ocorrência e nos lançamentos de baixa.
+- Ocorrências já geradas são imutáveis.

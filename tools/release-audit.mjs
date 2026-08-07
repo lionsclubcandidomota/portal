@@ -72,8 +72,8 @@ for (const tag of targetBlankTags) {
   }
 }
 
-if (!/^6\.26\.0$/.test(packageJson.version)) {
-  failures.push(`a versão estável esperada é 6.26.0; encontrada ${packageJson.version}`);
+if (!/^6\.28\.0$/.test(packageJson.version)) {
+  failures.push(`a versão estável esperada é 6.28.0; encontrada ${packageJson.version}`);
 }
 
 if (failures.length) {

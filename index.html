@@ -11,12 +11,12 @@
   <title>Portal Lions • Cândido Mota</title>
   <link rel="icon" type="image/png" href="./public/favicon.png">
   <link rel="apple-touch-icon" href="./public/apple-touch-icon.png">
-  <link rel="stylesheet" href="./assets/css/app.css?v=6.26.0.1">
-  <link rel="modulepreload" href="./assets/js/app.js?v=6.26.0.1">
-  <link rel="modulepreload" href="./assets/js/modules/portal-app.js?v=6.26.0.1">
+  <link rel="stylesheet" href="./assets/css/app.css?v=6.28.0.1">
+  <link rel="modulepreload" href="./assets/js/app.js?v=6.28.0.1">
+  <link rel="modulepreload" href="./assets/js/modules/portal-app.js?v=6.28.0.1">
   <link rel="modulepreload" href="./assets/js/storage.js">
   <link rel="modulepreload" href="./assets/js/utils.js">
-  <link rel="modulepreload" href="./assets/js/github.js?v=6.26.0">
+  <link rel="modulepreload" href="./assets/js/github.js?v=6.28.0">
 </head>
 <body class="app-loading visitor-mode">
   <a class="skip-link" href="#mainContent">Pular para o conteúdo principal</a>
@@ -29,20 +29,20 @@
         </div>
         <div>
           <strong id="sidebarClubName">Lions Clube de Cândido Mota</strong>
-          <small>Portal de gestão do clube</small>
+          <small>Gestão do clube</small>
         </div>
       </div>
 
-      <div class="nav-section-label">Navegação</div>
+      <div class="nav-section-label">Menu</div>
       <nav class="nav-list" id="mainNav">
-        <button type="button" class="nav-item active" data-view="dashboard" aria-current="page"><span>▦</span><span class="nav-label">Dashboard</span></button>
+        <button type="button" class="nav-item active" data-view="dashboard" aria-current="page"><span>▦</span><span class="nav-label">Início</span></button>
         <button type="button" class="nav-item" data-view="birthdays"><span>🎂</span><span class="nav-label">Aniversariantes</span></button>
         <button type="button" class="nav-item admin-only" data-view="treasury" id="treasuryNav" hidden><span>💰</span><span class="nav-label">Tesouraria</span></button>
         <button type="button" class="nav-item" data-view="agenda"><span>🗓️</span><span class="nav-label">Agenda</span></button>
         <button type="button" class="nav-item" data-view="notices"><span>📢</span><span class="nav-label">Avisos</span></button>
         <div class="nav-divider" aria-hidden="true"></div>
-        <button type="button" class="nav-item" data-view="admin" id="adminAccessNav"><span>🔐</span><span class="nav-label">Acesso Administrativo</span></button>
-        <button type="button" class="nav-item admin-only administrator-only" data-view="settings" id="settingsNav" hidden aria-hidden="true" style="display:none"><span>⚙️</span><span class="nav-label">Configurações</span></button>
+        <button type="button" class="nav-item" data-view="admin" id="adminAccessNav"><span>🔐</span><span class="nav-label">Área administrativa</span></button>
+        <button type="button" class="nav-item admin-only administrator-only" data-view="settings" id="settingsNav" hidden aria-hidden="true" style="display:none"><span>⚙️</span><span class="nav-label">Ajustes</span></button>
       </nav>
 
     </aside>
@@ -53,51 +53,51 @@
       <header class="topbar">
         <button type="button" class="icon-btn menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">☰</button>
         <div class="topbar-title">
-          <h1 id="pageTitle">Dashboard</h1>
-          <p id="pageDescription">Visão geral das informações do clube</p>
+          <h1 id="pageTitle">Início</h1>
+          <p id="pageDescription">O essencial do clube em um só lugar</p>
           <small id="currentDate" class="topbar-date"></small>
         </div>
         <div class="topbar-actions">
           <button class="btn btn-ghost btn-sm portal-refresh-button admin-only" id="portalRefreshButton" type="button" aria-label="Atualizar todo o painel sem encerrar a sessão" title="Atualizar painel" hidden>
             <span class="portal-refresh-icon" aria-hidden="true">↻</span>
-            <span data-portal-refresh-label>Atualizar painel</span>
+            <span data-portal-refresh-label>Atualizar</span>
           </button>
-          <span class="mode-chip" id="modeChip">Modo visitante</span>
+          <span class="mode-chip" id="modeChip">Visitante</span>
           <div class="clock" id="clock">00:00:00</div>
           <div class="sync-header" id="publishProgressNotice" aria-live="polite" hidden>
             <button class="sync-header-trigger" id="publishCenterToggle" type="button" aria-expanded="false" aria-controls="publishCenterBody">
               <span class="publish-progress-icon" aria-hidden="true">☁️</span>
               <span class="sync-header-trigger-copy">
-                <strong id="publishProgressTitle">Portal sincronizado</strong>
-                <small id="publishProgressDetail">Nenhuma alteração pendente</small>
+                <strong id="publishProgressTitle">Tudo salvo</strong>
+                <small id="publishProgressDetail">Sem alterações pendentes</small>
               </span>
               <span class="publish-center-count" id="publishCenterCount" hidden>0</span>
               <span class="publish-center-chevron" aria-hidden="true"></span>
             </button>
             <div class="sync-header-popover" id="publishCenterBody" role="dialog" aria-label="Portal de Sincronização">
               <div class="sync-popover-heading">
-                <div class="sync-popover-heading-copy"><span class="sync-popover-brand-icon" aria-hidden="true">☁</span><div><span class="sync-popover-eyebrow">Portal de Sincronização</span><strong>Publicação e segurança dos dados</strong></div></div>
+                <div class="sync-popover-heading-copy"><span class="sync-popover-brand-icon" aria-hidden="true">☁</span><div><span class="sync-popover-eyebrow">Sincronização</span><strong>Salvar alterações no portal</strong></div></div>
                 <button class="sync-popover-close" id="publishCenterClose" type="button" aria-label="Minimizar central de sincronização" title="Minimizar">×</button>
               </div>
               <div class="sync-popover-status">
                 <span class="sync-popover-status-icon" aria-hidden="true">✓</span>
-                <div><strong id="publishPopoverTitle">Portal sincronizado</strong><p id="publishPopoverDetail">Nenhuma alteração pendente.</p></div>
+                <div><strong id="publishPopoverTitle">Tudo salvo</strong><p id="publishPopoverDetail">Sem alterações pendentes.</p></div>
               </div>
               <div class="publish-progress-block">
-                <div class="publish-progress-copy"><span>Progresso da sincronização</span><small>O processo continua mesmo com esta janela minimizada.</small></div>
+                <div class="publish-progress-copy"><span>Progresso</span><small>Você pode continuar usando o portal.</small></div>
                 <div class="publish-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="publishProgressBar"></span></div>
               </div>
               <div class="sync-flow-steps" aria-label="Etapas da publicação"><span data-sync-step="review"><i aria-hidden="true">1</i>Revisar</span><span data-sync-step="send"><i aria-hidden="true">2</i>Enviar</span><span data-sync-step="publish"><i aria-hidden="true">3</i>Disponibilizar</span></div>
               <button class="publish-review-trigger" id="publishCenterReview" type="button">
                 <span class="publish-review-icon" aria-hidden="true">☷</span>
-                <span class="publish-review-copy"><strong>Revisar alterações</strong><small id="publishCenterReviewSummary">Veja tudo o que será enviado ao portal</small></span>
+                <span class="publish-review-copy"><strong>Revisar alterações</strong><small id="publishCenterReviewSummary">Confira antes de salvar</small></span>
                 <span class="publish-review-arrow" aria-hidden="true">›</span>
               </button>
               <div class="publish-center-actions">
                 <button class="btn btn-danger-soft btn-sm" id="publishCenterDiscard" type="button">Descartar</button>
-                <button class="btn btn-primary btn-sm" id="publishCenterSend" type="button">Publicar alterações</button>
+                <button class="btn btn-primary btn-sm" id="publishCenterSend" type="button">Salvar alterações</button>
               </div>
-              <p class="sync-popover-footnote"><span aria-hidden="true">🛡️</span>As alterações locais permanecem protegidas até a confirmação da publicação.</p>
+              <p class="sync-popover-footnote"><span aria-hidden="true">🛡️</span>Seus dados ficam protegidos até a confirmação.</p>
             </div>
           </div>
         </div>
@@ -105,7 +105,7 @@
 
       <section class="content-area" id="viewRoot" aria-live="polite">
         <div class="initial-loading" role="status" aria-label="Carregando informações do portal">
-          <div class="loading-heading"><span class="loading-spinner" aria-hidden="true"></span><div><strong>Carregando o painel</strong><small>Buscando as informações mais recentes…</small></div></div>
+          <div class="loading-heading"><span class="loading-spinner" aria-hidden="true"></span><div><strong>Carregando</strong><small>Preparando suas informações…</small></div></div>
           <div class="loading-kpis"><span></span><span></span><span></span><span></span></div>
           <div class="loading-panels"><span></span><span></span></div>
         </div>
@@ -146,6 +146,6 @@
   <input type="file" id="jsonImportInput" accept="application/json" hidden>
   <input type="file" id="imageInput" accept="image/*" hidden>
 
-  <script type="module" src="./assets/js/app.js?v=6.26.0.1"></script>
+  <script type="module" src="./assets/js/app.js?v=6.28.0.1"></script>
 </body>
 </html>

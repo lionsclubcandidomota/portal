@@ -17,7 +17,7 @@ function allButtonsHaveType(html) {
 test('versão estável usa o mesmo identificador no pacote e no cache do HTML', async () => {
   const html = await readFile(path.join(projectRoot, 'index.html'), 'utf8');
   const versions = [...html.matchAll(/\?v=(\d+\.\d+\.\d+)/g)].map(match => match[1]);
-  assert.equal(packageJson.version, '6.26.0');
+  assert.equal(packageJson.version, '6.28.0');
   assert.ok(versions.length > 0);
   assert.deepEqual([...new Set(versions)], [packageJson.version]);
   assert.doesNotMatch(html, /upgrade-insecure-requests/, 'a CSP não deve forçar HTTPS no servidor local de homologação');
@@ -66,7 +66,7 @@ test('dashboard administrativo mantém todos os módulos gerenciais e botões ti
   });
   const html = adminDashboardHtml(model);
 
-  for (const label of ['Tesouraria', 'Agenda', 'Compromissos', 'Aniversariantes', 'Avisos', 'Histórico de alterações', 'Recuperação e continuidade', 'Central de relatórios']) {
+  for (const label of ['Finanças', 'Agenda', 'Reuniões', 'Pessoas', 'Avisos', 'Histórico de alterações', 'Backup e recuperação', 'Gerar relatório']) {
     assert.match(html, new RegExp(label));
   }
   assert.equal(allButtonsHaveType(html), true);

@@ -78,7 +78,7 @@ test('publicação pode ser minimizada sem interromper o processo', async () => 
   assert.match(publishCenter, /Minimizar sem interromper/);
   assert.match(publishCenter, /const isBusy = \['syncing', 'publishing'\]\.includes\(status\)/);
   assert.doesNotMatch(publishCenter, /if \(isBusy \|\| isError/);
-  assert.match(html, /O processo continua mesmo com esta janela minimizada/);
+  assert.match(html, /Você pode continuar usando o portal/);
   assert.match(css, /\.sync-header\.is-busy\.is-minimized/);
 });
 

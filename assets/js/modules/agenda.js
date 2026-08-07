@@ -77,7 +77,7 @@ export function renderAgenda(agenda, helpers) {
       <button type="button" class="agenda-overview-card ${agenda.quickFilter === 'virtual' ? 'is-active' : ''}" data-agenda-quick="virtual" aria-pressed="${agenda.quickFilter === 'virtual'}"><span class="agenda-overview-icon">🎥</span><div><small>Virtuais</small><strong>${virtualCount}</strong><span>com acesso online</span></div><span class="agenda-overview-arrow" aria-hidden="true">›</span></button>
     </section>
     <section class="agenda-command-card">
-      ${pageToolbar('Pesquisar eventos e reuniões...', 'Novo compromisso', 'appointment')}
+      ${pageToolbar('Buscar na agenda...', 'Adicionar compromisso', 'appointment')}
       <div class="toolbar agenda-toolbar"><div class="toolbar-group agenda-view-switch"><button class="btn ${agenda.mode === 'list' ? 'btn-primary' : 'btn-ghost'}" id="listMode" type="button">☷ Lista</button><button class="btn ${agenda.mode === 'calendar' ? 'btn-primary' : 'btn-ghost'}" id="calendarMode" type="button">▦ Calendário</button></div><div class="toolbar-group agenda-filters" aria-label="Filtrar agenda"><button class="btn ${agenda.filter === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="all" type="button">Todos</button><button class="btn ${agenda.filter === 'event' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="event" type="button">📅 Eventos</button><button class="btn ${agenda.filter === 'meeting' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-agenda-filter="meeting" type="button">🤝 Reuniões</button></div></div>
     </section>
     <div id="agendaContent"></div>`;
@@ -246,10 +246,10 @@ function renderAgendaList(agenda, query, helpers) {
     .filter(item => parseLocalDate(item.date) < today)
     .sort((a, b) => -compareAppointments(a, b));
   const quickLabels = {
-    all: ['🗓️', 'Compromissos ativos', 'Eventos e reuniões de hoje em diante.'],
-    upcoming: ['🗓️', 'Próximos compromissos', 'Eventos e reuniões futuros, do mais próximo para os seguintes.'],
-    today: ['☀️', 'Compromissos de hoje', 'Tudo o que está programado para hoje.'],
-    virtual: ['🎥', 'Compromissos virtuais', 'Reuniões e eventos futuros com acesso on-line.']
+    all: ['🗓️', 'Agenda atual', 'Eventos e reuniões de hoje em diante.'],
+    upcoming: ['🗓️', 'Próximos', 'Eventos e reuniões em ordem de data.'],
+    today: ['☀️', 'Hoje', 'Compromissos programados para hoje.'],
+    virtual: ['🎥', 'Online', 'Compromissos com acesso virtual.']
   };
   const [icon, title, subtitle] = quickLabels[agenda.quickFilter] || quickLabels.all;
   const showHistory = agenda.quickFilter === 'all';
@@ -259,7 +259,7 @@ function renderAgendaList(agenda, query, helpers) {
 
   content.innerHTML = `
     <section class="timeline-section agenda-results-section agenda-active-section">${timelineHeading(icon, title, subtitle, active.length)}${agendaTable(active, 'Nenhum compromisso ativo encontrado.', helpers)}</section>
-    ${showHistory ? `<section class="timeline-section agenda-results-section agenda-history-section is-history">${timelineHeading('🕘', 'Compromissos já realizados', 'Histórico separado, do mais recente para o mais antigo.', history.length, true)}${agendaTable(history, 'Nenhum compromisso realizado no histórico.', helpers)}</section>` : ''}`;
+    ${showHistory ? `<section class="timeline-section agenda-results-section agenda-history-section is-history">${timelineHeading('🕘', 'Histórico', 'Compromissos já realizados.', history.length, true)}${agendaTable(history, 'Nenhum compromisso realizado no histórico.', helpers)}</section>` : ''}`;
 
   bindRowActions();
   bindAgendaDescriptionToggles(root);

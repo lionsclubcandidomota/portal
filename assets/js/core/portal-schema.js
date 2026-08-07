@@ -1,8 +1,8 @@
-import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.26.0';
-import { normalizeMemberRecord } from './portal-members.js?v=6.26.0';
+import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.28.0';
+import { normalizeMemberRecord } from './portal-members.js?v=6.28.0';
 
 export const PORTAL_APP_ID = 'Lions Clube de Cândido Mota Dashboard';
-export const CURRENT_SCHEMA_VERSION = 9;
+export const CURRENT_SCHEMA_VERSION = 10;
 
 export const DEFAULT_TREASURY_CATEGORIES = Object.freeze([
   'Mensalidades',
@@ -57,13 +57,32 @@ function monthReference(value, fallback = '') {
   return /^\d{4}-\d{2}$/.test(normalized) ? normalized : String(fallback || '');
 }
 
+function dateReference(value, fallback = '') {
+  const normalized = String(value || '').trim().slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(normalized) ? normalized : String(fallback || '');
+}
+
+function normalizeMutualEventRecord(event, index = 0) {
+  const source = isPlainObject(event) ? event : {};
+  return {
+    id: String(source.id || `mue_${index}`),
+    deceasedName: String(source.deceasedName || source.name || '').trim(),
+    occurrenceDate: dateReference(source.occurrenceDate || source.date),
+    amount: Math.max(0, Number(source.amount || 0)),
+    participantIds: [...new Set((Array.isArray(source.participantIds) ? source.participantIds : [])
+      .map(value => String(value || '').trim())
+      .filter(Boolean))],
+    notes: String(source.notes || '').trim(),
+    createdDate: dateReference(source.createdDate),
+    createdAt: String(source.createdAt || '')
+  };
+}
+
 function normalizeMutualGroupRecord(group) {
   const source = isPlainObject(group) ? group : {};
   const legacyCharges = Array.isArray(source.memberCharges) ? source.memberCharges : [];
   const fallbackMonth = new Date().toISOString().slice(0, 7);
   const startedMonth = monthReference(source.startedMonth || source.referenceDate, fallbackMonth);
-  const legacyAmount = legacyCharges.find(charge => Number(charge?.amount || 0) > 0)?.amount;
-  const monthlyAmount = Math.max(0, Number(source.monthlyAmount || legacyAmount || 0));
   const membershipSource = Array.isArray(source.memberships) && source.memberships.length
     ? source.memberships
     : legacyCharges.map((charge, index) => ({
@@ -80,30 +99,37 @@ function normalizeMutualGroupRecord(group) {
       endedMonth: monthReference(membership?.endedMonth)
     }))
     .filter(membership => membership.memberId && membership.joinedMonth);
-  const amountHistory = (Array.isArray(source.amountHistory) ? source.amountHistory : [])
-    .map(item => ({
-      fromMonth: monthReference(item?.fromMonth, startedMonth),
-      amount: Math.max(0, Number(item?.amount || 0))
-    }))
-    .filter(item => item.fromMonth && item.amount > 0)
-    .sort((first, second) => first.fromMonth.localeCompare(second.fromMonth));
+  const eventSource = Array.isArray(source.events)
+    ? source.events
+    : Array.isArray(source.chargeEvents)
+      ? source.chargeEvents
+      : Array.isArray(source.occurrences)
+        ? source.occurrences
+        : [];
+  const events = eventSource
+    .map(normalizeMutualEventRecord)
+    .filter(event => event.id && event.deceasedName && event.occurrenceDate && event.amount > 0)
+    .sort((first, second) => second.occurrenceDate.localeCompare(first.occurrenceDate));
 
-  if (!amountHistory.length && monthlyAmount > 0) {
-    amountHistory.push({ fromMonth: startedMonth, amount: monthlyAmount });
-  }
-
-  const { memberCharges: _memberCharges, referenceDate: _referenceDate, ...rest } = source;
+  const {
+    memberCharges: _memberCharges,
+    referenceDate: _referenceDate,
+    monthlyAmount: _monthlyAmount,
+    amountHistory: _amountHistory,
+    startedMonth: _startedMonth,
+    chargeEvents: _chargeEvents,
+    occurrences: _occurrences,
+    ...rest
+  } = source;
   return {
     ...rest,
     id: String(source.id || ''),
     name: String(source.name || '').trim(),
-    monthlyAmount,
-    startedMonth,
+    notes: String(source.notes || '').trim(),
     memberships,
-    amountHistory
+    events
   };
 }
-
 
 const TREASURY_ATTACHMENT_DATA_URL = /^data:(?:image\/(?:jpeg|jpg|png|webp|gif)|application\/(?:pdf|msword|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.(?:wordprocessingml\.document|spreadsheetml\.sheet)|vnd\.oasis\.opendocument\.(?:text|spreadsheet))|text\/(?:plain|csv));base64,[a-z0-9+/=\s]+$/i;
 const TREASURY_ATTACHMENT_PUBLIC_URL = /^\.\/public\/treasury\/[a-z0-9/_-]+\.[a-z0-9]+(?:\?[^\s]*)?$/i;
@@ -145,19 +171,25 @@ function normalizeMutualMovementRecord(item) {
   const reference = monthReference(
     item.mutualReferenceMonth || item.mutualReferenceDate || item.referenceMonth || item.date
   );
+  const occurrenceDate = dateReference(item.mutualReferenceDate || item.occurrenceDate || item.date);
   const memberId = String(item.mutualMemberId || item.memberId || '').trim();
-  const key = [String(item.mutualGroupId || '').trim(), memberId, reference]
+  const eventId = String(item.mutualEventId || '').trim();
+  const eventKey = [String(item.mutualGroupId || '').trim(), eventId, memberId]
+    .filter(Boolean)
+    .join('::');
+  const legacyKey = [String(item.mutualGroupId || '').trim(), memberId, reference]
     .filter(Boolean)
     .join('::');
   return {
     ...item,
     attachments,
+    mutualEventId: eventId,
     mutualMemberId: memberId,
     mutualReferenceMonth: reference,
-    mutualReferenceDate: reference ? `${reference}-01` : String(item.mutualReferenceDate || ''),
+    mutualReferenceDate: occurrenceDate || (reference ? `${reference}-01` : ''),
     referenceMonth: reference || String(item.referenceMonth || ''),
     coveredMonths: reference ? [reference] : (Array.isArray(item.coveredMonths) ? item.coveredMonths : []),
-    mutualChargeKey: key || String(item.mutualChargeKey || '')
+    mutualChargeKey: String(item.mutualChargeKey || eventKey || legacyKey)
   };
 }
 
@@ -364,6 +396,7 @@ export function migratePortalPayload(payload) {
   if (sourceSchemaVersion < 7) migrations.push('v6→v7: mútuas passam a usar grupos mensais, competências e histórico de participantes');
   if (sourceSchemaVersion < 8) migrations.push('v7→v8: cadastros passam a distinguir Associados, Mutuários e registros inativos');
   if (sourceSchemaVersion < 9) migrations.push('v8→v9: movimentações financeiras passam a aceitar comprovantes e documentos anexos');
+  if (sourceSchemaVersion < 10) migrations.push('v9→v10: cobranças de mútuas deixam de ser mensais e passam a existir somente por ocorrência de falecimento');
 
   state = normalizePortalStateShape(state);
   assertValidPortalState(state);

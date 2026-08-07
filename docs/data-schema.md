@@ -1,43 +1,34 @@
-# Esquema de dados do Portal — v9
+# Esquema de dados do Portal — v10
 
-O esquema v9 adiciona anexos às movimentações financeiras. A distinção entre Associados, Mutuários e registros inativos introduzida no esquema v8 permanece inalterada.
+O esquema v10 altera a regra das Mútuas: grupos não geram cobranças mensais. Uma cobrança existe somente quando o Administrador registra o falecimento de um associado do Distrito.
 
 ```json
 {
-  "app": "Lions Clube de Cândido Mota Dashboard",
-  "schemaVersion": 9,
-  "version": 9,
+  "schemaVersion": 10,
+  "version": 10,
   "data": {
-    "birthdays": [
+    "mutualGroups": [
       {
-        "id": "b_associado",
-        "name": "Associado de exemplo",
-        "status": "Ativo",
-        "active": true
-      },
-      {
-        "id": "b_mutuario",
-        "name": "Mutuário de exemplo",
-        "status": "Mútua",
-        "active": true
-      }
-    ],
-    "treasury": [
-      {
-        "id": "t_exemplo",
-        "date": "2026-08-04",
-        "description": "Pagamento de fornecedor",
-        "entry": 0,
-        "exit": 100,
-        "attachments": [
+        "id": "mu_exemplo",
+        "name": "Mútua 658",
+        "notes": "",
+        "memberships": [
           {
-            "id": "att_exemplo",
-            "name": "comprovante.pdf",
-            "type": "application/pdf",
-            "size": 84231,
-            "originalSize": 84231,
-            "optimized": false,
-            "url": "./public/treasury/t_exemplo/att_exemplo-hash.pdf"
+            "id": "mum_exemplo",
+            "memberId": "b_participante",
+            "joinedMonth": "2026-08",
+            "endedMonth": ""
+          }
+        ],
+        "events": [
+          {
+            "id": "mue_exemplo",
+            "deceasedName": "Associado do Distrito",
+            "occurrenceDate": "2026-08-15",
+            "amount": 15,
+            "participantIds": ["b_participante"],
+            "notes": "Comunicado do Distrito",
+            "createdAt": "2026-08-16T12:00:00.000Z"
           }
         ]
       }
@@ -46,37 +37,24 @@ O esquema v9 adiciona anexos às movimentações financeiras. A distinção entr
 }
 ```
 
-## Anexos financeiros
-
-- Cada movimentação aceita até cinco anexos.
-- Enquanto a alteração estiver pendente, o arquivo pode permanecer como `dataUrl` no estado local.
-- Após a publicação, o JSON guarda somente uma referência em `./public/treasury/<movimentacao>/...`.
-- Imagens JPEG, PNG e WebP são redimensionadas e recomprimidas no navegador antes de serem salvas.
-- GIFs, PDFs e documentos compatíveis são preservados para não comprometer a legibilidade.
-- O portal aceita apenas os tipos definidos pelo módulo `treasury-admin/attachments.js` e rejeita caminhos ou Data URLs incompatíveis.
-- A revisão da publicação mostra somente quantidade e nomes dos anexos; o conteúdo Base64 não é exibido no histórico.
-
-## Situações das pessoas
-
-- `Ativo`: Associado ativo. Participa das Mensalidades e pode participar das Mútuas.
-- `Mútua`: Mutuário. Não é associado, não paga Mensalidades e pode participar das Mútuas.
-- `Inativo`: não entra em novas cobranças ou novos grupos.
-
-O campo legado `active` é mantido por compatibilidade. Ele é `false` somente para a situação Inativo. As regras de negócio devem consultar as funções de `assets/js/core/portal-members.js`, e não apenas esse booleano.
-
 ## Regras das Mútuas
 
-- O grupo define um valor mensal integral por participante.
-- Associados ativos e Mutuários podem ser vinculados aos grupos.
-- Cada participante gera uma cobrança individual por competência.
-- Remoções interrompem competências futuras e preservam o histórico.
-- Pagamentos são registrados como entradas individuais na Tesouraria.
+- `memberships` mantém o histórico de participação no grupo.
+- A ausência de itens em `events` significa que não existem cobranças abertas, independentemente da quantidade de meses transcorridos.
+- Cada item de `events` representa um falecimento e guarda uma lista imutável de `participantIds`.
+- `amount` é o valor individual devido por cada participante daquela ocorrência.
+- Alterar o grupo não modifica eventos já registrados.
+- Uma baixa financeira usa `mutualGroupId`, `mutualEventId`, `mutualMemberId` e uma chave `grupo::evento::participante`.
+- Movimentações antigas da categoria Mútua continuam preservadas no histórico financeiro.
 
-## Migração
+## Migração v9 → v10
 
-- Arquivos v8 recebem a coleção `attachments` vazia em cada movimentação.
-- Cadastros antigos com `active: false` são migrados para `status: "Inativo"`.
-- Cadastros antigos sem situação são migrados para `status: "Ativo"`.
-- Valores Mutuário, Mutuária ou Mútua são normalizados para `status: "Mútua"`.
-- Backups dos esquemas anteriores continuam aceitos e são migrados antes do uso.
-- Arquivos com esquema superior ao v9 são bloqueados para evitar perda de dados.
+- `monthlyAmount`, `startedMonth` e `amountHistory` deixam de fazer parte do grupo normalizado.
+- Os participantes existentes são preservados em `memberships`.
+- Nenhum evento é criado automaticamente a partir dos meses anteriores.
+- Cobranças mensais que ainda não tinham baixa deixam de existir.
+- Entradas e saídas já registradas na Tesouraria não são apagadas nem recalculadas.
+
+Os anexos financeiros e as situações `Ativo`, `Mútua` e `Inativo` permanecem conforme o esquema v9.
+
+- `createdDate` registra a data local em que a cobrança foi gerada; `createdAt` mantém o instante técnico completo.

@@ -36,7 +36,8 @@ export const CSS_SOURCES = Object.freeze([
   'components/audit-log.css',
   'components/recovery-center.css',
   'components/membership-actions-menu.css',
-  'components/native-charts.css'
+  'components/native-charts.css',
+  'components/clean-ui.css'
 ]);
 
 export async function buildCssBundle() {

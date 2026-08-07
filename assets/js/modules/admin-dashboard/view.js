@@ -48,20 +48,20 @@ export function adminLoginHtml() {
 export function adminDashboardHtml(model, { financePrivacyButton = '', auditSummary = null, recoverySummary = null, canWrite = true, accessRole = 'admin' } = {}) {
   const treasury = model.treasury;
   const directorMode = accessRole === 'director';
-  const dashboardTitle = directorMode ? 'Dashboard Diretoria' : 'Dashboard Administrativo';
-  const sessionLabel = directorMode ? 'Diretoria · somente leitura' : 'Portal conectado';
+  const dashboardTitle = directorMode ? 'Área da Diretoria' : 'Área administrativa';
+  const sessionLabel = directorMode ? 'Diretoria · leitura' : 'Conectado';
   const customHidden = model.customPeriodVisible ? '' : 'hidden';
 
   return `
     <section class="admin-command-header admin-dashboard-header">
-      <div><span class="admin-eyebrow">Visão gerencial</span><h2>${dashboardTitle}</h2><p>Acompanhe os principais indicadores do clube e identifique rapidamente o que exige atenção.</p>${directorMode ? '<div class="notice medium"><strong>👁️ Acesso somente leitura</strong><p>Consultas, filtros, relatórios e exportações estão liberados. Alterações permanecem bloqueadas.</p></div>' : ''}</div>
+      <div><span class="admin-eyebrow">Administração</span><h2>${dashboardTitle}</h2><p>Veja os números principais e acesse os cadastros.</p>${directorMode ? '<div class="notice medium"><strong>👁️ Somente leitura</strong><p>Você pode consultar e exportar, mas não alterar dados.</p></div>' : ''}</div>
       <div class="admin-session-box"><span class="admin-session-dot"></span><div><strong>${sessionLabel}</strong><small>lionsclubcandidomota.github.io/portal</small></div><button class="btn btn-ghost btn-sm" id="logoutInlineBtn" type="button">Sair</button></div>
     </section>
 
     <section class="admin-period-panel" aria-label="Filtro de período do dashboard">
-      <div class="admin-period-copy"><span class="admin-period-icon" aria-hidden="true">🗓️</span><div><small>Período analisado</small><strong>${escapeHtml(model.selectedPeriodLabel)}</strong></div></div>
+      <div class="admin-period-copy"><span class="admin-period-icon" aria-hidden="true">🗓️</span><div><small>Período</small><strong>${escapeHtml(model.selectedPeriodLabel)}</strong></div></div>
       <div class="admin-period-controls">
-        <label class="admin-period-select"><span>Visualizar</span><select id="adminPeriodPreset">
+        <label class="admin-period-select"><span>Mostrar</span><select id="adminPeriodPreset">
           <option value="current-month" ${model.periodPreset === 'current-month' ? 'selected' : ''}>Este mês</option>
           <option value="previous-month" ${model.periodPreset === 'previous-month' ? 'selected' : ''}>Mês anterior</option>
           <option value="current-quarter" ${model.periodPreset === 'current-quarter' ? 'selected' : ''}>Trimestre atual</option>
@@ -72,46 +72,46 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
         <div class="admin-custom-period" ${customHidden}>
           <label><span>De</span><input id="adminPeriodStart" type="date" value="${escapeHtml(model.customStart)}" aria-label="Data inicial do período personalizado"></label>
           <label><span>Até</span><input id="adminPeriodEnd" type="date" value="${escapeHtml(model.customEnd)}" aria-label="Data final do período personalizado"></label>
-          <button class="btn btn-primary btn-sm admin-period-apply" id="adminPeriodApply" type="button">Aplicar período</button>
+          <button class="btn btn-primary btn-sm admin-period-apply" id="adminPeriodApply" type="button">Aplicar</button>
         </div>
       </div>
     </section>
 
     <section class="admin-insight-grid">
       <article class="admin-insight-card admin-treasury-insight">
-        <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">💰</span><div><span class="admin-insight-eyebrow">Tesouraria</span><h3>Movimentações do período</h3></div></div><div class="admin-insight-heading-actions">${financePrivacyButton}<div class="admin-insight-total"><strong>${treasury.total}</strong><small>total</small></div></div></div>
+        <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">💰</span><div><span class="admin-insight-eyebrow">Finanças</span><h3>Resumo do período</h3></div></div><div class="admin-insight-heading-actions">${financePrivacyButton}<div class="admin-insight-total"><strong>${treasury.total}</strong><small>total</small></div></div></div>
         <div class="admin-balance-highlight ${treasury.balance < 0 ? 'is-negative' : ''}"><small>Saldo do período</small><strong class="sensitive-money">${currency.format(treasury.balance)}</strong><span>Entradas − saídas</span></div>
         <div class="admin-money-chart">
           ${moneyBar('Entradas', treasury.entries.length, treasury.entriesValue, 'entry', treasury.maxValue)}
           ${moneyBar('Saídas', treasury.exits.length, treasury.exitsValue, 'exit', treasury.maxValue)}
         </div>
-        <div class="admin-insight-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="treasury" type="button">＋ Novo lançamento</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="treasury" type="button">Abrir tesouraria</button></div>
+        <div class="admin-insight-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="treasury" type="button">＋ Adicionar</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="treasury" type="button">Ver tesouraria</button></div>
       </article>
 
       <article class="admin-insight-card admin-agenda-insight">
-        <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">🗓️</span><div><span class="admin-insight-eyebrow">Agenda</span><h3>Situação dos eventos</h3></div></div><div class="admin-insight-total"><strong>${model.events.items.length}</strong><small>total</small></div></div>
+        <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">🗓️</span><div><span class="admin-insight-eyebrow">Agenda</span><h3>Eventos</h3></div></div><div class="admin-insight-total"><strong>${model.events.items.length}</strong><small>total</small></div></div>
         ${statusDistribution(model.events.groups, model.events.items.length, `Distribuição de ${model.events.items.length} eventos por status`)}
         ${statusRows(model.events.groups)}
-        <div class="admin-insight-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="event" type="button">＋ Novo evento</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="agenda" type="button">Abrir agenda</button></div>
+        <div class="admin-insight-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="event" type="button">＋ Adicionar evento</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="agenda" type="button">Ver agenda</button></div>
       </article>
 
       <article class="admin-insight-card admin-meeting-insight">
-        <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">🤝</span><div><span class="admin-insight-eyebrow">Compromissos</span><h3>Situação das reuniões</h3></div></div><div class="admin-insight-total"><strong>${model.meetings.items.length}</strong><small>total</small></div></div>
+        <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">🤝</span><div><span class="admin-insight-eyebrow">Agenda</span><h3>Reuniões</h3></div></div><div class="admin-insight-total"><strong>${model.meetings.items.length}</strong><small>total</small></div></div>
         ${statusDistribution(model.meetings.groups, model.meetings.items.length, `Distribuição de ${model.meetings.items.length} compromissos por status`)}
         ${statusRows(model.meetings.groups)}
-        <div class="admin-insight-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="meeting" type="button">＋ Novo compromisso</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="agenda" type="button">Ver compromissos</button></div>
+        <div class="admin-insight-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="meeting" type="button">＋ Adicionar reunião</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="agenda" type="button">Ver agenda</button></div>
       </article>
     </section>
 
     <section class="admin-support-grid">
-      <article class="admin-support-card admin-people-support-card"><div class="admin-support-main"><span class="admin-module-icon">🎂</span><div><span class="admin-insight-eyebrow">Aniversariantes</span><div class="admin-people-counts" aria-label="${model.birthdayAssociateCount} associado(s) e ${model.birthdayMutualCount} mutuário(s)"><span class="admin-people-count"><strong>${model.birthdayAssociateCount}</strong><small>Associado(s)</small></span><span class="admin-people-count is-mutual"><strong>${model.birthdayMutualCount}</strong><small>Mutuário(s)</small></span></div><p>Gerencie associados, mutuários e suas datas comemorativas.</p></div></div><div class="admin-support-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="birthday" type="button">＋ Cadastrar</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="birthdays" type="button">Ver cadastros</button></div></article>
-      <article class="admin-support-card"><div class="admin-support-main"><span class="admin-module-icon">📢</span><div><span class="admin-insight-eyebrow">Avisos</span><h3>${model.noticeCount} aviso(s)</h3><p>Cadastre comunicados e acompanhe as prioridades.</p></div></div><div class="admin-support-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="notice" type="button">＋ Novo aviso</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="notices" type="button">Ver avisos</button></div></article>
+      <article class="admin-support-card admin-people-support-card"><div class="admin-support-main"><span class="admin-module-icon">🎂</span><div><span class="admin-insight-eyebrow">Pessoas</span><div class="admin-people-counts" aria-label="${model.birthdayAssociateCount} associado(s) e ${model.birthdayMutualCount} mutuário(s)"><span class="admin-people-count"><strong>${model.birthdayAssociateCount}</strong><small>Associado(s)</small></span><span class="admin-people-count is-mutual"><strong>${model.birthdayMutualCount}</strong><small>Mutuário(s)</small></span></div><p>Consulte pessoas e datas de aniversário.</p></div></div><div class="admin-support-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="birthday" type="button">＋ Adicionar</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="birthdays" type="button">Ver pessoas</button></div></article>
+      <article class="admin-support-card"><div class="admin-support-main"><span class="admin-module-icon">📢</span><div><span class="admin-insight-eyebrow">Avisos</span><h3>${model.noticeCount} aviso(s)</h3><p>Crie e consulte comunicados.</p></div></div><div class="admin-support-actions">${canWrite ? '<button class="btn btn-primary btn-sm" data-add="notice" type="button">＋ Adicionar aviso</button>' : ''}<button class="btn btn-ghost btn-sm" data-manage="notices" type="button">Ver avisos</button></div></article>
     </section>
 
     <section class="card admin-report-center" aria-labelledby="adminReportTitle">
-      <div class="admin-report-heading"><span class="admin-card-icon" aria-hidden="true">📄</span><div><span class="admin-insight-eyebrow">Documentos gerenciais</span><h3 id="adminReportTitle">Central de relatórios</h3><p>Gere documentos usando o período selecionado acima. A visualização de impressão também permite salvar em PDF.</p></div></div>
+      <div class="admin-report-heading"><span class="admin-card-icon" aria-hidden="true">📄</span><div><span class="admin-insight-eyebrow">Relatórios</span><h3 id="adminReportTitle">Gerar relatório</h3><p>Escolha o conteúdo e exporte em PDF ou CSV.</p></div></div>
       <div class="admin-report-controls">
-        <label class="admin-report-type"><span>Tipo de relatório</span><select id="adminReportType">
+        <label class="admin-report-type"><span>Conteúdo</span><select id="adminReportType">
           <option value="movements">Movimentações financeiras</option>
           <option value="memberships">Mensalidades</option>
           <option value="mutuals">Mútuas</option>
@@ -120,20 +120,20 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
           <option value="notices">Avisos</option>
         </select></label>
         <div class="admin-report-period"><small>Período aplicado</small><strong>${escapeHtml(model.selectedPeriodLabel)}</strong></div>
-        <div class="admin-report-actions"><button class="btn btn-primary" id="generateReportPrint" type="button">🖨️ Visualizar / PDF</button><button class="btn btn-ghost" id="generateReportCsv" type="button">⬇️ Exportar CSV</button></div>
+        <div class="admin-report-actions"><button class="btn btn-primary" id="generateReportPrint" type="button">🖨️ Abrir PDF</button><button class="btn btn-ghost" id="generateReportCsv" type="button">⬇️ Baixar CSV</button></div>
       </div>
     </section>
 
     <section class="admin-operation-grid">
       <article class="card admin-backup-card admin-backup-card-wide">
-        <div class="admin-card-heading"><span class="admin-card-icon">🛟</span><div><h3>Recuperação e continuidade</h3><p>Exporte dados, importe uma cópia ou restaure áreas específicas usando pontos automáticos.</p></div></div>
-        <div class="admin-recovery-summary"><span class="is-${escapeHtml(recoverySummary?.diagnosticStatus || 'ok')}">${recoverySummary?.diagnosticStatus === 'error' ? '!' : recoverySummary?.diagnosticStatus === 'warning' ? '!' : '✓'}</span><div><strong>${Number(recoverySummary?.snapshots || 0)} ponto(s) de recuperação</strong><small>${recoverySummary?.latestAt ? `Último criado em ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(recoverySummary.latestAt))}` : 'O portal criará cópias antes de operações críticas'}</small></div>${canWrite ? '<button class="btn btn-primary btn-sm" id="openRecoveryCenterBtn" type="button">Abrir recuperação</button>' : '<span class="badge badge-muted">Somente Administrador</span>'}</div>
-        <div class="admin-backup-options"><button class="admin-backup-action" id="exportBtn" type="button"><span>⬇️</span><div><strong>Exportar JSON</strong><small>Baixar uma cópia externa</small></div></button>${canWrite ? '<button class="admin-backup-action" id="importBtn" type="button"><span>⬆️</span><div><strong>Importar JSON</strong><small>Substituir dados com proteção automática</small></div></button>' : ''}</div>
+        <div class="admin-card-heading"><span class="admin-card-icon">🛟</span><div><h3>Backup e recuperação</h3><p>Baixe uma cópia ou restaure dados quando necessário.</p></div></div>
+        <div class="admin-recovery-summary"><span class="is-${escapeHtml(recoverySummary?.diagnosticStatus || 'ok')}">${recoverySummary?.diagnosticStatus === 'error' ? '!' : recoverySummary?.diagnosticStatus === 'warning' ? '!' : '✓'}</span><div><strong>${Number(recoverySummary?.snapshots || 0)} ponto(s) de recuperação</strong><small>${recoverySummary?.latestAt ? `Último criado em ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(recoverySummary.latestAt))}` : 'O portal criará cópias antes de operações críticas'}</small></div>${canWrite ? '<button class="btn btn-primary btn-sm" id="openRecoveryCenterBtn" type="button">Ver backups</button>' : '<span class="badge badge-muted">Somente Administrador</span>'}</div>
+        <div class="admin-backup-options"><button class="admin-backup-action" id="exportBtn" type="button"><span>⬇️</span><div><strong>Baixar backup</strong><small>Salvar uma cópia dos dados</small></div></button>${canWrite ? '<button class="admin-backup-action" id="importBtn" type="button"><span>⬆️</span><div><strong>Restaurar backup</strong><small>Usar uma cópia salva</small></div></button>' : ''}</div>
       </article>
       <article class="admin-audit-card">
-        <div class="admin-audit-main"><span class="admin-module-icon" aria-hidden="true">◷</span><div><span class="admin-insight-eyebrow">Observabilidade</span><h3>Histórico de alterações</h3><p>${auditSummary?.latestAction ? `Última operação: ${escapeHtml(auditSummary.latestAction)}` : 'As operações administrativas realizadas neste navegador aparecerão aqui.'}</p></div></div>
+        <div class="admin-audit-main"><span class="admin-module-icon" aria-hidden="true">◷</span><div><span class="admin-insight-eyebrow">Atividade</span><h3>Histórico de alterações</h3><p>${auditSummary?.latestAction ? `Última operação: ${escapeHtml(auditSummary.latestAction)}` : 'As alterações feitas neste navegador aparecem aqui.'}</p></div></div>
         <div class="admin-audit-stats"><div class="admin-audit-stat"><strong>${Number(auditSummary?.operations || 0)}</strong><small>operações</small></div><div class="admin-audit-stat"><strong>${Number(auditSummary?.pendingBatches || 0)}</strong><small>pendentes</small></div></div>
-        <div class="admin-audit-actions"><button class="btn btn-primary btn-sm" id="openAuditLogBtn" type="button">Abrir histórico</button></div>
+        <div class="admin-audit-actions"><button class="btn btn-primary btn-sm" id="openAuditLogBtn" type="button">Ver histórico</button></div>
       </article>
     </section>`;
 }

@@ -41,6 +41,7 @@ test('fachada administrativa preserva o contrato público', () => {
     'openFamilyGroupsManager',
     'openMembershipPayment',
     'openMutualGroupsManager',
+    'openMutualEventManager',
     'openMutualPayment',
     'openTreasuryAccountsManager',
     'shareMembershipCharge',
