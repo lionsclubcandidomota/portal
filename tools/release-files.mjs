@@ -32,7 +32,8 @@ export const SITE_ROOTS = Object.freeze([
 
 export const SITE_FILES = Object.freeze([
   'index.html',
-  'assets/css/app.css'
+  'assets/css/app.css',
+  'data/dados.json'
 ]);
 
 export const WORKER_ROOT = 'cloudflare/attachment-worker';

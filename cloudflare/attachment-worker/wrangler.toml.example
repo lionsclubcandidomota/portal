@@ -14,7 +14,12 @@ migrations_dir = "migrations"
 
 [vars]
 ALLOWED_ORIGINS = "https://lionsclubcandidomota.github.io,http://localhost:*,http://127.0.0.1:*"
-# Usada somente na primeira importação da versão antiga. Pode ser removida após confirmar a migração.
+GITHUB_OWNER = "lionsclubcandidomota"
+GITHUB_REPO = "portal"
+GITHUB_BRANCH = "main"
+GITHUB_DATA_PATH = "data/dados.json"
+LEGACY_GITHUB_LOGIN_ENABLED = "false"
 PUBLIC_DATA_URL = "https://lionsclubcandidomota.github.io/portal/data/dados.json"
 SESSION_TTL_SECONDS = "1800"
 DOWNLOAD_TTL_SECONDS = "300"
+

@@ -188,7 +188,7 @@ export async function getAuthenticationStatus(env) {
       initialized: false,
       bootstrapRequired: false,
       passwordLogin: false,
-      publicationAvailable: Boolean(env.PORTAL_DB)
+      publicationAvailable: Boolean(env.GITHUB_TOKEN)
     };
   }
   try {
@@ -201,7 +201,7 @@ export async function getAuthenticationStatus(env) {
         initialized: false,
         bootstrapRequired: false,
         passwordLogin: false,
-        publicationAvailable: Boolean(env.PORTAL_DB)
+        publicationAvailable: Boolean(env.GITHUB_TOKEN)
       };
     }
     const result = await env.PORTAL_DB.prepare(
@@ -213,8 +213,8 @@ export async function getAuthenticationStatus(env) {
       initialized: true,
       bootstrapRequired: total === 0,
       passwordLogin: total > 0,
-      publicationAvailable: Boolean(env.PORTAL_DB),
-      emergencyLoginAvailable: false,
+      publicationAvailable: Boolean(env.GITHUB_TOKEN),
+      emergencyLoginAvailable: String(env.LEGACY_GITHUB_LOGIN_ENABLED || '').toLowerCase() === 'true',
       passwordIterations: PASSWORD_ITERATIONS
     };
   } catch (error) {
@@ -223,7 +223,7 @@ export async function getAuthenticationStatus(env) {
       initialized: false,
       bootstrapRequired: false,
       passwordLogin: false,
-      publicationAvailable: Boolean(env.PORTAL_DB),
+      publicationAvailable: Boolean(env.GITHUB_TOKEN),
       error: error instanceof Error ? error.message : String(error)
     };
   }
@@ -331,7 +331,7 @@ async function createDatabaseSession(env, request, {
       role,
       mustChangePassword: Boolean(mustChangePassword)
     },
-    publication: { available: Boolean(env.PORTAL_DB) }
+    publication: { available: Boolean(env.GITHUB_TOKEN) }
   };
 }
 
@@ -400,6 +400,14 @@ export async function createDirectorSession(request, env, subject = 'diretoria')
     username: String(subject || 'diretoria'),
     displayName: 'Diretoria',
     role: 'director'
+  });
+}
+
+export async function createLegacyAdministratorSession(request, env, subject = 'administrador') {
+  return createDatabaseSession(env, request, {
+    username: String(subject || 'administrador'),
+    displayName: String(subject || 'Administrador'),
+    role: 'admin'
   });
 }
 

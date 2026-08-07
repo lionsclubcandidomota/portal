@@ -1,75 +1,261 @@
-# Migração integral do Portal para Cloudflare D1 — v6.47.0
+# Migração do estado privado para Cloudflare D1
 
-## Estado final
+## Objetivo
 
-O D1 passa a ser a fonte única de dados estruturados públicos e privados. O R2 mantém arquivos binários e backups. A hospedagem estática mantém somente a interface.
+O Portal passa a utilizar o Cloudflare D1 como fonte principal dos dados privados estruturados e mantém o R2 para:
 
-## Requisitos existentes
+- comprovantes e documentos;
+- backups versionados;
+- espelho de contingência do estado atual;
+- retorno temporário ao modelo anterior, caso necessário.
 
-- banco D1 `lions-portal-dados` no binding `PORTAL_DB`;
-- bucket R2 no binding `ATTACHMENTS`;
-- `SESSION_SECRET`;
-- `ADMIN_BOOTSTRAP_KEY`;
-- Worker anterior funcionando com esquema D1 8.
+A migração não altera o JSON público do GitHub Pages e não expõe dados financeiros.
 
-## Implantação segura
+## Arquitetura
 
-1. Mantenha o Portal 6.46.0 publicado. O antigo `data/dados.json` e as fotos ainda precisam estar acessíveis durante a importação.
-2. Extraia o Worker 1.13.0 e copie o `wrangler.toml` configurado da versão anterior.
-3. Defina temporariamente:
+```text
+Portal no GitHub Pages
+        │ sessão autenticada
+        ▼
+Cloudflare Worker 1.7.0
+        ├── D1: dados privados estruturados
+        └── R2: anexos, backups e espelho de contingência
+```
 
-   ```toml
-   PUBLIC_DATA_URL = "https://lionsclubcandidomota.github.io/portal/data/dados.json"
-   ```
+O frontend continua usando `GET/PUT /api/private-state`. O Worker grava, na mesma transação, um snapshot JSON canônico e projeções relacionais para consultas, relatórios e vínculos. O snapshot preserva exatamente o contrato atual; as tabelas tornam os dados estruturados e indexáveis sem reconstruir as telas existentes.
 
-4. Publique o Worker:
+As inclusões em massa são agrupadas com `json_each()` e limitadas a no máximo 40 consultas de escrita por sincronização. O fluxo permanece dentro do limite de consultas por invocação do Workers Free para o volume atual do Portal.
 
-   ```bash
-   npm ci
-   npx wrangler deploy --config wrangler.toml
-   ```
+## 1. Criar o banco
 
-5. Aplique as migrações:
+Na pasta `cloudflare/attachment-worker`:
 
-   ```bash
-   npx wrangler d1 migrations apply lions-portal-dados --remote --config wrangler.toml
-   ```
+```bash
+npm install
+npx wrangler d1 create lions-portal-dados
+```
 
-6. Confirme `0010_public_portal_d1.sql`.
-7. Faça logout e login como Administrador. O primeiro login importa automaticamente o JSON e as mídias da versão 6.46.0.
-8. Abra `/health` e confira esquema 9, fonte `cloudflare-d1` e as contagens esperadas.
-9. Só então publique o Portal 6.47.0.
-10. Homologue páginas públicas, fotos, agenda, avisos e administração.
-11. Após o período de segurança, remova `PUBLIC_DATA_URL` e o segredo antigo `GITHUB_TOKEN`, caso ainda existam.
+O comando retorna um `database_id`. Copie `wrangler.toml.example` para `wrangler.toml` e substitua:
 
-## Resultado esperado no health
+```toml
+[[d1_databases]]
+binding = "PORTAL_DB"
+database_name = "lions-portal-dados"
+database_id = "UUID_RETORNADO_PELA_CLOUDFLARE"
+migrations_dir = "migrations"
+```
+
+Mantenha também o binding R2 existente:
+
+```toml
+[[r2_buckets]]
+binding = "ATTACHMENTS"
+bucket_name = "lions-portal-documentos"
+```
+
+## 2. Aplicar o esquema
+
+```bash
+npx wrangler d1 migrations apply lions-portal-dados --remote
+```
+
+A primeira migração cria tabelas para:
+
+- snapshot privado canônico;
+- configurações privadas;
+- contas e categorias;
+- movimentações e anexos;
+- grupos familiares e participantes;
+- grupos de mútuas, vínculos, falecimentos e participantes dos eventos;
+- metadados, revisão e integridade.
+
+## 3. Publicar o Worker
+
+Confirme que `SESSION_SECRET` continua configurado e publique:
+
+```bash
+npx wrangler secret put SESSION_SECRET
+npm run deploy
+```
+
+A resposta de `/health` deve conter:
 
 ```json
 {
-  "workerVersion": "1.13.0",
+  "status": "ok",
+  "storage": "cloudflare-r2+d1",
+  "privateState": "r2",
   "d1": {
-    "active": true,
-    "schemaVersion": 9,
-    "requiredSchemaVersion": 9
-  },
-  "publicData": {
-    "source": "d1",
-    "active": true,
-    "media": "cloudflare-r2"
-  },
-  "structuredDataSource": "cloudflare-d1",
-  "automaticSync": {
-    "intervalSeconds": 60,
-    "lightweightRevisionCheck": true
-  },
-  "snapshotPolicy": "recovery-only"
+    "available": true,
+    "initialized": true,
+    "active": false,
+    "schemaVersion": 2,
+    "requiredSchemaVersion": 2
+  }
 }
 ```
 
-Para o conjunto atual, as contagens públicas esperadas são 32 associados, 12 eventos, 3 reuniões e 2 avisos.
+O valor `privateState: "r2"` antes do corte é intencional.
 
-## Rollback de implantação
+## 4. Publicar o Portal 6.39.0
 
-Antes de publicar o Portal 6.47.0, basta manter a versão 6.46.0 no ar enquanto se corrige o Worker. Depois da publicação estática, um rollback visual pode restaurar o pacote 6.46.0; os dados já migrados permanecem no D1 e não são apagados.
+Depois do Worker, publique os arquivos do Portal. Entre como Administrador e abra:
 
-Backups privados continuam no R2. O snapshot não participa das operações diárias e é materializado somente para recuperação, importação, exportação ou retorno emergencial.
+**Painel Administrativo → Recuperação e integridade**
+
+O cartão do D1 deve exibir **Banco pronto para receber os dados**.
+
+## 5. Executar a migração
+
+Clique em **Migrar para o D1**.
+
+O Worker executa, nesta ordem:
+
+1. confere a revisão atual do R2;
+2. cria um backup `before-d1-migration`;
+3. grava o snapshot e todas as projeções relacionais em uma transação;
+4. registra checksum, revisão e data da migração;
+5. mantém o estado atual espelhado no R2;
+6. passa a responder `GET/PUT /api/private-state` usando o D1.
+
+Nenhum anexo é movido: os arquivos continuam no mesmo bucket R2 e o D1 guarda os metadados e as referências.
+
+## 6. Conferência
+
+Atualize a Central de Recuperação. O cartão deve mostrar **Banco estruturado ativo**.
+
+O `/health` passa a apresentar:
+
+```json
+{
+  "privateState": "d1",
+  "d1": {
+    "available": true,
+    "initialized": true,
+    "active": true,
+    "schemaVersion": 2
+  }
+}
+```
+
+Faça uma inclusão e uma exclusão privada de teste, sem publicar no GitHub, e confirme:
+
+- dados preservados após recarregar;
+- indicador “Banco sincronizado” após cada operação;
+- nenhuma pendência pública criada por operações financeiras;
+- totais financeiros iguais;
+- anexos acessíveis;
+- backup R2 criado;
+- revisão D1 atualizada.
+
+## Retorno temporário ao R2
+
+A Central de Recuperação oferece **Retornar ao R2** somente ao Administrador.
+
+Antes da troca, o Worker copia o estado atual do D1 para o R2 e cria um backup. O banco não é apagado. Uma nova migração pode reativá-lo posteriormente.
+
+## Recuperação
+
+O D1 dispõe de recuperação por ponto no tempo da própria Cloudflare — atualmente 7 dias no Workers Free e 30 dias no Workers Paid. Os backups do Portal no R2 continuam existindo como segunda camada e podem ser restaurados pela interface; quando o D1 está ativo, a restauração grava o conteúdo no D1 e atualiza o espelho do R2.
+
+## Salvamento automático — versão 6.38.0
+
+Depois que o D1 estiver ativo, operações privadas não dependem mais da publicação do GitHub:
+
+```text
+Tesouraria / Mensalidades / Mútuas / Contas / Categorias
+        → fila privada do navegador
+        → PUT /api/private-state
+        → transação no D1
+        → espelho e backups no R2
+```
+
+O botão **Publicar conteúdo público** permanece apenas para dados que precisam aparecer no GitHub Pages, como avisos, agenda, associados e conteúdo institucional.
+
+O cabeçalho administrativo mostra um estado independente:
+
+- **Salvando no banco**: existe uma gravação privada em andamento;
+- **Banco sincronizado**: a última alteração privada foi confirmada;
+- **Falha ao salvar**: a alteração permanece no navegador e o indicador permite tentar novamente.
+
+Antes de publicar conteúdo público, atualizar o Portal ou encerrar a sessão, a fila privada é finalizada. Se o Worker não confirmar a gravação, a ação é interrompida para evitar perda de dados.
+
+
+## Autenticação administrativa — versão 6.39.0
+
+A segunda migração D1 cria usuários e sessões:
+
+```bash
+npx wrangler d1 migrations apply lions-portal-dados --remote
+```
+
+Depois de aplicar `0002_admin_auth.sql`, configure os segredos `GITHUB_TOKEN` e `ADMIN_BOOTSTRAP_KEY`, publique o Worker 1.5.0 e crie o primeiro Administrador pela tela **Primeiro acesso**. O token do GitHub deixa de ser informado no navegador e passa a ser usado exclusivamente pelo endpoint de publicação do Worker.
+
+Consulte `docs/admin-authentication-d1.md` para o procedimento completo.
+
+
+## Gravação granular da Tesouraria — versão 6.40.0
+
+Aplique `0003_treasury_granular_writes.sql` e publique o Worker 1.6.0. Alterações exclusivas em movimentações e anexos passam a usar `PUT /api/private-state/treasury`, com revisão otimista e idempotência. As demais coleções continuam usando `PUT /api/private-state` até suas respectivas etapas de migração.
+
+O `/health` deve informar `privateAutosave: "granular-treasury"`, `schemaVersion: 2` e `granularWrites.treasury: true`.
+
+
+## Gravação granular de grupos — versão 6.41.0
+
+Aplique `0004_group_granular_writes.sql` e publique o Worker 1.7.0. Alterações exclusivas em grupos familiares e grupos de Mútuas passam a usar `PUT /api/private-state/groups`. Cada grupo de Mútuas é atualizado junto com seus vínculos, eventos e participantes no mesmo lote transacional.
+
+O `/health` deve informar `privateAutosave: "granular-treasury-groups"`, `schemaVersion: 3`, `granularWrites.treasury: true` e `granularWrites.groups: true`. A sincronização completa continua disponível para alterações mistas e como fallback de contingência.
+
+Consulte `docs/d1-granular-groups.md` para detalhes de implantação, concorrência e homologação.
+
+## Leituras otimizadas — versão 6.42.0
+
+Publique primeiro o Worker 1.8.0 e depois aplique `0005_analytics_read_models.sql`. O Worker mantém as operações existentes enquanto o banco ainda estiver no esquema 3; os endpoints de analytics são ativados somente no esquema 4.
+
+O `/health` deve informar:
+
+```json
+{
+  "workerVersion": "1.8.0",
+  "d1": { "schemaVersion": 4, "active": true },
+  "optimizedReads": {
+    "dashboard": true,
+    "reports": true
+  }
+}
+```
+
+O Dashboard Administrativo consulta as somatórias financeiras no D1. Movimentações, Mensalidades e Mútuas usam recortes SQL na Central de Relatórios. O snapshot permanece como contingência e para compatibilidade das telas operacionais nesta etapa.
+
+## Fonte relacional operacional — versão 6.43.0
+
+Publique primeiro o Worker 1.9.0 e depois aplique `0006_relational_operational_source.sql`. A migração eleva o esquema para 5, ativa `relational_source` e `operational_read_models` e preserva o snapshot atual como ponto de recuperação.
+
+Após a migração, confirme no `/health`:
+
+```json
+{
+  "workerVersion": "1.9.0",
+  "d1": { "schemaVersion": 5, "active": true },
+  "relationalSource": true,
+  "snapshotPolicy": "recovery-only",
+  "optimizedReads": { "treasuryPagination": true }
+}
+```
+
+
+## Mensalidades e Mútuas operacionais — versão 6.44.0
+
+Publique primeiro o Worker 1.10.0 e aplique `0007_operational_memberships_mutuals.sql`. A migração eleva o esquema para 6 e cria o diretório relacional de associados usado pelas consultas paginadas.
+
+```json
+{
+  "workerVersion": "1.10.0",
+  "d1": { "schemaVersion": 6, "requiredSchemaVersion": 6, "active": true },
+  "optimizedReads": { "memberships": true, "mutuals": true },
+  "memberDirectory": { "available": true }
+}
+```
+
+Depois da migração, publique o Portal 6.44.0 e valide Mensalidades e Mútuas. Se `memberDirectory.updatedAt` estiver vazio no primeiro acesso, a primeira consulta autenticada tenta sincronizar os associados a partir de `PUBLIC_DATA_URL`.

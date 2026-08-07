@@ -1,5 +1,5 @@
 import { cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import {
   collectSiteFiles,
@@ -86,7 +86,7 @@ async function buildArtifact({
 async function run() {
   const packageJson = JSON.parse(await readFile(path.join(projectRoot, 'package.json'), 'utf8'));
   const workerPackage = JSON.parse(await readFile(path.join(projectRoot, WORKER_ROOT, 'package.json'), 'utf8'));
-  const schemaModule = await import(`${pathToFileURL(path.join(projectRoot, 'assets/js/core/portal-schema.js')).href}?release=${Date.now()}`);
+  const portalData = JSON.parse(await readFile(path.join(projectRoot, 'data', 'dados.json'), 'utf8'));
 
   await rm(distRoot, { recursive: true, force: true });
   await mkdir(distRoot, { recursive: true });
@@ -103,7 +103,7 @@ async function run() {
     sourceRoot: projectRoot,
     files: siteFiles,
     version: packageJson.version,
-    schemaVersion: schemaModule.CURRENT_SCHEMA_VERSION,
+    schemaVersion: portalData.schemaVersion,
     generatedAt: packageJson.releaseTimestamp
   }));
   artifacts.push(await buildArtifact({

@@ -9,8 +9,7 @@ A versão 6.46.0 adiciona revisões independentes para os módulos privados do P
 - `treasury`: movimentações e anexos;
 - `memberships`: pagamentos e visão operacional de Mensalidades;
 - `mutuals`: eventos, cobranças e pagamentos de Mútuas;
-- `member-directory`: projeção relacional dos associados públicos;
-- `public`: configurações, associados, agenda, reuniões, avisos e mídias públicas.
+- `member-directory`: projeção relacional dos associados públicos.
 
 Cada mutação granular incrementa somente as revisões relacionadas. Uma movimentação financeira, por exemplo, incrementa `treasury`, `memberships` e `mutuals`, mas não altera a revisão dos grupos.
 
@@ -28,7 +27,7 @@ A primeira rota retorna apenas números de revisão e datas. As duas rotas segui
 
 O Portal consulta revisões:
 
-- a cada 60 segundos;
+- a cada 45 segundos;
 - ao voltar para a aba;
 - ao focar a janela;
 - ao trocar de área da aplicação.

@@ -16,7 +16,7 @@ import {
   readD1ModuleRevisions,
   readD1ReferenceModule
 } from '../cloudflare/attachment-worker/src/d1-sync.js';
-import { createLiveSyncActions } from '../assets/js/modules/portal-runtime/live-sync.js?v=6.47.0';
+import { createLiveSyncActions } from '../assets/js/modules/portal-runtime/live-sync.js?v=6.46.0';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -58,8 +58,7 @@ async function fixture() {
     '0006_relational_operational_source.sql',
     '0007_operational_memberships_mutuals.sql',
     '0008_private_bootstrap_reference.sql',
-    '0009_module_revisions.sql',
-    '0010_public_portal_d1.sql'
+    '0009_module_revisions.sql'
   ]) {
     database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations', migration), 'utf8'));
   }
@@ -84,16 +83,15 @@ async function fixture() {
   return { database, env, state };
 }
 
-test('migrações 0009 e 0010 mantêm revisões independentes por módulo e conteúdo público', async () => {
+test('migração 0009 mantém revisões independentes por módulo', async () => {
   const { database, env, state } = await fixture();
   const status = await getD1StorageStatus(env);
-  assert.equal(status.schemaVersion, 9);
+  assert.equal(status.schemaVersion, 8);
   assert.equal(status.moduleRevisionSync, true);
   const initial = await readD1ModuleRevisions(env);
   assert.equal(initial.modules.reference.revision, 1);
   assert.equal(initial.modules.groups.revision, 1);
   assert.equal(initial.modules.treasury.revision, 1);
-  assert.equal(initial.modules.public.revision, 0);
 
   const treasuryState = structuredClone(state);
   treasuryState.treasury.push({ id: 'mov-2', date: '2026-08-02', category: 'Mútuas', entry: 20, exit: 0, status: 'Recebido', attachments: [] });
@@ -163,8 +161,8 @@ test('sincronização do Portal aplica apenas módulos alterados sem recarregar 
       loadD1ModuleRevisions: async () => {
         revisionsCall += 1;
         return revisionsCall === 1
-          ? { revision: 'r1', modules: { reference: { revision: 1 }, groups: { revision: 1 }, treasury: { revision: 1 }, memberships: { revision: 1 }, mutuals: { revision: 1 }, 'member-directory': { revision: 0 }, public: { revision: 0 } } }
-          : { revision: 'r2', updatedAt: '2026-08-07T23:00:00.000Z', modules: { reference: { revision: 2 }, groups: { revision: 2 }, treasury: { revision: 2 }, memberships: { revision: 2 }, mutuals: { revision: 2 }, 'member-directory': { revision: 0 }, public: { revision: 0 } } };
+          ? { revision: 'r1', modules: { reference: { revision: 1 }, groups: { revision: 1 }, treasury: { revision: 1 }, memberships: { revision: 1 }, mutuals: { revision: 1 }, 'member-directory': { revision: 0 } } }
+          : { revision: 'r2', updatedAt: '2026-08-07T23:00:00.000Z', modules: { reference: { revision: 2 }, groups: { revision: 2 }, treasury: { revision: 2 }, memberships: { revision: 2 }, mutuals: { revision: 2 }, 'member-directory': { revision: 0 } } };
       },
       loadD1ReferenceModule: async () => ({ state: { settings: { membershipMonthlyFee: 50 }, treasuryAccounts: [{ id: 'a1', name: 'Conta nova' }], treasuryCategories: ['Nova'] } }),
       loadD1GroupsModule: async () => ({ state: { familyGroups: [{ id: 'f1', name: 'Família nova' }], mutualGroups: [{ id: 'm1', name: 'Mútua' }] } }),

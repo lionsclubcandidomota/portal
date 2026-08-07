@@ -82,6 +82,6 @@ test('aceita somente payload remoto novo ou sem versão', () => {
 });
 
 test('usa intervalo de atualização mais conservador na sessão administrativa', () => {
-  assert.equal(remoteRefreshInterval(false), 60000);
-  assert.equal(remoteRefreshInterval(true), 60000);
+  assert.equal(remoteRefreshInterval(false), 10000);
+  assert.equal(remoteRefreshInterval(true), 30000);
 });

@@ -18,6 +18,9 @@ async function walk(directory, extensions = null) {
 
 const packageJson = JSON.parse(await readFile(path.join(projectRoot, 'package.json'), 'utf8'));
 const indexHtml = await readFile(path.join(projectRoot, 'index.html'), 'utf8');
+const dataPath = path.join(projectRoot, 'data', 'dados.json');
+const dataSource = await readFile(dataPath, 'utf8');
+const dataEnvelope = JSON.parse(dataSource);
 const schemaPath = path.join(projectRoot, 'assets', 'js', 'core', 'portal-schema.js');
 const schemaModule = await import(`${pathToFileURL(schemaPath).href}?release=${Date.now()}`);
 const appFiles = await walk(path.join(projectRoot, 'assets', 'js'), ['.js']);
@@ -53,12 +56,11 @@ for (const documentPath of ['CHANGELOG.md', 'RELEASE.md', 'docs/homologation.md'
   }
 }
 
-try {
-  await stat(path.join(projectRoot, 'data', 'dados.json'));
-  failures.push('data/dados.json não deve existir após a migração integral para o D1');
-} catch (error) {
-  if (error?.code !== 'ENOENT') throw error;
+if (dataEnvelope.schemaVersion !== schemaModule.CURRENT_SCHEMA_VERSION) {
+  failures.push(`data/dados.json usa esquema v${dataEnvelope.schemaVersion}; esperado v${schemaModule.CURRENT_SCHEMA_VERSION}`);
 }
+if (Buffer.byteLength(dataSource) > 100_000) failures.push('data/dados.json voltou a ultrapassar 100 KB');
+if (/data:image\//i.test(dataSource)) failures.push('data/dados.json contém imagem Base64 incorporada');
 
 const runtimeSources = `${indexHtml}\n${appSources.map(item => item.source).join('\n')}`;
 for (const forbidden of ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'unpkg.com']) {
@@ -95,4 +97,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Auditoria da versão ${packageJson.version} aprovada: esquema v${schemaModule.CURRENT_SCHEMA_VERSION}, ${appFiles.length} módulos e conteúdo estruturado fora do site estático.`);
+console.log(`Auditoria da versão ${packageJson.version} aprovada: esquema v${dataEnvelope.schemaVersion}, ${appFiles.length} módulos e dados com ${Buffer.byteLength(dataSource)} bytes.`);

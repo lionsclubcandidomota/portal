@@ -1,7 +1,37 @@
-# Persistência privada — estado atual v6.47.0
+# Migração dos dados privados
 
-Todos os dados privados estruturados estão no D1. Movimentações, anexos, contas, categorias, grupos familiares, Mútuas, usuários e auditoria não são publicados junto ao site estático.
+A versão 6.29.0 separa os dados do Portal em dois destinos.
 
-O R2 mantém comprovantes e backups. O snapshot JSON é somente uma ferramenta de recuperação e não é regravado em cada operação.
+## GitHub Pages
 
-As telas usam consultas específicas, paginação e revisões por módulo. Alterações privadas são confirmadas automaticamente no banco e não criam uma publicação pública.
+Permanece público e recebe somente:
+
+- identidade visual e URL do Worker;
+- aniversariantes sem contatos privados;
+- agenda, compromissos e avisos;
+- indicador público de que o acesso da Diretoria está habilitado.
+
+## Cloudflare R2
+
+O Worker grava no objeto interno `__portal/private-state-v1.json`:
+
+- contas e categorias da Tesouraria;
+- movimentações e metadados de anexos;
+- grupos familiares e de mútuas;
+- valores das mensalidades;
+- perfil completo de autenticação da Diretoria.
+
+## Procedimento
+
+1. Atualize e publique o Worker.
+2. Atualize o Portal sem editar manualmente `data/dados.json`.
+3. Entre como Administrador com o usuário e a senha cadastrados no D1.
+4. Publique a alteração de migração apresentada pelo Portal.
+5. Saia e teste o acesso de Visitante e da Diretoria.
+
+A migração preserva o JSON legado até a publicação ser confirmada. Não apague manualmente os dados financeiros antes dessa etapa.
+
+
+## Etapa D1
+
+A migração R2 → D1 é executada pelo Worker, não pelo navegador. Ela verifica a revisão otimista, cria backup, grava as tabelas em um único `batch()` transacional e ativa o banco somente ao final. O arquivo R2 não é removido e permanece como contingência. Consulte `cloudflare-d1-migration.md`.

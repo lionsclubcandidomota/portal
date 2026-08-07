@@ -1,21 +1,18 @@
 {
   "application": "lions-portal-attachment-worker",
   "artifactType": "cloudflare-worker",
-  "version": "1.13.0",
-  "schemaVersion": 9,
-  "generatedAt": "2026-08-07T23:58:00.000Z",
+  "version": "1.9.0",
+  "schemaVersion": 5,
+  "generatedAt": "2026-08-07T11:48:01.000Z",
   "summary": {
-    "files": 23,
-    "javascript": 8,
-    "migrations": 10,
-    "totalBytes": 300506
+    "files": 17,
+    "javascript": 6,
+    "css": 0,
+    "tests": 0,
+    "memberImages": 0,
+    "totalBytes": 236187
   },
   "files": [
-    {
-      "path": "README.md",
-      "bytes": 3713,
-      "sha256": "76a7c9ff2d238c0de9150782ad50c5a74fdfdf101df2fc2efcdcc9dabf3fa5cc"
-    },
     {
       "path": "migrations/0001_portal_private_state.sql",
       "bytes": 5602,
@@ -47,39 +44,24 @@
       "sha256": "ebf1625e6be7aacf4b73bde54895dcfe97a84f8f6103c177114d1e07e2b4d03e"
     },
     {
-      "path": "migrations/0007_operational_memberships_mutuals.sql",
-      "bytes": 1584,
-      "sha256": "a6fc7192ca8533023146d4e5f93c1266c6b5dcb420f107751b03c334e18504c5"
-    },
-    {
-      "path": "migrations/0008_private_bootstrap_reference.sql",
-      "bytes": 570,
-      "sha256": "5c3f74e64566bd98979a7133a68c93f5cd2f589819daae61a0bcb96eacff8e30"
-    },
-    {
-      "path": "migrations/0009_module_revisions.sql",
-      "bytes": 816,
-      "sha256": "b7b9412aae957b7dc5fe9ddf6411dc48da3df67f0eeb953e9761415e6faa96f1"
-    },
-    {
-      "path": "migrations/0010_public_portal_d1.sql",
-      "bytes": 3511,
-      "sha256": "1e6a6d7d114c1213d816b3de14400fa0d340b0f3bb93164b1ef5a541d249a670"
-    },
-    {
       "path": "package-lock.json",
-      "bytes": 49385,
-      "sha256": "494f85723e65a7f4ed41ec58eaa597d9a0ef8398348790d2a1355d53681476cd"
+      "bytes": 49383,
+      "sha256": "c4fb487deda05c575b429ba5ff1b5d1d93615ecd6d0dbad3b644df156ad48226"
     },
     {
       "path": "package.json",
-      "bytes": 742,
-      "sha256": "cf46173060ac4ca2a9021af0837c136190186e50034f4342137c700ffed0cf3a"
+      "bytes": 669,
+      "sha256": "8c9de59b58f825bb253790a4d2f26d2e8d16ea42e02465e33a82f1f9fe8a4b1f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 8291,
+      "sha256": "675bea776543554fc82aabd1738b56e3e5e9df3d9a00fa5986e7ff8a98c21517"
     },
     {
       "path": "src/auth.js",
-      "bytes": 22559,
-      "sha256": "07bc394a3b9ee1b1814428872554c3082e5b415e02d583b9ca0c68c4212b872a"
+      "bytes": 22914,
+      "sha256": "1965267ab342da4b5f7e48d8d1169e2a8aaa05e6330d832402196d7f3a206ae4"
     },
     {
       "path": "src/d1-analytics.js",
@@ -87,44 +69,34 @@
       "sha256": "6b1f866884f0faa0dfec1a16a59d3310e17e1ac2c768023f602d2871e881feb9"
     },
     {
-      "path": "src/d1-operational-memberships.js",
-      "bytes": 19887,
-      "sha256": "818f57a534056f2de59a59c617cf6c2b3edcc1ebdf20df2e47433d0390aa4419"
-    },
-    {
       "path": "src/d1-operational.js",
       "bytes": 6883,
       "sha256": "c07cb216a0074b8cc36096f1df610c40c4d830a95f727a05562ad8006ee94ddc"
     },
     {
-      "path": "src/d1-public.js",
-      "bytes": 27428,
-      "sha256": "2f1995a87cc72c80382b4253e302d823e7c5aa41d5454afc467a1e60860e7cd9"
-    },
-    {
       "path": "src/d1-storage.js",
-      "bytes": 60157,
-      "sha256": "5ad87d7814599e2947bb82cd401e0400811a097123bac7eb004869c122902515"
+      "bytes": 46337,
+      "sha256": "c7634cc397bbf93aa6148920631ac873e64e3f830f191e7b203824b55749a109"
     },
     {
-      "path": "src/d1-sync.js",
-      "bytes": 4882,
-      "sha256": "8c5e16e65ef2b435009cfc242fae8d6de6620ba41e1cda8b1a1a70c94dd365e9"
+      "path": "src/github-publication.js",
+      "bytes": 15764,
+      "sha256": "fba8df682ef80d6e0a42f31ded48a13123e608b4777c6a7791df099720a7c0b0"
     },
     {
       "path": "src/index.js",
-      "bytes": 78219,
-      "sha256": "9e0ab43f6d24e0f4ca593c975ec072ef835e0882c340bc1fa0c8220aed787bfd"
+      "bytes": 65565,
+      "sha256": "309fb9b348d6dfbfd68a03bb6c95a4ce709744a6f886f8af789515bedf48ec94"
     },
     {
       "path": "wrangler.ci.toml",
-      "bytes": 576,
-      "sha256": "49cd9512a5e57cf44fa08874690e5549b1977df85919fdababd5589983d093c6"
+      "bytes": 735,
+      "sha256": "5859d7e005d2a0113c66fc8a4804a1d7f615c1c4d526c29bd1faefc84597cd4a"
     },
     {
       "path": "wrangler.toml.example",
-      "bytes": 668,
-      "sha256": "9d26a16433142a22921ae29694c7562f5294cdf86d46ae2c679203ca828fef6a"
+      "bytes": 720,
+      "sha256": "0f15818ae42eccd6ecf2ceee517fbf14e34cfb85df3bc04987d26846460aea59"
     }
   ]
 }

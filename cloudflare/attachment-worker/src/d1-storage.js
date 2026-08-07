@@ -1,6 +1,6 @@
 import { moduleRevisionStatement } from './d1-sync.js';
 
-export const D1_SCHEMA_VERSION = 9;
+export const D1_SCHEMA_VERSION = 8;
 export const D1_MIN_OPERATIONAL_SCHEMA_VERSION = 3;
 
 const encoder = new TextEncoder();
@@ -251,8 +251,6 @@ export async function getD1StorageStatus(env) {
       (SELECT value FROM portal_meta WHERE key = 'snapshot_stale') AS snapshot_stale,
       (SELECT value FROM portal_meta WHERE key = 'snapshot_updated_at') AS snapshot_updated_at,
       (SELECT value FROM portal_meta WHERE key = 'module_revision_sync') AS module_revision_sync,
-      (SELECT value FROM portal_meta WHERE key = 'public_data_d1') AS public_data_d1,
-      (SELECT value FROM portal_meta WHERE key = 'public_revision') AS public_revision,
       (SELECT COUNT(*) FROM treasury_movements) AS treasury,
       (SELECT COUNT(*) FROM treasury_accounts) AS accounts,
       (SELECT COUNT(*) FROM family_groups) AS family_groups,
@@ -281,8 +279,6 @@ export async function getD1StorageStatus(env) {
       snapshotStale: text(row?.snapshot_stale) === '1',
       snapshotUpdatedAt: text(row?.snapshot_updated_at),
       moduleRevisionSync: text(row?.module_revision_sync) === '1',
-      publicDataD1: text(row?.public_data_d1) === '1',
-      publicRevision: text(row?.public_revision),
       counts: {
         treasury: Number(row?.treasury || 0),
         accounts: Number(row?.accounts || 0),
@@ -314,8 +310,6 @@ export async function getD1StorageStatus(env) {
       snapshotStale: false,
       snapshotUpdatedAt: '',
       moduleRevisionSync: false,
-      publicDataD1: false,
-      publicRevision: '',
       error: /no such table/i.test(message) ? '' : message
     };
   }

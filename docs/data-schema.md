@@ -1,87 +1,160 @@
-# Esquema de dados do Portal — funcional v11 / D1 v9
+# Esquema de dados do Portal — v11
 
-O contrato funcional dos registros permanece na versão 11. O esquema físico do Cloudflare D1 chega à versão 9 na migração `0010_public_portal_d1.sql`.
+O esquema funcional permanece na versão 11. A partir do Portal 6.37.0, movimentações, contas, grupos, valores de mensalidade e perfil completo da Diretoria ficam no Cloudflare D1. O R2 privado mantém anexos, backups e espelho de contingência. O JSON publicado contém somente os módulos destinados aos visitantes e metadados públicos de acesso.
 
-## Fonte única estruturada
-
-Todos os módulos estruturados ficam no D1:
-
-- configurações públicas e privadas;
-- associados e situação cadastral;
-- agenda, reuniões e avisos;
-- contas, categorias e movimentações;
-- metadados de anexos;
-- mensalidades e grupos familiares;
-- grupos, eventos e cobranças de Mútuas;
-- usuários, sessões e auditoria;
-- revisões por módulo e histórico de publicações.
-
-O R2 guarda os arquivos binários e backups. O site estático não contém o estado operacional.
-
-## Tabelas públicas
-
-- `portal_public_settings`;
-- `portal_members`;
-- `portal_public_events`;
-- `portal_public_meetings`;
-- `portal_public_notices`;
-- `portal_public_media`;
-- `portal_public_publications`.
-
-Cada tabela mantém colunas indexadas para filtros e um `payload` JSON validado para preservar o contrato funcional completo.
-
-## Tabelas privadas principais
-
-- `portal_private_settings`;
-- `treasury_accounts` e `treasury_categories`;
-- `treasury_movements` e `treasury_attachments`;
-- `family_groups` e `family_group_members`;
-- `mutual_groups`, `mutual_memberships`, `mutual_events` e `mutual_event_participants`;
-- `portal_users`, `portal_auth_sessions` e `portal_auth_audit`.
-
-## Revisões
-
-`portal_module_revisions` mantém revisões independentes para:
-
-- `reference`;
-- `groups`;
-- `treasury`;
-- `memberships`;
-- `mutuals`;
-- `member-directory`;
-- `public`.
-
-O navegador consulta as revisões antes de buscar novamente uma coleção.
-
-## Mídias
-
-O D1 armazena somente metadados e referências. Exemplos:
+A distinção entre Associados, Mutuários e registros inativos permanece inalterada.
 
 ```json
 {
-  "storage": "r2",
-  "objectKey": "treasury/t_123/att_123-hash.pdf",
-  "checksum": "...",
-  "size": 84231
+  "app": "Lions Clube de Cândido Mota Dashboard",
+  "schemaVersion": 11,
+  "version": 11,
+  "data": {
+    "settings": {
+      "secureStorage": {
+        "version": 1,
+        "enabled": true,
+        "workerUrl": "https://lions-portal-anexos.exemplo.workers.dev"
+      }
+    },
+    "birthdays": [
+      {
+        "id": "b_associado",
+        "name": "Associado de exemplo",
+        "status": "Ativo",
+        "active": true
+      },
+      {
+        "id": "b_mutuario",
+        "name": "Mutuário de exemplo",
+        "status": "Mútua",
+        "active": true
+      }
+    ],
+    "treasury": [
+      {
+        "id": "t_exemplo",
+        "date": "2026-08-04",
+        "description": "Pagamento de fornecedor",
+        "entry": 0,
+        "exit": 100,
+        "attachments": [
+          {
+            "id": "att_exemplo",
+            "name": "comprovante.pdf",
+            "type": "application/pdf",
+            "size": 84231,
+            "originalSize": 84231,
+            "optimized": false,
+            "storage": "r2",
+            "objectKey": "treasury/t_exemplo/att_exemplo-a1b2c3d4e5f60708.pdf",
+            "checksum": "a1b2c3d4e5f60708...",
+            "uploadedAt": "2026-08-04T12:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
-Mídias públicas usam referências internas `r2://public/...` e são convertidas pela API em URLs do Worker.
+## Configuração do armazenamento seguro
 
-## Snapshot
+- `enabled`: ativa o fluxo privado de anexos.
+- `workerUrl`: URL pública do Cloudflare Worker, nunca uma chave ou credencial do R2.
+- O navegador não armazena chave de acesso, segredo do bucket ou token permanente do Worker.
+- O Worker recebe acesso ao bucket por binding e entrega apenas sessões e links temporários.
 
-`portal_state_snapshot` é um artefato de recuperação. Ele pode ficar marcado como desatualizado durante a operação normal e é reconstruído a partir das tabelas relacionais quando um backup, restauração, exportação ou rollback exigir o estado integral.
+## Anexos financeiros
+
+- Cada movimentação aceita até cinco anexos.
+- Enquanto a alteração estiver pendente, o arquivo pode permanecer como `dataUrl` somente no estado local.
+- Após o salvamento privado, o D1 guarda `storage: "r2"` e `objectKey`; não guarda Base64 nem URL pública permanente.
+- Imagens JPEG, PNG e WebP são redimensionadas e recomprimidas no navegador antes do envio.
+- GIFs, PDFs e documentos compatíveis são preservados para não comprometer a legibilidade.
+- O Worker repete a validação de formato e tamanho antes de gravar no R2.
+- A revisão da publicação mostra somente quantidade e nomes dos anexos; o conteúdo não é exibido no histórico.
+
+## Compatibilidade temporária
+
+Referências antigas em `./public/treasury/...` continuam legíveis antes da ativação do R2. Na primeira publicação com o armazenamento seguro configurado:
+
+1. o Portal carrega cada anexo público antigo;
+2. envia o conteúdo ao Worker;
+3. troca a referência pública pelo `objectKey` privado;
+4. publica o JSON atualizado;
+5. remove os arquivos antigos de `public/treasury/` no mesmo commit.
+
+Se a publicação no GitHub falhar, os objetos recém-enviados ao R2 são removidos e os dados oficiais permanecem inalterados.
 
 ## Situações das pessoas
 
-- `Ativo`: associado ativo, elegível para Mensalidades e Mútuas conforme configuração;
-- `Mútua`: mutuário não associado, elegível para Mútuas;
-- `Inativo`: não entra em novas cobranças ou grupos.
+- `Ativo`: Associado ativo. Participa das Mensalidades e pode participar das Mútuas.
+- `Mútua`: Mutuário. Não é associado, não paga Mensalidades e pode participar das Mútuas.
+- `Inativo`: não entra em novas cobranças ou novos grupos.
+
+O campo legado `active` é mantido por compatibilidade. Ele é `false` somente para a situação Inativo. As regras de negócio devem consultar as funções de `assets/js/core/portal-members.js`, e não apenas esse booleano.
 
 ## Regras das Mútuas
 
-- grupos não possuem recorrência mensal fixa;
-- cada falecimento gera um evento;
-- participantes do evento ficam congelados;
-- cobranças usam a chave `grupo::evento::participante`;
-- pagamentos relacionam grupo, evento e participante.
+- Grupos não possuem mensalidade fixa.
+- O grupo é criado ativo, com `closedDate` vazio.
+- `closedDate` e `closureReason` só são preenchidos quando houver encerramento real.
+- A coleção `events` do grupo registra cada falecimento.
+- Cada evento possui `deathDate`, `deceasedName`, `amountPerParticipant` e uma lista congelada em `participantIds`.
+- As cobranças existem somente para participantes de um evento registrado.
+- Pagamentos usam `mutualGroupId`, `mutualEventId`, `mutualMemberId` e `mutualChargeKey`.
+- A chave de cobrança segue `grupo::evento::participante`.
+- A migração v10→v11 remove a recorrência mensal legada e não cria eventos retroativos.
+
+
+## Persistência D1 — esquema 2
+
+O estado privado possui duas representações gravadas atomicamente:
+
+- `portal_state_snapshot`: snapshot canônico que preserva exatamente o contrato JSON atual e o checksum;
+- projeções relacionais: configurações, contas, categorias, movimentações, anexos, grupos familiares e mútuas.
+
+Cada entidade relacional mantém também um `payload` JSON validado para preservar campos já existentes e permitir evolução compatível. Colunas indexadas atendem consultas por data, situação, conta, categoria e vínculos de mútuas. O snapshot é usado para manter compatibilidade com o frontend durante esta primeira fase; as projeções permitem evoluir posteriormente para endpoints granulares sem nova migração de dados.
+
+
+## Autenticação D1 — esquema 1
+
+A migração `0002_admin_auth.sql` adiciona três tabelas fora do snapshot operacional:
+
+- `portal_users`: usuário normalizado, nome exibido, perfil, derivação da senha, salt, iterações, bloqueio e datas de acesso;
+- `portal_auth_sessions`: hash do token opaco, perfil, usuário, expiração e revogação;
+- `portal_auth_audit`: eventos de autenticação sem senha ou token.
+
+A senha original e o token de sessão não entram no snapshot privado. O frontend recebe apenas a sessão opaca e a mantém em memória; o D1 guarda somente o hash SHA-256 dessa sessão.
+
+
+### Mutações granulares da Tesouraria
+
+A migração `0003_treasury_granular_writes.sql` adiciona `portal_mutations`. Movimentações e anexos são atualizados por `UPSERT`/`DELETE` específicos, protegidos pela revisão global. O snapshot continua sincronizado para recuperação e compatibilidade, mas as demais projeções não são apagadas ou reconstruídas durante uma alteração exclusivamente financeira.
+
+## Fonte relacional operacional — esquema D1 5
+
+A migração `0006_relational_operational_source.sql` torna as projeções relacionais a fonte principal do estado privado. O Worker reconstrói o contrato compatível do Portal consultando as tabelas de configurações, contas, categorias, movimentações, anexos, grupos familiares e Mútuas.
+
+Novos metadados em `portal_meta`:
+
+- `relational_source`: indica que as tabelas são a fonte oficial;
+- `operational_read_models`: habilita consultas operacionais paginadas;
+- `snapshot_stale`: indica que o snapshot não contém necessariamente a última mutação granular;
+- `snapshot_updated_at`: registra a última materialização integral.
+
+A rota `GET /api/operational/treasury` aplica período, pesquisa, situação, tipo e paginação diretamente em SQL. Ela retorna somente as páginas solicitadas e agregados do filtro, sem alterar o contrato de recuperação do estado completo.
+
+
+## Leituras operacionais de Mensalidades e Mútuas — esquema D1 6
+
+A migração `0007_operational_memberships_mutuals.sql` adiciona `portal_members`, uma projeção do cadastro público necessária para relacionar nomes, números, situação e identificação de mutuários às tabelas financeiras privadas. O `payload` preserva o contrato público completo do associado sem incluir credenciais ou dados financeiros.
+
+Metadados adicionados em `portal_meta`:
+
+- `operational_memberships`: habilita a leitura paginada de mensalidades;
+- `operational_mutuals`: habilita a leitura paginada de eventos e cobranças de Mútuas;
+- `member_directory_updated_at`: registra a última atualização do diretório relacional.
+
+A rota de mensalidades combina `portal_members`, `family_groups`, `family_group_members` e `treasury_movements`. A rota de Mútuas combina `portal_members`, `mutual_groups`, `mutual_memberships`, `mutual_events`, `mutual_event_participants` e os pagamentos em `treasury_movements`.
