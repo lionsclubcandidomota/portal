@@ -6,6 +6,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   D1_SCHEMA_VERSION,
+  applyD1TreasuryMutation,
   composePrivateState,
   decomposePrivateState,
   getD1StorageStatus,
@@ -116,7 +117,7 @@ test('adaptador D1 preserva o estado privado e cria coleções relacionais', () 
     futurePrivateField: { enabled: true }
   };
   const model = decomposePrivateState(original);
-  assert.equal(D1_SCHEMA_VERSION, 1);
+  assert.equal(D1_SCHEMA_VERSION, 2);
   assert.equal(model.treasury.length, 1);
   assert.equal(model.treasury[0].attachments.length, 1);
   assert.equal(model.familyGroups[0].members.length, 2);
@@ -145,12 +146,17 @@ test('migração SQL cria tabelas, vínculos e índices do Portal', async () => 
   assert.match(migration, /FOREIGN KEY \(movement_id\) REFERENCES treasury_movements\(id\) ON DELETE CASCADE/);
   assert.match(migration, /idx_treasury_movements_date/);
   assert.match(migration, /schema_version', '1'/);
+  const granularMigration = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8');
+  assert.match(granularMigration, /CREATE TABLE IF NOT EXISTS portal_mutations/);
+  assert.match(granularMigration, /treasury_granular_writes/);
+  assert.match(granularMigration, /schema_version', '2'/);
 });
 
 test('gravação D1 é transacional, compacta e preserva o snapshot exato', async () => {
   const migration = await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0001_portal_private_state.sql'), 'utf8');
   const database = new DatabaseSync(':memory:');
   database.exec(migration);
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8'));
   const env = { PORTAL_DB: new SQLiteD1Database(database) };
   const privateState = {
     version: 11,
@@ -188,6 +194,95 @@ test('gravação D1 é transacional, compacta e preserva o snapshot exato', asyn
   database.close();
 });
 
+
+test('movimentação e anexos são atualizados granularmente sem reconstruir as demais tabelas', async () => {
+  const database = new DatabaseSync(':memory:');
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0001_portal_private_state.sql'), 'utf8'));
+  database.exec(await readFile(path.join(projectRoot, 'cloudflare/attachment-worker/migrations/0003_treasury_granular_writes.sql'), 'utf8'));
+  const env = { PORTAL_DB: new SQLiteD1Database(database) };
+  const initial = {
+    version: 11,
+    settings: { membershipMonthlyFee: 40 },
+    treasuryAccounts: [{ id: 'acc-1', name: 'Conta principal', active: true }],
+    treasuryCategories: ['Documentação'],
+    familyGroups: [{ id: 'fam-1', name: 'Família', memberIds: ['m-1'] }],
+    mutualGroups: [],
+    treasury: [{ id: 'mov-1', date: '2026-08-01', accountId: 'acc-1', category: 'Documentação', status: 'Programado', entry: 0, exit: 25, attachments: [] }]
+  };
+  const initialStatus = await getD1StorageStatus(env);
+  await writeD1PrivateState(env, initial, {
+    revision: 'revision-1',
+    updatedAt: '2026-08-07T02:00:00.000Z',
+    updatedBy: 'teste',
+    checksum: 'checksum-1',
+    activate: true,
+    storageStatus: initialStatus
+  });
+
+  const updatedMovement = {
+    ...initial.treasury[0],
+    status: 'Realizado',
+    exit: 30,
+    attachments: [{
+      id: 'att-1',
+      storage: 'r2',
+      objectKey: 'treasury/mov-1/att-1-a.pdf',
+      name: 'Comprovante.pdf',
+      type: 'application/pdf',
+      size: 1200,
+      checksum: 'abc'
+    }]
+  };
+  const nextState = structuredClone(initial);
+  nextState.treasury = [updatedMovement];
+  const saved = await applyD1TreasuryMutation(env, {
+    mutationId: 'treasury-test-0001',
+    expectedRevision: 'revision-1',
+    revision: 'revision-2',
+    updatedAt: '2026-08-07T02:05:00.000Z',
+    updatedBy: 'administrador',
+    checksum: 'checksum-2',
+    nextState,
+    upserts: [{ movement: updatedMovement, sortOrder: 0 }],
+    deletes: [],
+    storageStatus: await getD1StorageStatus(env)
+  });
+
+  assert.equal(saved.mode, 'granular-treasury');
+  assert.equal(saved.changes.upserted, 1);
+  assert.equal(saved.statements, 9);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM family_groups').get().total, 1);
+  assert.equal(database.prepare('SELECT exit_amount FROM treasury_movements WHERE id = ?').get('mov-1').exit_amount, 30);
+  assert.equal(database.prepare('SELECT COUNT(*) AS total FROM treasury_attachments').get().total, 1);
+  const restored = await readD1PrivateState(env, { storageStatus: await getD1StorageStatus(env) });
+  assert.deepEqual(restored.state, nextState);
+
+  const repeated = await applyD1TreasuryMutation(env, {
+    mutationId: 'treasury-test-0001',
+    expectedRevision: 'revision-1',
+    revision: 'revision-2',
+    nextState,
+    upserts: [{ movement: updatedMovement, sortOrder: 0 }]
+  });
+  assert.equal(repeated.idempotent, true);
+
+  await assert.rejects(
+    applyD1TreasuryMutation(env, {
+      mutationId: 'treasury-test-0002',
+      expectedRevision: 'revision-1',
+      revision: 'revision-3',
+      updatedAt: '2026-08-07T02:06:00.000Z',
+      updatedBy: 'outro',
+      checksum: 'checksum-3',
+      nextState,
+      upserts: [{ movement: updatedMovement, sortOrder: 0 }],
+      storageStatus: await getD1StorageStatus(env)
+    }),
+    error => error?.code === 'REVISION_CONFLICT'
+  );
+  database.close();
+});
+
 test('cliente consulta o backend e executa migração e retorno com revisão otimista', async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
@@ -201,7 +296,7 @@ test('cliente consulta o backend e executa migração e retorno com revisão oti
       return response({ found: true, state: { treasury: [] }, revision: 'rev-r2', updatedAt: '2026-08-06T20:00:00.000Z' });
     }
     if (pathname === '/api/storage/status') {
-      return response({ backend: 'r2', d1: { available: true, initialized: true, active: false, schemaVersion: 1 } });
+      return response({ backend: 'r2', d1: { available: true, initialized: true, active: false, schemaVersion: 2 } });
     }
     if (pathname === '/api/storage/migrate-d1') {
       return response({ migrated: true, backend: 'd1', revision: 'rev-r2' });

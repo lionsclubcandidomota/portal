@@ -1,7 +1,7 @@
 import { exportState } from '../../storage.js';
-import { createEntityFormsController } from '../entity-forms.js?v=6.39.1';
-import { createAdminPanelController } from '../admin-panel.js?v=6.39.1';
-import { createReportsController } from '../reports/controller.js?v=6.39.1';
+import { createEntityFormsController } from '../entity-forms.js?v=6.40.0';
+import { createAdminPanelController } from '../admin-panel.js?v=6.40.0';
+import { createReportsController } from '../reports/controller.js?v=6.40.0';
 import { createSettingsController } from '../settings.js';
 import { createBirthdaysController, createBirthdayActions } from '../birthdays.js';
 import { createBirthdayArtworkController } from '../birthday-artwork.js';

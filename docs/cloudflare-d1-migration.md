@@ -17,7 +17,7 @@ A migração não altera o JSON público do GitHub Pages e não expõe dados fin
 Portal no GitHub Pages
         │ sessão autenticada
         ▼
-Cloudflare Worker 1.5.0
+Cloudflare Worker 1.6.0
         ├── D1: dados privados estruturados
         └── R2: anexos, backups e espelho de contingência
 ```
@@ -89,8 +89,8 @@ A resposta de `/health` deve conter:
     "available": true,
     "initialized": true,
     "active": false,
-    "schemaVersion": 1,
-    "requiredSchemaVersion": 1
+    "schemaVersion": 2,
+    "requiredSchemaVersion": 2
   }
 }
 ```
@@ -133,7 +133,7 @@ O `/health` passa a apresentar:
     "available": true,
     "initialized": true,
     "active": true,
-    "schemaVersion": 1
+    "schemaVersion": 2
   }
 }
 ```
@@ -192,3 +192,10 @@ npx wrangler d1 migrations apply lions-portal-dados --remote
 Depois de aplicar `0002_admin_auth.sql`, configure os segredos `GITHUB_TOKEN` e `ADMIN_BOOTSTRAP_KEY`, publique o Worker 1.5.0 e crie o primeiro Administrador pela tela **Primeiro acesso**. O token do GitHub deixa de ser informado no navegador e passa a ser usado exclusivamente pelo endpoint de publicação do Worker.
 
 Consulte `docs/admin-authentication-d1.md` para o procedimento completo.
+
+
+## Gravação granular da Tesouraria — versão 6.40.0
+
+Aplique `0003_treasury_granular_writes.sql` e publique o Worker 1.6.0. Alterações exclusivas em movimentações e anexos passam a usar `PUT /api/private-state/treasury`, com revisão otimista e idempotência. As demais coleções continuam usando `PUT /api/private-state` até suas respectivas etapas de migração.
+
+O `/health` deve informar `privateAutosave: "granular-treasury"`, `schemaVersion: 2` e `granularWrites.treasury: true`.

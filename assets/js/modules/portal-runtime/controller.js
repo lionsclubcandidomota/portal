@@ -2,14 +2,15 @@ import { loadState, saveState } from '../../storage.js';
 import {
   loadPublicGitHubPayload,
   waitForPagesDeployment
-} from '../../github.js?v=6.39.1';
-import { createPortalRuntimeContext } from './context.js?v=6.39.1';
+} from '../../github.js?v=6.40.0';
+import { createPortalRuntimeContext } from './context.js?v=6.40.0';
 import {
   bootstrapAdministrator,
   clearSecureStorageSession,
   collectSecureTreasuryObjectKeys,
   connectSecureStorageSession,
   createPrivateStateBackup,
+  createTreasuryPrivateMutation,
   diagnosePrivateStorageIntegrity,
   getAuthenticationStatus,
   deleteSecureTreasuryObjects,
@@ -25,28 +26,29 @@ import {
   restorePrivateStateBackup,
   rollbackPrivateStorageToR2,
   savePrivatePortalState,
+  savePrivateTreasuryMutation,
   secureStorageProfileFromState
-} from '../secure-storage/client.js?v=6.39.1';
+} from '../secure-storage/client.js?v=6.40.0';
 import {
   createPrivatePortalState,
   createPublicPortalState,
   hasPrivatePortalData,
   mergePublicAndPrivatePortalState
-} from '../../core/portal-data-boundary.js?v=6.39.1';
-import { createPersistenceActions } from './persistence.js?v=6.39.1';
-import { createPrivateSyncActions } from './private-sync.js?v=6.39.1';
-import { createAdminSessionActions } from './session.js?v=6.39.1';
-import { createPublicationActions } from './publication.js?v=6.39.1';
-import { createRemoteSyncActions } from './remote-sync.js?v=6.39.1';
-import { createBootstrapAction } from './bootstrap.js?v=6.39.1';
-import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.39.1';
-import { createAccessProfileActions } from './access-profile.js?v=6.39.1';
+} from '../../core/portal-data-boundary.js?v=6.40.0';
+import { createPersistenceActions } from './persistence.js?v=6.40.0';
+import { createPrivateSyncActions } from './private-sync.js?v=6.40.0';
+import { createAdminSessionActions } from './session.js?v=6.40.0';
+import { createPublicationActions } from './publication.js?v=6.40.0';
+import { createRemoteSyncActions } from './remote-sync.js?v=6.40.0';
+import { createBootstrapAction } from './bootstrap.js?v=6.40.0';
+import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.40.0';
+import { createAccessProfileActions } from './access-profile.js?v=6.40.0';
 import {
   ACCESS_CAPABILITIES,
   accessSnapshot,
   canAccessView,
   roleHasCapability
-} from './authorization.js?v=6.39.1';
+} from './authorization.js?v=6.40.0';
 
 export function createPortalRuntimeController(dependencies) {
   const services = {
@@ -55,6 +57,7 @@ export function createPortalRuntimeController(dependencies) {
     collectSecureTreasuryObjectKeys,
     connectSecureStorageSession,
     createPrivateStateBackup,
+    createTreasuryPrivateMutation,
     diagnosePrivateStorageIntegrity,
     getAuthenticationStatus,
     deleteSecureTreasuryObjects,
@@ -73,6 +76,7 @@ export function createPortalRuntimeController(dependencies) {
     restorePrivateStateBackup,
     rollbackPrivateStorageToR2,
     savePrivatePortalState,
+    savePrivateTreasuryMutation,
     saveState,
     createPrivatePortalState,
     createPublicPortalState,

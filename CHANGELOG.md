@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.40.0 — Gravação granular de movimentações e anexos no D1
+
+- Cria a migração `0003_treasury_granular_writes.sql` e eleva o esquema operacional do D1 para a versão 2.
+- Movimentações novas, editadas ou excluídas passam pelo endpoint granular `PUT /api/private-state/treasury`.
+- Atualiza somente as linhas afetadas em `treasury_movements` e `treasury_attachments`, sem apagar e reconstruir contas, grupos familiares ou Mútuas.
+- Mantém o snapshot canônico sincronizado como contingência, sem utilizá-lo para reconstruir todas as projeções em cada operação financeira.
+- Adiciona revisão otimista por operação, identificador idempotente e histórico limitado das últimas mutações para impedir duplicações em novas tentativas.
+- Preserva a sincronização completa como fallback quando contas, categorias, grupos, configurações ou muitas entidades mudam na mesma operação.
+- Mantém os anexos binários no R2 e grava granularmente apenas seus metadados e referências no D1.
+- Atualiza o Worker para 1.6.0 e o `/health` passa a informar `privateAutosave: granular-treasury`.
+- Adiciona testes reais em SQLite para edição granular, anexos, idempotência e conflito de revisão.
+
 ## 6.39.1 — Correção do acesso temporário aos anexos
 
 - restaura o cálculo de validade dos tickets temporários de anexos no Worker;

@@ -1,46 +1,29 @@
-# Release 6.39.1
+# Release 6.40.0
 
-Esta etapa introduz **autenticação administrativa por usuário e senha no Cloudflare D1** e retira o token do GitHub do navegador.
+Esta etapa inicia a otimização operacional do D1 com **CRUD granular de movimentações e anexos**.
 
 ## Componentes
 
-- Portal 6.39.0: tela de login, primeiro acesso e cliente de sessão.
-- Worker 1.5.0: autenticação, sessões, auditoria e publicação pública.
-- Migração D1 `0002_admin_auth.sql`: usuários, sessões e eventos de autenticação.
-- R2: permanece responsável por anexos, espelho e backups.
+- Portal 6.40.0: detecta alterações exclusivas da Tesouraria e usa o endpoint granular.
+- Worker 1.6.0: aplica mutações idempotentes e protegidas por revisão.
+- Migração D1 `0003_treasury_granular_writes.sql`: histórico de mutações e ativação do esquema 2.
+- R2: continua armazenando anexos e o espelho de contingência.
 
 ## Ordem de implantação
 
-1. Atualizar o pacote do Worker, preservando os bindings `ATTACHMENTS` e `PORTAL_DB`.
-2. Configurar os segredos `GITHUB_TOKEN`, `ADMIN_BOOTSTRAP_KEY` e manter `SESSION_SECRET`.
-3. Aplicar as migrações D1 remotas.
-4. Publicar o Worker 1.5.0.
-5. Confirmar `/health` com autenticação inicializada.
-6. Publicar o Portal 6.39.0 uma vez pelo fluxo atual de implantação do repositório.
-7. Abrir a área administrativa e criar o primeiro usuário pela opção **Primeiro acesso**.
-8. Entrar usando o usuário e a senha criados.
-9. Testar salvamento privado no D1 e publicação pública pelo Worker.
+1. Atualizar o Worker para 1.6.0, preservando `wrangler.toml` e os segredos.
+2. Executar `npx wrangler d1 migrations apply lions-portal-dados --remote`.
+3. Confirmar a aplicação de `0003_treasury_granular_writes.sql`.
+4. Publicar o Worker com `npx wrangler deploy --config wrangler.toml`.
+5. Confirmar `/health` com `workerVersion: 1.6.0`, esquema D1 2 e `privateAutosave: granular-treasury`.
+6. Publicar o Portal 6.40.0 no GitHub Pages.
+7. Criar, editar e excluir uma movimentação de teste e confirmar **Banco sincronizado**.
+8. Recarregar a página, conferir o registro e testar visualização/baixa de anexos.
 
-## Segredos
+## Comportamento de fallback
 
-```bash
-npx wrangler secret put SESSION_SECRET
-npx wrangler secret put GITHUB_TOKEN
-npx wrangler secret put ADMIN_BOOTSTRAP_KEY
-```
+O Portal usa a gravação completa quando a alteração inclui contas, categorias, grupos familiares, Mútuas, configurações privadas ou mais de 60 registros. Isso mantém compatibilidade durante a migração progressiva dos demais módulos.
 
-`ADMIN_BOOTSTRAP_KEY` deve possuir pelo menos 24 caracteres e ser usada somente para a criação inicial. `GITHUB_TOKEN` não deve aparecer em `wrangler.toml`, arquivos do Portal ou armazenamento do navegador.
+## Segurança
 
-## Compatibilidade
-
-- O D1 já ativo continua como fonte principal dos dados privados.
-- Os anexos e backups existentes não são movidos ou apagados.
-- O acesso da Diretoria por senha permanece disponível.
-- O acesso administrativo por token antigo fica desabilitado com `LEGACY_GITHUB_LOGIN_ENABLED = "false"`.
-
-Guia detalhado: `docs/admin-authentication-d1.md`.
-
-
-## Correção 6.39.1
-
-O Worker 1.5.2 restaura a emissão de URLs temporárias para visualizar e baixar anexos do R2. Não há migração D1 adicional.
+Cada mutação possui um identificador idempotente, revisão esperada e nova revisão. Uma tentativa repetida retorna o resultado original; uma sessão desatualizada recebe conflito e não sobrescreve os dados atuais.

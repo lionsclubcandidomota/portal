@@ -1,4 +1,4 @@
-# Homologação — v6.39.1
+# Homologação — v6.40.0
 
 ## Fluxos prioritários do Portal
 

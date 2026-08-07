@@ -108,7 +108,7 @@ O campo legado `active` é mantido por compatibilidade. Ele é `false` somente p
 - A migração v10→v11 remove a recorrência mensal legada e não cria eventos retroativos.
 
 
-## Persistência D1 — esquema 1
+## Persistência D1 — esquema 2
 
 O estado privado possui duas representações gravadas atomicamente:
 
@@ -127,3 +127,8 @@ A migração `0002_admin_auth.sql` adiciona três tabelas fora do snapshot opera
 - `portal_auth_audit`: eventos de autenticação sem senha ou token.
 
 A senha original e o token de sessão não entram no snapshot privado. O frontend recebe apenas a sessão opaca e a mantém em memória; o D1 guarda somente o hash SHA-256 dessa sessão.
+
+
+### Mutações granulares da Tesouraria
+
+A migração `0003_treasury_granular_writes.sql` adiciona `portal_mutations`. Movimentações e anexos são atualizados por `UPSERT`/`DELETE` específicos, protegidos pela revisão global. O snapshot continua sincronizado para recuperação e compatibilidade, mas as demais projeções não são apagadas ou reconstruídas durante uma alteração exclusivamente financeira.

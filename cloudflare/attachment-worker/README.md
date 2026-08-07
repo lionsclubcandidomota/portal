@@ -1,4 +1,4 @@
-# Cloudflare Worker do Portal Lions — v1.5.1
+# Cloudflare Worker do Portal Lions — v1.6.0
 
 O Worker concentra autenticação, dados privados, anexos, backups e publicação pública.
 
@@ -70,7 +70,8 @@ npx wrangler d1 migrations apply lions-portal-dados --remote
 Migrações atuais:
 
 - `0001_portal_private_state.sql`: estado privado e projeções relacionais;
-- `0002_admin_auth.sql`: usuários, sessões e auditoria de autenticação.
+- `0002_admin_auth.sql`: usuários, sessões e auditoria de autenticação;
+- `0003_treasury_granular_writes.sql`: mutações idempotentes da Tesouraria e esquema D1 2.
 
 ## Implantação
 
@@ -107,7 +108,7 @@ A resposta contém uma sessão opaca temporária. Somente o hash da sessão fica
 
 ### Segurança
 
-- PBKDF2-HMAC-SHA-256 com salt individual e 150.000 iterações;
+- PBKDF2-HMAC-SHA-256 com salt individual e 100.000 iterações;
 - cinco falhas consecutivas provocam bloqueio de 15 minutos;
 - limite de tentativas por origem;
 - sessões revogáveis e expiráveis;
@@ -149,6 +150,7 @@ O Worker usa `GITHUB_TOKEN`, valida a fronteira pública e cria um único commit
 - `GET /api/publication/status`
 - `POST /api/publication`
 - `GET/PUT /api/private-state`
+- `PUT /api/private-state/treasury` para movimentações e anexos granulares
 - rotas de backups, integridade, migração D1 e anexos
 
 ### Diretoria
@@ -164,7 +166,7 @@ Antes do primeiro usuário:
 
 ```json
 {
-  "workerVersion": "1.5.1",
+  "workerVersion": "1.6.0",
   "privateState": "d1",
   "authentication": {
     "available": true,
@@ -184,3 +186,8 @@ Depois do primeiro usuário, `bootstrapRequired` muda para `false` e `passwordLo
 - Mantém salt individual, contexto de domínio, derivação SHA-256 e comparação resistente a tempo.
 - Não exige nova migração D1 e não altera usuários já persistidos pela versão compatível.
 
+
+
+## Otimização v1.6.0
+
+O endpoint `PUT /api/private-state/treasury` grava somente as movimentações e os anexos alterados. Cada solicitação usa revisão otimista e `mutationId` idempotente. O endpoint completo permanece como fallback para alterações nas demais coleções.

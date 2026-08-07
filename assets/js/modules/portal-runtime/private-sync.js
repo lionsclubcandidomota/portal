@@ -1,5 +1,5 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.39.1';
-import { ACCESS_ROLES } from './authorization.js?v=6.39.1';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.40.0';
+import { ACCESS_ROLES } from './authorization.js?v=6.40.0';
 
 function attachmentIdentity(attachment = {}, index = 0) {
   return String(attachment.id || attachment.name || `index:${index}`);
@@ -37,6 +37,7 @@ export function createPrivateSyncActions(context) {
   let savedGeneration = 0;
   let running = null;
   const auditQueue = [];
+  const mutationIds = new Map();
 
   const setStatus = (status, message = '') => {
     model.privateSaveStatus = status;
@@ -88,6 +89,15 @@ export function createPrivateSyncActions(context) {
     }
   };
 
+  const mutationIdFor = generation => {
+    if (!mutationIds.has(generation)) {
+      const random = globalThis.crypto?.randomUUID?.()
+        || `mut-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+      mutationIds.set(generation, `treasury-${String(random).replace(/[^a-z0-9_-]/gi, '-')}`);
+    }
+    return mutationIds.get(generation);
+  };
+
   const saveLatestSnapshot = async targetGeneration => {
     const snapshot = cloneState(context.currentState());
     await ensureSecureSession(snapshot);
@@ -100,7 +110,18 @@ export function createPrivateSyncActions(context) {
     const removedKeys = [...previousKeys].filter(key => !nextKeys.has(key));
 
     try {
-      const result = await services.savePrivatePortalState?.(securePublication.state);
+      const granularMutation = services.createTreasuryPrivateMutation?.(baseline, securePublication.state);
+      const useGranularTreasury = Boolean(
+        granularMutation
+        && services.savePrivateTreasuryMutation
+      );
+      const result = useGranularTreasury
+        ? await services.savePrivateTreasuryMutation(
+          securePublication.state,
+          granularMutation,
+          { mutationId: mutationIdFor(targetGeneration) }
+        )
+        : await services.savePrivatePortalState?.(securePublication.state);
       const current = context.currentState();
       const mergedCurrent = mergeSecureAttachmentReferences(current, securePublication.state);
       if (!statesAreEquivalent(current, mergedCurrent)) context.replaceCurrentState(mergedCurrent);
@@ -109,6 +130,7 @@ export function createPrivateSyncActions(context) {
       securePublication.deletedPublicPaths?.forEach(path => model.pendingDeletedPublicPaths.add(path));
       context.storeSyncMeta();
       savedGeneration = Math.max(savedGeneration, targetGeneration);
+      mutationIds.delete(targetGeneration);
       closeSavedAuditBatches(targetGeneration);
 
       if (removedKeys.length) {
@@ -121,7 +143,8 @@ export function createPrivateSyncActions(context) {
         ok: true,
         result,
         convertedCount: Number(securePublication.convertedCount || 0),
-        generation: targetGeneration
+        generation: targetGeneration,
+        mode: String(result?.mode || 'full-snapshot')
       };
     } catch (error) {
       if (securePublication.uploadedObjectKeys?.length) {
@@ -204,6 +227,7 @@ export function createPrivateSyncActions(context) {
   const markLoaded = (message = 'Dados privados sincronizados com o banco.') => {
     requestedGeneration = 0;
     savedGeneration = 0;
+    mutationIds.clear();
     model.privateSavePending = 0;
     setStatus('saved', message);
   };

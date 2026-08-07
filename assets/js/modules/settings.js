@@ -1,11 +1,11 @@
 import { escapeHtml } from '../utils.js';
-import { directorProfileFromState, directorProfileRequiresWorkerMigration, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.39.1';
+import { directorProfileFromState, directorProfileRequiresWorkerMigration, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.40.0';
 import {
   collectSecureTreasuryObjectKeys,
   normalizeSecureStorageWorkerUrl,
   secureStorageProfileFromState,
   testSecureStorageConnection
-} from './secure-storage/client.js?v=6.39.1';
+} from './secure-storage/client.js?v=6.40.0';
 
 const DEFAULT_LOGO = './public/logo.png';
 const DEFAULT_PRIMARY_COLOR = '#00529B';

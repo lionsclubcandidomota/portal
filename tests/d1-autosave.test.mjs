@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createPortalRuntimeContext } from '../assets/js/modules/portal-runtime/context.js';
 import { createPersistenceActions } from '../assets/js/modules/portal-runtime/persistence.js';
 import { createPrivateSyncActions } from '../assets/js/modules/portal-runtime/private-sync.js';
+import { createTreasuryPrivateMutation } from '../assets/js/modules/secure-storage/private-mutations.js';
 import {
   createPrivatePortalState,
   createPublicPortalState,
@@ -180,4 +181,85 @@ test('fila privada grava automaticamente no backend ativo e confirma a sincroniz
   assert.equal(fixture.context.model.privateSaveStatus, 'saved');
   assert.ok(fixture.calls.some(call => call[0] === 'database-status' && call[1] === 'saving'));
   assert.ok(fixture.calls.some(call => call[0] === 'database-status' && call[1] === 'saved'));
+});
+
+
+test('diferença exclusiva de movimentação gera mutação granular e preserva demais coleções', () => {
+  const previous = baseState();
+  previous.treasury.push({ id: 'mov-1', date: '2026-08-01', entry: 10, exit: 0, attachments: [] });
+  const next = clone(previous);
+  next.treasury[0].entry = 15;
+  next.treasury.push({ id: 'mov-2', date: '2026-08-02', entry: 0, exit: 5, attachments: [] });
+
+  const mutation = createTreasuryPrivateMutation(previous, next);
+  assert.equal(mutation.scope, 'treasury');
+  assert.equal(mutation.upserts.length, 2);
+  assert.deepEqual(mutation.deletes, []);
+
+  next.treasuryCategories.push('Nova categoria');
+  assert.equal(createTreasuryPrivateMutation(previous, next), null);
+});
+
+test('fila privada prefere endpoint granular quando somente a Tesouraria mudou', async () => {
+  let granularWrites = 0;
+  let fullWrites = 0;
+  const initial = baseState();
+  initial.treasury.push({ id: 'mov-1', date: '2026-08-01', entry: 10, exit: 0, attachments: [] });
+  const fixture = setup(initial, {
+    hasActiveSecureStorageSession: () => true,
+    collectSecureTreasuryObjectKeys: () => new Set(),
+    prepareSecureTreasuryAttachmentsForPublication: async state => ({
+      state: clone(state),
+      convertedCount: 0,
+      deletedPublicPaths: [],
+      uploadedObjectKeys: []
+    }),
+    createTreasuryPrivateMutation,
+    savePrivateTreasuryMutation: async (_state, mutation, options) => {
+      granularWrites += 1;
+      assert.equal(mutation.upserts.length, 1);
+      assert.match(options.mutationId, /^treasury-/);
+      return { revision: 'rev-granular', backend: 'd1', mode: 'granular-treasury' };
+    },
+    savePrivatePortalState: async () => {
+      fullWrites += 1;
+      return { revision: 'rev-full', backend: 'd1' };
+    },
+    deleteSecureTreasuryObjects: async () => ({ deleted: 0 })
+  });
+  fixture.getState().treasury[0].entry = 25;
+  const privateSync = createPrivateSyncActions(fixture.context);
+  privateSync.schedule({ message: 'Editar movimentação.' });
+  const result = await privateSync.flush();
+
+  assert.equal(result.ok, true);
+  assert.equal(result.mode, 'granular-treasury');
+  assert.equal(granularWrites, 1);
+  assert.equal(fullWrites, 0);
+});
+
+test('fila privada mantém sincronização completa quando outra coleção privada mudou', async () => {
+  let granularWrites = 0;
+  let fullWrites = 0;
+  const fixture = setup(baseState(), {
+    hasActiveSecureStorageSession: () => true,
+    collectSecureTreasuryObjectKeys: () => new Set(),
+    prepareSecureTreasuryAttachmentsForPublication: async state => ({
+      state: clone(state), convertedCount: 0, deletedPublicPaths: [], uploadedObjectKeys: []
+    }),
+    createTreasuryPrivateMutation,
+    savePrivateTreasuryMutation: async () => { granularWrites += 1; },
+    savePrivatePortalState: async () => {
+      fullWrites += 1;
+      return { revision: 'rev-full', backend: 'd1' };
+    },
+    deleteSecureTreasuryObjects: async () => ({ deleted: 0 })
+  });
+  fixture.getState().treasuryAccounts.push({ id: 'acc-1', name: 'Conta', active: true });
+  const privateSync = createPrivateSyncActions(fixture.context);
+  privateSync.schedule({ message: 'Criar conta.' });
+  await privateSync.flush();
+
+  assert.equal(granularWrites, 0);
+  assert.equal(fullWrites, 1);
 });

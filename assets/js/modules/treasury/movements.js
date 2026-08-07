@@ -7,7 +7,7 @@ import {
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
-import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.39.1';
+import { isSecureTreasuryAttachment, requestSecureAttachmentAccess } from '../secure-storage/client.js?v=6.40.0';
 
 
 export function movementValueSummary(items = [], isProgrammed = () => false, mode = 'realized') {
