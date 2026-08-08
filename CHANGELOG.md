@@ -1,5 +1,15 @@
 # Changelog
 
+## 6.46.5 — Estabilização do pacote e integridade do release
+
+- Migra `data/modelo.json` do esquema 7 para o esquema 12.
+- Preserva `data/dados.json` sem qualquer alteração.
+- Faz a auditoria do release validar os dois arquivos oficiais de dados.
+- Regenera o manifesto com todos os arquivos atuais, incluindo imagens e miniaturas.
+- Remove a versão antiga fixa da mensagem do finalizador.
+- Adiciona testes de regressão para impedir modelo desatualizado em versões futuras.
+- Documenta a homologação visual prioritária e o congelamento temporário da arquitetura.
+
 ## 6.46.4 — Largura integral da prévia de participantes
 
 - Faz o resumo e a lista de participantes ocuparem toda a largura disponível no registro de falecimento.

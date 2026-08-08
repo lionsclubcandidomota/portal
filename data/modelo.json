@@ -1,17 +1,19 @@
 {
   "exportedAt": "2026-07-28T00:00:00.000Z",
   "app": "Lions Clube de Cândido Mota Dashboard",
-  "schemaVersion": 7,
-  "version": 7,
+  "schemaVersion": 12,
+  "version": 12,
   "data": {
     "settings": {
       "clubName": "Lions Clube de Cândido Mota",
       "logo": "./public/logo.png",
       "primaryColor": "#00529B",
       "accentColor": "#F2C100",
+      "fontFamily": "modern",
       "membershipMonthlyFee": 0,
       "membershipFamilyPrimaryFee": 0,
       "membershipFamilyAdditionalFee": 0,
+      "accessProfiles": {},
       "initialized": true
     },
     "birthdays": [
@@ -20,7 +22,9 @@
         "memberNumber": "1234567",
         "name": "Associado de exemplo",
         "birthDate": "1980-08-15",
-        "photo": ""
+        "photo": "",
+        "status": "Ativo",
+        "active": true
       }
     ],
     "treasuryAccounts": [
@@ -64,6 +68,88 @@
     "treasury": [],
     "events": [],
     "meetings": [],
-    "notices": []
+    "notices": [],
+    "accessRoles": [
+      {
+        "id": "role-president",
+        "name": "Presidente",
+        "description": "Acompanha todo o trabalho operacional do clube.",
+        "system": true,
+        "active": true,
+        "permissions": [
+          "view-private-data",
+          "view-treasury",
+          "refresh-panel",
+          "export-reports",
+          "manage-people",
+          "manage-agenda",
+          "manage-notices",
+          "manage-treasury",
+          "write-data"
+        ]
+      },
+      {
+        "id": "role-vice-president",
+        "name": "Vice-Presidente",
+        "description": "Consulta o painel e apoia agenda, avisos e relatórios.",
+        "system": true,
+        "active": true,
+        "permissions": [
+          "view-private-data",
+          "view-treasury",
+          "refresh-panel",
+          "export-reports",
+          "manage-agenda",
+          "manage-notices",
+          "write-data"
+        ]
+      },
+      {
+        "id": "role-secretary",
+        "name": "Secretário",
+        "description": "Mantém pessoas, agenda, reuniões e comunicados atualizados.",
+        "system": true,
+        "active": true,
+        "permissions": [
+          "view-private-data",
+          "refresh-panel",
+          "export-reports",
+          "manage-people",
+          "manage-agenda",
+          "manage-notices",
+          "write-data"
+        ]
+      },
+      {
+        "id": "role-treasurer",
+        "name": "Tesoureiro",
+        "description": "Consulta e mantém os controles financeiros do clube.",
+        "system": true,
+        "active": true,
+        "permissions": [
+          "view-private-data",
+          "view-treasury",
+          "refresh-panel",
+          "export-reports",
+          "manage-treasury",
+          "write-data"
+        ]
+      },
+      {
+        "id": "role-director",
+        "name": "Diretor",
+        "description": "Consulta informações internas e relatórios sem realizar alterações.",
+        "system": true,
+        "active": true,
+        "permissions": [
+          "view-private-data",
+          "view-treasury",
+          "refresh-panel",
+          "export-reports"
+        ]
+      }
+    ],
+    "portalUsers": [],
+    "leadershipAssignments": []
   }
 }

@@ -16,8 +16,8 @@ export function createLazyAdminPanelController({ root, createOptions, toast }) {
   async function load() {
     if (!controllerPromise) {
       controllerPromise = Promise.all([
-        import('./admin-panel.js?v=6.46.4'),
-        import('./reports/controller.js?v=6.46.4')
+        import('./admin-panel.js?v=6.46.5'),
+        import('./reports/controller.js?v=6.46.5')
       ]).then(([adminModule, reportsModule]) => {
         const options = createOptions();
         const reports = reportsModule.createReportsController({

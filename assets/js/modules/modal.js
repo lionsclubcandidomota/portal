@@ -1,4 +1,4 @@
-import { createDialogFocusManager } from './dialog-focus.js?v=6.46.4';
+import { createDialogFocusManager } from './dialog-focus.js?v=6.46.5';
 
 export function createModalController({
   modal,

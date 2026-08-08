@@ -1,5 +1,5 @@
 import { escapeHtml, money, normalize, uid } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.4';
+import { uiIcon } from '../visual-helpers.js?v=6.46.5';
 
 export function createTreasuryAccountsManager(context) {
   const {

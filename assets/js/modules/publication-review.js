@@ -1,4 +1,4 @@
-import { uiIcon } from './visual-helpers.js?v=6.46.4';
+import { uiIcon } from './visual-helpers.js?v=6.46.5';
 
 const MONEY_FORMAT = new Intl.NumberFormat('pt-BR', {
   style: 'currency',

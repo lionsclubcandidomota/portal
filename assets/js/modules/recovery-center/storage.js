@@ -1,4 +1,4 @@
-import { MAX_RECOVERY_SNAPSHOTS, pruneRecoverySnapshots } from './domain.js?v=6.46.4';
+import { MAX_RECOVERY_SNAPSHOTS, pruneRecoverySnapshots } from './domain.js?v=6.46.5';
 
 const DATABASE_NAME = 'lionsPortalRecovery';
 const STORE_NAME = 'snapshots';

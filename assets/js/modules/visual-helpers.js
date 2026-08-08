@@ -1,4 +1,4 @@
-import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.46.4';
+import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.46.5';
 import { escapeHtml } from '../utils.js';
 
 

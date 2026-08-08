@@ -1,4 +1,4 @@
-import { uiIcon } from './visual-helpers.js?v=6.46.4';
+import { uiIcon } from './visual-helpers.js?v=6.46.5';
 
 export function createFinancePrivacyController() {
   let hidden = sessionStorage.getItem('lions.finance.hidden') === '1';

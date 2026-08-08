@@ -1,22 +1,44 @@
-# Portal Lions v6.46.4
+# Portal Lions v6.46.5
 
-> Atualização corretiva sobre a v6.46.3, concentrada na área de **Mútuas da Tesouraria** e no aproveitamento da largura da prévia de participantes por falecimento.
+> Versão de estabilização do pacote v6.46.4. Não adiciona funcionalidades nem altera as regras operacionais do Portal.
 
-## Correção
+## Objetivo
 
-- O resumo da quantidade de participantes agora ocupa toda a largura disponível.
-- A lista de participantes deixa de ficar concentrada no lado esquerdo do painel.
-- As duas colunas passam a dividir igualmente o espaço útil do formulário.
-- Em telas de até 760 px, a lista permanece em uma coluna.
-- A correção redefine explicitamente alinhamento e largura que eram herdados de uma regra antiga do componente.
+A versão 6.46.5 corrige inconsistências do pacote de distribuição antes de novas evoluções:
 
-## Dados e compatibilidade
+- atualiza `data/modelo.json` do esquema 7 para o esquema 12;
+- mantém `data/dados.json` integralmente preservado;
+- regenera o manifesto com todos os arquivos atuais, inclusive imagens e miniaturas;
+- torna a auditoria do release responsável por validar tanto os dados oficiais quanto o modelo de instalação;
+- elimina a versão antiga fixa na mensagem do finalizador;
+- documenta a homologação visual prioritária e o congelamento temporário da arquitetura.
 
-- Esquema dos dados mantido na versão **12**.
-- Nenhum grupo, participante, falecimento, cobrança, movimentação, usuário ou fotografia é alterado.
-- Compatível com atualização incremental sobre a v6.46.3.
+## Compatibilidade de dados
 
-## Validação
+- Esquema atual: **12**.
+- `data/dados.json`: não modificado nesta versão.
+- `data/modelo.json`: migrado de forma idempotente para o esquema 12.
+- Nenhuma movimentação, cobrança, grupo, usuário, cargo, dirigente, associado ou mídia é alterado.
 
-- Teste de regressão ampliado para exigir largura integral e colunas flexíveis.
-- Auditorias de módulos, integração, CSS, acessibilidade, segurança, desempenho, mídia, sintaxe e manifesto executadas pelo pipeline do projeto.
+## Pacote incremental
+
+A atualização incremental inclui `data/modelo.json`, pois esse é um dos arquivos corrigidos. Ela não inclui:
+
+- `data/dados.json`;
+- fotos, miniaturas ou outros arquivos da pasta `public`.
+
+## Homologação
+
+O pipeline executa testes, auditorias de módulos, integração, CSS, acessibilidade, segurança, desempenho, mídia, dados e manifesto.
+
+A auditoria visual automatizada permanece disponível por:
+
+```cmd
+npm run audit:visual:required
+```
+
+Caso o navegador da estação não seja compatível, a revisão manual deve seguir `docs/homologation.md`, priorizando Tesouraria móvel, Mútuas, Usuários e cargos, Dirigentes e Painel de Publicação.
+
+## Política após esta versão
+
+A arquitetura fica congelada temporariamente. Novas versões devem priorizar correções pontuais e evitar novas camadas gerais de CSS ou reestruturações de módulos sem uma justificativa funcional e testes de regressão correspondentes.

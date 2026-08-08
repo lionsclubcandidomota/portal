@@ -1,7 +1,7 @@
 import {
   DEFAULT_LOGO,
   applyPortalAppearance
-} from './settings-appearance.js?v=6.46.4';
+} from './settings-appearance.js?v=6.46.5';
 
 function loadingView() {
   return `<section class="card feature-loading" role="status" aria-live="polite">
@@ -40,7 +40,7 @@ export function createLazySettingsController(options) {
 
   const load = () => {
     if (!controllerPromise) {
-      controllerPromise = import('./settings.js?v=6.46.4')
+      controllerPromise = import('./settings.js?v=6.46.5')
         .then(module => {
           controller = createController(module);
           return controller;

@@ -112,4 +112,12 @@ O módulo `integrated-homologation.mjs` valida o esquema, referências, período
 - Define uma coluna estrutural de largura integral para o contêiner da prévia.
 - Faz resumo e lista usarem `width: 100%`, sem limite máximo residual.
 - Mantém duas colunas flexíveis no desktop e uma coluna em telas pequenas.
+## v6.46.5 — estabilização do release
+
+- `data/modelo.json` passa a acompanhar o esquema 12 usado pelo Portal.
+- `release-audit.mjs` valida dados oficiais e modelo de instalação.
+- O manifesto é regenerado a partir da árvore real do projeto, incluindo mídias e miniaturas atuais.
+- O finalizador consulta a versão diretamente do `package.json`, evitando mensagens obsoletas.
+- A arquitetura fica temporariamente congelada: novas alterações estruturais devem ser justificadas por uma necessidade funcional mensurável.
+- Evoluções visuais devem preferir correções locais e remoção de regras antigas em vez de novas camadas globais de sobrescrita.
 

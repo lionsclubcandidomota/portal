@@ -3,11 +3,11 @@ import {
   createPortalEnvelope,
   migratePortalPayload,
   validatePortalState
-} from '../../core/portal-schema.js?v=6.46.4';
+} from '../../core/portal-schema.js?v=6.46.5';
 import {
   findSensitivePortalFields,
   stripSensitivePortalFields
-} from '../../core/portal-security.js?v=6.46.4';
+} from '../../core/portal-security.js?v=6.46.5';
 
 export const RECOVERY_SNAPSHOT_VERSION = 1;
 export const MAX_RECOVERY_SNAPSHOTS = 12;

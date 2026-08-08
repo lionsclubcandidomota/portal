@@ -4,7 +4,7 @@ import {
   createDefaultPortalState,
   createPortalEnvelope,
   migratePortalPayload
-} from './core/portal-schema.js?v=6.46.4';
+} from './core/portal-schema.js?v=6.46.5';
 
 const STORAGE_KEY = 'lionsCandidoMota.dashboard.v1';
 

@@ -1,5 +1,5 @@
-import { renderHtmlIfChanged, uiIcon } from './visual-helpers.js?v=6.46.4';
-import { memberIsActive as isActiveMember, memberStatusKey, memberStatusLabel } from '../core/portal-members.js?v=6.46.4';
+import { renderHtmlIfChanged, uiIcon } from './visual-helpers.js?v=6.46.5';
+import { memberIsActive as isActiveMember, memberStatusKey, memberStatusLabel } from '../core/portal-members.js?v=6.46.5';
 
 export function createBirthdaysController() {
   let monthFilter = 'all';

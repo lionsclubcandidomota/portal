@@ -1,14 +1,14 @@
-import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.46.4';
-import { RESTRICTED_VIEWS } from './constants.js?v=6.46.4';
-import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.46.4';
-import { createAdminSessionGuard } from './session-guard.js?v=6.46.4';
-import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.46.4';
+import { cloneState, statesAreEquivalent } from '../../core/portal-state.js?v=6.46.5';
+import { RESTRICTED_VIEWS } from './constants.js?v=6.46.5';
+import { mergePortalStates, remotePayloadVersion } from './domain.js?v=6.46.5';
+import { createAdminSessionGuard } from './session-guard.js?v=6.46.5';
+import { passwordMatchesDirectorProfile } from './access-profile.js?v=6.46.5';
 import {
   ACCESS_ROLES,
   accessSnapshot,
   applyAccessRole,
   clearAccessRole
-} from './authorization.js?v=6.46.4';
+} from './authorization.js?v=6.46.5';
 
 function isLocalHomologation(environment) {
   const location = environment?.window?.location;
@@ -166,7 +166,7 @@ export function createAdminSessionActions(context) {
     }
 
     const payload = await services.loadPublicGitHubPayload();
-    const { authenticatePortalUser } = await import('./user-access.js?v=6.46.4');
+    const { authenticatePortalUser } = await import('./user-access.js?v=6.46.5');
     const authenticated = await authenticatePortalUser(username, password, payload.state);
     if (!authenticated) {
       throw new Error('Usuário ou senha inválidos. Confira os dados e tente novamente.');

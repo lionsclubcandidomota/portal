@@ -1,5 +1,5 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.4';
+import { uiIcon } from '../visual-helpers.js?v=6.46.5';
 
 export function createFamilyGroupsManager(context, memberSelectorCard) {
   const {

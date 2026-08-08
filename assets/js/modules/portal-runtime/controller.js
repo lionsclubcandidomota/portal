@@ -4,21 +4,21 @@ import {
   loadPublicGitHubPayload,
   saveGitHubState,
   waitForPagesDeployment
-} from '../../github.js?v=6.46.4';
-import { createPortalRuntimeContext } from './context.js?v=6.46.4';
-import { createPersistenceActions } from './persistence.js?v=6.46.4';
-import { createAdminSessionActions } from './session.js?v=6.46.4';
-import { createPublicationActions } from './publication.js?v=6.46.4';
-import { createRemoteSyncActions } from './remote-sync.js?v=6.46.4';
-import { createBootstrapAction } from './bootstrap.js?v=6.46.4';
-import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.46.4';
-import { createAccessProfileActions } from './access-profile.js?v=6.46.4';
+} from '../../github.js?v=6.46.5';
+import { createPortalRuntimeContext } from './context.js?v=6.46.5';
+import { createPersistenceActions } from './persistence.js?v=6.46.5';
+import { createAdminSessionActions } from './session.js?v=6.46.5';
+import { createPublicationActions } from './publication.js?v=6.46.5';
+import { createRemoteSyncActions } from './remote-sync.js?v=6.46.5';
+import { createBootstrapAction } from './bootstrap.js?v=6.46.5';
+import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.46.5';
+import { createAccessProfileActions } from './access-profile.js?v=6.46.5';
 import {
   ACCESS_CAPABILITIES,
   accessSnapshot,
   canAccessView,
   roleHasCapability
-} from './authorization.js?v=6.46.4';
+} from './authorization.js?v=6.46.5';
 
 export function createPortalRuntimeController(dependencies) {
   const services = {

@@ -2,7 +2,9 @@
 setlocal
 cd /d "%~dp0"
 
-echo Preparando a atualizacao do Portal...
+for /f "usebackq delims=" %%V in (`node -p "require('./package.json').version"`) do set "PORTAL_VERSION=%%V"
+
+echo Preparando a atualizacao do Portal v%PORTAL_VERSION%...
 
 where node >nul 2>&1
 if errorlevel 1 (
@@ -40,7 +42,7 @@ call npm run release:prepare
 if errorlevel 1 goto :erro
 
 echo.
-echo Atualizacao 6.44.0 concluida e validada.
+echo Atualizacao v%PORTAL_VERSION% concluida e validada.
 echo Uma copia dos dados anteriores foi salva em .portal-backups.
 pause
 exit /b 0
