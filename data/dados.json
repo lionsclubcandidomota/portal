@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-08-08T02:13:40.558Z",
-  "deploymentId": "1786155220558-a40554f1-bf46-4271-8e34-384c076d8012",
+  "updatedAt": "2026-08-08T02:19:41.486Z",
+  "deploymentId": "1786155581486-a8ffa7b3-d398-46d5-9d3b-d7fd62d9806b",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
   "data": {
     "settings": {
-      "clubName": "Lions Clube de Cândido Mota",
+      "clubName": "Lions Clube de Cândido Mota - Distrito LB 1",
       "logo": "./public/logo.png",
       "primaryColor": "#00529B",
       "accentColor": "#F2C100",
