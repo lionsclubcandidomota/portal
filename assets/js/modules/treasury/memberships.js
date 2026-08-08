@@ -4,6 +4,7 @@ import {
   normalize,
   toInputDate
 } from '../../utils.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 export function buildMembershipViewModel(state, treasury, now = new Date()) {
   const currentMembershipMonth = toInputDate(now).slice(0, 7);
@@ -102,7 +103,7 @@ export function renderMembershipSection({
 
   return `<section class="card membership-control-card ${membershipExpanded ? 'is-expanded' : 'is-collapsed'}">
     <button class="membership-control-toggle" id="membershipControlToggle" type="button" aria-expanded="${membershipExpanded}">
-      <span><strong>🧾 Controle de mensalidades</strong><small>Baixas individuais e familiares com controle mensal.</small></span><span class="membership-toggle-chevron" aria-hidden="true"></span>
+      <span><strong>${uiIcon('receipt')} Controle de mensalidades</strong><small>Baixas individuais e familiares com controle mensal.</small></span><span class="membership-toggle-chevron" aria-hidden="true"></span>
     </button>
     <div class="membership-control-content" ${membershipExpanded ? '' : 'hidden'}>
       <div class="membership-toolbar membership-toolbar-v2 membership-period-toolbar">
@@ -112,7 +113,7 @@ export function renderMembershipSection({
         <label><span>Situação</span><select id="membershipStatusFilter"><option value="all" ${membershipStatus === 'all' ? 'selected' : ''}>Todos</option><option value="pending" ${membershipStatus === 'pending' ? 'selected' : ''}>Pendentes</option><option value="paid" ${membershipStatus === 'paid' ? 'selected' : ''}>Pagos</option></select></label>
         ${adminUnlocked ? '<div class="membership-toolbar-actions"><button class="btn btn-ghost btn-sm" id="manageFamilyGroups" type="button">Gerenciar famílias</button></div>' : ''}
       </div>
-      <div class="membership-period-summary"><span>📆</span><div><small>Período selecionado</small><strong>${membershipMonths.length === 1 ? treasury.monthLabel(membershipMonths[0]) : `${treasury.monthLabel(membershipMonths[0])} até ${treasury.monthLabel(membershipMonths.at(-1))}`}</strong></div></div>
+      <div class="membership-period-summary"><span>${uiIcon('calendar')}</span><div><small>Período selecionado</small><strong>${membershipMonths.length === 1 ? treasury.monthLabel(membershipMonths[0]) : `${treasury.monthLabel(membershipMonths[0])} até ${treasury.monthLabel(membershipMonths.at(-1))}`}</strong></div></div>
       <div class="membership-kpis"><div><small>Meses</small><strong>${membershipMonths.length}</strong></div><div><small>Associados</small><strong>${membershipMembers.length}</strong></div><div><small>Mensalidades quitadas</small><strong>${membershipPaidUnits}</strong></div><div><small>Pendentes</small><strong>${Math.max(0, membershipExpectedUnits - membershipPaidUnits)}</strong></div><div><small>Total recebido</small><strong>${money.format(membershipTotal)}</strong></div></div>
       <div class="membership-results-summary"><strong id="membershipVisibleCount">${membershipVisibleMembers.length}</strong> associado(s) exibido(s)</div>
       <div class="membership-list" id="membershipMemberList">${membershipMembers.length ? membershipMembers.map(member => {
@@ -148,7 +149,7 @@ export function renderMembershipSection({
             <span class="membership-avatar-shell">${avatar(member)}<span class="membership-avatar-state" aria-hidden="true"></span></span>
             <span class="membership-member-copy">
               <span class="membership-member-heading"><strong>${escapeHtml(member.name)}</strong><span class="membership-state-pill"><i aria-hidden="true"></i>${stateLabel}</span></span>
-              <span class="membership-member-meta"><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small>${group ? `<span class="membership-family-chip">👥 ${escapeHtml(group.name)}</span>` : ''}</span>
+              <span class="membership-member-meta"><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small>${group ? `<span class="membership-family-chip">${uiIcon('family')} ${escapeHtml(group.name)}</span>` : ''}</span>
             </span>
             <span class="membership-progress-panel">
               <span class="membership-progress-heading"><b>${progressLabel}</b><small>${progressDetail}</small></span>
@@ -156,10 +157,10 @@ export function renderMembershipSection({
               <small class="membership-progress-note">${progressNote}</small>
             </span>
           </button>
-          ${!paid && adminUnlocked ? `<div class="membership-member-actions"><div class="membership-actions-menu"><button type="button" class="membership-more-toggle" data-membership-menu-toggle aria-expanded="false" aria-haspopup="menu" aria-label="Mais ações para ${escapeHtml(member.name)}">•••</button><div class="membership-more-menu" data-membership-menu role="menu" hidden><button type="button" class="membership-menu-item" role="menuitem" data-membership-charge="${escapeHtml(member.id)}" data-membership-months="${escapeHtml(progress.pendingMonths.join(','))}"><span aria-hidden="true">💬</span><span><strong>Enviar cobrança</strong><small>Escolher associado ou família</small></span></button></div></div></div>` : ''}
+          ${!paid && adminUnlocked ? `<div class="membership-member-actions"><div class="membership-actions-menu"><button type="button" class="membership-more-toggle" data-membership-menu-toggle aria-expanded="false" aria-haspopup="menu" aria-label="Mais ações para ${escapeHtml(member.name)}">•••</button><div class="membership-more-menu" data-membership-menu role="menu" hidden><button type="button" class="membership-menu-item" role="menuitem" data-membership-charge="${escapeHtml(member.id)}" data-membership-months="${escapeHtml(progress.pendingMonths.join(','))}"><span aria-hidden="true">${uiIcon('message')}</span><span><strong>Enviar cobrança</strong><small>Escolher associado ou família</small></span></button></div></div></div>` : ''}
         </article>`;
-      }).join('') : empty('🔎', 'Nenhum associado cadastrado.')}</div>
-      <div id="membershipFilterEmpty" class="membership-filter-empty" ${membershipVisibleMembers.length ? 'hidden' : ''}>🔎 Nenhum associado encontrado com os filtros selecionados.</div>
+      }).join('') : empty('search', 'Nenhum associado cadastrado.')}</div>
+      <div id="membershipFilterEmpty" class="membership-filter-empty" ${membershipVisibleMembers.length ? 'hidden' : ''}>${uiIcon('search')}<span>Nenhum associado encontrado com os filtros selecionados.</span></div>
     </div>
   </section>`;
 }

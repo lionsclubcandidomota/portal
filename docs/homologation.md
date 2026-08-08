@@ -1,6 +1,63 @@
-# Homologação — v6.44.1
+# Homologação — v6.46.4
 
-> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.44.1.
+> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.46.4.
+
+
+## Largura integral da prévia de participantes — versão 6.46.4
+
+1. Abra **Tesouraria → Mútuas → Registrar falecimento** em uma tela ampla.
+2. Selecione um grupo com participantes e confirme que o resumo ocupa toda a largura do painel.
+3. Confirme que as duas colunas de participantes dividem igualmente o espaço, sem área vazia lateral.
+4. Valide nomes curtos e longos, fotos e identificação de associado ou mutuário.
+5. Em 390 px, confirme que a lista muda para uma coluna e não produz rolagem horizontal.
+6. Confirme que nenhum registro é criado enquanto o formulário não for confirmado.
+
+
+## Estabilização visual dos formulários de Mútuas — versão 6.46.3
+
+1. Em **Tesouraria → Mútuas**, role a página e abra **Gerenciar grupos**; confirme que o modal começa no título e nos primeiros campos, sem reaproveitar a rolagem anterior.
+2. Feche e reabra o modal após rolar sua lista; confirme que ele volta ao início.
+3. Verifique se cada participante possui altura suficiente para nome, identificação, fotografia e controle, sem texto cortado ou cartões achatados.
+4. Valide a grade de participantes em 390, 768 e 1366 px: uma coluna no celular e duas colunas quando houver espaço.
+5. Abra **Registrar falecimento** e confirme que a área de participantes ocupa toda a largura do formulário.
+6. Confira se todos os participantes do grupo são exibidos, sem a mensagem de itens ocultos.
+7. Role a lista interna e confirme que cabeçalho e rodapé de ações do modal permanecem utilizáveis.
+8. Feche e reabra o registro de falecimento; confirme que o formulário volta ao início e que nenhum dado foi criado sem confirmação.
+9. Confirme que grupos, ocorrências, cobranças, Tesouraria, usuários e fotografias permanecem inalterados.
+
+## Correção de Mútuas e Tesouraria móvel — versão 6.46.2
+
+1. Em **Tesouraria → Mútuas**, abrir **Gerenciar grupos** e confirmar que o modal abre sem erro no console.
+2. Pesquisar, selecionar e remover participantes, verificando que o contador da janela é atualizado corretamente e não interfere no contador de cobranças da Tesouraria.
+3. Abrir **Registrar falecimento** em 390, 768 e 1366 px e confirmar que campos, resumo, lista de participantes e botões permanecem alinhados, legíveis e acessíveis.
+4. Conferir na prévia da ocorrência a diferenciação visual entre **Associado** e **Mutuário**, inclusive em nomes longos e telas pequenas.
+5. Em um celular de 390 px, abrir a Tesouraria e confirmar que **Movimentações**, **Contas**, **Mensalidades** e **Mútuas** aparecem simultaneamente em uma grade visível, sem exigir gesto horizontal oculto.
+6. Confirmar que o texto de orientação da navegação móvel é exibido e que os botões principais ficam centralizados, com área de toque adequada.
+7. Navegar por todas as quatro áreas financeiras e confirmar que nenhum conteúdo fica fora do contêiner principal da Tesouraria.
+8. Confirmar que a atualização não altera movimentações, cobranças, grupos, participantes, usuários, cargos, fotos ou demais dados existentes.
+
+## Painel de Publicação, Tesouraria móvel e Mútuas — versão 6.46.1
+
+1. Abra o Painel de Publicação e confirme as etapas **Conferir**, **Preparar** e **Publicar**.
+2. Gere uma alteração de teste e valide a contagem, o resumo, o progresso e a ação **Publicar agora**.
+3. Minimize o painel durante a publicação e confirme que o restante do Portal continua utilizável.
+4. Em 390 px, abra a Tesouraria e percorra Movimentações, Contas, Mensalidades e Mútuas por toque.
+5. Valide período, filtros, programados recolhíveis, gráficos, cartões de movimentação e formulários sem corte ou sobreposição.
+6. Abra o cadastro de grupos de Mútua e confirme que associados e mutuários são visualmente diferenciados.
+7. Pesquise participantes, selecione e remova itens, e valide o contador em desktop e celular.
+8. Confirme que as ações financeiras revisadas usam ícones SVG locais, sem emojis funcionais.
+
+
+## Navegação persistente e experiência pública — versão 6.45.0
+
+1. Confirmar que **Atualizar Portal** permanece visível no rodapé do menu lateral e mantém a tela e a rolagem atuais.
+2. Abrir **Início** como visitante e validar o novo banner institucional, o logotipo em destaque e a marca d’água sem cortes.
+3. Abrir **Dirigentes**, alternar entre o AL vigente e anos anteriores e confirmar que nenhum ano futuro é exibido.
+4. Validar que os cartões de Dirigentes usam a mesma identidade visual do banner inicial.
+5. Abrir **Aniversariantes** como visitante e confirmar que somente o mês atual é exibido.
+6. Entrar como Administrador e confirmar que os filtros completos de aniversariantes continuam disponíveis.
+7. Conferir os novos ícones SVG nas telas públicas, no painel de publicação e nos estados vazios.
+8. Validar Início, Dirigentes e Aniversariantes em 390, 768, 1024 e 1366 px.
 
 
 
@@ -237,3 +294,13 @@
 8. Percorra Início, Aniversários, Agenda, Avisos, Tesouraria e Área administrativa para validar que a remoção dos módulos antigos não alterou nenhum fluxo.
 9. Registre uma cobrança de Mútua apenas em ambiente de teste e confirme que a regra por falecimento permanece inalterada.
 10. Confirme que os arquivos operacionais continuam no esquema 10 e que o pacote de atualização não inclui `data` nem `public`.
+
+
+## Verificações da v6.46.1
+
+1. Em **Usuários e cargos**, recolher e expandir Cargos, Usuários e Histórico.
+2. No Histórico, recolher e expandir cada Ano Leonístico.
+3. Confirmar que dirigentes com foto exibem o retrato no histórico administrativo.
+4. Na área pública **Dirigentes**, alternar entre o AL atual e anos anteriores.
+5. Confirmar que ex-dirigentes inativos aparecem apenas no histórico, não na diretoria vigente.
+6. Na área pública de aniversários, confirmar que não aparece a explicação técnica sobre o filtro mensal.

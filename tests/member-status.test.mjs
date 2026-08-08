@@ -78,7 +78,7 @@ test('identificação visual de aniversariantes mostra Mútua', () => {
     showMemberNumber: true
   });
 
-  assert.match(rows, /🤲 Mútua/);
+  assert.match(rows, /<small>Mútua<\/small>/);
   assert.equal(memberStatusLabel({ status: 'Mútua' }), 'Mútua');
 });
 

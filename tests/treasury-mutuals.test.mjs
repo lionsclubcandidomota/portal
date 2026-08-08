@@ -347,7 +347,7 @@ test('registro de falecimento cria snapshot de participantes e exige confirmaç�
   assert.match(source, /confirmation\.askConfirmation/);
   assert.match(source, /Falecimento registrado/);
   assert.match(source, /Depois de gerada, a cobrança é definitiva e não pode ser editada ou excluída/);
-  assert.match(source, /🔒 Registro definitivo/);
+  assert.match(source, /uiIcon\('lock'\).*Registro definitivo/);
   assert.doesNotMatch(source, /data-remove-mutual-event/);
   assert.doesNotMatch(source, /Excluir ocorrência de falecimento/);
   assert.doesNotMatch(source, /group\.events = group\.events\.filter/);

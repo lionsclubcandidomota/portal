@@ -1,4 +1,4 @@
-import { normalizeTreasurySection } from './treasury/domain.js?v=6.44.1';
+import { normalizeTreasurySection } from './treasury/domain.js?v=6.46.4';
 
 /**
  * Mantém o controlador completo da Tesouraria fora do grafo inicial.
@@ -20,7 +20,7 @@ export function createLazyTreasuryController({
   function load() {
     if (controller) return Promise.resolve(controller);
     if (!controllerPromise) {
-      controllerPromise = import('./treasury/controller.js?v=6.44.1')
+      controllerPromise = import('./treasury/controller.js?v=6.46.4')
         .then(module => {
           controller = module.createTreasuryController({
             getState,

@@ -4,13 +4,13 @@ import {
   mergeRecoveryAreas,
   summarizePortalState,
   verifyRecoverySnapshot
-} from './domain.js?v=6.44.1';
-import { createRecoverySnapshotStore } from './storage.js?v=6.44.1';
+} from './domain.js?v=6.46.4';
+import { createRecoverySnapshotStore } from './storage.js?v=6.46.4';
 import {
   recoveryCenterHtml,
   recoveryLoadingHtml,
   recoveryRestoreHtml
-} from './view.js?v=6.44.1';
+} from './view.js?v=6.46.4';
 
 function snapshotDownload(snapshot) {
   const blob = new Blob([JSON.stringify(snapshot.payload, null, 2)], { type: 'application/json' });

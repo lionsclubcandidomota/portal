@@ -1,4 +1,5 @@
 import { escapeHtml, money, normalize, uid } from '../../utils.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 export function createTreasuryAccountsManager(context) {
   const {
@@ -26,7 +27,7 @@ export function createTreasuryAccountsManager(context) {
       }).join('')}</div>
       <form id="accountManagerForm" class="admin-entity-form catalog-editor-form">
         <input type="hidden" name="accountId" value="${escapeHtml(editing?.id || '')}">
-        <section class="admin-form-section"><div class="admin-form-section-heading"><span>${editing ? '✏️' : '➕'}</span><div><h3>${editing ? 'Editar conta' : 'Adicionar conta'}</h3><p>Informe os dados usados na identificação e nos saldos.</p></div></div><div class="form-grid admin-form-section-grid"><div class="form-field"><label>Nome *</label><input name="name" required value="${escapeHtml(editing?.name || '')}" placeholder="Ex.: Conta corrente Sicredi"></div><div class="form-field"><label>Tipo *</label><select name="type" required>${typeOptions.map(type => `<option ${editing?.type === type ? 'selected' : ''}>${escapeHtml(type)}</option>`).join('')}</select></div><div class="form-field"><label>Saldo inicial (R$)</label><input name="initialBalance" type="number" step="0.01" value="${Number(editing?.initialBalance || 0)}"></div><div class="form-field catalog-active-field"><label><input name="active" type="checkbox" ${editing?.active === false ? '' : 'checked'}> Conta ativa</label><small>Contas inativas não aparecem em novos lançamentos.</small></div></div></section><div class="form-actions admin-form-actions"><button type="button" class="btn btn-ghost" data-close-modal>Fechar</button>${editing ? '<button type="button" class="btn btn-ghost" id="cancelAccountEdit">Cancelar edição</button>' : ''}<button class="btn btn-primary" type="submit">${editing ? 'Salvar conta' : 'Adicionar conta'}</button></div>
+        <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon(editing ? 'edit' : 'plus')}</span><div><h3>${editing ? 'Editar conta' : 'Adicionar conta'}</h3><p>Informe os dados usados na identificação e nos saldos.</p></div></div><div class="form-grid admin-form-section-grid"><div class="form-field"><label>Nome *</label><input name="name" required value="${escapeHtml(editing?.name || '')}" placeholder="Ex.: Conta corrente Sicredi"></div><div class="form-field"><label>Tipo *</label><select name="type" required>${typeOptions.map(type => `<option ${editing?.type === type ? 'selected' : ''}>${escapeHtml(type)}</option>`).join('')}</select></div><div class="form-field"><label>Saldo inicial (R$)</label><input name="initialBalance" type="number" step="0.01" value="${Number(editing?.initialBalance || 0)}"></div><div class="form-field catalog-active-field"><label><input name="active" type="checkbox" ${editing?.active === false ? '' : 'checked'}> Conta ativa</label><small>Contas inativas não aparecem em novos lançamentos.</small></div></div></section><div class="form-actions admin-form-actions"><button type="button" class="btn btn-ghost" data-close-modal>Fechar</button>${editing ? '<button type="button" class="btn btn-ghost" id="cancelAccountEdit">Cancelar edição</button>' : ''}<button class="btn btn-primary" type="submit">${editing ? 'Salvar conta' : 'Adicionar conta'}</button></div>
       </form>
     </div>`;
     showModal('Contas da Tesouraria');
@@ -94,7 +95,7 @@ export function createTreasuryAccountsManager(context) {
         const approved = await confirmation.askConfirmation({
           title: 'Excluir conta?',
           message: `A conta “${account.name}” será removida do cadastro.`,
-          icon: '🏦',
+          icon: 'bank',
           confirmText: 'Excluir conta',
           tone: 'danger'
         });

@@ -6,7 +6,7 @@ function createButton() {
   const listeners = new Map();
   const classes = new Set();
   const attributes = new Map();
-  const label = { textContent: 'Atualizar painel' };
+  const label = { textContent: 'Atualizar Portal' };
   return {
     disabled: false,
     classList: {
@@ -76,7 +76,7 @@ test('atualização sem pendências recarrega o painel diretamente', async () =>
   assert.equal(fixture.refreshCalls, 1);
   assert.equal(fixture.publishCalls, 0);
   assert.equal(fixture.discardCalls, 0);
-  assert.equal(fixture.button.label.textContent, 'Atualizar painel');
+  assert.equal(fixture.button.label.textContent, 'Atualizar Portal');
 });
 
 test('opção publicar trata pendências antes de atualizar', async () => {

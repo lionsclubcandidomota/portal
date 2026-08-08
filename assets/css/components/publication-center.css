@@ -3,3 +3,54 @@
 /* v6.38 — central de publicação mais clara e compacta */
 .sync-header-trigger{min-width:196px;padding:7px 9px 7px 8px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.9);box-shadow:0 6px 18px rgba(20,47,75,.06)}
 .sync-header-trigger-copy{min-width:0;text-align:left}.sync-header-trigger-copy strong{font-size:.77rem;line-height:1.15}.sync-header-trigger-copy small{display:block;max-width:150px;margin-top:2px;overflow:hidden;color:var(--muted);font-size:.62rem;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}.publish-progress-icon{width:34px;height:34px;border-radius:11px}.publish-center-count{min-width:23px;height:23px;padding:0 6px;border-radius:999px;background:var(--primary);color:#fff;font-size:.65rem;font-weight:900}.sync-header-popover{width:min(420px,calc(100vw - 24px));border-radius:20px;box-shadow:0 24px 65px rgba(8,34,65,.23)}.sync-popover-heading{padding:14px 15px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 8%,#fff),#fff 62%)}.sync-popover-eyebrow{display:block;margin-bottom:2px;color:var(--primary);font-size:.61rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.sync-popover-status{margin:13px 14px 0;padding:13px;border:0;background:color-mix(in srgb,var(--primary) 5%,var(--surface-2))}.sync-popover-status p{margin:4px 0 0}.publish-progress-block{margin:13px 14px 0}.sync-flow-steps{gap:7px;margin:12px 14px 0}.sync-flow-steps span{justify-content:flex-start;padding:7px 8px}.sync-header-popover .publish-review-trigger{margin:12px 14px 0;width:calc(100% - 28px);padding:11px 12px;border-radius:13px}.sync-header .publish-center-actions{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px;margin:11px 14px 0}.sync-header .publish-center-actions .btn{width:100%;min-height:42px}.sync-popover-footnote{margin:11px 14px 14px;padding-top:10px}.sync-header.is-complete .sync-header-trigger{border-color:color-mix(in srgb,var(--success) 32%,var(--border));background:color-mix(in srgb,var(--success) 5%,#fff)}.sync-header.is-complete .sync-header-trigger-copy strong{color:var(--success)}.sync-header.has-pending .sync-header-trigger{border-color:color-mix(in srgb,#d99500 42%,var(--border));background:#fffaf0}.sync-header.is-error .sync-header-trigger{border-color:color-mix(in srgb,var(--danger) 36%,var(--border));background:#fff7f8}@media(max-width:1040px){.sync-header-trigger{min-width:44px;width:44px;padding:5px}.sync-header-trigger-copy,.publish-center-chevron{display:none}.publish-center-count{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 4px;font-size:.58rem}}@media(max-width:520px){.sync-header-popover{position:fixed;right:10px;left:10px;top:72px;width:auto;max-height:calc(100vh - 92px);overflow:auto}.sync-header .publish-center-actions{grid-template-columns:1fr}.sync-flow-steps span{font-size:.62rem}}
+
+/* v6.46 — painel de publicação reorganizado */
+.publication-workspace{width:min(470px,calc(100vw - 28px));padding:0;overflow:hidden;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--border));border-radius:24px;background:rgba(255,255,255,.985);box-shadow:0 30px 80px rgba(7,35,68,.26)}
+.publication-workspace-heading{align-items:center;padding:16px 17px;border-bottom:1px solid color-mix(in srgb,var(--primary) 10%,var(--border));background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 10%,#fff),#fff 58%)}
+.publication-workspace-heading .sync-popover-heading-copy{align-items:center;gap:12px}
+.publication-workspace-heading .sync-popover-heading-copy>div{min-width:0}
+.publication-workspace-heading .sync-popover-heading-copy strong{font-size:1rem;line-height:1.22}
+.publication-workspace-heading .sync-popover-heading-copy small{display:block;margin-top:3px;color:var(--muted);font-size:.7rem;line-height:1.35}
+.publication-workspace-heading .sync-popover-brand-icon{width:42px;height:42px;border-radius:14px}
+.publication-workspace-heading .sync-popover-brand-icon .ui-icon{width:22px;height:22px}
+.publication-workspace-heading .sync-popover-close{width:38px;height:38px;border:0;background:color-mix(in srgb,var(--primary) 5%,var(--surface-2))}
+.publication-workspace-heading .sync-popover-close .ui-icon{width:18px;height:18px}
+.publication-status-card{grid-template-columns:50px minmax(0,1fr) auto;margin:15px 16px 0;padding:14px 15px;border:1px solid color-mix(in srgb,var(--primary) 12%,var(--border));background:linear-gradient(145deg,color-mix(in srgb,var(--primary) 5%,#fff),#fff)}
+.publication-status-card .sync-popover-status-icon{width:50px;height:50px;border-radius:16px}
+.publication-status-card .sync-popover-status-icon .ui-icon{width:22px;height:22px}
+.publication-status-copy{min-width:0}
+.publication-status-eyebrow{display:block;margin-bottom:2px;color:var(--muted);font-size:.61rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.publication-status-copy strong{display:block;overflow-wrap:anywhere}
+.publication-status-copy p{margin:4px 0 0;overflow-wrap:anywhere}
+.publication-status-count{display:grid;place-items:center;min-width:62px;padding:8px 9px;border:1px solid var(--border);border-radius:13px;background:var(--surface);text-align:center}
+.publication-status-count strong,.publication-status-count small{display:block}
+.publication-status-count strong{color:var(--primary);font-size:1.15rem;line-height:1}
+.publication-status-count small{margin-top:4px;color:var(--muted);font-size:.57rem;font-weight:850;text-transform:uppercase}
+.publication-progress-card{margin:13px 16px 0;padding:12px 13px;border:1px solid var(--border);border-radius:15px;background:var(--surface-2)}
+.publication-progress-card .publish-progress-copy{align-items:center}
+.publication-progress-card .publish-progress-copy span{font-size:.7rem}
+.publication-progress-card .publish-progress-copy small{max-width:250px;line-height:1.35}
+.publication-progress-card .publish-progress-track{margin-top:9px!important}
+.publication-stepper{position:relative;gap:8px;margin:13px 16px 0}
+.publication-stepper::before{content:"";position:absolute;top:18px;left:17%;right:17%;height:2px;background:var(--border);z-index:0}
+.publication-stepper span{position:relative;z-index:1;display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:7px;padding:8px;border-radius:13px;background:var(--surface)}
+.publication-stepper i{width:28px;height:28px;border:2px solid #fff;box-shadow:0 0 0 1px var(--border)}
+.publication-stepper b{min-width:0;font-size:.65rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.publication-review-card{margin:13px 16px 0!important;width:calc(100% - 32px)!important;min-height:62px;padding:12px 13px!important;border:1px solid color-mix(in srgb,var(--primary) 20%,var(--border))!important;border-radius:16px!important;background:color-mix(in srgb,var(--primary) 4%,#fff)!important;box-shadow:none!important}
+.publication-review-card:hover,.publication-review-card:focus-visible{border-color:var(--primary)!important;background:var(--primary-soft)!important;outline:none}
+.publication-review-card .publish-review-icon{width:40px;height:40px;border-radius:13px;background:var(--primary);color:#fff}
+.publication-review-card .publish-review-icon .ui-icon{width:20px;height:20px}
+.publication-review-card .publish-review-copy strong{font-size:.84rem}
+.publication-review-card .publish-review-copy small{margin-top:3px;font-size:.68rem;line-height:1.35}
+.publication-workspace-actions{display:grid!important;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr)!important;gap:9px!important;margin:12px 16px 0!important}
+.publication-workspace-actions .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:46px!important;border-radius:13px}
+.publication-workspace-actions .btn .ui-icon{width:17px;height:17px}
+.publication-workspace .sync-popover-footnote{align-items:center;margin:12px 16px 16px;padding:11px 12px;border:0;border-radius:13px;background:color-mix(in srgb,var(--primary) 4%,var(--surface-2));font-size:.66rem}
+.publication-workspace .sync-popover-footnote .ui-icon{width:16px;height:16px;color:var(--primary)}
+.sync-header.is-busy .publication-status-card .sync-popover-status-icon .ui-icon{animation:publishCenterSpin 1.1s linear infinite}
+.sync-header.is-busy .publication-status-card{border-color:color-mix(in srgb,var(--primary) 30%,var(--border));background:color-mix(in srgb,var(--primary) 6%,#fff)}
+.sync-header.has-pending .publication-status-card{border-color:color-mix(in srgb,#d99500 30%,var(--border));background:#fffaf2}
+.sync-header.is-error .publication-status-card{border-color:color-mix(in srgb,var(--danger) 28%,var(--border));background:#fff8f9}
+.sync-header.is-complete .publication-status-card{border-color:color-mix(in srgb,var(--success) 28%,var(--border));background:#f6fcf8}
+@media(max-width:820px){.publication-workspace{position:fixed;top:auto!important;right:10px!important;bottom:max(76px,calc(env(safe-area-inset-bottom) + 68px));left:10px!important;width:auto!important;max-height:min(78dvh,690px)!important;border-radius:24px;overflow:auto}.publication-workspace-heading{position:sticky;top:0;z-index:4}.publication-status-card{grid-template-columns:46px minmax(0,1fr) auto}.publication-status-card .sync-popover-status-icon{width:46px;height:46px}.publication-stepper::before{left:15%;right:15%}}
+@media(max-width:520px){.publication-workspace{right:7px!important;bottom:max(70px,calc(env(safe-area-inset-bottom) + 64px));left:7px!important;max-height:calc(100dvh - 88px)!important;border-radius:21px}.publication-workspace-heading{padding:13px 14px}.publication-workspace-heading .sync-popover-heading-copy small{display:none}.publication-workspace-heading .sync-popover-brand-icon{width:38px;height:38px}.publication-status-card{grid-template-columns:42px minmax(0,1fr);margin-inline:12px;padding:12px}.publication-status-card .sync-popover-status-icon{width:42px;height:42px}.publication-status-count{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:5px;min-height:34px;padding:6px}.publication-status-count small{margin:0}.publication-progress-card,.publication-stepper{margin-inline:12px}.publication-progress-card .publish-progress-copy{display:grid;gap:3px}.publication-progress-card .publish-progress-copy small{text-align:left}.publication-stepper{grid-template-columns:repeat(3,minmax(0,1fr))}.publication-stepper::before{left:14%;right:14%}.publication-stepper span{grid-template-columns:1fr;justify-items:center;padding:7px 4px;text-align:center}.publication-stepper b{font-size:.6rem}.publication-review-card{margin-inline:12px!important;width:calc(100% - 24px)!important}.publication-workspace-actions{grid-template-columns:1fr!important;margin-inline:12px!important}.publication-workspace .sync-popover-footnote{margin-inline:12px}}

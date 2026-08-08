@@ -1,4 +1,64 @@
+# Changelog
+
+## 6.46.4 — Largura integral da prévia de participantes
+
+- Faz o resumo e a lista de participantes ocuparem toda a largura disponível no registro de falecimento.
+- Remove o espaço vazio lateral causado por alinhamentos herdados de uma regra antiga em flexbox.
+- Mantém duas colunas equilibradas em telas amplas e uma coluna no celular.
+- Mantém o esquema 12 e não altera grupos, ocorrências, cobranças ou demais dados.
+
+## 6.46.3 — Estabilização visual dos formulários de Mútuas
+
+- Faz os modais de grupos e falecimentos abrirem sempre no início do formulário.
+- Separa a rolagem do conteúdo da rolagem do cartão e do fundo do modal.
+- Impede que os cartões de participantes fiquem comprimidos ou com conteúdo cortado.
+- Exibe todos os participantes na prévia da cobrança por falecimento.
+- Faz a lista de participantes ocupar toda a largura disponível.
+- Mantém o esquema 12 e não altera dados operacionais.
+
+
+## 6.46.2 — Correções de Mútuas e Tesouraria móvel
+
+- Corrige o erro ao abrir Gerenciar Mútuas causado por identificadores duplicados no DOM.
+- Reorganiza o formulário de registro de falecimento e a lista de participantes.
+- Diferencia associados e mutuários na prévia da cobrança eventual.
+- Mostra Movimentações, Contas, Mensalidades e Mútuas em grade visível no celular.
+- Remove a dependência de arraste horizontal oculto na navegação financeira.
+- Corrige o fechamento antecipado do contêiner principal da Tesouraria.
+- Mantém o esquema 12 e não altera dados operacionais.
+
+## 6.46.1 — Histórico de dirigentes e seções recolhíveis
+
+- Cargos, usuários e histórico podem ser expandidos ou recolhidos na área administrativa.
+- Cada Ano Leonístico também possui controle próprio de expansão.
+- Fotos dos dirigentes incluídas no histórico administrativo.
+- Histórico público de Dirigentes ganhou navegação explícita por Ano Leonístico.
+- Ex-dirigentes inativos permanecem visíveis nos períodos anteriores.
+- Texto explicativo do filtro mensal de aniversariantes removido da área pública.
+
+## 6.46.0 — Melhorias visuais e responsivas, etapa final
+
+- Redesenha o Painel de Publicação com situação, progresso e fluxo em três etapas.
+- Mantém a publicação minimizável e o usuário trabalhando no mesmo contexto.
+- Cria uma camada responsiva dedicada à Tesouraria para celulares e tablets.
+- Reorganiza navegação, indicadores, gráficos, filtros, movimentações e formulários financeiros em telas pequenas.
+- Corrige o CSS dos participantes no cadastro de Mútuas.
+- Diferencia associados e mutuários na seleção do grupo.
+- Substitui emojis funcionais nas áreas financeiras e administrativas revisadas por ícones SVG locais.
+- Mantém o esquema 12 e não altera dados, movimentações, usuários ou fotografias.
+- Encerra o ciclo iniciado na v6.45.0.
+
 # Histórico de versões
+
+## 6.45.0 — Experiência pública e identidade institucional
+
+- Move o botão Atualizar Portal para o rodapé do menu lateral.
+- Reestrutura o banner inicial com logotipo maior e marca d’água institucional.
+- Padroniza o banner público de Dirigentes com a mesma identidade visual.
+- Adiciona consulta pública do histórico de dirigentes por Ano Leonístico.
+- Limita os aniversariantes de visitantes ao mês atual, inclusive no Dashboard.
+- Substitui emojis de estado nas telas públicas revisadas por ícones SVG locais.
+- Mantém o esquema 12 e não altera dados operacionais.
 
 ## 6.44.1 — Correção de acesso e Ano Leonístico
 

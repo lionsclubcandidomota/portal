@@ -1,14 +1,14 @@
-import { cloneState } from '../../core/portal-state.js?v=6.44.1';
-import { memberForPortalUser } from '../../core/portal-access.js?v=6.44.1';
-import { effectivePortalUserRole } from '../../core/portal-leadership.js?v=6.44.1';
-import { remotePayloadVersion } from './domain.js?v=6.44.1';
+import { cloneState } from '../../core/portal-state.js?v=6.46.4';
+import { memberForPortalUser } from '../../core/portal-access.js?v=6.46.4';
+import { effectivePortalUserRole } from '../../core/portal-leadership.js?v=6.46.4';
+import { remotePayloadVersion } from './domain.js?v=6.46.4';
 import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   applyAccessRole,
   clearAccessRole,
   roleHasCapability
-} from './authorization.js?v=6.44.1';
+} from './authorization.js?v=6.46.4';
 
 export function createInterfaceRefreshActions(context) {
   const { dependencies, services, model } = context;

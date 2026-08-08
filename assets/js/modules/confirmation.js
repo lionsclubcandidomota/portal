@@ -1,4 +1,5 @@
-import { createDialogFocusManager } from './dialog-focus.js?v=6.44.1';
+import { createDialogFocusManager } from './dialog-focus.js?v=6.46.4';
+import { uiIcon } from './visual-helpers.js?v=6.46.4';
 
 function buttonClass(tone, fallback = 'btn-danger') {
   if (tone === 'primary') return 'btn-primary';
@@ -46,7 +47,7 @@ export function createConfirmationController({
   function openChoice({
     title = 'Confirmar ação',
     message = '',
-    icon = '⚠️',
+    icon = 'warning',
     primaryText = 'Confirmar',
     primaryTone = 'danger',
     secondaryText = '',
@@ -59,7 +60,9 @@ export function createConfirmationController({
 
     confirmTitle.textContent = title;
     confirmMessage.textContent = message;
-    confirmIcon.textContent = icon;
+    const iconName = String(icon || 'warning');
+    if (/^[a-z0-9-]+$/.test(iconName)) confirmIcon.innerHTML = uiIcon(iconName);
+    else confirmIcon.textContent = iconName;
     confirmAccept.textContent = primaryText;
     confirmAccept.className = `btn ${buttonClass(primaryTone)}`;
 
@@ -84,7 +87,7 @@ export function createConfirmationController({
   async function askConfirmation({
     title = 'Confirmar ação',
     message = '',
-    icon = '⚠️',
+    icon = 'warning',
     confirmText = 'Confirmar',
     tone = 'danger'
   } = {}) {

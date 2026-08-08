@@ -86,10 +86,11 @@ test('documentação preserva a estabilização anterior e registra o novo ciclo
   const roadmap = await source('docs/evolution-roadmap.md');
   const quality = await source('docs/quality-gates.md');
 
-  assert.match(release, /Portal Lions v6\.44\.1/);
-  assert.match(release, /Etapa 8 de 8/i);
+  assert.match(release, /Portal Lions v6\.46\.4/);
+  assert.match(release, /Mútuas.*Tesouraria/i);
   assert.match(refactoring, /refatoração estrutural das versões 6\.29\.0 a 6\.36\.0 permanece concluída/i);
-  assert.match(refactoring, /v6\.44\.1 — correções pós-homologação/i);
+  assert.match(refactoring, /v6\.45\.0 — novo ciclo, etapa 1/i);
+  assert.match(refactoring, /v6\.46\.0 — novo ciclo, etapa 2 final/i);
   assert.match(roadmap, /Etapa 8 — Dirigentes públicos e estabilização final — concluída na v6\.44\.0/);
   assert.match(quality, /audit:modules/);
   assert.match(quality, /backup:local/);

@@ -60,15 +60,15 @@ test('contas inativas permanecem visíveis com aparência desabilitada', async (
 });
 
 
-test('topo administrativo oferece atualização global sem recarregar a página', async () => {
+test('rodapé do menu oferece atualização global sem recarregar a página', async () => {
   const [html, app, refreshController] = await Promise.all([
     source('index.html'),
     source('assets/js/modules/portal-app.js'),
     source('assets/js/modules/portal-refresh.js')
   ]);
 
-  assert.match(html, /id="portalRefreshButton"/);
-  assert.match(html, /Atualizar todo o painel sem encerrar a sessão/);
+  assert.match(html, /<div class="sidebar-footer">[\s\S]*id="portalRefreshButton"/);
+  assert.match(html, /Atualizar o Portal sem sair da tela atual/);
   assert.match(app, /refreshPortal:\s*runtime\.refreshPortalInterface/);
   assert.match(app, /resetInterfaceState/);
   assert.doesNotMatch(refreshController, /location\.reload/);

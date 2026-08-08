@@ -4,7 +4,7 @@ import {
   normalizePortalUsername,
   permissionDefinition,
   roleById
-} from '../core/portal-access.js?v=6.44.1';
+} from '../core/portal-access.js?v=6.46.4';
 import {
   assignmentDateRangeIsValid,
   createLeadershipAssignment,
@@ -17,11 +17,12 @@ import {
   normalizeLionYear,
   overlappingLeadershipAssignments,
   transitionLeadershipRole
-} from '../core/portal-leadership.js?v=6.44.1';
-import { memberIsActive } from '../core/portal-members.js?v=6.44.1';
+} from '../core/portal-leadership.js?v=6.46.4';
+import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.46.4';
+import { memberIsActive } from '../core/portal-members.js?v=6.46.4';
 import { escapeHtml, uid } from '../utils.js';
-import { buildPortalUserPassword } from './portal-runtime/user-access.js?v=6.44.1';
-import { uiIcon } from './visual-helpers.js?v=6.44.1';
+import { buildPortalUserPassword } from './portal-runtime/user-access.js?v=6.46.4';
+import { uiIcon } from './visual-helpers.js?v=6.46.4';
 
 function memberById(state, memberId) {
   return (Array.isArray(state?.birthdays) ? state.birthdays : []).find(member => member.id === memberId) || null;
@@ -66,7 +67,36 @@ function assignmentStatusLabel(assignment) {
   return { label: 'Encerrado', className: 'is-past' };
 }
 
-function historyHtml(state) {
+function memberAvatar(member, { historical = false } = {}) {
+  const name = String(member?.name || 'Associado').trim() || 'Associado';
+  const photo = String(member?.photo || '').trim();
+  const classes = `access-user-avatar${historical ? ' is-history-avatar' : ''}${photo ? ' has-photo' : ''}`;
+  if (!photo) return `<div class="${classes}" aria-hidden="true">${escapeHtml(name.charAt(0).toUpperCase())}</div>`;
+
+  const sourceSet = memberPhotoSourceSet(photo);
+  const responsive = sourceSet
+    ? ` srcset="${escapeHtml(sourceSet)}" sizes="${historical ? '48px' : '42px'}" data-photo-fallback="${escapeHtml(photo)}"`
+    : '';
+  const size = historical ? 48 : 42;
+  return `<div class="${classes}"><img src="${escapeHtml(photo)}"${responsive} alt="Foto de ${escapeHtml(name)}" width="${size}" height="${size}" loading="lazy" decoding="async" fetchpriority="low"></div>`;
+}
+
+function sectionToggleHtml({ key, title, description, count, open }) {
+  return `<button class="access-section-toggle" type="button" data-access-toggle="${escapeHtml(key)}" aria-expanded="${open ? 'true' : 'false'}" aria-controls="accessSection-${escapeHtml(key)}">
+    <span class="access-section-toggle-icon" aria-hidden="true">${uiIcon('chevron-down')}</span>
+    <span class="access-section-toggle-copy"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(description)}</small></span>
+    <span class="access-section-count">${escapeHtml(String(count))}</span>
+  </button>`;
+}
+
+function collapsibleSectionHtml({ key, title, description, count, action, content, open }) {
+  return `<section class="access-management-section access-collapsible-section ${open ? 'is-open' : ''}" data-access-section="${escapeHtml(key)}">
+    <div class="access-section-heading">${sectionToggleHtml({ key, title, description, count, open })}${action}</div>
+    <div class="access-section-body" id="accessSection-${escapeHtml(key)}" ${open ? '' : 'hidden'}>${content}</div>
+  </section>`;
+}
+
+function historyHtml(state, yearOpenState = new Map()) {
   const assignments = (Array.isArray(state.leadershipAssignments) ? state.leadershipAssignments : [])
     .slice()
     .sort((first, second) => {
@@ -82,22 +112,30 @@ function historyHtml(state) {
     groups.set(assignment.lionYear, items);
   });
 
-  return [...groups.entries()].map(([lionYear, items]) => `<section class="leadership-year-group">
-    <div class="leadership-year-heading"><div><span class="admin-eyebrow">Ano Leonístico</span><h4>AL ${escapeHtml(lionYear)}</h4></div><span>${items.length} registro(s)</span></div>
-    <div class="leadership-history-list">${items.map(assignment => {
-      const member = memberById(state, assignment.memberId);
-      const role = roleById(state, assignment.roleId) || (state.accessRoles || []).find(item => item.id === assignment.roleId);
-      const status = assignmentStatusLabel(assignment);
-      return `<article class="leadership-history-card">
-        <div class="access-user-avatar">${escapeHtml(String(member?.name || '?').charAt(0).toUpperCase())}</div>
-        <div class="leadership-history-main"><div class="access-user-heading"><h4>${escapeHtml(member?.name || 'Associado não encontrado')}</h4><span class="leadership-status ${status.className}">${status.label}</span></div><p>${escapeHtml(role?.name || 'Cargo não encontrado')}</p><small>${formatDate(assignment.startsOn)} a ${formatDate(assignment.endsOn)}${assignment.notes ? ` · ${escapeHtml(assignment.notes)}` : ''}</small></div>
-        <div class="access-user-actions"><button class="btn btn-ghost btn-sm" type="button" data-access-edit-assignment="${escapeHtml(assignment.id)}">Editar</button></div>
-      </article>`;
-    }).join('')}</div>
-  </section>`).join('');
+  const currentYear = currentLionYear();
+  return [...groups.entries()].map(([lionYear, items]) => {
+    const safeYear = String(lionYear || '').replace(/[^0-9A-Za-z_-]/g, '-');
+    const open = yearOpenState.has(lionYear) ? yearOpenState.get(lionYear) : lionYear === currentYear;
+    return `<section class="leadership-year-group ${open ? 'is-open' : ''}" data-leadership-year="${escapeHtml(lionYear)}">
+      <button class="leadership-year-heading" type="button" data-access-year-toggle="${escapeHtml(lionYear)}" aria-expanded="${open ? 'true' : 'false'}" aria-controls="leadershipYear-${escapeHtml(safeYear)}">
+        <span class="leadership-year-heading-main"><span class="leadership-year-chevron" aria-hidden="true">${uiIcon('chevron-down')}</span><span><small class="admin-eyebrow">Ano Leonístico</small><strong>AL ${escapeHtml(lionYear)}</strong></span></span>
+        <span class="leadership-year-count">${items.length} registro(s)</span>
+      </button>
+      <div class="leadership-history-list" id="leadershipYear-${escapeHtml(safeYear)}" ${open ? '' : 'hidden'}>${items.map(assignment => {
+        const member = memberById(state, assignment.memberId);
+        const role = roleById(state, assignment.roleId) || (state.accessRoles || []).find(item => item.id === assignment.roleId);
+        const status = assignmentStatusLabel(assignment);
+        return `<article class="leadership-history-card">
+          ${memberAvatar(member, { historical: true })}
+          <div class="leadership-history-main"><div class="access-user-heading"><h4>${escapeHtml(member?.name || 'Associado não encontrado')}</h4><span class="leadership-status ${status.className}">${status.label}</span></div><p>${escapeHtml(role?.name || 'Cargo não encontrado')}</p><small>${formatDate(assignment.startsOn)} a ${formatDate(assignment.endsOn)}${assignment.notes ? ` · ${escapeHtml(assignment.notes)}` : ''}</small></div>
+          <div class="access-user-actions"><button class="btn btn-ghost btn-sm" type="button" data-access-edit-assignment="${escapeHtml(assignment.id)}">Editar</button></div>
+        </article>`;
+      }).join('')}</div>
+    </section>`;
+  }).join('');
 }
 
-function managerHtml(state) {
+function managerHtml(state, sectionOpenState = {}, yearOpenState = new Map()) {
   const roles = Array.isArray(state.accessRoles) ? state.accessRoles : [];
   const users = Array.isArray(state.portalUsers) ? state.portalUsers : [];
   const assignments = Array.isArray(state.leadershipAssignments) ? state.leadershipAssignments : [];
@@ -116,18 +154,22 @@ function managerHtml(state) {
     const role = current.role;
     const historyCount = leadershipAssignmentsForMember(state, user.memberId).length;
     return `<article class="access-user-card">
-      <div class="access-user-avatar">${escapeHtml(String(member?.name || '?').charAt(0).toUpperCase())}</div>
+      ${memberAvatar(member)}
       <div class="access-user-main"><div class="access-user-heading"><h4>${escapeHtml(member?.name || 'Associado não encontrado')}</h4>${statusBadge(user.active !== false)}</div><p>@${escapeHtml(user.username)}</p><small>${role ? `${escapeHtml(role.name)} · AL ${escapeHtml(current.assignment?.lionYear || currentYear)}` : 'Sem cargo vigente'} · ${historyCount} registro(s)</small></div>
       <div class="access-user-actions"><button class="btn btn-ghost btn-sm" type="button" data-access-edit-user="${escapeHtml(user.id)}">Editar</button><button class="btn btn-danger btn-sm" type="button" data-access-delete-user="${escapeHtml(user.id)}">Excluir</button></div>
     </article>`;
   }).join('');
 
+  const rolesOpen = sectionOpenState.roles !== false;
+  const usersOpen = sectionOpenState.users !== false;
+  const historyOpen = sectionOpenState.history !== false;
+
   return `<div class="access-management">
     <section class="access-management-intro"><div><span class="admin-eyebrow">Controle de acesso</span><h3>Usuários, cargos e histórico</h3><p>Os acessos acompanham o cargo vigente no Ano Leonístico. Ao terminar o período, as permissões deixam de valer automaticamente.</p></div><div class="access-management-stats has-four"><span><strong>${users.length}</strong><small>usuários</small></span><span><strong>${roles.length}</strong><small>cargos</small></span><span><strong>${currentLeaders}</strong><small>vigentes</small></span><span><strong>${escapeHtml(currentYear)}</strong><small>AL atual</small></span></div></section>
     <div class="notice medium"><strong>${uiIcon('shield')} Permissões por período</strong><p>O histórico é preservado. Um usuário só entra quando possui um cargo vigente na data atual.</p></div>
-    <section class="access-management-section"><div class="access-section-heading"><div><h3>Cargos e permissões</h3><p>Defina o que cada responsabilidade permite fazer.</p></div><button class="btn btn-primary btn-sm" type="button" id="createAccessRoleBtn">${uiIcon('plus')} Novo cargo</button></div><div class="access-role-grid">${roleCards || '<div class="empty">Nenhum cargo cadastrado.</div>'}</div></section>
-    <section class="access-management-section"><div class="access-section-heading"><div><h3>Usuários individuais</h3><p>O usuário permanece vinculado ao associado; o cargo ativo vem do histórico.</p></div><button class="btn btn-primary btn-sm" type="button" id="createPortalUserBtn">${uiIcon('plus')} Novo usuário</button></div><div class="access-user-list">${userCards || '<div class="empty">Nenhum usuário individual cadastrado.</div>'}</div></section>
-    <section class="access-management-section"><div class="access-section-heading"><div><h3>Histórico por Ano Leonístico</h3><p>Registre cargos atuais, anteriores e futuros sem apagar o histórico.</p></div><button class="btn btn-primary btn-sm" type="button" id="createLeadershipAssignmentBtn">${uiIcon('plus')} Nova designação</button></div><div class="leadership-history">${historyHtml(state)}</div></section>
+    ${collapsibleSectionHtml({ key: 'roles', title: 'Cargos e permissões', description: 'Defina o que cada responsabilidade permite fazer.', count: roles.length, open: rolesOpen, action: `<button class="btn btn-primary btn-sm" type="button" id="createAccessRoleBtn">${uiIcon('plus')} Novo cargo</button>`, content: `<div class="access-role-grid">${roleCards || '<div class="empty">Nenhum cargo cadastrado.</div>'}</div>` })}
+    ${collapsibleSectionHtml({ key: 'users', title: 'Usuários individuais', description: 'O usuário permanece vinculado ao associado; o cargo ativo vem do histórico.', count: users.length, open: usersOpen, action: `<button class="btn btn-primary btn-sm" type="button" id="createPortalUserBtn">${uiIcon('plus')} Novo usuário</button>`, content: `<div class="access-user-list">${userCards || '<div class="empty">Nenhum usuário individual cadastrado.</div>'}</div>` })}
+    ${collapsibleSectionHtml({ key: 'history', title: 'Histórico por Ano Leonístico', description: 'Registre cargos atuais, anteriores e futuros sem apagar o histórico.', count: assignments.length, open: historyOpen, action: `<button class="btn btn-primary btn-sm" type="button" id="createLeadershipAssignmentBtn">${uiIcon('plus')} Nova designação</button>`, content: `<div class="leadership-history">${historyHtml(state, yearOpenState)}</div>` })}
   </div>`;
 }
 
@@ -177,6 +219,9 @@ export function createAccessManagementController({ getState, modalController, co
   if (typeof getState !== 'function') throw new TypeError('createAccessManagementController requer getState().');
   if (!modalController?.open || !modalController?.setContent) throw new TypeError('createAccessManagementController requer modalController.');
 
+  const sectionOpenState = { roles: true, users: true, history: true };
+  const yearOpenState = new Map();
+
   const ensureAllowed = () => {
     if (canManageUsers()) return true;
     toast('Somente o Administrador pode gerenciar usuários e cargos.');
@@ -185,7 +230,7 @@ export function createAccessManagementController({ getState, modalController, co
 
   const renderManager = () => {
     modalController.title.textContent = 'Usuários e cargos';
-    modalController.setContent(managerHtml(getState()));
+    modalController.setContent(managerHtml(getState(), sectionOpenState, yearOpenState));
     bindManager();
   };
 
@@ -343,6 +388,26 @@ export function createAccessManagementController({ getState, modalController, co
   };
 
   function bindManager() {
+    modalController.body.querySelectorAll('[data-access-toggle]').forEach(button => button.addEventListener('click', () => {
+      const key = button.dataset.accessToggle;
+      const section = button.closest('[data-access-section]');
+      const body = section?.querySelector('.access-section-body');
+      const open = button.getAttribute('aria-expanded') !== 'true';
+      sectionOpenState[key] = open;
+      button.setAttribute('aria-expanded', String(open));
+      section?.classList.toggle('is-open', open);
+      if (body) body.hidden = !open;
+    }));
+    modalController.body.querySelectorAll('[data-access-year-toggle]').forEach(button => button.addEventListener('click', () => {
+      const lionYear = button.dataset.accessYearToggle;
+      const group = button.closest('[data-leadership-year]');
+      const list = group?.querySelector('.leadership-history-list');
+      const open = button.getAttribute('aria-expanded') !== 'true';
+      yearOpenState.set(lionYear, open);
+      button.setAttribute('aria-expanded', String(open));
+      group?.classList.toggle('is-open', open);
+      if (list) list.hidden = !open;
+    }));
     modalController.body.querySelector('#createAccessRoleBtn')?.addEventListener('click', () => openRoleForm());
     modalController.body.querySelector('#createPortalUserBtn')?.addEventListener('click', () => openUserForm());
     modalController.body.querySelector('#createLeadershipAssignmentBtn')?.addEventListener('click', () => openAssignmentForm());
@@ -355,7 +420,7 @@ export function createAccessManagementController({ getState, modalController, co
 
   const open = () => {
     if (!ensureAllowed()) return;
-    modalController.open('Usuários e cargos', managerHtml(getState()));
+    modalController.open('Usuários e cargos', managerHtml(getState(), sectionOpenState, yearOpenState));
     bindManager();
   };
 

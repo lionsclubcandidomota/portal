@@ -7,3 +7,102 @@
 .access-management-stats.has-four{display:grid;grid-template-columns:repeat(2,minmax(78px,1fr));max-width:360px}.leadership-history{display:grid;gap:16px}.leadership-year-group{display:grid;gap:10px;padding:14px;border:1px solid var(--border);border-radius:17px;background:var(--surface-2)}.leadership-year-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.leadership-year-heading h4,.leadership-year-heading span{margin:0}.leadership-year-heading>span{color:var(--muted);font-size:.72rem;font-weight:800}.leadership-history-list{display:grid;gap:8px}.leadership-history-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 13px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}.leadership-history-main{min-width:0}.leadership-history-main h4,.leadership-history-main p{margin:0}.leadership-history-main p{margin-top:3px;color:var(--primary);font-size:.78rem;font-weight:800}.leadership-history-main small{display:block;margin-top:4px;color:var(--muted);font-size:.69rem;line-height:1.4}.leadership-status{display:inline-flex;align-items:center;min-height:23px;padding:3px 8px;border-radius:999px;font-size:.65rem;font-weight:850}.leadership-status.is-current{background:var(--success-soft);color:var(--success)}.leadership-status.is-future{background:var(--primary-soft);color:var(--primary)}.leadership-status.is-past{background:var(--surface-3,#eef2f7);color:var(--muted)}.leadership-status.is-inactive{background:var(--danger-soft,#fff0f0);color:var(--danger)}
 @media(max-width:760px){.access-management-stats.has-four{max-width:none}.leadership-history-card{grid-template-columns:auto minmax(0,1fr)}.leadership-history-card .access-user-actions{grid-column:1/-1;justify-content:flex-end}.leadership-year-heading{align-items:flex-start}}
 @media(max-width:430px){.access-management-stats.has-four{grid-template-columns:1fr 1fr}.leadership-history-card .access-user-actions{display:block}.leadership-history-card .access-user-actions .btn{width:100%}}
+
+.access-collapsible-section{
+  gap:0;
+  overflow:hidden;
+  padding:0;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--surface);
+  box-shadow:0 8px 24px rgba(25,57,96,.045);
+}
+.access-collapsible-section>.access-section-heading{
+  align-items:stretch;
+  gap:10px;
+  padding:12px;
+  border-bottom:1px solid transparent;
+}
+.access-collapsible-section.is-open>.access-section-heading{border-bottom-color:var(--border)}
+.access-section-toggle{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:11px;
+  min-width:0;
+  flex:1 1 auto;
+  padding:8px 10px;
+  border:0;
+  border-radius:13px;
+  background:transparent;
+  color:var(--text);
+  text-align:left;
+  cursor:pointer;
+}
+.access-section-toggle:hover{background:var(--surface-2)}
+.access-section-toggle:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 26%,transparent);outline-offset:2px}
+.access-section-toggle-icon{
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  border-radius:11px;
+  background:var(--primary-soft);
+  color:var(--primary);
+}
+.access-section-toggle-icon .ui-icon{width:18px;height:18px;transition:transform .18s ease}
+.access-section-toggle[aria-expanded="true"] .access-section-toggle-icon .ui-icon{transform:rotate(180deg)}
+.access-section-toggle-copy{display:grid;gap:3px;min-width:0}
+.access-section-toggle-copy strong{font-size:.95rem}
+.access-section-toggle-copy small{overflow:hidden;color:var(--muted);font-size:.74rem;line-height:1.4;text-overflow:ellipsis;white-space:nowrap}
+.access-section-count{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:31px;
+  min-height:27px;
+  padding:3px 8px;
+  border-radius:999px;
+  background:var(--surface-3,#eef2f7);
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:850;
+}
+.access-section-body{padding:14px}
+.access-section-body[hidden],.leadership-history-list[hidden]{display:none!important}
+.access-user-avatar.has-photo{overflow:hidden;padding:0;background:var(--surface-3,#eef2f7)}
+.access-user-avatar.has-photo img{display:block;width:100%;height:100%;object-fit:cover}
+.access-user-avatar.is-history-avatar{width:48px;height:48px;box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--border)}
+.leadership-year-heading{
+  width:100%;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--text);
+  text-align:left;
+  cursor:pointer;
+}
+.leadership-year-heading:hover .leadership-year-heading-main{color:var(--primary)}
+.leadership-year-heading:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 26%,transparent);outline-offset:5px;border-radius:10px}
+.leadership-year-heading-main{display:flex;align-items:center;gap:10px;min-width:0}
+.leadership-year-heading-main>span:last-child{display:grid;gap:2px}
+.leadership-year-heading-main strong{font-size:.9rem}
+.leadership-year-heading-main .admin-eyebrow{font-size:.62rem}
+.leadership-year-chevron{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--surface);color:var(--primary)}
+.leadership-year-chevron .ui-icon{width:16px;height:16px;transition:transform .18s ease}
+.leadership-year-heading[aria-expanded="true"] .leadership-year-chevron .ui-icon{transform:rotate(180deg)}
+.leadership-year-count{color:var(--muted);font-size:.72rem;font-weight:800}
+.leadership-year-group.is-open{background:color-mix(in srgb,var(--primary-soft) 22%,var(--surface-2))}
+.leadership-year-group.is-open .leadership-history-list{padding-top:2px}
+@media(max-width:760px){
+  .access-collapsible-section>.access-section-heading{grid-template-columns:1fr}
+  .access-section-toggle{width:100%}
+  .access-collapsible-section>.access-section-heading>.btn{width:100%}
+  .access-section-toggle-copy small{white-space:normal}
+}
+@media(max-width:430px){
+  .access-section-toggle{grid-template-columns:auto minmax(0,1fr);padding:7px 4px}
+  .access-section-count{grid-column:2;justify-self:start}
+  .access-section-body{padding:10px}
+  .access-user-avatar.is-history-avatar{width:44px;height:44px}
+}

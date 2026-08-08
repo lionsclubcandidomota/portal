@@ -1,5 +1,5 @@
 import { escapeHtml } from '../utils.js';
-import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.44.1';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.4';
 
 export function createLazyEntityActions({
   getState,
@@ -58,8 +58,8 @@ export function createLazyEntityActions({
     if (!featurePromise) {
       featurePromise = Promise.all([
         loadTreasuryController(),
-        import('./treasury-admin.js?v=6.44.1'),
-        import('./entity-forms.js?v=6.44.1')
+        import('./treasury-admin.js?v=6.46.4'),
+        import('./entity-forms.js?v=6.46.4')
       ]).then(([treasury, treasuryAdminModule, entityFormsModule]) => {
         const treasuryAdmin = treasuryAdminModule.createTreasuryAdminController({
           getState,

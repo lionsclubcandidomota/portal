@@ -1,4 +1,5 @@
-import { memberCanJoinMutual, memberIsActive, memberIsInactive, memberIsMutual, memberStatusKey, memberStatusLabel } from '../../core/portal-members.js?v=6.44.1';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
+import { memberCanJoinMutual, memberIsActive, memberIsInactive, memberIsMutual, memberStatusKey, memberStatusLabel } from '../../core/portal-members.js?v=6.46.4';
 
 export const DEFAULT_ACCOUNTS = Object.freeze([
   { id: 'acc-current', name: 'Conta corrente', type: 'Conta corrente', initialBalance: 0, active: true },
@@ -305,10 +306,10 @@ export function createStatusHelpers({ parseDate, todayStart }) {
 
 export function accountTypeIcon(type) {
   const key = String(type || '').toLowerCase();
-  if (key.includes('aplica')) return '📈';
-  if (key.includes('caixa') || key.includes('dinheiro')) return '💵';
-  if (key.includes('poup')) return '🏦';
-  return '💳';
+  if (key.includes('aplica')) return uiIcon('trend-up');
+  if (key.includes('caixa') || key.includes('dinheiro')) return uiIcon('money');
+  if (key.includes('poup')) return uiIcon('bank');
+  return uiIcon('wallet');
 }
 
 export function paginate(items, page, key, pageSize = 8) {

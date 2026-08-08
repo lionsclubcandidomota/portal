@@ -6,16 +6,16 @@ import {
   parseLocalDate
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
-import { renderHtmlIfChanged } from '../visual-helpers.js?v=6.44.1';
+import { renderHtmlIfChanged, uiIcon } from '../visual-helpers.js?v=6.46.4';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
 
 
 function attachmentIcon(type = '') {
   const normalized = String(type).toLowerCase();
-  if (normalized.startsWith('image/')) return '🖼️';
-  if (normalized === 'application/pdf') return '📕';
-  if (normalized.includes('sheet') || normalized.includes('excel') || normalized === 'text/csv') return '📊';
-  return '📄';
+  if (normalized.startsWith('image/')) return uiIcon('image');
+  if (normalized === 'application/pdf') return uiIcon('file-text');
+  if (normalized.includes('sheet') || normalized.includes('excel') || normalized === 'text/csv') return uiIcon('chart-bar');
+  return uiIcon('file-text');
 }
 
 function treasuryAttachmentGallery(item) {
@@ -29,14 +29,14 @@ function treasuryAttachmentGallery(item) {
     return `<article class="treasury-attachment-card"><span class="treasury-attachment-card-icon" aria-hidden="true">${attachmentIcon(attachment.type)}</span><div class="treasury-attachment-card-copy"><strong>${escapeHtml(attachment.name)}</strong><small>${escapeHtml(attachment.type || 'Documento')} · ${formatAttachmentSize(attachment.size)}</small></div><div class="treasury-attachment-card-actions">${previewable ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(attachment.href)}" target="_blank" rel="noopener noreferrer">Visualizar</a>` : ''}<a class="btn btn-primary btn-sm" href="${escapeHtml(attachment.href)}" download="${escapeHtml(attachment.name)}">Baixar</a></div></article>`;
   }).join('');
 
-  return `<section class="treasury-attachment-gallery"><div class="treasury-attachment-gallery-heading"><div><span aria-hidden="true">📎</span><div><strong>Comprovantes e documentos</strong><small>${attachments.length} arquivo(s) vinculado(s) a esta movimentação</small></div></div></div><div class="treasury-attachment-gallery-grid">${cards}</div></section>`;
+  return `<section class="treasury-attachment-gallery"><div class="treasury-attachment-gallery-heading"><div><span aria-hidden="true">${uiIcon('paperclip')}</span><div><strong>Comprovantes e documentos</strong><small>${attachments.length} arquivo(s) vinculado(s) a esta movimentação</small></div></div></div><div class="treasury-attachment-gallery-grid">${cards}</div></section>`;
 }
 
 export function treasuryCards(items, emptyText, treasury, helpers) {
   const { empty, rowActions } = helpers;
 
   if (!items.length) {
-    return `<div class="mobile-card-empty">${empty('💰', emptyText)}</div>`;
+    return `<div class="mobile-card-empty">${empty('money', emptyText)}</div>`;
   }
 
   return items.map(item => {
@@ -68,10 +68,10 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
     return `<article class="expandable-record-card treasury-record-card ${treasury.statusClass(item)} ${item.entry ? 'is-entry' : 'is-exit'} ${membership || mutual ? 'is-membership' : ''} ${mutual ? 'is-mutual' : ''}" data-expandable-card>
       <button class="expandable-record-summary treasury-record-summary" type="button" data-card-toggle aria-expanded="false" aria-label="Ver detalhes de ${escapeHtml(item.description)}">
         <span class="record-icon treasury-record-icon" aria-hidden="true">${item.entry ? '↗' : '↘'}</span>
-        <span class="record-summary-main treasury-summary-description"><strong>${escapeHtml(item.description)}</strong><small>${escapeHtml(secondaryText)}${attachmentCount ? ` · 📎 ${attachmentCount} anexo${attachmentCount === 1 ? '' : 's'}` : ''}</small></span>
+        <span class="record-summary-main treasury-summary-description"><strong>${escapeHtml(item.description)}</strong><small>${escapeHtml(secondaryText)}${attachmentCount ? ` · ${attachmentCount} anexo${attachmentCount === 1 ? '' : 's'}` : ''}</small></span>
         <span class="treasury-summary-field treasury-summary-account"><small>Conta</small><strong>${treasury.accountTypeIcon(account?.type)} ${escapeHtml(account?.name || 'Conta principal')}</strong></span>
         <span class="treasury-summary-field treasury-summary-category"><small>Categoria</small><span class="badge badge-info">${escapeHtml(item.category)}</span></span>
-        ${members.length ? `<span class="treasury-summary-field treasury-summary-member"><small>${members.length > 1 ? 'Associados' : 'Associado'}</small><strong>👥 ${escapeHtml(members.map(member => member.name).join(', '))}</strong></span>` : ''}
+        ${members.length ? `<span class="treasury-summary-field treasury-summary-member"><small>${members.length > 1 ? 'Associados' : 'Associado'}</small><strong>${uiIcon('users')} ${escapeHtml(members.map(member => member.name).join(', '))}</strong></span>` : ''}
         <span class="treasury-summary-field treasury-summary-date"><small>Data</small><strong>${formatDate(item.date)}</strong></span>
         <span class="treasury-summary-field treasury-summary-type"><small>Movimento</small><span class="treasury-type-chip ${valueType}">${item.entry ? 'Entrada' : 'Saída'}</span></span>
         <span class="treasury-summary-field treasury-summary-status"><small>Situação</small><span class="treasury-status-chip ${treasury.statusClass(item)}">${escapeHtml(treasury.statusLabel(item))}</span></span>
@@ -94,11 +94,11 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
           </div>
         </div>
         <div class="treasury-expanded-meta">
-          <div class="treasury-expanded-meta-item is-date"><span aria-hidden="true">📅</span><div><small>Data</small><strong>${formatDate(item.date)}</strong></div></div>
+          <div class="treasury-expanded-meta-item is-date"><span aria-hidden="true">${uiIcon('calendar')}</span><div><small>Data</small><strong>${formatDate(item.date)}</strong></div></div>
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${treasury.accountTypeIcon(account?.type)}</span><div><small>Conta</small><strong>${escapeHtml(account?.name || 'Conta principal')}</strong></div></div>
-          <div class="treasury-expanded-meta-item"><span aria-hidden="true">🏷️</span><div><small>Categoria</small><strong>${escapeHtml(item.category)}</strong></div></div>
+          <div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('tag')}</span><div><small>Categoria</small><strong>${escapeHtml(item.category)}</strong></div></div>
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${item.entry ? '↗' : '↘'}</span><div><small>Tipo</small><strong>${item.entry ? 'Entrada' : 'Saída'}</strong></div></div>
-          ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">👥</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🗓️</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">🤲</span><div><small>${mutualEvent ? 'Grupo / ocorrência' : 'Grupo / referência histórica'}</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${mutualEvent ? `Falecimento de ${escapeHtml(mutualEvent.deceasedName)} em ${escapeHtml(formatDate(mutualDate))}` : escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
+          ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">${uiIcon('users')}</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('calendar')}</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('heart')}</span><div><small>${mutualEvent ? 'Grupo / ocorrência' : 'Grupo / referência histórica'}</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${mutualEvent ? `Falecimento de ${escapeHtml(mutualEvent.deceasedName)} em ${escapeHtml(formatDate(mutualDate))}` : escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
         </div>
         ${treasuryAttachmentGallery(item)}
         <div class="treasury-expanded-footer">
@@ -113,7 +113,7 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
 export function treasuryTable(items, emptyText, treasury, helpers) {
   return items.length
     ? `<div class="treasury-card-grid">${treasuryCards(items, emptyText, treasury, helpers)}</div>`
-    : `<div class="card treasury-empty-state">${helpers.empty('💰', emptyText)}</div>`;
+    : `<div class="card treasury-empty-state">${helpers.empty('money', emptyText)}</div>`;
 }
 
 export function categorySummaries(items, treasury) {
@@ -163,7 +163,7 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
 
   const scheduledHeading = (count, expanded) => `<div class="timeline-heading treasury-scheduled-heading">
     <div class="timeline-heading-main">
-      <span aria-hidden="true">🗓️</span>
+      <span aria-hidden="true">${uiIcon('calendar')}</span>
       <div><h3>Programados</h3><p>Valores previstos que ainda não alteram o saldo.</p></div>
     </div>
     <div class="treasury-timeline-heading-actions">
@@ -224,7 +224,7 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
       : `<section class="timeline-section treasury-scheduled-section ${scheduledExpanded ? 'is-expanded' : 'is-collapsed'}">${scheduledHeading(scheduled.length, scheduledExpanded)}<div id="treasuryScheduledBody" class="treasury-scheduled-body" ${scheduledExpanded ? '' : 'hidden'}>${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</div></section>`;
     const completedSection = movementFilter === 'scheduled'
       ? ''
-      : `<section class="timeline-section is-history">${timelineHeading('🧾', 'Realizados', 'Entradas recebidas e despesas pagas.', completed.length)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
+      : `<section class="timeline-section is-history">${timelineHeading(uiIcon('receipt'), 'Realizados', 'Entradas recebidas e despesas pagas.', completed.length)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
 
     const changed = renderHtmlIfChanged(
       lists,

@@ -1,4 +1,5 @@
 import { escapeHtml, formatDate, money, uid } from '../../utils.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 export function createMutualPaymentManager(context) {
   const {
@@ -49,12 +50,12 @@ export function createMutualPaymentManager(context) {
       ? `Falecimento de ${eventNames[0]}`
       : `${eventNames.length} falecimentos selecionados`;
     modalBody.innerHTML = `<form id="mutualPaymentForm" class="admin-entity-form membership-payment-form-v2 mutual-payment-form">
-      <section class="mutual-payment-hero"><div><span aria-hidden="true">🤲</span><div><small>Baixa de mútuas</small><strong>${escapeHtml(occurrenceLabel)}</strong><p>${groupNames.length === 1 ? escapeHtml(groupNames[0]) : `${groupNames.length} grupos selecionados`}</p></div></div><div><small>Cobranças selecionadas</small><strong>${charges.length}</strong></div></section>
-      <section class="admin-form-section"><div class="admin-form-section-heading"><span>👥</span><div><h3>Participantes e ocorrências</h3><p>Revise cada cobrança antes de registrar os recebimentos individuais.</p></div></div>
+      <section class="mutual-payment-hero"><div><span aria-hidden="true">${uiIcon('heart')}</span><div><small>Baixa de mútuas</small><strong>${escapeHtml(occurrenceLabel)}</strong><p>${groupNames.length === 1 ? escapeHtml(groupNames[0]) : `${groupNames.length} grupos selecionados`}</p></div></div><div><small>Cobranças selecionadas</small><strong>${charges.length}</strong></div></section>
+      <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('users')}</span><div><h3>Participantes e ocorrências</h3><p>Revise cada cobrança antes de registrar os recebimentos individuais.</p></div></div>
         <div class="mutual-payment-charge-list" id="mutualPaymentChargeList">${charges.map(item => `<label class="mutual-payment-charge"><input type="checkbox" name="chargeKeys" value="${escapeHtml(item.key)}" checked>${avatar(item.member)}<span class="mutual-payment-charge-copy"><strong>${escapeHtml(item.member.name)}</strong><small>${escapeHtml(item.group.name)} · falecimento de ${escapeHtml(item.event.deceasedName)} · ${escapeHtml(formatDate(item.event.occurrenceDate))}</small></span><b class="sensitive-money">${money.format(item.amount)}</b></label>`).join('')}</div>
         <div class="mutual-payment-total"><div><small>Participantes incluídos</small><strong id="mutualPaymentCount">${charges.length}</strong></div><div><small>Total do recebimento</small><strong class="sensitive-money" id="mutualPaymentTotal">${money.format(charges.reduce((sum, item) => sum + item.amount, 0))}</strong></div></div>
       </section>
-      <section class="admin-form-section"><div class="admin-form-section-heading"><span>🧾</span><div><h3>Detalhes do recebimento</h3><p>A data deve representar quando o valor realmente entrou na conta.</p></div></div>
+      <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('receipt')}</span><div><h3>Detalhes do recebimento</h3><p>A data deve representar quando o valor realmente entrou na conta.</p></div></div>
         <div class="form-grid admin-form-section-grid"><div class="form-field"><label>Data efetiva do recebimento *</label><input name="paymentDate" type="date" required value="" autocomplete="off"><small>Escolha manualmente a data da baixa.</small></div><div class="form-field"><label>Conta de entrada *</label><select name="accountId" required>${activeAccounts.map(account => `<option value="${escapeHtml(account.id)}">${escapeHtml(account.name)}</option>`).join('')}</select></div><div class="form-field full-row"><label>Observação desta baixa</label><textarea name="paymentNotes" rows="3" placeholder="Ex.: recebimento via PIX ou informação relevante para conferência"></textarea></div></div>
       </section>
       <div class="operation-readiness" id="mutualPaymentReadiness" role="status" aria-live="polite"><span aria-hidden="true">○</span><strong>Informe a data e mantenha ao menos um participante selecionado.</strong></div>
@@ -81,7 +82,7 @@ export function createMutualPaymentManager(context) {
       const ready = selected.length > 0 && hasDate;
       submitButton.disabled = !ready;
       readiness.classList.toggle('is-ready', ready);
-      readiness.querySelector('span').textContent = ready ? '✓' : '○';
+      readiness.querySelector('span').innerHTML = uiIcon(ready ? 'check' : 'circle');
       readiness.querySelector('strong').textContent = ready
         ? 'Dados essenciais preenchidos. Revise a confirmação antes de registrar.'
         : !selected.length
@@ -120,7 +121,7 @@ export function createMutualPaymentManager(context) {
       const total = selected.reduce((sum, item) => sum + item.amount, 0);
       const approved = await confirmation.askConfirmation({
         title: 'Conferir baixa de mútuas',
-        icon: '🤲',
+        icon: 'heart',
         tone: 'warning',
         confirmText: 'Confirmar recebimentos',
         message: `Registrar ${selected.length} pagamento(s) de cobrança por falecimento, totalizando ${money.format(total)}, em ${formatDate(paymentDate)}? Cada cobrança gerará um movimento individual.`

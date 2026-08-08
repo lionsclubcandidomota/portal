@@ -4,6 +4,7 @@ import {
   money,
   normalize
 } from '../../utils.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 function latestPayment(payments = []) {
   return [...payments]
@@ -172,9 +173,9 @@ function renderChargeCard(item, adminUnlocked, avatar) {
     : `Cobrança gerada em ${escapeHtml(formatDate(mutualChargeCreatedDate(item.event)))}`;
   return `<article class="membership-member mutual-charge-card ${item.paid ? 'is-paid' : 'is-pending'} ${item.selected ? 'is-selected' : ''}" data-mutual-key="${escapeHtml(item.key)}" data-mutual-search="${escapeHtml(normalize(`${item.member.name || ''} ${item.member.memberNumber || ''} ${item.group.name || ''} ${item.event.deceasedName || ''}`))}" data-mutual-status="${item.paid ? 'paid' : 'pending'}" data-mutual-amount="${item.amount}" data-mutual-group-id="${escapeHtml(item.group.id)}" data-mutual-event-id="${escapeHtml(item.event.id)}" ${item.visible ? '' : 'hidden'}>
     <label class="membership-member-main mutual-charge-main">
-      <span class="mutual-charge-choice">${adminUnlocked && !item.paid ? `<input class="mutual-charge-checkbox" type="checkbox" value="${escapeHtml(item.key)}" ${item.selected ? 'checked' : ''} aria-label="Selecionar cobrança de ${escapeHtml(item.member.name)} referente ao falecimento de ${escapeHtml(item.event.deceasedName)}"><i aria-hidden="true">✓</i>` : '<i class="is-readonly" aria-hidden="true">✓</i>'}</span>
+      <span class="mutual-charge-choice">${adminUnlocked && !item.paid ? `<input class="mutual-charge-checkbox" type="checkbox" value="${escapeHtml(item.key)}" ${item.selected ? 'checked' : ''} aria-label="Selecionar cobrança de ${escapeHtml(item.member.name)} referente ao falecimento de ${escapeHtml(item.event.deceasedName)}"><i aria-hidden="true">${uiIcon('check')}</i>` : `<i class="is-readonly" aria-hidden="true">${uiIcon('check')}</i>`}</span>
       <span class="membership-avatar-shell">${avatar(item.member)}<span class="membership-avatar-state" aria-hidden="true"></span></span>
-      <span class="membership-member-copy"><span class="membership-member-heading"><strong>${escapeHtml(item.member.name)}</strong><span class="membership-state-pill"><i aria-hidden="true"></i>${statusLabel}</span></span><span class="membership-member-meta"><small>${item.member.memberNumber ? `Nº ${escapeHtml(item.member.memberNumber)}` : 'Sem número informado'}</small><span class="membership-family-chip">🤲 ${escapeHtml(item.group.name)}</span></span></span>
+      <span class="membership-member-copy"><span class="membership-member-heading"><strong>${escapeHtml(item.member.name)}</strong><span class="membership-state-pill"><i aria-hidden="true"></i>${statusLabel}</span></span><span class="membership-member-meta"><small>${item.member.memberNumber ? `Nº ${escapeHtml(item.member.memberNumber)}` : 'Sem número informado'}</small><span class="membership-family-chip">${uiIcon('heart')} ${escapeHtml(item.group.name)}</span></span></span>
       <span class="membership-progress-panel mutual-charge-summary"><span class="membership-progress-heading"><b class="sensitive-money">${money.format(item.displayAmount)}</b><small>${paymentDetail}</small></span><small class="membership-progress-note">${item.paid ? 'Cobrança quitada' : 'Selecione para registrar o recebimento'}</small></span>
     </label>
   </article>`;
@@ -184,11 +185,11 @@ function renderEventSection(section, adminUnlocked, avatar, empty) {
   const { event } = section;
   const content = section.charges.length
     ? section.charges.map(item => renderChargeCard(item, adminUnlocked, avatar)).join('')
-    : empty('👥', 'Nenhum participante foi incluído nesta ocorrência.');
+    : empty('users', 'Nenhum participante foi incluído nesta ocorrência.');
   return `<section class="mutual-month-section mutual-event-section" data-mutual-event-section="${escapeHtml(event.id)}">
-    <div class="mutual-month-heading mutual-event-heading"><div><span aria-hidden="true">🕊️</span><div><strong>Falecimento de ${escapeHtml(event.deceasedName)}</strong><small>${escapeHtml(formatDate(event.occurrenceDate))} · ${section.charges.length} cobrança(s) · ${section.pendingCharges.length} em aberto</small>${event.notes ? `<p>${escapeHtml(event.notes)}</p>` : ''}</div></div><div><small>Recebido / previsto</small><strong class="sensitive-money">${money.format(section.receivedTotal)} / ${money.format(section.expectedTotal)}</strong></div></div>
+    <div class="mutual-month-heading mutual-event-heading"><div><span aria-hidden="true">${uiIcon('heart')}</span><div><strong>Falecimento de ${escapeHtml(event.deceasedName)}</strong><small>${escapeHtml(formatDate(event.occurrenceDate))} · ${section.charges.length} cobrança(s) · ${section.pendingCharges.length} em aberto</small>${event.notes ? `<p>${escapeHtml(event.notes)}</p>` : ''}</div></div><div><small>Recebido / previsto</small><strong class="sensitive-money">${money.format(section.receivedTotal)} / ${money.format(section.expectedTotal)}</strong></div></div>
     <div class="membership-list mutual-charge-list">${content}</div>
-    <div class="membership-filter-empty mutual-event-empty" ${section.visibleCharges.length || !section.charges.length ? 'hidden' : ''}>🔎 Nenhum participante desta ocorrência corresponde aos filtros.</div>
+    <div class="membership-filter-empty mutual-event-empty" ${section.visibleCharges.length || !section.charges.length ? 'hidden' : ''}>${uiIcon('search')} Nenhum participante desta ocorrência corresponde aos filtros.</div>
   </section>`;
 }
 
@@ -199,7 +200,7 @@ function renderActiveParticipants(section, avatar, empty) {
       <span class="mutual-participant-copy"><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número de associado'}</small></span>
       <span class="mutual-participant-type is-${kind}">${label}</span>
     </article>`).join('')
-    : empty('👥', 'Nenhum participante ativo neste grupo.');
+    : empty('users', 'Nenhum participante ativo neste grupo.');
 
   return `<section class="mutual-participants-panel" aria-label="Participantes atuais de ${escapeHtml(section.group.name)}">
     <div class="mutual-participants-heading"><div><span class="section-eyebrow">Participantes atuais</span><h4>Quem participa das próximas cobranças</h4><p>Associados e mutuários aparecem separados por identificação visual.</p></div><div class="mutual-participant-counts"><span><strong>${section.activeParticipants.length}</strong><small>Total</small></span><span class="is-associate"><strong>${section.associateCount}</strong><small>Associados</small></span><span class="is-mutual"><strong>${section.mutualCount}</strong><small>Mutuários</small></span></div></div>
@@ -212,7 +213,7 @@ function renderGroupAccordion(section, allGroupsMode, adminUnlocked, avatar, emp
   const contentId = `mutual-group-content-${String(group.id).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   return `<article class="mutual-group-accordion ${section.expanded ? 'is-expanded' : 'is-collapsed'}" data-mutual-group-section="${escapeHtml(group.id)}">
     <button class="mutual-group-accordion-toggle" type="button" data-mutual-group-toggle="${escapeHtml(group.id)}" aria-expanded="${section.expanded}" aria-controls="${escapeHtml(contentId)}">
-      <span class="mutual-group-accordion-icon" aria-hidden="true">🤲</span>
+      <span class="mutual-group-accordion-icon" aria-hidden="true">${uiIcon('heart')}</span>
       <span class="mutual-group-accordion-copy"><small>Grupo de mútua</small><strong>${escapeHtml(group.name)}</strong><span>${section.activeParticipants.length} participante(s): ${section.associateCount} associado(s) · ${section.mutualCount} mutuário(s)</span></span>
       <span class="mutual-group-accordion-metrics"><span><small>Cobranças</small><strong>${section.charges.length}</strong></span><span><small>Em aberto</small><strong>${section.pendingCharges.length}</strong></span><span><small>Previsto</small><strong class="sensitive-money">${money.format(section.expectedTotal)}</strong></span></span>
       <span class="mutual-group-accordion-chevron" aria-hidden="true"></span>
@@ -220,8 +221,8 @@ function renderGroupAccordion(section, allGroupsMode, adminUnlocked, avatar, emp
     <div class="mutual-group-accordion-content" id="${escapeHtml(contentId)}" ${section.expanded ? '' : 'hidden'}>
       ${renderActiveParticipants(section, avatar, empty)}
       <div class="mutual-group-period-summary"><span><strong>${section.visibleCharges.length}</strong> resultado(s) com os filtros atuais</span>${allGroupsMode ? '<small>Expanda somente os grupos que deseja analisar.</small>' : '<small>Cada ocorrência preserva os participantes incluídos no momento do registro.</small>'}</div>
-      ${section.eventSections.length ? section.eventSections.map(eventSection => renderEventSection(eventSection, adminUnlocked, avatar, empty)).join('') : empty('🕊️', 'Nenhum falecimento foi registrado para este grupo no período selecionado.')}
-      <div class="membership-filter-empty mutual-group-empty" ${section.visibleCharges.length || !section.charges.length ? 'hidden' : ''}>🔎 Nenhuma cobrança deste grupo corresponde aos filtros selecionados.</div>
+      ${section.eventSections.length ? section.eventSections.map(eventSection => renderEventSection(eventSection, adminUnlocked, avatar, empty)).join('') : empty('heart', 'Nenhum falecimento foi registrado para este grupo no período selecionado.')}
+      <div class="membership-filter-empty mutual-group-empty" ${section.visibleCharges.length || !section.charges.length ? 'hidden' : ''}>${uiIcon('search')} Nenhuma cobrança deste grupo corresponde aos filtros selecionados.</div>
     </div>
   </article>`;
 }
@@ -256,11 +257,11 @@ export function renderMutualSection({
 
   return `<section class="card membership-control-card mutual-control-card mutual-control-card-v2 ${expanded ? 'is-expanded' : 'is-collapsed'}">
     <button class="membership-control-toggle mutual-control-header" id="mutualControlToggle" type="button" aria-expanded="${expanded}">
-      <span class="mutual-control-heading"><span aria-hidden="true">🤲</span><span><strong>Controle de mútuas por falecimento</strong><small>Nenhuma cobrança é criada mensalmente. As cobranças surgem somente quando um falecimento é registrado.</small></span></span><span class="membership-toggle-chevron" aria-hidden="true"></span>
+      <span class="mutual-control-heading"><span aria-hidden="true">${uiIcon('heart')}</span><span><strong>Controle de mútuas por falecimento</strong><small>Nenhuma cobrança é criada mensalmente. As cobranças surgem somente quando um falecimento é registrado.</small></span></span><span class="membership-toggle-chevron" aria-hidden="true"></span>
     </button>
     <div class="membership-control-content mutual-control-content" ${expanded ? '' : 'hidden'}>
       <div class="mutual-filter-panel" aria-label="Filtros das mútuas">
-        <div class="mutual-filter-panel-heading"><div><span class="section-eyebrow">Cobranças eventuais</span><h3>Falecimentos registrados no Distrito</h3><p>Cadastre uma ocorrência somente quando houver falecimento. O Portal gera uma cobrança individual para cada participante do grupo.</p></div>${adminUnlocked ? '<div class="card-header-actions"><button class="btn btn-ghost" id="manageMutualGroups" type="button">⚙ Gerenciar grupos</button><button class="btn btn-primary" id="registerMutualEvent" type="button">🕊️ Registrar falecimento</button></div>' : ''}</div>
+        <div class="mutual-filter-panel-heading"><div><span class="section-eyebrow">Cobranças eventuais</span><h3>Falecimentos registrados no Distrito</h3><p>Cadastre uma ocorrência somente quando houver falecimento. O Portal gera uma cobrança individual para cada participante do grupo.</p></div>${adminUnlocked ? `<div class="card-header-actions"><button class="btn btn-ghost" id="manageMutualGroups" type="button">${uiIcon('settings')} Gerenciar grupos</button><button class="btn btn-primary" id="registerMutualEvent" type="button">${uiIcon('heart')} Registrar falecimento</button></div>` : ''}</div>
         <div class="membership-toolbar membership-toolbar-v2 mutual-toolbar mutual-toolbar-v2">
           <label><span>Grupo de mútua</span><select id="mutualGroupFilter" ${groups.length ? '' : 'disabled'}><option value="all" ${groupFilter === 'all' ? 'selected' : ''}>Todos os grupos</option>${groups.map(group => `<option value="${escapeHtml(group.id)}" ${groupFilter === group.id ? 'selected' : ''}>${escapeHtml(group.name)}</option>`).join('')}</select></label>
           <label><span>Data inicial</span><input id="mutualStartFilter" type="date" value="${escapeHtml(selectedStart)}" ${groups.length ? '' : 'disabled'}></label>
@@ -269,16 +270,16 @@ export function renderMutualSection({
           <label><span>Situação</span><select id="mutualStatusFilter" ${groups.length ? '' : 'disabled'}><option value="pending" ${statusFilter === 'pending' ? 'selected' : ''}>Em aberto</option><option value="paid" ${statusFilter === 'paid' ? 'selected' : ''}>Pagas</option><option value="all" ${statusFilter === 'all' ? 'selected' : ''}>Todas</option></select></label>
         </div>
       </div>
-      <div class="mutual-period-banner"><div><span aria-hidden="true">🕊️</span><div><small>Período das ocorrências</small><strong>${escapeHtml(selectedPeriodLabel)}</strong><p>${events.length} ocorrência(s) · ${groupFilter === 'all' ? `${groupSections.length} grupo(s)` : escapeHtml(groupSections[0]?.group.name || 'Grupo não encontrado')}</p></div></div><div><small>Resultados filtrados</small><strong id="mutualVisibleCount">${visibleCharges.length}</strong></div></div>
+      <div class="mutual-period-banner"><div><span aria-hidden="true">${uiIcon('heart')}</span><div><small>Período das ocorrências</small><strong>${escapeHtml(selectedPeriodLabel)}</strong><p>${events.length} ocorrência(s) · ${groupFilter === 'all' ? `${groupSections.length} grupo(s)` : escapeHtml(groupSections[0]?.group.name || 'Grupo não encontrado')}</p></div></div><div><small>Resultados filtrados</small><strong id="mutualVisibleCount">${visibleCharges.length}</strong></div></div>
       <div class="membership-kpis mutual-kpis mutual-kpis-v2"><div><small>Grupos exibidos</small><strong>${groupSections.length}</strong></div><div><small>Falecimentos</small><strong>${events.length}</strong></div><div><small>Cobranças</small><strong>${charges.length}</strong></div><div><small>Pagas</small><strong>${paidCharges.length}</strong></div><div><small>Em aberto</small><strong>${pendingCharges.length}</strong></div><div><small>Recebido</small><strong class="sensitive-money">${money.format(receivedTotal)}</strong></div><div><small>Previsto</small><strong class="sensitive-money">${money.format(expectedTotal)}</strong></div></div>
       ${adminUnlocked && groups.length ? `<div class="mutual-selection-bar ${selectedCharges.length ? 'has-selection' : ''}" id="mutualSelectionBar" role="status" aria-live="polite">
-        <div><span aria-hidden="true">✓</span><div><small>Selecionadas para baixa</small><strong><b id="mutualSelectedCount">${selectedCharges.length}</b> cobrança(s) · <span class="sensitive-money" id="mutualSelectedTotal">${money.format(selectedTotal)}</span></strong></div></div>
+        <div><span aria-hidden="true">${uiIcon('check')}</span><div><small>Selecionadas para baixa</small><strong><b id="mutualSelectedCount">${selectedCharges.length}</b> cobrança(s) · <span class="sensitive-money" id="mutualSelectedTotal">${money.format(selectedTotal)}</span></strong></div></div>
         <div class="mutual-selection-actions"><button class="btn btn-ghost btn-sm" id="mutualSelectVisible" type="button" ${visibleCharges.some(item => !item.paid) ? '' : 'disabled'}>Selecionar pendentes filtradas</button><button class="btn btn-ghost btn-sm" id="mutualClearSelection" type="button" ${selectedCharges.length ? '' : 'disabled'}>Limpar seleção</button><button class="btn btn-primary" id="mutualPaymentButton" type="button" ${selectedCharges.length ? '' : 'disabled'}>Dar baixa selecionadas</button></div>
       </div>` : ''}
       <div class="mutual-groups-list" id="mutualChargeList">${!groups.length
-        ? empty('🤲', 'Cadastre um grupo de mútua. As cobranças serão criadas somente após o registro de um falecimento.')
+        ? empty('heart', 'Cadastre um grupo de mútua. As cobranças serão criadas somente após o registro de um falecimento.')
         : groupSections.map(section => renderGroupAccordion(section, allGroupsMode, adminUnlocked, avatar, empty)).join('')}</div>
-      <div id="mutualFilterEmpty" class="membership-filter-empty mutual-filter-empty-global" ${visibleCharges.length || !charges.length ? 'hidden' : ''}>🔎 Nenhuma cobrança encontrada com os filtros selecionados.</div>
+      <div id="mutualFilterEmpty" class="membership-filter-empty mutual-filter-empty-global" ${visibleCharges.length || !charges.length ? 'hidden' : ''}>${uiIcon('search')} Nenhuma cobrança encontrada com os filtros selecionados.</div>
     </div>
   </section>`;
 }

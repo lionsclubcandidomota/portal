@@ -1,5 +1,6 @@
 import { escapeHtml, formatDate, money, toInputDate, uid } from '../../utils.js';
 import { buildMemberAllocations, calculateMembershipBase } from './domain.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 export function createMembershipPaymentManager(context, memberSelectorCard) {
   const {
@@ -56,17 +57,17 @@ export function createMembershipPaymentManager(context, memberSelectorCard) {
     }).join('');
 
     modalBody.innerHTML = `<form id="membershipPaymentForm" class="admin-entity-form membership-payment-form-v2">
-      <section class="membership-payment-hero"><div class="membership-payment-person">${avatar(member)}<div><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small>${group ? `<span class="membership-family-chip">👨‍👩‍👧‍👦 ${escapeHtml(group.name)}</span>` : ''}</div></div><div class="membership-fee-highlight"><small>${group ? 'Plano familiar' : 'Mensalidade individual'}</small><strong>${group ? `${money.format(familyPrimary)} + ${money.format(familyAdditional)}` : money.format(individualFee)}</strong>${group ? '<small>Titular + adicional por integrante</small>' : ''}</div></section>
-      <section class="admin-form-section"><div class="admin-form-section-heading"><span>👥</span><div><h3>Associados incluídos</h3><p>${group ? `O grupo ${escapeHtml(group.name)} foi selecionado automaticamente. Ajuste se necessário.` : 'Confirme o associado que receberá a baixa.'}</p></div></div>
+      <section class="membership-payment-hero"><div class="membership-payment-person">${avatar(member)}<div><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small>${group ? `<span class="membership-family-chip">${uiIcon('family')} ${escapeHtml(group.name)}</span>` : ''}</div></div><div class="membership-fee-highlight"><small>${group ? 'Plano familiar' : 'Mensalidade individual'}</small><strong>${group ? `${money.format(familyPrimary)} + ${money.format(familyAdditional)}` : money.format(individualFee)}</strong>${group ? '<small>Titular + adicional por integrante</small>' : ''}</div></section>
+      <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('family')}</span><div><h3>Associados incluídos</h3><p>${group ? `O grupo ${escapeHtml(group.name)} foi selecionado automaticamente. Ajuste se necessário.` : 'Confirme o associado que receberá a baixa.'}</p></div></div>
         <div class="family-member-options family-member-options-v2 membership-payment-members">${groupMembers.map(item => memberSelectorCard(item, { checked: true })).join('')}</div>
       </section>
-      <section class="admin-form-section"><div class="admin-form-section-heading"><span>🗓️</span><div><h3>Meses de referência</h3><p>Selecione exatamente os meses que deseja quitar. Isso facilita pagamentos antecipados ou de períodos acumulados.</p></div></div>
+      <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('calendar')}</span><div><h3>Meses de referência</h3><p>Selecione exatamente os meses que deseja quitar. Isso facilita pagamentos antecipados ou de períodos acumulados.</p></div></div>
         <div class="month-selection-toolbar"><label><span>Ano de referência</span><select id="membershipReferenceYear">${[referenceYear - 1, referenceYear, referenceYear + 1].map(year => `<option value="${year}" ${year === referenceYear ? 'selected' : ''}>${year}</option>`).join('')}</select></label><span id="selectedMonthsCount" class="selected-count" aria-live="polite">0 meses selecionados</span></div>
         <div class="month-selection-grid" id="membershipMonthsGrid">${monthChecks}</div>
       </section>
-      <section class="admin-form-section"><div class="admin-form-section-heading"><span>🧾</span><div><h3>Detalhes do recebimento</h3><p>A data da baixa representa quando o valor realmente entrou na conta.</p></div></div>
+      <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('receipt')}</span><div><h3>Detalhes do recebimento</h3><p>A data da baixa representa quando o valor realmente entrou na conta.</p></div></div>
         <div class="form-grid admin-form-section-grid"><div class="form-field"><label>Data da baixa</label><input name="paymentDate" type="date" value="" autocomplete="off" required><small>Informe manualmente a data efetiva do recebimento.</small></div><div class="form-field"><label>Conta de recebimento</label><select name="accountId" required>${treasury.accounts().filter(account => account.active !== false).map(account => `<option value="${escapeHtml(account.id)}">${escapeHtml(account.name)}</option>`).join('')}</select></div><div class="form-field"><label>Valor do recebimento</label><div class="currency-input"><span>R$</span><input name="amount" type="text" inputmode="decimal" value="${treasury.currencyInputValue(0)}" readonly required></div><small>Calculado conforme os valores configurados para titular e familiar.</small></div><div class="form-field full-row"><label>Observações do ${group ? 'grupo familiar' : 'associado'}</label><textarea name="membershipNotes" rows="3" placeholder="Informações sobre cobrança, responsável, acordo ou forma de pagamento">${escapeHtml(storedNotes)}</textarea><small>Estas informações serão mantidas para as próximas baixas.</small></div><div class="form-field full-row"><label>Observação desta baixa</label><textarea name="paymentNotes" rows="3" placeholder="Ex.: pagamento via PIX, complemento ou detalhe específico deste recebimento"></textarea></div></div>
-        <div class="membership-calculation-box"><span>🧮</span><div><small>Cálculo automático</small><strong id="membershipCalculationHint">Selecione ao menos um mês ainda pendente</strong></div><b id="membershipCalculationTotal">${money.format(0)}</b></div>
+        <div class="membership-calculation-box"><span>${uiIcon('calculator')}</span><div><small>Cálculo automático</small><strong id="membershipCalculationHint">Selecione ao menos um mês ainda pendente</strong></div><b id="membershipCalculationTotal">${money.format(0)}</b></div>
       </section>
       <div class="operation-readiness" id="membershipPaymentReadiness" role="status" aria-live="polite"><span aria-hidden="true">○</span><strong>Selecione os meses e informe a data da baixa.</strong></div><div class="form-actions admin-form-actions"><button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button><button class="btn btn-primary" id="membershipPaymentSubmit" type="submit" disabled>Revisar e registrar</button></div>
     </form>`;
@@ -126,7 +127,7 @@ export function createMembershipPaymentManager(context, memberSelectorCard) {
       if (submitButton) submitButton.disabled = !ready;
       if (readiness) {
         readiness.classList.toggle('is-ready', ready);
-        readiness.querySelector('span').textContent = ready ? '✓' : '○';
+        readiness.querySelector('span').innerHTML = uiIcon(ready ? 'check' : 'circle');
         readiness.querySelector('strong').textContent = ready
           ? 'Dados essenciais preenchidos. Revise a confirmação antes de registrar.'
           : !coveredMonths.length
@@ -209,7 +210,7 @@ export function createMembershipPaymentManager(context, memberSelectorCard) {
         .reduce((sum, allocation) => sum + Number(allocation.amount || 0), 0);
       const approved = await confirmation.askConfirmation({
         title: 'Conferir baixa de mensalidade',
-        icon: '🧾',
+        icon: 'receipt',
         tone: 'warning',
         confirmText: 'Confirmar recebimento',
         message: `Registrar ${money.format(calculatedTotal)} em ${formatDate(paymentDate)}, referente a ${monthsText}, para ${names.join(', ')}?`

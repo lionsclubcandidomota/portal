@@ -49,8 +49,8 @@ test('documentação registra a etapa atual e preserva a homologação visual', 
   const refactoring = await source('REFACTORING.md');
   const visual = await source('docs/visual-audit.md');
   const changelog = await source('CHANGELOG.md');
-  assert.match(release, /Portal Lions v6\.44\.1/);
-  assert.match(refactoring, /v6\.44\.1 — correções pós-homologação/i);
+  assert.match(release, /Portal Lions v6\.46\.4/);
+  assert.match(refactoring, /v6\.46\.0 — novo ciclo, etapa 2 final/i);
   assert.match(refactoring, /ciclo funcional concluído/i);
   assert.match(changelog, /6\.44\.0 — Dirigentes públicos e estabilização final/);
   assert.match(visual, /audit:visual:required/);

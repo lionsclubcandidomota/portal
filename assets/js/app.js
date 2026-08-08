@@ -1,5 +1,6 @@
-import { bootstrapPortal } from './modules/portal-app.js?v=6.44.1';
-import { enableHomologationReload } from './core/homologation-reload.js?v=6.44.1';
+import { bootstrapPortal } from './modules/portal-app.js?v=6.46.4';
+import { enableHomologationReload } from './core/homologation-reload.js?v=6.46.4';
+import { uiIcon } from './modules/visual-helpers.js?v=6.46.4';
 
 function bindStaticImageFallbacks() {
   const sidebarLogo = document.getElementById('sidebarLogo');
@@ -36,7 +37,7 @@ async function startPortal() {
     const root = document.getElementById('viewRoot');
     if (root) {
       root.innerHTML = `<div class="card empty-state" role="alert">
-        <div class="empty-icon" aria-hidden="true">⚠️</div>
+        <div class="empty-icon" aria-hidden="true">${uiIcon('warning')}</div>
         <h2>Não foi possível carregar o portal</h2>
         <p>Atualize a página. Se o problema continuar, verifique a conexão e tente novamente.</p>
         <button class="btn btn-primary" type="button" data-reload-portal>Atualizar página</button>

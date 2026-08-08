@@ -1,4 +1,5 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 export function createFamilyGroupsManager(context, memberSelectorCard) {
   const {
@@ -47,12 +48,12 @@ export function createFamilyGroupsManager(context, memberSelectorCard) {
             .map(id => currentState.birthdays.find(member => member.id === id))
             .filter(Boolean);
           const primaryName = currentState.birthdays.find(member => member.id === group.primaryMemberId)?.name || 'Não identificado';
-          return `<article class="family-group-row family-group-row-v2 ${editingGroup?.id === group.id ? 'is-editing' : ''}"><div class="family-group-main"><span class="family-group-icon">👨‍👩‍👧‍👦</span><div><strong>${escapeHtml(group.name)}</strong><small>${members.length} associado(s)${group.primaryMemberId ? ` · Titular: ${escapeHtml(primaryName)}` : ''}</small>${group.notes ? `<p class="family-group-notes">${escapeHtml(group.notes)}</p>` : ''}<div class="family-group-avatars">${members.slice(0, 5).map(member => avatar(member)).join('')}${members.length > 5 ? `<span class="family-avatar-more">+${members.length - 5}</span>` : ''}</div></div></div><div class="family-group-actions"><button class="btn btn-ghost btn-sm" type="button" data-edit-family="${escapeHtml(group.id)}">Editar</button><button class="btn btn-danger-soft btn-sm" type="button" data-remove-family="${escapeHtml(group.id)}">Excluir</button></div></article>`;
-        }).join('') : empty('👨‍👩‍👧‍👦', 'Nenhuma família vinculada.')}</div></div>
+          return `<article class="family-group-row family-group-row-v2 ${editingGroup?.id === group.id ? 'is-editing' : ''}"><div class="family-group-main"><span class="family-group-icon">${uiIcon('family')}</span><div><strong>${escapeHtml(group.name)}</strong><small>${members.length} associado(s)${group.primaryMemberId ? ` · Titular: ${escapeHtml(primaryName)}` : ''}</small>${group.notes ? `<p class="family-group-notes">${escapeHtml(group.notes)}</p>` : ''}<div class="family-group-avatars">${members.slice(0, 5).map(member => avatar(member)).join('')}${members.length > 5 ? `<span class="family-avatar-more">+${members.length - 5}</span>` : ''}</div></div></div><div class="family-group-actions"><button class="btn btn-ghost btn-sm" type="button" data-edit-family="${escapeHtml(group.id)}">Editar</button><button class="btn btn-danger-soft btn-sm" type="button" data-remove-family="${escapeHtml(group.id)}">Excluir</button></div></article>`;
+        }).join('') : empty('family', 'Nenhuma família vinculada.')}</div></div>
       </section>
       <form id="familyGroupForm" class="admin-entity-form family-group-form-v2">
         <input type="hidden" name="familyId" value="${escapeHtml(editingGroup?.id || '')}">
-        <section class="admin-form-section"><div class="admin-form-section-heading"><span>${editingGroup ? '✏️' : '➕'}</span><div><h3>${editingGroup ? 'Editar grupo familiar' : 'Novo grupo familiar'}</h3><p>${editingGroup ? 'Atualize nome, titular, integrantes e observações.' : 'Localize e selecione os associados que normalmente pagam juntos.'}</p></div></div>
+        <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon(editingGroup ? 'edit' : 'plus')}</span><div><h3>${editingGroup ? 'Editar grupo familiar' : 'Novo grupo familiar'}</h3><p>${editingGroup ? 'Atualize nome, titular, integrantes e observações.' : 'Localize e selecione os associados que normalmente pagam juntos.'}</p></div></div>
           <div class="form-grid admin-form-section-grid"><div class="form-field full-row"><label>Nome da família *</label><input name="name" required placeholder="Ex.: Família Silva" value="${escapeHtml(editingGroup?.name || '')}"></div>
             <div class="form-field full-row family-member-picker"><label>Associados *</label><div class="member-picker-toolbar"><div class="search-box compact"><span>⌕</span><input id="familyMemberSearch" type="search" placeholder="Filtrar por nome, número ou família"></div><span id="familySelectedCount" class="selected-count">0 selecionado(s)</span></div>
               <div class="family-member-options family-member-options-v2">${availableMembers.map(member => memberCardForFamily(member)).join('')}</div><div id="familyMemberEmpty" class="member-picker-empty" hidden>Nenhum associado encontrado.</div>
@@ -154,7 +155,7 @@ export function createFamilyGroupsManager(context, memberSelectorCard) {
         const approved = await confirmation.askConfirmation({
           title: 'Excluir grupo familiar?',
           message: 'Os associados continuarão cadastrados e poderão receber baixa individual.',
-          icon: '👨‍👩‍👧‍👦',
+          icon: 'family',
           confirmText: 'Excluir grupo',
           tone: 'danger'
         });

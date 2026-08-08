@@ -1,4 +1,4 @@
-import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.44.1';
+import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.46.4';
 import { escapeHtml } from '../utils.js';
 
 
@@ -23,11 +23,14 @@ export function uiIcon(name, className = '') {
 }
 
 export function empty(icon, text) {
-  return `<div class="empty"><div class="empty-icon">${icon}</div><div>${text}</div></div>`;
+  const iconMarkup = /^[a-z0-9-]+$/.test(String(icon || ''))
+    ? uiIcon(icon, 'empty-svg-icon')
+    : String(icon || '');
+  return `<div class="empty"><div class="empty-icon">${iconMarkup}</div><div>${text}</div></div>`;
 }
 
 export function kpi(icon, label, value, view = '') {
-  return `<article class="card kpi-card ${view ? 'kpi-link' : ''}" ${view ? `data-go="${view}" role="button" tabindex="0" aria-label="Abrir ${escapeHtml(label)}"` : ''}><div class="kpi-icon">${icon}</div><div><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div></div>${view ? '<span class="kpi-arrow">›</span>' : ''}</article>`;
+  return `<article class="card kpi-card ${view ? 'kpi-link' : ''}" ${view ? `data-go="${view}" role="button" tabindex="0" aria-label="Abrir ${escapeHtml(label)}"` : ''}><div class="kpi-icon">${icon}</div><div><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div></div>${view ? `<span class="kpi-arrow">${uiIcon('chevron-right')}</span>` : ''}</article>`;
 }
 
 export function avatar(person) {

@@ -1,3 +1,5 @@
+import { uiIcon } from './visual-helpers.js?v=6.46.4';
+
 export function createFinancePrivacyController() {
   let hidden = sessionStorage.getItem('lions.finance.hidden') === '1';
 
@@ -7,12 +9,12 @@ export function createFinancePrivacyController() {
     document.querySelectorAll('[data-finance-privacy]').forEach(button => {
       const compact = button.classList.contains('is-compact');
       const label = hidden ? 'Mostrar valores' : 'Ocultar valores';
-      const icon = hidden ? '🙈' : '👁️';
+      const icon = hidden ? 'eye-off' : 'eye';
 
       button.setAttribute('aria-pressed', String(hidden));
       button.setAttribute('aria-label', label);
       button.setAttribute('title', label);
-      button.innerHTML = `<span aria-hidden="true">${icon}</span>${compact ? '' : `<span>${label}</span>`}`;
+      button.innerHTML = `<span aria-hidden="true">${uiIcon(icon)}</span>${compact ? '' : `<span>${label}</span>`}`;
     });
   }
 
@@ -29,7 +31,7 @@ export function createFinancePrivacyController() {
 
   function buttonHtml({ compact = false } = {}) {
     const label = hidden ? 'Mostrar valores' : 'Ocultar valores';
-    const icon = hidden ? '🙈' : '👁️';
+    const icon = hidden ? 'eye-off' : 'eye';
 
     return `
       <button
@@ -40,7 +42,7 @@ export function createFinancePrivacyController() {
         title="${label}"
         aria-pressed="${hidden}"
       >
-        <span aria-hidden="true">${icon}</span>${compact ? '' : `<span>${label}</span>`}
+        <span aria-hidden="true">${uiIcon(icon)}</span>${compact ? '' : `<span>${label}</span>`}
       </button>
     `;
   }

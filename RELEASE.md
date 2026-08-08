@@ -1,31 +1,22 @@
-# Portal Lions v6.44.1
+# Portal Lions v6.46.4
 
-## Correção de estabilidade
+> Atualização corretiva sobre a v6.46.3, concentrada na área de **Mútuas da Tesouraria** e no aproveitamento da largura da prévia de participantes por falecimento.
 
-O ciclo funcional anterior permanece concluído na **Etapa 8 de 8**. Esta versão é uma correção pós-homologação.
+## Correção
 
-A v6.44.1 corrige duas regressões encontradas depois da publicação da v6.44.0. Não há migração de dados nem mudança no esquema.
+- O resumo da quantidade de participantes agora ocupa toda a largura disponível.
+- A lista de participantes deixa de ficar concentrada no lado esquerdo do painel.
+- As duas colunas passam a dividir igualmente o espaço útil do formulário.
+- Em telas de até 760 px, a lista permanece em uma coluna.
+- A correção redefine explicitamente alinhamento e largura que eram herdados de uma regra antiga do componente.
 
-### Tesouraria e Ajustes
+## Dados e compatibilidade
 
-A navegação recebia um resumo da sessão com a propriedade `role`, enquanto a verificação de rotas procurava apenas `accessRole`. Como resultado, as telas restritas eram interpretadas como acesso de visitante e redirecionadas para a Área administrativa.
+- Esquema dos dados mantido na versão **12**.
+- Nenhum grupo, participante, falecimento, cobrança, movimentação, usuário ou fotografia é alterado.
+- Compatível com atualização incremental sobre a v6.46.3.
 
-A política agora reconhece os dois formatos usados internamente e preserva as permissões corretas:
+## Validação
 
-- Administrador: Tesouraria, Ajustes e Área administrativa;
-- Diretoria: Tesouraria em consulta e Área administrativa;
-- usuários individuais: conforme as permissões do cargo vigente.
-
-### Ano Leonístico
-
-O campo possuía uma expressão de validação escrita dentro de uma string JavaScript. A barra invertida era consumida antes de chegar ao HTML, fazendo o navegador validar literalmente `dddd/dddd`.
-
-O campo agora utiliza o padrão HTML seguro `[0-9]{4}/[0-9]{4}` e aceita normalmente valores como `2026/2027`.
-
-### Compatibilidade
-
-- versão do Portal: 6.44.1;
-- esquema dos dados: 12;
-- nenhuma coleção é criada, removida ou regravada;
-- o pacote incremental não inclui `data` nem `public`;
-- a atualização de versão dos módulos força a renovação do cache do navegador.
+- Teste de regressão ampliado para exigir largura integral e colunas flexíveis.
+- Auditorias de módulos, integração, CSS, acessibilidade, segurança, desempenho, mídia, sintaxe e manifesto executadas pelo pipeline do projeto.

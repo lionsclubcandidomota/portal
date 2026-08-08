@@ -1,6 +1,7 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
 import { normalizeTreasuryEntryPayload, resolveTreasuryEntryStatus } from './domain.js';
 import { bindTreasuryAttachmentPicker, renderTreasuryAttachmentPicker } from './attachments.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 export function createTreasuryEntryManager(context) {
   const {
@@ -23,18 +24,18 @@ export function createTreasuryEntryManager(context) {
   const treasuryEntryFormHtml = item => {
     const value = key => escapeHtml(item[key] ?? '');
     const required = '<span class="required-mark">*</span>';
-    const section = (icon, title, subtitle, content) => `<section class="admin-form-section"><div class="admin-form-section-heading"><span>${icon}</span><div><h3>${title}</h3><p>${subtitle}</p></div></div><div class="form-grid admin-form-section-grid">${content}</div></section>`;
+    const section = (icon, title, subtitle, content) => `<section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon(icon)}</span><div><h3>${title}</h3><p>${subtitle}</p></div></div><div class="form-grid admin-form-section-grid">${content}</div></section>`;
     const accounts = treasury.accounts();
     const statusMode = treasury.isProgrammed(item) ? 'Programado' : 'Efetivado';
 
     const content = section(
-      '🧾',
+      'receipt',
       'Identificação da movimentação',
       'Registre somente movimentações financeiras gerais. Mensalidades e mútuas são recebidas pelos módulos próprios.',
       `<div class="form-field"><label>Data ${required}</label><input name="date" type="date" value="${value('date')}" autocomplete="off" required><small>${item?.id ? 'Confira a data antes de salvar as alterações.' : 'Preenchimento manual obrigatório para evitar movimentações na data errada.'}</small></div>
       <div class="form-field"><label>Conta ${required}</label><select name="accountId" required>${accounts.filter(account => account.active !== false || account.id === item.accountId).map(account => `<option value="${escapeHtml(account.id)}" ${(item.accountId || accounts[0]?.id) === account.id ? 'selected' : ''}>${escapeHtml(account.name)}</option>`).join('')}</select><small>A movimentação afetará o saldo desta conta.</small></div>
       <div class="form-field full-row treasury-category-form-field">
-        <div class="form-field-label-row"><label for="treasuryEntryCategory">Categoria ${required}</label><button class="btn btn-ghost btn-sm inline-category-toggle" id="inlineCategoryToggle" type="button" aria-expanded="false" aria-controls="inlineCategoryManager">⚙ Gerenciar categorias</button></div>
+        <div class="form-field-label-row"><label for="treasuryEntryCategory">Categoria ${required}</label><button class="btn btn-ghost btn-sm inline-category-toggle" id="inlineCategoryToggle" type="button" aria-expanded="false" aria-controls="inlineCategoryManager">${uiIcon('settings')}<span>Gerenciar categorias</span></button></div>
         <select id="treasuryEntryCategory" name="category" required>${categoryOptions(item.category)}</select>
         <small>Crie ou renomeie categorias aqui, sem interromper o cadastro da movimentação.</small>
         <div class="inline-category-manager" id="inlineCategoryManager" hidden>
@@ -47,18 +48,18 @@ export function createTreasuryEntryManager(context) {
       <div class="form-field full-row"><label>Descrição ${required}</label><input name="description" value="${value('description')}" required placeholder="Ex.: Compra de papel, pagamento de cartório ou patrocínio de evento"></div>
       <div class="form-field"><label>Situação ${required}</label><select name="statusMode" required><option value="Programado" ${statusMode === 'Programado' ? 'selected' : ''}>Programado</option><option value="Efetivado" ${statusMode === 'Efetivado' ? 'selected' : ''}>Efetivado</option></select><small>Programado não altera o saldo. Ao efetivar, uma entrada vira “Recebido” e uma saída vira “Pago”.</small></div>`
     ) + section(
-      '💵',
+      'money',
       'Valores',
       'Preencha entrada ou saída. Evite informar os dois na mesma movimentação.',
       `<div class="form-field money-field"><label>Entrada (R$)</label><input name="entry" type="number" step="0.01" min="0" value="${value('entry') || 0}" inputmode="decimal"></div><div class="form-field money-field"><label>Saída (R$)</label><input name="exit" type="number" step="0.01" min="0" value="${value('exit') || 0}" inputmode="decimal"></div><div class="form-field full-row"><label>Observações</label><textarea name="notes" rows="4" placeholder="Ex.: forma de pagamento, fornecedor, projeto relacionado ou documento de referência">${value('notes')}</textarea></div>`
     ) + section(
-      '📎',
+      'paperclip',
       'Comprovantes e documentos',
       'Anexe recibos, notas fiscais, comprovantes ou outros documentos relacionados à movimentação.',
       `<div class="form-field full-row">${renderTreasuryAttachmentPicker(item.attachments || [])}<small>Imagens são otimizadas automaticamente antes da publicação. PDFs e documentos compatíveis são preservados para manter a legibilidade.</small></div>`
     );
 
-    return `<form id="treasuryEntryForm" class="admin-entity-form"><div class="admin-form-intro"><span>Campos marcados com ${required} são obrigatórios.</span></div>${item?.id ? '' : '<div class="operation-safety-note" role="note"><span aria-hidden="true">🛡️</span><div><strong>Data sem preenchimento automático</strong><small>Escolha conscientemente a data real da movimentação antes de concluir.</small></div></div>'}${content}<div class="form-actions admin-form-actions"><button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button><button class="btn btn-primary" type="submit">${item?.id ? 'Salvar movimentação' : 'Adicionar movimentação'}</button></div></form>`;
+    return `<form id="treasuryEntryForm" class="admin-entity-form"><div class="admin-form-intro"><span>Campos marcados com ${required} são obrigatórios.</span></div>${item?.id ? '' : `<div class="operation-safety-note" role="note"><span aria-hidden="true">${uiIcon('shield')}</span><div><strong>Data sem preenchimento automático</strong><small>Escolha conscientemente a data real da movimentação antes de concluir.</small></div></div>`}${content}<div class="form-actions admin-form-actions"><button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button><button class="btn btn-primary" type="submit">${item?.id ? 'Salvar movimentação' : 'Adicionar movimentação'}</button></div></form>`;
   };
 
   const bindInlineCategoryManager = form => {
@@ -201,7 +202,7 @@ export function createTreasuryEntryManager(context) {
       const approved = await confirmation.askConfirmation({
         title: 'Excluir categoria?',
         message: `A categoria “${category}” deixará de aparecer nas novas movimentações.`,
-        icon: '🏷️',
+        icon: 'tag',
         confirmText: 'Excluir categoria',
         tone: 'danger'
       });

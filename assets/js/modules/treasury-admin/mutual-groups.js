@@ -1,4 +1,5 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 function activeMemberships(group) {
   return (Array.isArray(group?.memberships) ? group.memberships : [])
@@ -58,26 +59,26 @@ export function createMutualGroupsManager(context) {
             .map(memberId => currentState.birthdays.find(member => String(member.id) === memberId))
             .filter(Boolean);
           return `<article class="family-group-row family-group-row-v2 mutual-group-row ${editingGroup?.id === group.id ? 'is-editing' : ''}">
-            <div class="family-group-main"><span class="family-group-icon">🤲</span><div><strong>${escapeHtml(group.name)}</strong><small>${summary.currentIds.length} participante(s) ativo(s) · ${summary.eventCount} falecimento(s) registrado(s) · ${summary.paymentCount} pagamento(s)</small><p class="family-group-notes">Sem cobrança periódica automática.</p>${group.notes ? `<p class="family-group-notes">${escapeHtml(group.notes)}</p>` : ''}<div class="family-group-avatars">${members.slice(0, 5).map(member => avatar(member)).join('')}${members.length > 5 ? `<span class="family-avatar-more">+${members.length - 5}</span>` : ''}</div></div></div>
+            <div class="family-group-main"><span class="family-group-icon">${uiIcon('heart')}</span><div><strong>${escapeHtml(group.name)}</strong><small>${summary.currentIds.length} participante(s) ativo(s) · ${summary.eventCount} falecimento(s) registrado(s) · ${summary.paymentCount} pagamento(s)</small><p class="family-group-notes">Sem cobrança periódica automática.</p>${group.notes ? `<p class="family-group-notes">${escapeHtml(group.notes)}</p>` : ''}<div class="family-group-avatars">${members.slice(0, 5).map(member => avatar(member)).join('')}${members.length > 5 ? `<span class="family-avatar-more">+${members.length - 5}</span>` : ''}</div></div></div>
             <div class="family-group-actions"><button class="btn btn-ghost btn-sm" type="button" data-edit-mutual-group="${escapeHtml(group.id)}">Editar</button><button class="btn btn-danger-soft btn-sm" type="button" data-remove-mutual-group="${escapeHtml(group.id)}">Excluir</button></div>
           </article>`;
-        }).join('') : empty('🤲', 'Nenhum grupo de mútua cadastrado.')}</div></div>
+        }).join('') : empty('heart', 'Nenhum grupo de mútua cadastrado.')}</div></div>
       </section>
       <form id="mutualGroupForm" class="admin-entity-form family-group-form-v2 mutual-group-form">
         <input type="hidden" name="groupId" value="${escapeHtml(editingGroup?.id || '')}">
-        <section class="admin-form-section"><div class="admin-form-section-heading"><span>${editingGroup ? '✏️' : '➕'}</span><div><h3>${editingGroup ? 'Editar grupo de mútua' : 'Novo grupo de mútua'}</h3><p>Defina quem participará das próximas cobranças eventuais por falecimento.</p></div></div>
+        <section class="admin-form-section mutual-group-form-section"><div class="admin-form-section-heading"><span>${uiIcon(editingGroup ? 'edit' : 'plus')}</span><div><h3>${editingGroup ? 'Editar grupo de mútua' : 'Novo grupo de mútua'}</h3><p>Defina quem participará das próximas cobranças eventuais por falecimento.</p></div></div>
           <div class="form-grid admin-form-section-grid">
             <div class="form-field full-row"><label for="mutualGroupName">Nome do grupo *</label><input id="mutualGroupName" name="name" required placeholder="Ex.: Mútua 658" value="${escapeHtml(editingGroup?.name || '')}"></div>
             <div class="form-field full-row mutual-member-picker"><label>Participantes da mútua *</label>
-              <div class="member-picker-toolbar mutual-member-picker-toolbar"><div class="search-box compact"><span>⌕</span><input id="mutualMemberSearch" type="search" placeholder="Filtrar por nome ou número" autocomplete="off"></div><span id="mutualSelectedCount" class="selected-count" aria-live="polite">0 selecionado(s)</span></div>
+              <div class="member-picker-toolbar mutual-member-picker-toolbar"><div class="search-box compact"><span>${uiIcon('search')}</span><input id="mutualMemberSearch" type="search" placeholder="Filtrar por nome ou número" autocomplete="off"></div><span data-mutual-group-selected-count class="selected-count mutual-selected-count" aria-live="polite">${uiIcon('check')}<strong>0</strong><small>selecionados</small></span></div>
               <div class="mutual-member-options" id="mutualMemberOptions">${availableMembers.map(member => {
                 const checked = activeIds.has(String(member.id));
                 const unavailable = !treasury.memberCanJoinMutual(member);
                 const mutualMember = treasury.memberIsMutual(member);
                 const inputId = `mutual-member-${String(member.id).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
-                return `<article class="mutual-member-option ${checked ? 'is-selected' : ''} ${unavailable ? 'is-inactive' : ''}" data-member-search="${escapeHtml(normalize(`${member.name || ''} ${member.memberNumber || ''} ${mutualMember ? 'mutuario mutua' : 'associado'}`))}">
+                return `<article class="mutual-member-option ${checked ? 'is-selected' : ''} ${unavailable ? 'is-inactive' : ''} ${mutualMember ? 'is-mutual' : 'is-associate'}" data-member-kind="${mutualMember ? 'mutual' : 'associate'}" data-member-search="${escapeHtml(normalize(`${member.name || ''} ${member.memberNumber || ''} ${mutualMember ? 'mutuario mutua' : 'associado'}`))}">
                   <input class="mutual-member-option-input" id="${escapeHtml(inputId)}" type="checkbox" name="memberIds" value="${escapeHtml(member.id)}" ${checked ? 'checked' : ''} ${unavailable && !checked ? 'disabled' : ''}>
-                  <label for="${escapeHtml(inputId)}" class="mutual-member-option-label">${avatar(member)}<span class="member-selector-copy"><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small>${mutualMember ? '<span class="membership-family-chip">Mútua · Mutuário</span>' : ''}${unavailable ? '<span class="member-unavailable-note">Cadastro inativo</span>' : ''}</span><span class="member-selector-check" aria-hidden="true">✓</span></label>
+                  <label for="${escapeHtml(inputId)}" class="mutual-member-option-label"><span class="mutual-member-avatar">${avatar(member)}</span><span class="member-selector-copy"><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small><span class="mutual-member-kind ${mutualMember ? 'is-mutual' : 'is-associate'}">${uiIcon(mutualMember ? 'heart' : 'user')}<span>${mutualMember ? 'Mutuário' : 'Associado'}</span></span>${unavailable ? '<span class="member-unavailable-note">Cadastro inativo</span>' : ''}</span><span class="member-selector-check" aria-hidden="true">${uiIcon('check')}</span></label>
                 </article>`;
               }).join('')}</div>
               <div id="mutualMemberEmpty" class="member-picker-empty" hidden>Nenhum participante encontrado.</div>
@@ -93,7 +94,7 @@ export function createMutualGroupsManager(context) {
 
     const form = document.getElementById('mutualGroupForm');
     const search = document.getElementById('mutualMemberSearch');
-    const selectedCount = document.getElementById('mutualSelectedCount');
+    const selectedCount = form?.querySelector('[data-mutual-group-selected-count]');
     const memberEmpty = document.getElementById('mutualMemberEmpty');
     const existingListToggle = modalBody.querySelector('[data-mutual-list-toggle]');
     const existingListContent = document.getElementById(existingListId);
@@ -107,8 +108,12 @@ export function createMutualGroupsManager(context) {
     });
 
     const updateSelection = () => {
+      if (!form) return;
       const selected = [...form.querySelectorAll('[name="memberIds"]:checked')];
-      selectedCount.textContent = `${selected.length} selecionado(s)`;
+      const number = selectedCount?.querySelector('strong');
+      const label = selectedCount?.querySelector('small');
+      if (number) number.textContent = String(selected.length);
+      if (label) label.textContent = selected.length === 1 ? 'selecionado' : 'selecionados';
       form.querySelectorAll('.mutual-member-option').forEach(row => {
         const checkbox = row.querySelector('[name="memberIds"]');
         row.classList.toggle('is-selected', Boolean(checkbox?.checked));
@@ -207,7 +212,7 @@ export function createMutualGroupsManager(context) {
         const approved = await confirmation.askConfirmation({
           title: 'Excluir grupo de mútua?',
           message: 'O grupo será removido. Nenhuma cobrança mensal será criada automaticamente.',
-          icon: '🤲',
+          icon: 'heart',
           confirmText: 'Excluir grupo',
           tone: 'danger'
         });

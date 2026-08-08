@@ -1,3 +1,5 @@
+import { uiIcon } from './visual-helpers.js?v=6.46.4';
+
 const STATUS_LABELS = {
   offline: 'Trabalho local',
   pending: 'Mudanças para publicar',
@@ -62,6 +64,7 @@ export function createPublishCenterController({
 
   const statusIcon = panel.querySelector('.publish-progress-icon');
   const popoverStatusIcon = panel.querySelector('.sync-popover-status-icon');
+  const popoverStatusCount = panel.querySelector('[data-publication-status-count]');
   const flowSteps = [...panel.querySelectorAll('[data-sync-step]')];
 
   const clearAutoClose = () => {
@@ -144,34 +147,34 @@ export function createPublishCenterController({
       percent = 12;
       title.textContent = 'Atualização bloqueada';
       detail.textContent = attentionMessage;
-      if (statusIcon) statusIcon.textContent = '!';
+      if (statusIcon) statusIcon.innerHTML = uiIcon('warning');
     } else if (status === 'syncing') {
       percent = 35;
       title.textContent = 'Salvando mudanças';
       detail.textContent = 'Preparando a publicação…';
-      if (statusIcon) statusIcon.textContent = '↻';
+      if (statusIcon) statusIcon.innerHTML = uiIcon('refresh');
     } else if (status === 'publishing') {
       percent = 88;
       title.textContent = 'Atualizando o portal';
       detail.textContent = statusMessage || 'As mudanças foram enviadas. Finalizando a publicação…';
-      if (statusIcon) statusIcon.textContent = '↑';
+      if (statusIcon) statusIcon.innerHTML = uiIcon('upload');
     } else if (status === 'synced') {
       percent = 100;
       title.textContent = 'Tudo em dia';
       detail.textContent = lastSyncInfo?.publishedAt
         ? `Última publicação em ${formatSyncDate(lastSyncInfo.publishedAt)}.`
         : 'Nenhuma mudança esperando publicação.';
-      if (statusIcon) statusIcon.textContent = '✓';
+      if (statusIcon) statusIcon.innerHTML = uiIcon('check');
     } else if (status === 'published') {
       percent = 100;
       title.textContent = 'Portal atualizado';
       detail.textContent = 'As informações já estão disponíveis para todos.';
-      if (statusIcon) statusIcon.textContent = '✓';
+      if (statusIcon) statusIcon.innerHTML = uiIcon('check');
     } else if (status === 'error') {
       percent = 100;
       title.textContent = 'Não foi possível publicar';
       detail.textContent = statusMessage || 'As mudanças continuam seguras neste navegador.';
-      if (statusIcon) statusIcon.textContent = '!';
+      if (statusIcon) statusIcon.innerHTML = uiIcon('warning');
     } else if (pendingChanges > 0) {
       percent = 12;
       title.textContent = githubToken
@@ -180,21 +183,22 @@ export function createPublishCenterController({
       detail.textContent = attentionMessage || (githubToken
         ? 'Confira e publique quando terminar o trabalho.'
         : 'As alterações estão salvas neste navegador. Entre como Administrador para publicá-las.');
-      if (statusIcon) statusIcon.textContent = '•';
+      if (statusIcon) statusIcon.innerHTML = uiIcon('clock');
     } else {
       percent = 100;
       title.textContent = 'Tudo em dia';
       detail.textContent = lastSyncInfo?.publishedAt
         ? `Última publicação em ${formatSyncDate(lastSyncInfo.publishedAt)}.`
         : 'Nenhuma mudança esperando publicação.';
-      if (statusIcon) statusIcon.textContent = '✓';
+      if (statusIcon) statusIcon.innerHTML = uiIcon('check');
     }
 
     if (popoverStatusIcon) {
-      const icon = isError ? '!' : isBusy ? '↻' : pendingChanges > 0 ? '•' : '✓';
-      popoverStatusIcon.textContent = icon;
+      const iconName = isError ? 'warning' : isBusy ? 'refresh' : pendingChanges > 0 ? 'clock' : 'check';
+      popoverStatusIcon.innerHTML = uiIcon(iconName);
       popoverStatusIcon.className = `sync-popover-status-icon ${isError ? 'is-error' : isBusy ? 'is-busy' : pendingChanges > 0 ? 'is-pending' : 'is-success'}`;
     }
+    if (popoverStatusCount) popoverStatusCount.textContent = String(displayCount || 0);
     if (popoverTitle) popoverTitle.textContent = title.textContent;
     if (popoverDetail) popoverDetail.textContent = detail.textContent;
     bar.style.width = `${percent}%`;
@@ -214,11 +218,14 @@ export function createPublishCenterController({
 
     if (sendButton) {
       sendButton.disabled = !githubToken || pendingChanges === 0 || isBusy;
-      sendButton.textContent = status === 'syncing'
-        ? 'Salvando…'
+      const sendLabel = sendButton.querySelector('span');
+      const label = status === 'syncing'
+        ? 'Preparando…'
         : status === 'publishing'
           ? 'Publicando…'
           : 'Publicar agora';
+      if (sendLabel) sendLabel.textContent = label;
+      else sendButton.textContent = label;
     }
     if (discardButton) discardButton.disabled = pendingChanges === 0 || isBusy;
   };

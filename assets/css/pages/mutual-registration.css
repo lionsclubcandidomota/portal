@@ -1,0 +1,84 @@
+/* Portal Lions v6.46 — cadastro de grupos de Mútua */
+.mutual-group-manager{display:grid;gap:18px;min-width:0}
+.mutual-group-manager .family-existing-section,.mutual-group-manager .mutual-group-form{min-width:0}
+.mutual-group-manager .mutual-group-form-section{overflow:visible;border:1px solid color-mix(in srgb,#7656b5 18%,var(--border));border-radius:19px;background:linear-gradient(180deg,color-mix(in srgb,#7656b5 3%,#fff),#fff)}
+.mutual-group-manager .admin-form-section-heading>span{display:grid;place-items:center;width:44px;height:44px;flex:0 0 auto;border-radius:14px;background:color-mix(in srgb,#7656b5 12%,#fff);color:#6548a1}
+.mutual-group-manager .admin-form-section-heading>span .ui-icon{width:21px;height:21px}
+.mutual-group-manager .family-group-icon .ui-icon{width:19px;height:19px}
+.mutual-member-picker{display:grid;gap:11px;min-width:0;padding:13px;border:1px solid color-mix(in srgb,#7656b5 16%,var(--border));border-radius:17px;background:rgba(255,255,255,.92)}
+.mutual-member-picker>label{font-size:.82rem;font-weight:850}
+.mutual-member-picker-toolbar{position:sticky;top:-1px;z-index:3;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.97);box-shadow:0 6px 18px rgba(24,48,77,.06);backdrop-filter:blur(10px)}
+.mutual-member-picker-toolbar .search-box{min-width:0;min-height:48px;margin:0;border:0;border-radius:12px;background:var(--surface-2);box-shadow:none}
+.mutual-member-picker-toolbar .search-box>span{display:grid;place-items:center;width:40px;color:var(--primary)}
+.mutual-member-picker-toolbar .search-box>span .ui-icon{width:18px;height:18px}
+.mutual-member-picker-toolbar .search-box input{min-width:0;width:100%;min-height:48px;border:0;background:transparent;box-shadow:none}
+.mutual-member-picker-toolbar .search-box input:focus{box-shadow:none}
+.mutual-selected-count{display:grid!important;grid-template-columns:28px auto;grid-template-areas:"icon number" "icon label";align-items:center;column-gap:7px;min-width:112px;min-height:48px;padding:7px 10px!important;border:1px solid color-mix(in srgb,#7656b5 20%,var(--border));border-radius:12px;background:color-mix(in srgb,#7656b5 7%,#fff)!important;color:#5d3f9a!important;text-align:left}
+.mutual-selected-count>.ui-icon{grid-area:icon;width:18px;height:18px;padding:5px;border-radius:9px;background:#7656b5;color:#fff;box-sizing:content-box}
+.mutual-selected-count strong{grid-area:number;font-size:.9rem;line-height:1}
+.mutual-selected-count small{grid-area:label;margin-top:2px;font-size:.59rem;font-weight:850;line-height:1;text-transform:uppercase}
+.mutual-member-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(84px,max-content);align-content:start;gap:9px;max-height:min(54vh,560px);min-height:88px;overflow:auto;padding:3px 4px 3px 3px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,#7656b5 28%,transparent) transparent}
+.mutual-member-option{position:relative;min-width:0;min-height:84px!important;overflow:hidden;border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:15px;background:#fff;transition:border-color .16s ease,background .16s ease,box-shadow .16s ease,transform .16s ease}
+.mutual-member-option.is-mutual{border-left-color:#7656b5}
+.mutual-member-option:hover{border-color:color-mix(in srgb,var(--primary) 28%,var(--border));box-shadow:0 8px 20px rgba(24,48,77,.07);transform:translateY(-1px)}
+.mutual-member-option.is-mutual:hover{border-color:color-mix(in srgb,#7656b5 35%,var(--border))}
+.mutual-member-option.is-selected{border-color:color-mix(in srgb,var(--primary) 45%,var(--border));background:color-mix(in srgb,var(--primary) 4%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 9%,transparent)}
+.mutual-member-option.is-mutual.is-selected{border-color:color-mix(in srgb,#7656b5 48%,var(--border));background:color-mix(in srgb,#7656b5 5%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,#7656b5 10%,transparent)}
+.mutual-member-option.is-inactive{border-style:dashed;opacity:.66;filter:saturate(.7)}
+.mutual-member-option[hidden]{display:none!important}
+.mutual-member-option-label{display:grid;grid-template-columns:46px minmax(0,1fr) 30px;align-items:center;gap:10px;min-height:84px!important;padding:11px;cursor:pointer}
+.mutual-member-avatar{display:grid;place-items:center;width:46px;height:46px}
+.mutual-member-avatar .avatar{width:46px!important;height:46px!important;border:2px solid #fff;box-shadow:0 0 0 1px var(--border),0 5px 12px rgba(24,48,77,.09)}
+.mutual-member-option .member-selector-copy{display:grid;gap:4px;min-width:0}
+.mutual-member-option .member-selector-copy>strong{display:-webkit-box;min-width:0;overflow:hidden;color:var(--text);font-size:.86rem;line-height:1.25;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.mutual-member-option .member-selector-copy>small{overflow:hidden;color:var(--muted);font-size:.68rem;text-overflow:ellipsis;white-space:nowrap}
+.mutual-member-kind{display:inline-flex;align-items:center;gap:5px;width:max-content;max-width:100%;min-height:24px;padding:4px 7px;border-radius:999px;font-size:.62rem;font-weight:850}
+.mutual-member-kind .ui-icon{width:13px;height:13px;flex:0 0 auto}
+.mutual-member-kind.is-associate{background:color-mix(in srgb,var(--primary) 9%,#fff);color:var(--primary-dark)}
+.mutual-member-kind.is-mutual{background:color-mix(in srgb,#7656b5 12%,#fff);color:#5d3f9a}
+.mutual-member-option-label .member-selector-check{display:grid;place-items:center;width:28px;height:28px;border:2px solid #b9cad8;border-radius:9px;background:#fff;color:transparent}
+.mutual-member-option-label .member-selector-check .ui-icon{width:16px;height:16px}
+.mutual-member-option-input:checked+.mutual-member-option-label .member-selector-check{border-color:var(--primary);background:var(--primary);color:#fff}
+.mutual-member-option.is-mutual .mutual-member-option-input:checked+.mutual-member-option-label .member-selector-check{border-color:#7656b5;background:#7656b5}
+.mutual-member-option-input:focus-visible+.mutual-member-option-label{outline:3px solid color-mix(in srgb,var(--primary) 20%,transparent);outline-offset:-3px}
+.mutual-member-option-input:disabled+.mutual-member-option-label{cursor:not-allowed}
+.mutual-member-option .member-unavailable-note{display:inline-flex;width:max-content;padding:3px 6px;border-radius:999px;background:#eef1f5;color:#6c7786;font-size:.6rem;font-weight:800}
+.mutual-member-picker>.member-picker-empty{padding:18px;border:1px dashed var(--border);border-radius:14px;background:var(--surface-2);color:var(--muted);text-align:center}
+.mutual-member-picker>small{display:block;padding:10px 11px;border-radius:12px;background:color-mix(in srgb,#7656b5 5%,var(--surface-2));color:var(--muted);font-size:.7rem;line-height:1.45}
+.mutual-group-form .admin-form-actions{align-items:center}
+
+.modal-card:has(.mutual-group-manager),.modal-card:has(.mutual-event-manager){display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}.modal-card:has(.mutual-group-manager){width:min(980px,calc(100vw - 32px));max-height:92dvh}.modal-card:has(.mutual-group-manager) .modal-body,.modal-card:has(.mutual-event-manager) .modal-body{min-height:0;overflow:auto;overscroll-behavior:contain;scroll-behavior:auto}
+
+@media(max-width:900px){
+  .mutual-member-options{grid-template-columns:1fr}
+}
+
+@media(max-width:620px){
+  .modal-card:has(.mutual-group-manager){width:100%;height:min(95dvh,940px);max-height:95dvh;border-radius:22px 22px 0 0}
+  .modal-card:has(.mutual-group-manager) .modal-body{padding:12px;overflow:auto}
+  .mutual-group-manager{gap:13px}
+  .mutual-group-manager .mutual-group-form-section{padding:12px;border-radius:16px}
+  .mutual-member-picker{padding:9px;border-radius:15px}
+  .mutual-member-picker-toolbar{position:relative;top:auto;grid-template-columns:1fr;padding:6px}
+  .mutual-selected-count{grid-template-columns:26px auto;grid-template-areas:"icon number label";justify-content:start;min-width:0;width:100%}
+  .mutual-selected-count small{margin:0}
+  .mutual-member-options{grid-auto-rows:minmax(78px,max-content);max-height:none;overflow:visible;padding:0}
+  .mutual-member-option,.mutual-member-option-label{min-height:78px!important}.mutual-member-option-label{grid-template-columns:42px minmax(0,1fr) 28px;padding:9px}
+  .mutual-member-avatar,.mutual-member-avatar .avatar{width:42px!important;height:42px!important}
+  .mutual-group-form .admin-form-actions{position:sticky;bottom:-12px;z-index:6;display:grid;grid-template-columns:1fr;margin:12px -12px -12px;padding:12px calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));border-top:1px solid var(--border);background:rgba(255,255,255,.97);backdrop-filter:blur(12px)}
+  .mutual-group-form .admin-form-actions .btn{width:100%}
+}
+
+@media(max-width:390px){
+  .mutual-member-option-label{grid-template-columns:38px minmax(0,1fr);grid-template-areas:"avatar copy" "check check"}
+  .mutual-member-avatar{grid-area:avatar}
+  .mutual-member-option .member-selector-copy{grid-area:copy}
+  .mutual-member-option-label .member-selector-check{grid-area:check;justify-self:start;margin-left:48px;width:auto;min-width:86px;height:30px;padding-inline:9px;color:var(--muted)}
+  .mutual-member-option-label .member-selector-check::after{content:"Selecionar";margin-left:5px;font-size:.61rem;font-weight:850}
+  .mutual-member-option-input:checked+.mutual-member-option-label .member-selector-check::after{content:"Incluído";color:#fff}
+}
+/* v6.46.3 — registro de falecimento */
+.modal-card:has(.mutual-event-manager){width:min(920px,calc(100vw - 28px));max-height:92dvh}.mutual-event-participant-preview{min-width:0}.mutual-event-form-section{border:1px solid color-mix(in srgb,#7656b5 18%,var(--border));border-radius:18px;background:linear-gradient(180deg,color-mix(in srgb,#7656b5 3%,#fff),#fff)}.mutual-event-form-grid>.full-row{grid-column:1/-1!important}.mutual-event-form .mutual-event-participant-preview{display:grid;gap:8px;padding:12px;border:1px solid color-mix(in srgb,#7656b5 18%,var(--border));border-radius:15px;background:color-mix(in srgb,#7656b5 4%,var(--surface))}.mutual-event-participant-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}.mutual-event-participant-heading>div{display:grid;gap:2px}.mutual-event-participant-heading small{color:var(--muted);font-size:.67rem}.mutual-event-participant-heading>span{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:#7656b5;color:#fff}.mutual-event-participant-heading .ui-icon{width:17px;height:17px}.mutual-event-form .mutual-event-participants{display:grid;gap:8px;min-width:0;min-height:0;padding:0;border:0;background:transparent}.mutual-event-participant-summary{display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--border);border-radius:12px;background:#fff}.mutual-event-participant-summary>span{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,#7656b5 12%,#fff);color:#6548a1}.mutual-event-participant-summary div{display:grid;gap:2px}.mutual-event-participant-summary strong{color:#5d3f9a;font-size:.82rem}.mutual-event-participant-summary small{color:var(--muted);font-size:.64rem}.mutual-event-participant-list{display:grid;grid-template-columns:repeat(2,minmax(250px,1fr));gap:7px;max-height:330px;overflow:auto}.mutual-event-participant-item{display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:8px;min-height:58px;padding:8px;border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:12px;background:#fff}.mutual-event-participant-item.is-mutual{border-left-color:#7656b5}.mutual-event-participant-avatar,.mutual-event-participant-avatar .avatar{width:36px!important;height:36px!important}.mutual-event-participant-copy{display:grid;gap:2px;min-width:0}.mutual-event-participant-copy strong,.mutual-event-participant-copy small{overflow:hidden}.mutual-event-participant-copy strong{font-size:.74rem;white-space:normal;overflow-wrap:anywhere}.mutual-event-participant-copy small{color:var(--muted);font-size:.6rem;white-space:nowrap}.mutual-event-participant-empty{grid-column:1/-1;padding:9px;border:1px dashed var(--border);border-radius:11px;color:var(--muted);font-size:.67rem;text-align:center}.mutual-event-readiness{grid-template-columns:32px minmax(0,1fr)}.mutual-event-readiness>span{display:grid;place-items:center}.mutual-event-readiness .ui-icon{width:17px;height:17px}.mutual-event-form .admin-form-actions .btn{justify-content:center;text-align:center}
+@media(max-width:760px){.modal-card:has(.mutual-group-manager),.modal-card:has(.mutual-event-manager){width:100%;height:95dvh;max-height:95dvh;border-radius:22px 22px 0 0}.modal-card:has(.mutual-event-manager) .modal-body{padding:12px}.mutual-event-form-section{padding:12px}.mutual-event-participant-list{grid-template-columns:1fr;max-height:none;overflow:visible}.mutual-event-form .admin-form-actions{display:grid;grid-template-columns:1fr}.mutual-event-form .admin-form-actions .btn{width:100%}.mutual-event-row{grid-template-columns:1fr}.mutual-event-row .family-group-actions{justify-content:flex-start}}
+
+.mutual-event-form .mutual-event-participants{width:100%;grid-template-columns:minmax(0,1fr);justify-content:stretch;align-items:stretch}.mutual-event-form .mutual-event-participant-list{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:760px){.mutual-event-form .mutual-event-participant-list{grid-template-columns:minmax(0,1fr)}}

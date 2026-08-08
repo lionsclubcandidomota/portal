@@ -1,4 +1,5 @@
 import { escapeHtml, optimizeDataUrl, uid } from '../../utils.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 
 export const TREASURY_ATTACHMENT_LIMITS = Object.freeze({
   maxFiles: 5,
@@ -128,11 +129,11 @@ export function attachmentReference(attachment) {
 
 function attachmentIcon(type = '') {
   const normalized = String(type).toLowerCase();
-  if (normalized.startsWith('image/')) return '🖼️';
-  if (normalized === 'application/pdf') return '📕';
-  if (normalized.includes('sheet') || normalized.includes('excel') || normalized === 'text/csv') return '📊';
-  if (normalized.includes('word') || normalized.includes('text')) return '📄';
-  return '📎';
+  if (normalized.startsWith('image/')) return uiIcon('image');
+  if (normalized === 'application/pdf') return uiIcon('file-text');
+  if (normalized.includes('sheet') || normalized.includes('excel') || normalized === 'text/csv') return uiIcon('chart-bar');
+  if (normalized.includes('word') || normalized.includes('text')) return uiIcon('file-text');
+  return uiIcon('paperclip');
 }
 
 export function renderTreasuryAttachmentPicker(attachments = []) {
@@ -144,7 +145,7 @@ export function renderTreasuryAttachmentPicker(attachments = []) {
   return `<div class="treasury-attachment-picker" data-treasury-attachment-picker>
     <div class="treasury-attachment-dropzone">
       <input id="treasuryEntryAttachments" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,text/csv,.doc,.docx,.xls,.xlsx,.odt,.ods" data-treasury-attachment-input>
-      <label for="treasuryEntryAttachments"><span aria-hidden="true">📎</span><strong>Adicionar comprovantes</strong><small>Imagens, PDFs e documentos. Até ${TREASURY_ATTACHMENT_LIMITS.maxFiles} arquivos; seleção de até ${formatAttachmentSize(TREASURY_ATTACHMENT_LIMITS.maxInputBytes)} e limite final de ${formatAttachmentSize(TREASURY_ATTACHMENT_LIMITS.maxStoredBytes)} por anexo.</small></label>
+      <label for="treasuryEntryAttachments"><span aria-hidden="true">${uiIcon('paperclip')}</span><strong>Adicionar comprovantes</strong><small>Imagens, PDFs e documentos. Até ${TREASURY_ATTACHMENT_LIMITS.maxFiles} arquivos; seleção de até ${formatAttachmentSize(TREASURY_ATTACHMENT_LIMITS.maxInputBytes)} e limite final de ${formatAttachmentSize(TREASURY_ATTACHMENT_LIMITS.maxStoredBytes)} por anexo.</small></label>
     </div>
     <p class="treasury-attachment-feedback" data-treasury-attachment-feedback aria-live="polite"></p>
     <ul class="treasury-attachment-editor-list" data-treasury-attachment-list>${items}</ul>

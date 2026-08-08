@@ -1,4 +1,5 @@
 import { escapeHtml, money } from '../../utils.js';
+import { uiIcon } from '../visual-helpers.js?v=6.46.4';
 import {
   buildFamilyMembershipChargeMessage,
   buildMembershipChargeMessage
@@ -110,13 +111,13 @@ export function createMembershipChargeSharer(context) {
     const familyTotal = groupPayload.memberCharges.reduce((sum, item) => sum + Number(item.expectedTotal || 0), 0);
 
     modalBody.innerHTML = `<section class="membership-charge-choice" aria-labelledby="membershipChargeChoiceTitle">
-      <div class="membership-charge-choice-intro"><span aria-hidden="true">💬</span><div><h3 id="membershipChargeChoiceTitle">Quem deve receber a mensagem?</h3><p>Escolha entre uma cobrança individual ou um resumo de toda a família.</p></div></div>
+      <div class="membership-charge-choice-intro"><span aria-hidden="true">${uiIcon('message')}</span><div><h3 id="membershipChargeChoiceTitle">Quem deve receber a mensagem?</h3><p>Escolha entre uma cobrança individual ou um resumo de toda a família.</p></div></div>
       <div class="membership-charge-choice-grid">
         <button class="membership-charge-option" type="button" data-membership-charge-target="member">
-          <span aria-hidden="true">👤</span><div><strong>Somente o associado</strong><small>${escapeHtml(member.name)} · ${pendingMonths.length} mês(es)</small></div><b>${money.format(treasury.membershipExpectedAmountForMember(memberId) * pendingMonths.length)}</b>
+          <span aria-hidden="true">${uiIcon('user')}</span><div><strong>Somente o associado</strong><small>${escapeHtml(member.name)} · ${pendingMonths.length} mês(es)</small></div><b>${money.format(treasury.membershipExpectedAmountForMember(memberId) * pendingMonths.length)}</b>
         </button>
         <button class="membership-charge-option is-family" type="button" data-membership-charge-target="family">
-          <span aria-hidden="true">👨‍👩‍👧‍👦</span><div><strong>Toda a família</strong><small>${escapeHtml(group.name)} · ${groupPayload.memberCharges.length} integrante(s) com pendências</small></div><b>${money.format(familyTotal)}</b>
+          <span aria-hidden="true">${uiIcon('family')}</span><div><strong>Toda a família</strong><small>${escapeHtml(group.name)} · ${groupPayload.memberCharges.length} integrante(s) com pendências</small></div><b>${money.format(familyTotal)}</b>
         </button>
       </div>
       <div class="form-actions"><button class="btn btn-ghost" type="button" data-close-modal>Cancelar</button></div>

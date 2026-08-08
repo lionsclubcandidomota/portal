@@ -1,5 +1,5 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.44.1';
-import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.44.1';
+import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.46.4';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.4';
 import {
   escapeHtml,
   normalize,
@@ -7,6 +7,7 @@ import {
   uid
 } from '../utils.js';
 import { setupMarkdownEditors } from './markdown.js';
+import { uiIcon } from './visual-helpers.js?v=6.46.4';
 import {
   entityFormHtml,
   normalizeLocationData,
@@ -105,7 +106,7 @@ export function createEntityFormsController({
 
     preview.innerHTML = data
       ? `<img src="${data}" alt="Pré-visualização da foto selecionada" decoding="async">`
-      : '<span>👤</span><small>Nenhuma foto selecionada</small>';
+      : `<span>${uiIcon('user')}</span><small>Nenhuma foto selecionada</small>`;
     if (removeButton) removeButton.hidden = !data;
     return true;
   };
@@ -308,7 +309,7 @@ export function createEntityFormsController({
     const approved = await confirmation.askConfirmation({
       title: `Excluir ${labels[type] || 'registro'}?`,
       message: `Você está prestes a excluir “${name}”. A exclusão ficará pendente até a próxima publicação e poderá ser desfeita usando “Descartar alterações”.`,
-      icon: '🗑️',
+      icon: 'trash',
       confirmText: 'Excluir registro',
       tone: 'danger'
     });

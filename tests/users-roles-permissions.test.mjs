@@ -208,7 +208,7 @@ test('gerenciador de acesso é carregado sob demanda e oferece cargos personaliz
     source('assets/css/components/access-management.css')
   ]);
   assert.doesNotMatch(portalApp, /from ['"]\.\/access-management\.js/);
-  assert.match(lazyManager, /import\('\.\/access-management\.js\?v=6\.44\.1'\)/);
+  assert.match(lazyManager, /import\('\.\/access-management\.js\?v=6\.46\.4'\)/);
   assert.match(manager, /Novo cargo/);
   assert.match(manager, /Novo usuário/);
   assert.match(manager, /buildPortalUserPassword/);

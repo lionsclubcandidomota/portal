@@ -48,7 +48,7 @@ test('documentação encerra as oito etapas e mantém o esquema 12', async () =>
     source('docs/data-schema.md'),
     source('CHANGELOG.md')
   ]);
-  assert.match(release, /Etapa 8 de 8/i);
+  assert.match(release, /Portal Lions v6\.46\.4/i);
   assert.match(refactoring, /ciclo funcional concluído/i);
   assert.match(schema, /Esquema de dados do Portal — v12/);
   assert.match(changelog, /6\.44\.0 — Dirigentes públicos e estabilização final/);

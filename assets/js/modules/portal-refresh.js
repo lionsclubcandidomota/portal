@@ -40,7 +40,7 @@ export function createPortalRefreshController({
     button.disabled = running;
     button.classList.toggle('is-loading', running);
     button.setAttribute('aria-busy', String(running));
-    if (label) label.textContent = running ? text : 'Atualizar painel';
+    if (label) label.textContent = running ? text : 'Atualizar Portal';
   };
 
   const resolvePendingChanges = async count => {

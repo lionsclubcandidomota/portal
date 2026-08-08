@@ -1,3 +1,5 @@
+import { uiIcon } from './visual-helpers.js?v=6.46.4';
+
 const MONEY_FORMAT = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL'
@@ -75,7 +77,7 @@ const COLLECTIONS = [
   {
     key: 'birthdays',
     title: 'Associados e aniversariantes',
-    icon: '🎂',
+    icon: 'cake',
     singular: 'associado',
     fields: ['memberNumber', 'name', 'birthDate', 'photo'],
     itemTitle: item => item?.name || 'Associado sem nome'
@@ -83,7 +85,7 @@ const COLLECTIONS = [
   {
     key: 'treasuryAccounts',
     title: 'Contas da Tesouraria',
-    icon: '🏦',
+    icon: 'bank',
     singular: 'conta',
     fields: ['name', 'type', 'initialBalance', 'active'],
     itemTitle: item => item?.name || 'Conta sem nome'
@@ -91,7 +93,7 @@ const COLLECTIONS = [
   {
     key: 'familyGroups',
     title: 'Grupos familiares',
-    icon: '👥',
+    icon: 'family',
     singular: 'grupo familiar',
     fields: ['name', 'memberIds', 'primaryMemberId', 'notes'],
     itemTitle: item => item?.name || 'Grupo sem nome'
@@ -99,7 +101,7 @@ const COLLECTIONS = [
   {
     key: 'mutualGroups',
     title: 'Grupos e falecimentos de mútuas',
-    icon: '🤲',
+    icon: 'heart',
     singular: 'grupo de mútua',
     fields: ['name', 'memberships', 'events', 'notes'],
     itemTitle: item => item?.name || 'Grupo de mútua sem nome'
@@ -107,7 +109,7 @@ const COLLECTIONS = [
   {
     key: 'treasury',
     title: 'Movimentações da Tesouraria',
-    icon: '💰',
+    icon: 'money',
     singular: 'movimentação',
     fields: [
       'date', 'description', 'category', 'entry', 'exit', 'status', 'accountId',
@@ -119,7 +121,7 @@ const COLLECTIONS = [
   {
     key: 'events',
     title: 'Agenda',
-    icon: '🗓️',
+    icon: 'calendar',
     singular: 'agendamento',
     fields: ['name', 'date', 'time', 'location', 'locationType', 'onlineUrl', 'status', 'description'],
     itemTitle: item => item?.name || 'Agendamento sem nome'
@@ -127,7 +129,7 @@ const COLLECTIONS = [
   {
     key: 'meetings',
     title: 'Compromissos',
-    icon: '📌',
+    icon: 'clock',
     singular: 'compromisso',
     fields: ['theme', 'date', 'time', 'location', 'locationType', 'onlineUrl', 'status', 'notes'],
     itemTitle: item => item?.theme || 'Compromisso sem tema'
@@ -135,7 +137,7 @@ const COLLECTIONS = [
   {
     key: 'notices',
     title: 'Avisos',
-    icon: '📢',
+    icon: 'megaphone',
     singular: 'aviso',
     fields: ['title', 'date', 'endDate', 'priority', 'text'],
     itemTitle: item => item?.title || 'Aviso sem título'
@@ -414,7 +416,7 @@ export function buildPublicationReview(previousState, currentState) {
 
   const settingsChanges = buildSettingsChanges(previous, current, lookups);
   if (settingsChanges.length) {
-    groups.push({ key: 'settings', title: 'Configurações', icon: '⚙️', changes: settingsChanges });
+    groups.push({ key: 'settings', title: 'Configurações', icon: 'settings', changes: settingsChanges });
   }
 
   for (const definition of COLLECTIONS) {
@@ -427,7 +429,7 @@ export function buildPublicationReview(previousState, currentState) {
     groups.push({
       key: 'treasuryCategories',
       title: 'Categorias financeiras',
-      icon: '🏷️',
+      icon: 'tag',
       changes: categoryChanges
     });
   }
@@ -480,7 +482,7 @@ export function publicationReviewHtml(review, { canPublish = false } = {}) {
   const safeReview = review || { total: 0, fieldsTotal: 0, groups: [] };
   if (!safeReview.total) {
     return `<section class="publication-review publication-review-empty">
-      <div class="publication-review-empty-icon" aria-hidden="true">✓</div>
+      <div class="publication-review-empty-icon" aria-hidden="true">${uiIcon('check')}</div>
       <h3>Nenhuma diferença para publicar</h3>
       <p>O conteúdo atual é igual à última versão sincronizada do portal.</p>
       <div class="publication-review-footer"><button class="btn btn-primary" type="button" data-publication-review-close>Voltar</button></div>
@@ -489,7 +491,7 @@ export function publicationReviewHtml(review, { canPublish = false } = {}) {
 
   return `<section class="publication-review">
     <div class="publication-review-intro">
-      <div class="publication-review-intro-icon" aria-hidden="true">☷</div>
+      <div class="publication-review-intro-icon" aria-hidden="true">${uiIcon('file-text')}</div>
       <div><span class="section-eyebrow">Revisão antes da publicação</span><h3>Confira o que será enviado ao portal</h3><p>As alterações são comparadas com a última versão sincronizada. Edições repetidas no mesmo registro aparecem consolidadas no resultado final.</p></div>
     </div>
     <div class="publication-review-summary" aria-label="Resumo das alterações">
@@ -499,7 +501,7 @@ export function publicationReviewHtml(review, { canPublish = false } = {}) {
     </div>
     <div class="publication-review-groups">
       ${safeReview.groups.map((group, index) => `<details class="publication-review-group" ${index < 2 ? 'open' : ''}>
-        <summary><span class="publication-review-group-icon" aria-hidden="true">${escapeHtml(group.icon)}</span><span><strong>${escapeHtml(group.title)}</strong><small>${group.changes.length} alteraç${group.changes.length === 1 ? 'ão' : 'ões'}</small></span><span class="publication-review-group-chevron" aria-hidden="true"></span></summary>
+        <summary><span class="publication-review-group-icon" aria-hidden="true">${uiIcon(group.icon)}</span><span><strong>${escapeHtml(group.title)}</strong><small>${group.changes.length} alteraç${group.changes.length === 1 ? 'ão' : 'ões'}</small></span><span class="publication-review-group-chevron" aria-hidden="true"></span></summary>
         <div class="publication-review-change-list">${group.changes.map(renderChange).join('')}</div>
       </details>`).join('')}
     </div>

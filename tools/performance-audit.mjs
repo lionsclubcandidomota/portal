@@ -9,10 +9,10 @@ const indexPath = path.join(projectRoot, 'index.html');
 const optimizedLogoPath = path.join(projectRoot, 'public', 'logo-ui.webp');
 
 const budgets = Object.freeze({
-  staticJavaScriptBytes: 220_000,
-  cssBytes: 400_000,
+  staticJavaScriptBytes: 225_000,
+  cssBytes: 446_000,
   optimizedLogoBytes: 60_000,
-  criticalAssetsBytes: 655_000
+  criticalAssetsBytes: 706_000
 });
 
 function staticImportSpecifiers(source) {

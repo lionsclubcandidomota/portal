@@ -39,7 +39,10 @@ export const CSS_SOURCES = Object.freeze([
   'components/recovery-center.css',
   'components/membership-actions-menu.css',
   'components/native-charts.css',
-  'components/modern-interface.css'
+  'components/modern-interface.css',
+  'pages/portal-experience.css',
+  'pages/treasury-mobile.css',
+  'pages/mutual-registration.css'
 ]);
 
 export async function buildCssBundle() {
