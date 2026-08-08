@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-08T14:07:10.151Z",
-  "deploymentId": "1786198030151-509a396c-d5f8-44ce-9539-f5b327df925d",
+  "updatedAt": "2026-08-08T14:11:17.705Z",
+  "deploymentId": "1786198277705-97cb0720-aab7-4b12-8c30-ee5d99a4a42e",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -358,7 +358,6 @@
       "Outros",
       "Associação Internacional de Lions Clubes",
       "Camisetas",
-      "Mutua",
       "Saldo Inicial"
     ],
     "familyGroups": [
@@ -543,14 +542,14 @@
     "treasury": [
       {
         "id": "t_ms8vq35c_89arju",
-        "date": "2026-08-30",
+        "date": "2026-07-13",
         "accountId": "acc-current",
         "category": "Documentação",
         "description": "Cartório de Registro Civil - Reconhecimento de Firma",
         "entry": 0,
         "exit": 118.17,
         "notes": "Pagamento realizado com recursos próprios em 13/07/2026, razão do bloqueio temporário da conta bancária do clube (Secretaria - Vitória Caroline Zibordi)",
-        "status": "Programado",
+        "status": "Vencida",
         "attachments": [
           {
             "id": "att_msemlade_cs69d5",
@@ -574,14 +573,14 @@
       },
       {
         "id": "t_ms8vs6iw_sgqfho",
-        "date": "2026-08-30",
+        "date": "2026-07-14",
         "accountId": "acc-current",
         "category": "Documentação",
         "description": "Cartório de Registro Civil - Atas de Assembleias ",
         "entry": 0,
         "exit": 244.59,
         "notes": "Pagamento realizado com recursos próprios em 14/07/2026, razão do bloqueio temporário da conta bancária do clube (Secretaria - Vitória Caroline Zibordi)",
-        "status": "Programado",
+        "status": "Vencida",
         "attachments": [
           {
             "id": "att_msemmff4_ojt7wg",
@@ -596,14 +595,14 @@
       },
       {
         "id": "t_ms8vtpaq_nhs553",
-        "date": "2026-08-30",
+        "date": "2026-07-15",
         "accountId": "acc-current",
         "category": "Camisetas",
         "description": "Estamparia Pererê - Camiseta Associado",
         "entry": 0,
         "exit": 83.2,
         "notes": "Pagamento realizado com recursos próprios em 15/07/2026, razão do bloqueio temporário da conta bancária do clube (Tesoureiro - João Augusto Batista de Paula)",
-        "status": "Programado",
+        "status": "Vencida",
         "attachments": [
           {
             "id": "att_msempsv8_9muus4",
@@ -618,14 +617,14 @@
       },
       {
         "id": "t_ms8vvl2p_vbr2nq",
-        "date": "2026-08-30",
+        "date": "2026-07-23",
         "accountId": "acc-current",
         "category": "Documentação",
         "description": "Tabelionato de Notas e Protestos - Autenticação das Cópias das Atas Assembleias ",
         "entry": 0,
         "exit": 78.6,
         "notes": "Pagamento realizado com recursos próprios em 23/07/2026, razão do bloqueio temporário da conta bancária do clube (Tesoureiro - João Augusto Batista de Paula)",
-        "status": "Programado",
+        "status": "Vencida",
         "attachments": [
           {
             "id": "att_msemolr5_a5ah3s",
@@ -806,6 +805,79 @@
         "exit": 0,
         "notes": "Saldo que foi passado para a nova diretoria.",
         "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_mskg8ws2_4xhd5h",
+        "date": "2026-08-03",
+        "paymentDate": "2026-08-03",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-08"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-08"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-08",
+        "coveredMonths": [
+          "2026-08"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: agosto de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_mskga6d2_rv2xu7",
+        "date": "2026-08-27",
+        "accountId": "acc-current",
+        "category": "Associação Internacional de Lions Clubes",
+        "description": "Boleto Taxa Internacional ",
+        "entry": 0,
+        "exit": 3185.31,
+        "notes": "",
+        "status": "Programado",
         "attachments": []
       }
     ],
