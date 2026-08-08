@@ -1,15 +1,16 @@
 {
-  "updatedAt": "2026-08-07T18:29:04.062Z",
-  "deploymentId": "1786127344062-86d020a2-54a0-4782-a57c-9ca6d95a06a7",
+  "updatedAt": "2026-08-08T02:13:40.558Z",
+  "deploymentId": "1786155220558-a40554f1-bf46-4271-8e34-384c076d8012",
   "app": "Lions Clube de Cândido Mota Dashboard",
-  "schemaVersion": 9,
-  "version": 9,
+  "schemaVersion": 12,
+  "version": 12,
   "data": {
     "settings": {
       "clubName": "Lions Clube de Cândido Mota",
       "logo": "./public/logo.png",
       "primaryColor": "#00529B",
       "accentColor": "#F2C100",
+      "fontFamily": "modern",
       "membershipMonthlyFee": 40,
       "membershipFamilyPrimaryFee": 40,
       "membershipFamilyAdditionalFee": 15,
@@ -449,8 +450,6 @@
       {
         "id": "mu_mse0d4dd_xo9pzr",
         "name": "Mutua 658",
-        "monthlyAmount": 15,
-        "startedMonth": "2026-08",
         "notes": "",
         "memberships": [
           {
@@ -538,12 +537,7 @@
             "endedMonth": ""
           }
         ],
-        "amountHistory": [
-          {
-            "fromMonth": "2026-08",
-            "amount": 15
-          }
-        ]
+        "events": []
       }
     ],
     "treasury": [
@@ -2271,6 +2265,191 @@
         "endDate": "2026-08-08",
         "priority": "Alta",
         "text": "**🦁 É SÁBADO, 08 DE AGOSTO – DIA \"D\" LIONS! 🦁**\n\n**Todo segundo sábado de cada mês é o nosso Dia \"D\" Lions!**\n\nConvido todos os companheiros e companheiras a vestirem, com muito orgulho, a camiseta, o colete, o jaleco, o boné ou qualquer peça que represente o Lions, demonstrando o nosso **ORGULHO DE SER LEÃO! 🦁💙💛**\n\n🚗🚎✈️ Vai viajar? Não se esqueça de levar sua camiseta do Lions!\n\nVamos vestir as cores do Lions para ir ao mercado, à feira, ao shopping, ao trabalho, durante nossas atividades de serviços leonísticos ou em qualquer outro lugar. Quanto mais visível estivermos, mais divulgaremos a nossa missão de servir.\n\n📸 Não se esqueçam de tirar uma foto e publicar em suas redes sociais (Facebook, Instagram, TikTok, YouTube, WhatsApp e outras), utilizando as hashtags:\n\n#DiaDLions #DiaDLionsDLB1\n\n**Vamos mostrar a força do nosso movimento e o orgulho de fazer parte desta grande família leonística! 🤗🦁🦁🦁**"
+      }
+    ],
+    "accessRoles": [
+      {
+        "id": "role-president",
+        "name": "Presidente",
+        "description": "Acompanha todo o trabalho operacional do clube.",
+        "system": true,
+        "active": true,
+        "permissions": []
+      },
+      {
+        "id": "role-vice-president",
+        "name": "Segundo Vice-Presidente",
+        "description": "Consulta o painel e apoia agenda, avisos e relatórios.",
+        "system": true,
+        "active": true,
+        "permissions": []
+      },
+      {
+        "id": "role-secretary",
+        "name": "Secretária",
+        "description": "Mantém pessoas, agenda, reuniões e comunicados atualizados.",
+        "system": true,
+        "active": true,
+        "permissions": []
+      },
+      {
+        "id": "role-treasurer",
+        "name": "Tesoureiro",
+        "description": "Consulta e mantém os controles financeiros do clube.",
+        "system": true,
+        "active": true,
+        "permissions": []
+      },
+      {
+        "id": "role-director",
+        "name": "Diretor",
+        "description": "Consulta informações internas e relatórios sem realizar alterações.",
+        "system": true,
+        "active": true,
+        "permissions": []
+      },
+      {
+        "id": "role_msjqkrrg_569583",
+        "name": "Assessor de Sócios",
+        "description": "",
+        "system": false,
+        "active": true,
+        "permissions": []
+      },
+      {
+        "id": "role_msjql43u_jfsdsi",
+        "name": "Assessor de Marketing",
+        "description": "",
+        "system": false,
+        "active": true,
+        "permissions": []
+      },
+      {
+        "id": "role_msjqlfeb_95aij6",
+        "name": "Assessor de Serviços",
+        "description": "",
+        "system": false,
+        "active": true,
+        "permissions": []
+      },
+      {
+        "id": "role_msjqlok7_6gvafb",
+        "name": "Primeiro Vice-Presidente",
+        "description": "",
+        "system": false,
+        "active": true,
+        "permissions": []
+      }
+    ],
+    "portalUsers": [],
+    "leadershipAssignments": [
+      {
+        "id": "leadership_msjqmcsu_tdz2qg",
+        "memberId": "b_ms3xlpvb_50kztj",
+        "roleId": "role-vice-president",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:11:25.902Z",
+        "updatedAt": "2026-08-08T02:11:25.902Z"
+      },
+      {
+        "id": "leadership_msjqmpjt_ppp1w1",
+        "memberId": "b_ms3xrshl_znpzq8",
+        "roleId": "role-secretary",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:11:42.425Z",
+        "updatedAt": "2026-08-08T02:11:42.425Z"
+      },
+      {
+        "id": "leadership_msjqmxno_3mpbkd",
+        "memberId": "b_ms3xhsbp_w6a41l",
+        "roleId": "role-president",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:11:52.932Z",
+        "updatedAt": "2026-08-08T02:11:52.932Z"
+      },
+      {
+        "id": "leadership_msjqn6la_9badeo",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "roleId": "role-treasurer",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:12:04.510Z",
+        "updatedAt": "2026-08-08T02:12:04.510Z"
+      },
+      {
+        "id": "leadership_msjqnhed_lwhibt",
+        "memberId": "b_ms3xnxct_7h4wxe",
+        "roleId": "role-director",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:12:18.517Z",
+        "updatedAt": "2026-08-08T02:12:18.517Z"
+      },
+      {
+        "id": "leadership_msjqnx06_mfjejb",
+        "memberId": "b_ms3xh5de_4qya3j",
+        "roleId": "role_msjqkrrg_569583",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:12:38.742Z",
+        "updatedAt": "2026-08-08T02:12:38.742Z"
+      },
+      {
+        "id": "leadership_msjqo3at_vw46sy",
+        "memberId": "b_ms3xpn5s_svjeqa",
+        "roleId": "role_msjql43u_jfsdsi",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:12:46.901Z",
+        "updatedAt": "2026-08-08T02:12:46.901Z"
+      },
+      {
+        "id": "leadership_msjqoev7_p1dh8f",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "roleId": "role_msjqlfeb_95aij6",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:13:01.891Z",
+        "updatedAt": "2026-08-08T02:13:01.891Z"
+      },
+      {
+        "id": "leadership_msjqolv4_c2he8q",
+        "memberId": "b_ms3xq92x_jjequd",
+        "roleId": "role_msjqlok7_6gvafb",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "",
+        "createdAt": "2026-08-08T02:13:10.960Z",
+        "updatedAt": "2026-08-08T02:13:10.960Z"
       }
     ]
   }
