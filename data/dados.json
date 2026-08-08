@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-08T12:45:23.515Z",
-  "deploymentId": "1786193123515-d88d981f-ee6b-45d5-969d-b766dfc568d6",
+  "updatedAt": "2026-08-08T13:14:03.412Z",
+  "deploymentId": "1786194843411-e8449335-9962-4fe4-82a1-e80c7f7bb923",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -44,7 +44,7 @@
         "memberNumber": "5422860",
         "name": "Adriano Moreira",
         "birthDate": "1986-04-09",
-        "photo": "./public/members/b_ms3xfcuq_bi8m42-1fjpvgj.jpg",
+        "photo": "./public/members/b_ms3xfcuq_bi8m42-0g4mufr.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -53,7 +53,7 @@
         "memberNumber": "4513801",
         "name": "Amanda Cristina Gozzi",
         "birthDate": "1985-09-11",
-        "photo": "./public/members/b_ms3xfobh_l0tq8n-0sse4y8.jpg",
+        "photo": "./public/members/b_ms3xfobh_l0tq8n-1wu2wak.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -62,7 +62,7 @@
         "memberNumber": "6050953",
         "name": "Ana Elisa Almeida",
         "birthDate": "1982-12-26",
-        "photo": "./public/members/b_ms3xg16k_59dtg6-0dn6bo1.jpg",
+        "photo": "./public/members/b_ms3xg16k_59dtg6-03uycut.jpg",
         "active": true,
         "status": "Ativo"
       },
@@ -89,7 +89,7 @@
         "memberNumber": "5434595",
         "name": "Evelin do Nascimento Ferreira",
         "birthDate": "1985-11-04",
-        "photo": "./public/members/b_ms3xi4tc_b25op6-0aae7x6.jpg",
+        "photo": "./public/members/b_ms3xi4tc_b25op6-0qjacss.jpg",
         "active": true,
         "status": "Ativo"
       },
@@ -98,7 +98,7 @@
         "memberNumber": "4369494",
         "name": "Fernanda Bolfarini Franciscatte",
         "birthDate": "1981-08-21",
-        "photo": "./public/members/b_ms3xkgot_6anwnv-1ua47i7.jpg",
+        "photo": "./public/members/b_ms3xkgot_6anwnv-1mvzcx8.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -107,7 +107,7 @@
         "memberNumber": "6268385",
         "name": "Larissa Baldesserra",
         "birthDate": "1986-07-31",
-        "photo": "./public/members/b_ms3xlhbw_3m6x55-1c3jbl8.jpg",
+        "photo": "./public/members/b_ms3xlhbw_3m6x55-0qrkx6v.jpg",
         "active": true,
         "status": "Ativo"
       },
@@ -125,7 +125,7 @@
         "memberNumber": "4899771",
         "name": "Marcelo Facina",
         "birthDate": "1974-11-18",
-        "photo": "./public/members/b_ms3xmb4t_6ypluu-1dxaqc0.jpg",
+        "photo": "./public/members/b_ms3xmb4t_6ypluu-16xkhpd.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -144,7 +144,7 @@
         "memberNumber": "6268395",
         "name": "Maria Aparecida Gonçalves",
         "birthDate": "1960-06-13",
-        "photo": "./public/members/b_ms3xn2nf_jifrzi-0833oql.jpg",
+        "photo": "./public/members/b_ms3xn2nf_jifrzi-01qc7tc.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -153,7 +153,7 @@
         "memberNumber": "4399595",
         "name": "Maria Madalena da Rocha",
         "birthDate": "1957-03-10",
-        "photo": "./public/members/b_ms3xnmv9_jt5r46-0b81ktu.jpg",
+        "photo": "./public/members/b_ms3xnmv9_jt5r46-1cvgkh0.jpg",
         "active": true,
         "status": "Ativo"
       },
@@ -171,7 +171,7 @@
         "memberNumber": "6018451",
         "name": "Matheus Prado",
         "birthDate": "1991-02-08",
-        "photo": "./public/members/b_ms3xo8wh_z97ryn-1yd86hz.jpg",
+        "photo": "./public/members/b_ms3xo8wh_z97ryn-1r3v4xy.jpg",
         "active": true,
         "status": "Ativo"
       },
@@ -180,7 +180,7 @@
         "memberNumber": "3730065",
         "name": "Michel Carvalho da Silva",
         "birthDate": "1988-08-06",
-        "photo": "./public/members/b_ms3xojdz_4w1hbv-01l2sy1.jpg",
+        "photo": "./public/members/b_ms3xojdz_4w1hbv-1bwg074.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -189,7 +189,7 @@
         "memberNumber": "2347336",
         "name": "Oswaldo Brancalhão",
         "birthDate": "1946-07-24",
-        "photo": "./public/members/b_ms3xp6en_ka98gi-1ffcm70.jpg",
+        "photo": "./public/members/b_ms3xp6en_ka98gi-1kyoy6v.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -207,7 +207,7 @@
         "memberNumber": "6334429",
         "name": "Roberta Bolfarini Jabur Freire",
         "birthDate": "2005-09-26",
-        "photo": "./public/members/b_ms3xpzjw_4n88dj-1enit2l.jpg",
+        "photo": "./public/members/b_ms3xpzjw_4n88dj-157z39t.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -225,7 +225,7 @@
         "memberNumber": "2676743",
         "name": "Rogério Andreotti",
         "birthDate": "1972-12-20",
-        "photo": "./public/members/b_ms3xqh6q_on357v-13hlg0a.jpg",
+        "photo": "./public/members/b_ms3xqh6q_on357v-12fn3o6.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -234,7 +234,7 @@
         "memberNumber": "4369499",
         "name": "Sônia Maria Brancalhão",
         "birthDate": "1950-12-31",
-        "photo": "./public/members/b_ms3xr0sd_wd81n3-011nztq.jpg",
+        "photo": "./public/members/b_ms3xr0sd_wd81n3-1m42eb5.jpg",
         "active": true,
         "status": "Ativo"
       },
@@ -243,7 +243,7 @@
         "memberNumber": "6050963",
         "name": "Sueli Neves",
         "birthDate": "1974-08-07",
-        "photo": "./public/members/b_ms3xrctq_knqsof-0aokyx8.jpg",
+        "photo": "./public/members/b_ms3xrctq_knqsof-11zsuyd.jpg",
         "membershipNotes": "PIX recebido junto com a mensalidade do Marcos Antônio de Almeida (Marido)",
         "status": "Ativo",
         "active": true
@@ -253,7 +253,7 @@
         "memberNumber": "26767938",
         "name": "Tamires Priscila Gonçalves da Silva",
         "birthDate": "1987-11-23",
-        "photo": "./public/members/b_ms3xrlee_op8bsq-0xd3pjb.jpg",
+        "photo": "./public/members/b_ms3xrlee_op8bsq-1adm34z.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -271,7 +271,7 @@
         "memberNumber": "6050955",
         "name": "Gustavo Almeida",
         "birthDate": "1982-12-19",
-        "photo": "./public/members/b_ms3zd19y_z8aqbx-1pn7w1b.jpg",
+        "photo": "./public/members/b_ms3zd19y_z8aqbx-1g28b9o.jpg",
         "active": true,
         "status": "Ativo"
       },
@@ -280,7 +280,7 @@
         "memberNumber": "27350180",
         "name": "Aparecido Batista da Silva",
         "birthDate": "1981-10-14",
-        "photo": "./public/members/b_ms40ff4a_n4tgfl-1tqyfk2.jpg",
+        "photo": "./public/members/b_ms40ff4a_n4tgfl-0y0pfnk.jpg",
         "status": "Ativo",
         "active": true
       },
