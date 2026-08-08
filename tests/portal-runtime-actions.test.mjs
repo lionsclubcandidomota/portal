@@ -459,7 +459,7 @@ test('atualização da interface é bloqueada antes de consultar o GitHub quando
   assert.equal(fixture.getState().settings.clubName, 'Local');
 });
 
-test('atualização segura restaura a interface inicial e preserva o token administrativo', async () => {
+test('atualização segura preserva a tela atual e o token administrativo', async () => {
   const fixture = setup({
     dependencies: {
       resetInterfaceState: () => fixture?.calls.push('resetInterface'),
@@ -496,7 +496,8 @@ test('atualização segura restaura a interface inicial e preserva o token admin
   assert.equal(fixture.context.model.githubToken, 'token-em-memoria');
   assert.equal(fixture.context.model.githubFileSha, 'sha-atualizado');
   assert.equal(fixture.getState().settings.clubName, 'Portal atualizado');
-  assert.ok(fixture.calls.includes('resetInterface'));
+  assert.ok(fixture.calls.includes('render'));
+  assert.ok(!fixture.calls.includes('resetInterface'));
   assert.ok(fixture.calls.includes('refreshCenter'));
   assert.ok(fixture.calls.some(call => Array.isArray(call) && call[0] === 'status' && call[1] === 'synced'));
 });

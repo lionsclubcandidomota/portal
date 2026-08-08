@@ -26,22 +26,36 @@ test('controle de rotas usa a mesma política central das ações', () => {
   assert.equal(canAccessView(ACCESS_ROLES.VISITOR, 'dashboard'), true);
 });
 
+
+test('rotas restritas aceitam o snapshot usado pela navegação após o login', () => {
+  const model = {};
+  applyAccessRole(model, ACCESS_ROLES.ADMIN);
+  const snapshot = accessSnapshot(model);
+
+  assert.equal(canAccessView(snapshot, 'treasury'), true);
+  assert.equal(canAccessView(snapshot, 'settings'), true);
+  assert.equal(canAccessView(snapshot, 'admin'), true);
+
+  applyAccessRole(model, ACCESS_ROLES.DIRECTOR);
+  const directorSnapshot = accessSnapshot(model);
+  assert.equal(canAccessView(directorSnapshot, 'treasury'), true);
+  assert.equal(canAccessView(directorSnapshot, 'settings'), false);
+});
+
 test('transição de perfil mantém os campos legados de sessão sincronizados', () => {
   const model = {};
 
   applyAccessRole(model, ACCESS_ROLES.DIRECTOR);
-  assert.deepEqual(accessSnapshot(model), {
-    role: ACCESS_ROLES.DIRECTOR,
-    authenticated: true,
-    readOnly: true,
-    canWrite: false,
-    canRefresh: true,
-    canViewTreasury: true,
-    canViewSettings: false,
-    canPublish: false,
-    canDiscard: false,
-    canManageAccess: false
-  });
+  const director = accessSnapshot(model);
+  assert.equal(director.role, ACCESS_ROLES.DIRECTOR);
+  assert.equal(director.authenticated, true);
+  assert.equal(director.readOnly, true);
+  assert.equal(director.canWrite, false);
+  assert.equal(director.canRefresh, true);
+  assert.equal(director.canViewTreasury, true);
+  assert.equal(director.canViewSettings, false);
+  assert.equal(director.canPublish, false);
+  assert.equal(director.canManageUsers, false);
   assert.equal(model.adminUnlocked, true);
   assert.equal(model.canWrite, false);
 

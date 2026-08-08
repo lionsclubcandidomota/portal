@@ -70,6 +70,35 @@ Obrigado(a)!
 Tesouraria do ${clubName}`;
 }
 
+export function buildFamilyMembershipChargeMessage({
+  familyName = '',
+  memberCharges = [],
+  clubName = 'Lions Clube'
+} = {}) {
+  const charges = (Array.isArray(memberCharges) ? memberCharges : [])
+    .map(item => ({
+      memberName: String(item?.memberName || '').trim(),
+      monthLabels: [...new Set(item?.monthLabels || [])].filter(Boolean),
+      expectedTotal: Math.max(0, Number(item?.expectedTotal || 0))
+    }))
+    .filter(item => item.memberName && item.monthLabels.length);
+  const familyLabel = String(familyName || '').trim() || 'família';
+  const total = charges.reduce((sum, item) => sum + item.expectedTotal, 0);
+  const lines = charges.map(item => `• ${item.memberName}: ${item.monthLabels.join(', ')} — ${money.format(item.expectedTotal)}`);
+
+  return `Olá, família ${familyLabel}! Tudo bem?
+
+Identificamos mensalidades pendentes para os integrantes abaixo:
+${lines.join('\n')}
+
+Total estimado: ${money.format(total)}.
+
+Pedimos, por gentileza, que verifiquem a situação. Caso os pagamentos já tenham sido realizados, desconsiderem esta mensagem e, se possível, encaminhem os comprovantes.
+
+Obrigado(a)!
+Tesouraria do ${clubName}`;
+}
+
 export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '' } = {}) {
   const data = { ...raw };
   data.category = String(data.category || '').trim();

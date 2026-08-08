@@ -1,4 +1,4 @@
-import { memberIsActive, memberStatusLabel } from '../../core/portal-members.js?v=6.36.0';
+import { memberIsActive, memberStatusLabel } from '../../core/portal-members.js?v=6.44.1';
 import { dateFromInput, periodLabel } from '../admin-dashboard/domain.js';
 import {
   isMutualEntry,
@@ -355,7 +355,7 @@ function buildAgendaReport(state, bounds) {
     date: item.date,
     time: item.time,
     title: item.name,
-    location: item.locationType === 'virtual' ? item.onlineUrl : item.location,
+    location: item.locationType === 'virtual' ? (item.onlineUrl || 'Online · link será disponibilizado') : item.location,
     status: item.status || 'Confirmado',
     details: item.description
   }));
@@ -364,7 +364,7 @@ function buildAgendaReport(state, bounds) {
     date: item.date,
     time: item.time,
     title: item.theme,
-    location: item.locationType === 'virtual' ? item.onlineUrl : item.location,
+    location: item.locationType === 'virtual' ? (item.onlineUrl || 'Online · link será disponibilizado') : item.location,
     status: item.status || 'Pendente',
     details: item.notes
   }));

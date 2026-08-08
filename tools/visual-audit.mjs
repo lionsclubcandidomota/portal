@@ -22,6 +22,7 @@ const visualViews = [
   { id: 'dashboard', title: 'Início' },
   { id: 'agenda', title: 'Agenda' },
   { id: 'birthdays', title: 'Aniversariantes' },
+  { id: 'leaders', title: 'Dirigentes' },
   { id: 'notices', title: 'Avisos' },
   { id: 'admin', title: 'Área administrativa' }
 ];
@@ -213,6 +214,14 @@ const layoutExpression = `(() => {
     const parentRect = parent.getBoundingClientRect();
     return itemRect.left < parentRect.left - 2 || itemRect.right > parentRect.right + 2;
   }).length;
+  const leaderCards = [...document.querySelectorAll('.leader-card')].filter(visible);
+  const leaderCardOverflow = leaderCards.filter(item => {
+    const parent = item.closest('.leaders-grid') || item.parentElement;
+    if (!parent) return false;
+    const itemRect = item.getBoundingClientRect();
+    const parentRect = parent.getBoundingClientRect();
+    return itemRect.left < parentRect.left - 2 || itemRect.right > parentRect.right + 2;
+  }).length;
   const pageTitle = document.getElementById('pageTitle');
   const pageTitleRect = pageTitle?.getBoundingClientRect();
   const topbarClipped = Boolean(pageTitleRect && (pageTitleRect.left < -2 || pageTitleRect.right > viewportWidth + 2));
@@ -230,6 +239,8 @@ const layoutExpression = `(() => {
     overflowing,
     appointmentOverflow,
     appointmentCount: appointments.length,
+    leaderCardOverflow,
+    leaderCardCount: leaderCards.length,
     pageTitle: pageTitle?.textContent || '',
     topbarClipped,
     bottomNavTooNarrow,
@@ -343,6 +354,7 @@ try {
       if (report.contentOverflow) failures.push(`${label}: conteúdo principal possui rolagem horizontal inesperada`);
       if (report.overflowing.length) failures.push(`${label}: ${report.overflowing.length} elemento(s) ultrapassam o conteúdo principal`);
       if (report.appointmentOverflow) failures.push(`${label}: ${report.appointmentOverflow} compromisso(s) ultrapassam o card`);
+      if (report.leaderCardOverflow) failures.push(`${label}: ${report.leaderCardOverflow} card(s) de dirigente ultrapassam a grade`);
       if (report.topbarClipped) failures.push(`${label}: título do topo ultrapassa a viewport`);
       if (report.bottomNavTooNarrow) failures.push(`${label}: item da navegação móvel ficou estreito demais`);
       if (report.sidebarLabelsClipped.length) failures.push(`${label}: rótulos laterais cortados (${report.sidebarLabelsClipped.join(', ')})`);

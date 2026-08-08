@@ -10,9 +10,12 @@ export function createTreasuryEntryManager(context) {
     showModal,
     confirmation,
     persist,
+    renderTreasuryView,
     renderCurrentView,
     closeModal,
-    toast
+    toast,
+    captureInterfaceContext,
+    restoreInterfaceContext
   } = context;
 
   const categoryOptions = selected => `<option value="">Selecione uma categoria</option>${treasury.categories().map(category => `<option value="${escapeHtml(category)}" ${normalize(selected) === normalize(category) ? 'selected' : ''}>${escapeHtml(category)}</option>`).join('')}`;
@@ -214,6 +217,7 @@ export function createTreasuryEntryManager(context) {
   };
 
   const openTreasuryEntryForm = (id = null) => {
+    const interfaceSnapshot = captureInterfaceContext?.();
     const collection = state().treasury;
     const item = id ? collection.find(entry => entry.id === id) : {};
     if (id && !item) {
@@ -268,7 +272,9 @@ export function createTreasuryEntryManager(context) {
           throw error;
         }
         closeModal();
-        renderCurrentView();
+        if (typeof renderTreasuryView === 'function') renderTreasuryView();
+        else renderCurrentView();
+        restoreInterfaceContext?.(interfaceSnapshot, { restoreFocus: false });
       } catch (error) {
         toast(error.message || 'Não foi possível salvar a movimentação.');
       } finally {

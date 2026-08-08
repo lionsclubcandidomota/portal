@@ -4,21 +4,21 @@ import {
   loadPublicGitHubPayload,
   saveGitHubState,
   waitForPagesDeployment
-} from '../../github.js?v=6.36.0';
-import { createPortalRuntimeContext } from './context.js?v=6.36.0';
-import { createPersistenceActions } from './persistence.js?v=6.36.0';
-import { createAdminSessionActions } from './session.js?v=6.36.0';
-import { createPublicationActions } from './publication.js?v=6.36.0';
-import { createRemoteSyncActions } from './remote-sync.js?v=6.36.0';
-import { createBootstrapAction } from './bootstrap.js?v=6.36.0';
-import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.36.0';
-import { createAccessProfileActions } from './access-profile.js?v=6.36.0';
+} from '../../github.js?v=6.44.1';
+import { createPortalRuntimeContext } from './context.js?v=6.44.1';
+import { createPersistenceActions } from './persistence.js?v=6.44.1';
+import { createAdminSessionActions } from './session.js?v=6.44.1';
+import { createPublicationActions } from './publication.js?v=6.44.1';
+import { createRemoteSyncActions } from './remote-sync.js?v=6.44.1';
+import { createBootstrapAction } from './bootstrap.js?v=6.44.1';
+import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.44.1';
+import { createAccessProfileActions } from './access-profile.js?v=6.44.1';
 import {
   ACCESS_CAPABILITIES,
   accessSnapshot,
   canAccessView,
   roleHasCapability
-} from './authorization.js?v=6.36.0';
+} from './authorization.js?v=6.44.1';
 
 export function createPortalRuntimeController(dependencies) {
   const services = {
@@ -71,13 +71,14 @@ export function createPortalRuntimeController(dependencies) {
     configureDirectorProfile: accessProfiles.configureDirectorProfile,
     connectAdminSession: session.connectAdminSession,
     connectDirectorSession: session.connectDirectorSession,
+    connectUserSession: session.connectUserSession,
     discardPendingChanges: publication.discardPendingChanges,
     importState: persistence.importState,
-    can: capability => roleHasCapability(model.accessRole, capability),
-    canAccessView: view => canAccessView(model.accessRole, view),
+    can: capability => roleHasCapability(model, capability),
+    canAccessView: view => canAccessView(model, view),
     getAccessPolicy: () => accessSnapshot(model),
     isAdminUnlocked: () => accessSnapshot(model).authenticated,
-    isWriteAllowed: () => roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.WRITE_DATA),
+    isWriteAllowed: () => roleHasCapability(model, ACCESS_CAPABILITIES.WRITE_DATA),
     isDirector: () => accessSnapshot(model).role === 'director',
     logoutAdmin: session.logoutAdmin,
     removeDirectorProfile: accessProfiles.removeDirectorProfile,

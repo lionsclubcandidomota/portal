@@ -66,11 +66,11 @@ export function stripSensitivePortalFields(value) {
 
 export function normalizeGitHubToken(value) {
   const token = String(value || '').trim();
-  if (!token) throw new Error('Informe um token de acesso do GitHub.');
-  if (token.length < 8) throw new Error('O token informado é muito curto para ser válido.');
-  if (token.length > 1024) throw new Error('O token informado excede o tamanho permitido.');
+  if (!token) throw new Error('Informe sua credencial de acesso.');
+  if (token.length < 8) throw new Error('O valor da credencial é muito curto.');
+  if (token.length > 1024) throw new Error('A credencial informada excede o tamanho permitido.');
   if (TOKEN_CONTROL_CHARACTERS.test(token) || TOKEN_WHITESPACE.test(token)) {
-    throw new Error('O token contém espaços ou caracteres inválidos. Cole apenas o valor do token.');
+    throw new Error('A credencial contém espaços ou caracteres inválidos. Informe somente o valor da credencial.');
   }
   return token;
 }

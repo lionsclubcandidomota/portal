@@ -1,8 +1,19 @@
-import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.36.0';
-import { normalizeMemberRecord } from './portal-members.js?v=6.36.0';
+import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.44.1';
+import { memberIsActive, normalizeMemberRecord } from './portal-members.js?v=6.44.1';
+import {
+  defaultAccessRoles,
+  normalizeAccessRoleRecord,
+  normalizePortalUserRecord
+} from './portal-access.js?v=6.44.1';
+import {
+  assignmentDateRangeIsValid,
+  lionYearBounds,
+  lionYearForDate,
+  normalizeLeadershipAssignmentRecord
+} from './portal-leadership.js?v=6.44.1';
 
 export const PORTAL_APP_ID = 'Lions Clube de Cândido Mota Dashboard';
-export const CURRENT_SCHEMA_VERSION = 10;
+export const CURRENT_SCHEMA_VERSION = 12;
 
 export const DEFAULT_TREASURY_CATEGORIES = Object.freeze([
   'Mensalidades',
@@ -27,7 +38,10 @@ const COLLECTION_FIELDS = Object.freeze([
   'treasury',
   'events',
   'meetings',
-  'notices'
+  'notices',
+  'accessRoles',
+  'portalUsers',
+  'leadershipAssignments'
 ]);
 
 const ENVELOPE_FIELDS = new Set([
@@ -209,6 +223,7 @@ export function createDefaultPortalState() {
       logo: './public/logo-ui.webp',
       primaryColor: '#00529B',
       accentColor: '#F2C100',
+      fontFamily: 'modern',
       membershipMonthlyFee: 0,
       membershipFamilyPrimaryFee: 0,
       membershipFamilyAdditionalFee: 0,
@@ -223,7 +238,10 @@ export function createDefaultPortalState() {
     treasury: [],
     events: [],
     meetings: [],
-    notices: []
+    notices: [],
+    accessRoles: defaultAccessRoles(),
+    portalUsers: [],
+    leadershipAssignments: []
   };
 }
 
@@ -310,6 +328,62 @@ export function normalizePortalStateShape(value) {
   normalized.mutualGroups = normalized.mutualGroups.map(normalizeMutualGroupRecord);
   normalized.treasury = normalized.treasury.map(normalizeMutualMovementRecord);
 
+  const roleSource = Array.isArray(state.accessRoles) && state.accessRoles.length
+    ? state.accessRoles
+    : defaultAccessRoles();
+  const roleMap = new Map();
+  roleSource.map(normalizeAccessRoleRecord).forEach(role => {
+    if (role.id && role.name && !roleMap.has(role.id)) roleMap.set(role.id, role);
+  });
+  defaultAccessRoles().forEach(role => {
+    if (!roleMap.has(role.id)) roleMap.set(role.id, role);
+  });
+  normalized.accessRoles = [...roleMap.values()];
+
+  const knownMembers = new Set(normalized.birthdays.map(member => member.id));
+  const knownRoles = new Set(normalized.accessRoles.map(role => role.id));
+  const usernames = new Set();
+  const memberUsers = new Set();
+  normalized.portalUsers = (Array.isArray(state.portalUsers) ? state.portalUsers : [])
+    .map(normalizePortalUserRecord)
+    .filter(user => {
+      if (!user.id || !user.username || !knownMembers.has(user.memberId) || !knownRoles.has(user.roleId)) return false;
+      if (usernames.has(user.username) || memberUsers.has(user.memberId)) return false;
+      usernames.add(user.username);
+      memberUsers.add(user.memberId);
+      return true;
+    });
+
+  const assignmentIds = new Set();
+  normalized.leadershipAssignments = (Array.isArray(state.leadershipAssignments) ? state.leadershipAssignments : [])
+    .map(normalizeLeadershipAssignmentRecord)
+    .filter(assignment => {
+      if (!assignment.id || assignmentIds.has(assignment.id)) return false;
+      if (!knownMembers.has(assignment.memberId) || !knownRoles.has(assignment.roleId)) return false;
+      if (!assignmentDateRangeIsValid(assignment)) return false;
+      assignmentIds.add(assignment.id);
+      return true;
+    });
+
+  const currentLionYear = lionYearForDate(new Date());
+  const currentBounds = lionYearBounds(currentLionYear);
+  normalized.portalUsers.forEach((user, index) => {
+    const hasHistory = normalized.leadershipAssignments.some(assignment => assignment.memberId === user.memberId);
+    if (hasHistory || !knownRoles.has(user.roleId)) return;
+    normalized.leadershipAssignments.push(normalizeLeadershipAssignmentRecord({
+      id: `leadership-migrated-${user.id || index + 1}`,
+      memberId: user.memberId,
+      roleId: user.roleId,
+      lionYear: currentLionYear,
+      startsOn: currentBounds.startsOn,
+      endsOn: currentBounds.endsOn,
+      active: user.active !== false,
+      notes: 'Cargo migrado automaticamente do acesso individual.',
+      createdAt: user.createdAt || '',
+      updatedAt: user.updatedAt || ''
+    }, normalized.leadershipAssignments.length));
+  });
+
   return normalized;
 }
 
@@ -326,6 +400,69 @@ export function validatePortalState(value) {
 
   for (const field of COLLECTION_FIELDS) {
     if (!Array.isArray(value[field])) errors.push(`${field} deve ser uma lista.`);
+  }
+
+  const roleIds = new Set();
+  const roleNames = new Set();
+  for (const role of Array.isArray(value.accessRoles) ? value.accessRoles : []) {
+    if (!role?.id || !role?.name) errors.push('Todo cargo deve possuir identificador e nome.');
+    if (roleIds.has(role?.id)) errors.push(`Cargo duplicado: ${role?.id}.`);
+    if (roleNames.has(String(role?.name || '').trim().toLocaleLowerCase('pt-BR'))) errors.push(`Nome de cargo duplicado: ${role?.name}.`);
+    roleIds.add(role?.id);
+    roleNames.add(String(role?.name || '').trim().toLocaleLowerCase('pt-BR'));
+  }
+
+  const userIds = new Set();
+  const usernames = new Set();
+  const userMembers = new Set();
+  const membersById = new Map((Array.isArray(value.birthdays) ? value.birthdays : []).map(member => [member.id, member]));
+  const memberIds = new Set(membersById.keys());
+  for (const user of Array.isArray(value.portalUsers) ? value.portalUsers : []) {
+    if (!user?.id || !user?.username || !user?.memberId || !user?.roleId) errors.push('Todo usuário deve estar vinculado a um associado e a um cargo.');
+    if (userIds.has(user?.id)) errors.push(`Usuário duplicado: ${user?.id}.`);
+    if (usernames.has(user?.username)) errors.push(`Nome de usuário duplicado: ${user?.username}.`);
+    if (userMembers.has(user?.memberId)) errors.push('Um associado não pode possuir mais de um usuário individual.');
+    if (user?.memberId && !memberIds.has(user.memberId)) errors.push(`Usuário vinculado a um associado inexistente: ${user.memberId}.`);
+    if (user?.active !== false && user?.memberId && memberIds.has(user.memberId) && !memberIsActive(membersById.get(user.memberId))) {
+      errors.push(`Usuário ativo vinculado a uma pessoa que não é associada ativa: ${user.memberId}.`);
+    }
+    if (user?.roleId && !roleIds.has(user.roleId)) errors.push(`Usuário vinculado a um cargo inexistente: ${user.roleId}.`);
+    const validPasswordHash = /^[a-f0-9]{64}$/i.test(String(user?.passwordHash || ''));
+    const validPasswordSalt = /^[a-f0-9]{32}$/i.test(String(user?.passwordSalt || ''));
+    if (user?.active !== false && (!validPasswordHash || !validPasswordSalt || Number(user?.passwordIterations || 0) < 100000)) {
+      errors.push(`O usuário ${user.username || user.id} não possui uma senha configurada corretamente.`);
+    } else {
+      if (user?.passwordHash && !validPasswordHash) errors.push(`Hash de senha inválido para o usuário ${user.username || user.id}.`);
+      if (user?.passwordSalt && !validPasswordSalt) errors.push(`Identificador de segurança inválido para o usuário ${user.username || user.id}.`);
+    }
+    userIds.add(user?.id);
+    usernames.add(user?.username);
+    userMembers.add(user?.memberId);
+  }
+
+  const assignmentIds = new Set();
+  for (const assignment of Array.isArray(value.leadershipAssignments) ? value.leadershipAssignments : []) {
+    if (!assignment?.id || !assignment?.memberId || !assignment?.roleId || !assignment?.lionYear) {
+      errors.push('Todo histórico de cargo deve possuir associado, cargo e Ano Leonístico.');
+    }
+    if (assignmentIds.has(assignment?.id)) errors.push(`Histórico de cargo duplicado: ${assignment?.id}.`);
+    if (assignment?.memberId && !memberIds.has(assignment.memberId)) errors.push(`Cargo vinculado a um associado inexistente: ${assignment.memberId}.`);
+    if (assignment?.roleId && !roleIds.has(assignment.roleId)) errors.push(`Histórico vinculado a um cargo inexistente: ${assignment.roleId}.`);
+    if (!assignmentDateRangeIsValid(assignment)) errors.push(`Período inválido no histórico de cargo ${assignment?.id || ''}.`);
+    assignmentIds.add(assignment?.id);
+  }
+
+  const activeAssignments = (Array.isArray(value.leadershipAssignments) ? value.leadershipAssignments : [])
+    .filter(assignment => assignment?.active !== false && assignmentDateRangeIsValid(assignment));
+  for (let firstIndex = 0; firstIndex < activeAssignments.length; firstIndex += 1) {
+    const first = activeAssignments[firstIndex];
+    for (let secondIndex = firstIndex + 1; secondIndex < activeAssignments.length; secondIndex += 1) {
+      const second = activeAssignments[secondIndex];
+      if (first.memberId !== second.memberId) continue;
+      if (first.startsOn <= second.endsOn && second.startsOn <= first.endsOn) {
+        errors.push(`O associado ${first.memberId} possui cargos ativos sobrepostos no histórico.`);
+      }
+    }
   }
 
   const sensitivePaths = findSensitivePortalFields(value);
@@ -397,6 +534,8 @@ export function migratePortalPayload(payload) {
   if (sourceSchemaVersion < 8) migrations.push('v7→v8: cadastros passam a distinguir Associados, Mutuários e registros inativos');
   if (sourceSchemaVersion < 9) migrations.push('v8→v9: movimentações financeiras passam a aceitar comprovantes e documentos anexos');
   if (sourceSchemaVersion < 10) migrations.push('v9→v10: cobranças de mútuas deixam de ser mensais e passam a existir somente por ocorrência de falecimento');
+  if (sourceSchemaVersion < 11) migrations.push('v10→v11: usuários individuais, cargos e permissões passam a integrar o Portal');
+  if (sourceSchemaVersion < 12) migrations.push('v11→v12: cargos passam a ser vinculados ao Ano Leonístico com histórico e expiração automática');
 
   state = normalizePortalStateShape(state);
   assertValidPortalState(state);

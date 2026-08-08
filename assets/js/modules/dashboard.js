@@ -15,9 +15,10 @@ import {
 import { markdownToHtml } from './markdown.js';
 import { noticeIsActive, noticePeriodText } from './notices.js';
 import { todayStart } from './timeline.js';
-import { memberIsActive } from '../core/portal-members.js?v=6.36.0';
-import { buildTreasuryDashboardSummary } from './treasury/dashboard-summary.js?v=6.36.0';
+import { memberIsActive } from '../core/portal-members.js?v=6.44.1';
+import { buildTreasuryDashboardSummary } from './treasury/dashboard-summary.js?v=6.44.1';
 import { uiIcon } from './visual-helpers.js';
+import { resolveDisplayLogo } from './settings-appearance.js?v=6.44.1';
 
 export function renderDashboard(state, helpers) {
   const {
@@ -66,6 +67,8 @@ export function renderDashboard(state, helpers) {
     || lastSyncInfo?.updatedAt
     || lastSyncInfo?.publishedAt
     || '';
+  const heroLogo = resolveDisplayLogo(state.settings?.logo);
+  const heroClubName = String(state.settings?.clubName || 'Lions Clube').trim() || 'Lions Clube';
   const lastUpdateText = lastUpdateValue
     ? `Atualizado em ${new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
@@ -81,9 +84,15 @@ export function renderDashboard(state, helpers) {
   root.innerHTML = `
     <section class="hero dashboard-hero ${adminUnlocked ? 'is-admin-compact' : ''}">
       <div class="hero-content">
+        <span class="dashboard-hero-eyebrow">Portal do clube</span>
         <h2>${greeting()}!</h2>
-        <p>${adminUnlocked ? 'Veja o que precisa da sua atenção hoje.' : `Acompanhe as novidades do ${escapeHtml(state.settings.clubName)}.`}</p>
+        <p>${adminUnlocked ? 'Veja o que precisa da sua atenção hoje.' : `Acompanhe as novidades do ${escapeHtml(heroClubName)}.`}</p>
         <div class="hero-meta"><span class="pill update-pill">${uiIcon('refresh')} ${lastUpdateText}</span></div>
+      </div>
+      <div class="dashboard-hero-visual">
+        <div class="dashboard-hero-logo-wrap">
+          <img class="dashboard-hero-logo" src="${escapeHtml(heroLogo)}" alt="Logo do ${escapeHtml(heroClubName)}" width="150" height="150" decoding="async">
+        </div>
       </div>
     </section>
     <section class="grid grid-kpis dashboard-kpis ${adminUnlocked ? 'is-admin-compact' : 'visitor-kpis'}">

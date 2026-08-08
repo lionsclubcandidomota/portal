@@ -1,4 +1,4 @@
-import { memberIsMutual } from '../../core/portal-members.js?v=6.36.0';
+import { memberIsMutual } from '../../core/portal-members.js?v=6.44.1';
 
 export const ADMIN_PERIOD_STORAGE = Object.freeze({
   preset: 'lions.admin.dashboard.period',
@@ -237,6 +237,8 @@ export function createAdminDashboardModel(state, {
     birthdayCount: birthdayPeople.total,
     birthdayAssociateCount: birthdayPeople.associateCount,
     birthdayMutualCount: birthdayPeople.mutualCount,
-    noticeCount: Array.isArray(safeState.notices) ? safeState.notices.length : 0
+    noticeCount: Array.isArray(safeState.notices) ? safeState.notices.length : 0,
+    userCount: Array.isArray(safeState.portalUsers) ? safeState.portalUsers.length : 0,
+    roleCount: Array.isArray(safeState.accessRoles) ? safeState.accessRoles.length : 0
   };
 }

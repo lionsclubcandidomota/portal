@@ -7,6 +7,18 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+
+echo Verificando integridade do Portal antes da homologacao...
+call npm run audit:integrated
+if errorlevel 1 (
+  echo.
+  echo A homologacao nao foi iniciada porque a verificacao integrada encontrou problemas.
+  pause
+  exit /b 1
+)
+
+echo.
+echo Abrindo o Portal para revisao manual...
 node tools\homologation-server.mjs --open
 if errorlevel 1 (
   echo.

@@ -1,5 +1,5 @@
 import { escapeHtml } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.36.0';
+import { uiIcon } from '../visual-helpers.js?v=6.44.1';
 
 const currency = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -30,14 +30,19 @@ export function moneyBar(label, count, value, type, maxValue) {
 
 export function adminLoginHtml() {
   return `<div class="card admin-login-card admin-login-refined">
-    <div class="admin-login-hero"><span class="admin-login-icon" aria-hidden="true">${uiIcon('lock')}</span><div class="admin-login-heading"><span class="admin-eyebrow">Área restrita</span><h2>Acesso ao painel</h2><p>Escolha o perfil de acesso.</p></div></div>
-    <div class="admin-access-switch" role="tablist" aria-label="Perfil de acesso">
+    <div class="admin-login-hero"><span class="admin-login-icon" aria-hidden="true">${uiIcon('lock')}</span><div class="admin-login-heading"><span class="admin-eyebrow">Área restrita</span><h2>Acesso ao painel</h2><p>Escolha como deseja entrar e informe seus dados.</p></div></div>
+    <div class="admin-access-switch has-three-options" role="tablist" aria-label="Perfil de acesso">
       <button class="btn btn-ghost admin-access-option is-active" id="adminAccessTab" type="button" role="tab" aria-selected="true" aria-controls="adminLoginForm" data-login-mode="admin"><span aria-hidden="true">${uiIcon('tools')}</span><strong>Administrador</strong></button>
+      <button class="btn btn-ghost admin-access-option" id="userAccessTab" type="button" role="tab" aria-selected="false" aria-controls="userLoginForm" data-login-mode="user"><span aria-hidden="true">${uiIcon('users')}</span><strong>Usuário</strong></button>
       <button class="btn btn-ghost admin-access-option" id="directorAccessTab" type="button" role="tab" aria-selected="false" aria-controls="directorLoginForm" data-login-mode="director"><span aria-hidden="true">${uiIcon('eye')}</span><strong>Diretoria</strong></button>
     </div>
     <form id="adminLoginForm" class="admin-login-form" autocomplete="off" role="tabpanel" aria-labelledby="adminAccessTab">
-      <div class="form-field"><label for="adminGithubToken">Token de acesso do GitHub <span class="required-mark">*</span></label><div class="admin-token-field"><input id="adminGithubToken" name="token" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Cole o token de Administrador" required><button type="button" class="btn btn-ghost admin-token-toggle" id="toggleAdminToken" aria-label="Mostrar token" aria-pressed="false">Mostrar</button></div></div>
-      <div class="admin-login-actions"><button class="btn btn-primary admin-login-submit" type="submit">Conectar como Administrador</button></div>
+      <div class="form-field"><label for="adminCredential">Credencial de acesso <span class="required-mark">*</span></label><div class="admin-token-field"><input id="adminCredential" name="credential" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Informe sua credencial de Administrador" required><button type="button" class="btn btn-ghost admin-token-toggle" id="toggleAdminCredential" aria-label="Mostrar credencial" aria-pressed="false">Mostrar</button></div><small>Use a credencial fornecida para o Portal.</small></div>
+      <div class="admin-login-actions"><button class="btn btn-primary admin-login-submit" type="submit">Entrar como Administrador</button></div>
+    </form>
+    <form id="userLoginForm" class="admin-login-form" autocomplete="off" role="tabpanel" aria-labelledby="userAccessTab" hidden>
+      <div class="form-grid"><div class="form-field"><label for="portalUsername">Usuário <span class="required-mark">*</span></label><input id="portalUsername" name="portalUsername" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Seu nome de usuário" required disabled></div><div class="form-field"><label for="portalUserPassword">Senha <span class="required-mark">*</span></label><div class="admin-token-field"><input id="portalUserPassword" name="portalUserPassword" type="password" autocomplete="current-password" placeholder="Informe sua senha" required disabled><button type="button" class="btn btn-ghost admin-token-toggle" id="togglePortalUserPassword" aria-label="Mostrar senha" aria-pressed="false" disabled>Mostrar</button></div></div></div>
+      <div class="admin-login-actions"><button class="btn btn-primary admin-login-submit" type="submit">Entrar com meu usuário</button></div>
     </form>
     <form id="directorLoginForm" class="admin-login-form" autocomplete="off" role="tabpanel" aria-labelledby="directorAccessTab" hidden>
       <div class="form-field"><label for="directorPassword">Senha da Diretoria <span class="required-mark">*</span></label><div class="admin-token-field"><input id="directorPassword" name="directorAccessPassword" type="password" value="" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Informe a senha da Diretoria" data-lpignore="true" data-1p-ignore="true" data-form-type="other" required disabled><button type="button" class="btn btn-ghost admin-token-toggle" id="toggleDirectorPassword" aria-label="Mostrar senha" aria-pressed="false" disabled>Mostrar</button></div></div>
@@ -46,41 +51,56 @@ export function adminLoginHtml() {
   </div>`;
 }
 
-export function adminDashboardHtml(model, { financePrivacyButton = '', auditSummary = null, recoverySummary = null, canWrite = true, accessRole = 'admin' } = {}) {
+export function adminDashboardHtml(model, { financePrivacyButton = '', auditSummary = null, recoverySummary = null, canWrite = true, accessRole = 'admin', accessPolicy = null } = {}) {
   const treasury = model.treasury;
   const directorMode = accessRole === 'director';
-  const dashboardTitle = directorMode ? 'Área da Diretoria' : 'Área administrativa';
-  const sessionLabel = directorMode ? 'Diretoria · leitura' : 'Conectado';
+  const userMode = accessRole === 'user';
+  const userName = accessPolicy?.user?.name || '';
+  const roleName = accessPolicy?.user?.roleName || accessPolicy?.label || 'Usuário';
+  const dashboardTitle = directorMode ? 'Área da Diretoria' : userMode ? 'Meu painel' : 'Área administrativa';
+  const sessionLabel = directorMode ? 'Diretoria · leitura' : userMode ? `${userName || 'Usuário'} · ${roleName}` : 'Administrador conectado';
   const customHidden = model.customPeriodVisible ? '' : 'hidden';
   const directorNotice = directorMode
     ? `<div class="notice medium"><strong>${uiIcon('eye')} Somente leitura</strong><p>Você pode consultar e exportar, mas não alterar dados.</p></div>`
-    : '';
-  const addMovementButton = canWrite
+    : userMode && accessPolicy?.readOnly
+      ? `<div class="notice medium"><strong>${uiIcon('eye')} Acesso de consulta</strong><p>Seu cargo permite consultar informações, sem realizar alterações.</p></div>`
+      : userMode && canWrite
+        ? `<div class="notice medium"><strong>${uiIcon('users')} Acesso individual</strong><p>As alterações ficam pendentes até serem publicadas pelo Administrador.</p></div>`
+        : '';
+  const canManagePeople = accessPolicy?.canManagePeople ?? canWrite;
+  const canManageAgenda = accessPolicy?.canManageAgenda ?? canWrite;
+  const canManageNotices = accessPolicy?.canManageNotices ?? canWrite;
+  const canManageTreasury = accessPolicy?.canManageTreasury ?? canWrite;
+  const canExportReports = accessPolicy?.canExportReports ?? true;
+  const canManageUsers = accessPolicy?.canManageUsers ?? accessRole === 'admin';
+  const canImport = accessPolicy?.canImport ?? accessRole === 'admin';
+  const canManageBackups = accessRole === 'admin';
+  const addMovementButton = canManageTreasury
     ? `<button class="btn btn-primary btn-sm" data-add="treasury" type="button">${uiIcon('plus')} Adicionar</button>`
     : '';
-  const addEventButton = canWrite
+  const addEventButton = canManageAgenda
     ? `<button class="btn btn-primary btn-sm" data-add="event" type="button">${uiIcon('plus')} Adicionar evento</button>`
     : '';
-  const addMeetingButton = canWrite
+  const addMeetingButton = canManageAgenda
     ? `<button class="btn btn-primary btn-sm" data-add="meeting" type="button">${uiIcon('plus')} Adicionar reunião</button>`
     : '';
-  const addBirthdayButton = canWrite
+  const addBirthdayButton = canManagePeople
     ? `<button class="btn btn-primary btn-sm" data-add="birthday" type="button">${uiIcon('plus')} Adicionar</button>`
     : '';
-  const addNoticeButton = canWrite
+  const addNoticeButton = canManageNotices
     ? `<button class="btn btn-primary btn-sm" data-add="notice" type="button">${uiIcon('plus')} Adicionar aviso</button>`
     : '';
-  const recoveryButton = canWrite
+  const recoveryButton = canImport
     ? '<button class="btn btn-primary btn-sm" id="openRecoveryCenterBtn" type="button">Ver backups</button>'
     : '<span class="badge badge-muted">Somente Administrador</span>';
-  const importButton = canWrite
+  const importButton = canImport
     ? `<button class="admin-backup-action" id="importBtn" type="button"><span>${uiIcon('upload')}</span><div><strong>Restaurar backup</strong><small>Usar uma cópia salva</small></div></button>`
     : '';
 
   return `
     <section class="admin-command-header admin-dashboard-header">
       <div><span class="admin-eyebrow">Administração</span><h2>${dashboardTitle}</h2><p>Veja os números principais e acesse os cadastros.</p>${directorNotice}</div>
-      <div class="admin-session-box"><span class="admin-session-dot"></span><div><strong>${sessionLabel}</strong><small>lionsclubcandidomota.github.io/portal</small></div><button class="btn btn-ghost btn-sm" id="logoutInlineBtn" type="button">Sair</button></div>
+      <div class="admin-session-box"><span class="admin-session-dot"></span><div><strong>${sessionLabel}</strong><small>${userMode ? escapeHtml(roleName) : 'lionsclubcandidomota.github.io/portal'}</small></div><button class="btn btn-ghost btn-sm" id="logoutInlineBtn" type="button">Sair</button></div>
     </section>
 
     <section class="admin-period-panel" aria-label="Filtro de período do dashboard">
@@ -133,7 +153,7 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
       <article class="admin-support-card"><div class="admin-support-main"><span class="admin-module-icon">${uiIcon('megaphone')}</span><div><span class="admin-insight-eyebrow">Avisos</span><h3>${model.noticeCount} aviso(s)</h3><p>Crie e consulte comunicados.</p></div></div><div class="admin-support-actions">${addNoticeButton}<button class="btn btn-ghost btn-sm" data-manage="notices" type="button">Ver avisos</button></div></article>
     </section>
 
-    <section class="card admin-report-center" aria-labelledby="adminReportTitle">
+    ${canExportReports ? `    <section class="card admin-report-center" aria-labelledby="adminReportTitle">
       <div class="admin-report-heading"><span class="admin-card-icon" aria-hidden="true">${uiIcon('file-text')}</span><div><span class="admin-insight-eyebrow">Relatórios</span><h3 id="adminReportTitle">Gerar relatório</h3><p>Escolha o conteúdo e exporte em PDF ou CSV.</p></div></div>
       <div class="admin-report-controls">
         <label class="admin-report-type"><span>Conteúdo</span><select id="adminReportType">
@@ -147,18 +167,19 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
         <div class="admin-report-period"><small>Período aplicado</small><strong>${escapeHtml(model.selectedPeriodLabel)}</strong></div>
         <div class="admin-report-actions"><button class="btn btn-primary" id="generateReportPrint" type="button">${uiIcon('printer')} Abrir PDF</button><button class="btn btn-ghost" id="generateReportCsv" type="button">${uiIcon('download')} Baixar CSV</button></div>
       </div>
-    </section>
+    </section>` : ''}
 
     <section class="admin-operation-grid">
-      <article class="card admin-backup-card admin-backup-card-wide">
+      ${canManageBackups ? `<article class="card admin-backup-card admin-backup-card-wide">
         <div class="admin-card-heading"><span class="admin-card-icon">${uiIcon('lifebuoy')}</span><div><h3>Backup e recuperação</h3><p>Baixe uma cópia ou restaure dados quando necessário.</p></div></div>
         <div class="admin-recovery-summary"><span class="is-${escapeHtml(recoverySummary?.diagnosticStatus || 'ok')}">${recoverySummary?.diagnosticStatus === 'error' ? '!' : recoverySummary?.diagnosticStatus === 'warning' ? '!' : '✓'}</span><div><strong>${Number(recoverySummary?.snapshots || 0)} ponto(s) de recuperação</strong><small>${recoverySummary?.latestAt ? `Último criado em ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(recoverySummary.latestAt))}` : 'O portal criará cópias antes de operações críticas'}</small></div>${recoveryButton}</div>
         <div class="admin-backup-options"><button class="admin-backup-action" id="exportBtn" type="button"><span>${uiIcon('download')}</span><div><strong>Baixar backup</strong><small>Salvar uma cópia dos dados</small></div></button>${importButton}</div>
-      </article>
+      </article>` : ''}
       <article class="admin-audit-card">
         <div class="admin-audit-main"><span class="admin-module-icon" aria-hidden="true">${uiIcon('history')}</span><div><span class="admin-insight-eyebrow">Atividade</span><h3>Histórico de alterações</h3><p>${auditSummary?.latestAction ? `Última operação: ${escapeHtml(auditSummary.latestAction)}` : 'As alterações feitas neste navegador aparecem aqui.'}</p></div></div>
         <div class="admin-audit-stats"><div class="admin-audit-stat"><strong>${Number(auditSummary?.operations || 0)}</strong><small>operações</small></div><div class="admin-audit-stat"><strong>${Number(auditSummary?.pendingBatches || 0)}</strong><small>pendentes</small></div></div>
         <div class="admin-audit-actions"><button class="btn btn-primary btn-sm" id="openAuditLogBtn" type="button">Ver histórico</button></div>
       </article>
+      ${canManageUsers ? `<article class="admin-audit-card admin-access-card"><div class="admin-audit-main"><span class="admin-module-icon" aria-hidden="true">${uiIcon('users')}</span><div><span class="admin-insight-eyebrow">Acessos</span><h3>Usuários e cargos</h3><p>Crie acessos individuais e defina permissões por responsabilidade.</p></div></div><div class="admin-audit-stats"><div class="admin-audit-stat"><strong>${Number(model.userCount || 0)}</strong><small>usuários</small></div><div class="admin-audit-stat"><strong>${Number(model.roleCount || 0)}</strong><small>cargos</small></div></div><div class="admin-audit-actions"><button class="btn btn-primary btn-sm" id="openAccessManagementBtn" type="button">Gerenciar acessos</button></div></article>` : ''}
     </section>`;
 }

@@ -1,93 +1,58 @@
-# Registro técnico — 6.36.0
+# Registro técnico — Portal v6.44.1
 
-## Objetivo desta etapa
+## Ciclos concluídos
 
-A v6.36.0 executa a **Etapa 8 — estabilização final** e encerra a refatoração incremental do Portal. O objetivo foi remover código comprovadamente sem uso, tornar o processo de atualização mais seguro e transformar as regras arquiteturais em verificações automáticas.
+A refatoração estrutural das versões 6.29.0 a 6.36.0 permanece concluída. O ciclo funcional das versões 6.37.0 a 6.44.0 também está encerrado, com todas as oito etapas entregues.
 
-## Código removido com evidência
+## Etapas 1 a 5
 
-Uma análise do grafo completo, iniciada em `assets/js/app.js`, identificou dois arquivos que não eram alcançados por imports estáticos nem dinâmicos:
+- **v6.37.0:** tela inicial, cabeçalho autenticado e tipografia configurável;
+- **v6.38.0:** preservação de tela, rolagem, filtros e reorganização de Ajustes e publicação;
+- **v6.39.0:** eventos on-line sem link obrigatório, parabenizações públicas e acesso administrativo simplificado;
+- **v6.40.0:** modernização da Tesouraria, gráficos interativos, programados recolhíveis e cobrança familiar;
+- **v6.41.0:** participantes das Mútuas e listas recolhidas no gerenciamento de famílias.
 
-- `assets/js/modules/treasury.js`: fachada antiga que duplicava exports dos módulos efetivamente usados;
-- `assets/js/modules/treasury-admin/categories.js`: gerenciador antigo substituído pelo fluxo integrado ao formulário de lançamento.
+## Etapa 6 — usuários, cargos e permissões
 
-Os dois arquivos foram removidos. A validação da Tesouraria agora consulta diretamente os contratos de `controller.js`, `view.js` e `charts.js`.
+A v6.42.0 criou `accessRoles` e `portalUsers`, vinculando acessos individuais aos associados. As senhas são derivadas por PBKDF2-SHA-256, nunca armazenadas em texto. A política central de autorização continua protegendo publicação, importação, recuperação e gerenciamento de acessos.
 
-## Auditoria do grafo de módulos
+## Etapa 7 — histórico por Ano Leonístico
 
-O novo comando:
+A v6.43.0 criou `leadershipAssignments`. Cada registro preserva associado, cargo, Ano Leonístico, início, fim e situação. O cargo efetivo é calculado pela vigência, e a troca de cargo não apaga o histórico anterior.
 
-```bash
-npm run audit:modules
-```
+## v6.44.0 — Etapa 8
 
-percorre todos os módulos de `assets/js`, resolve imports relativos com ou sem parâmetro de versão e reprova a entrega quando encontra:
+### Projeção pública
 
-- arquivo JavaScript não alcançável pela aplicação;
-- import relativo para arquivo inexistente;
-- dependência circular no grafo de execução.
+O módulo `leaders.js` cria uma projeção somente de leitura da diretoria vigente. Ele reutiliza:
 
-A auditoria integra o comando `npm run quality` e, consequentemente, todos os portões de release.
+- `birthdays` para nome e fotografia do associado;
+- `accessRoles` para o nome do cargo;
+- `leadershipAssignments` para Ano Leonístico e vigência.
 
-## Backup antes da atualização
+A projeção não consulta `portalUsers` e não expõe credenciais, números de associado, permissões ou observações internas.
 
-O comando:
+### Homologação integrada
 
-```bash
-npm run backup:local
-```
+O módulo `integrated-homologation.mjs` valida o esquema, referências, períodos, duplicidades e disponibilidade da rota pública. O relatório é gravado em `artifacts`, fora do Git. A auditoria visual inclui Dirigentes e passa a verificar os cartões da diretoria em 30 cenários responsivos.
 
-cria uma cópia de:
+### Estabilização
 
-- `data/dados.json`;
-- `data/modelo.json`.
+- esquema mantido em 12;
+- nenhuma coleção operacional é migrada ou regravada nesta etapa;
+- contratos públicos do módulo de Dirigentes são validados pelo pipeline;
+- a finalização continua criando backup local antes de qualquer normalização;
+- o pacote incremental continua excluindo `data` e `public`.
 
-Cada backup recebe data, versão do Portal, tamanho e SHA-256 dos arquivos. Os backups ficam em `.portal-backups`, fora do Git, com retenção automática das 10 cópias mais recentes.
+## v6.44.1 — correções pós-homologação
 
-O backup é executado antes de `data:migrate` no fluxo oficial de finalização.
+- A política de rotas passa a aceitar tanto o modelo de sessão (`accessRole`) quanto o snapshot consumido pela navegação (`role`).
+- O formulário de designação usa um padrão HTML sem escapes ambíguos para o Ano Leonístico.
+- Foram adicionados testes de regressão para navegação autenticada e para o formato `AAAA/AAAA`.
+- O esquema permanece em 12 e os dados não são modificados.
 
-## Pipeline consolidado
+## Planejamento atualizado
 
-O comando oficial passou a ser:
-
-```bash
-npm run release:prepare
-```
-
-Ele executa, nesta ordem:
-
-1. backup local;
-2. migração idempotente dos dados;
-3. geração do CSS;
-4. testes e auditorias de qualidade;
-5. geração do manifesto;
-6. auditoria e verificação final do release.
-
-A auditoria visual permanece separada: use `npm run audit:visual` durante a revisão e `npm run audit:visual:required` na estação oficial de homologação. Ela não faz parte do finalizador automático para evitar que uma instalação local de navegador incompatível bloqueie a atualização.
-
-O arquivo `FINALIZAR-ATUALIZACAO.bat` chama somente esse pipeline, evitando repetições e reduzindo o tempo de validação.
-
-## Segurança dos dados
-
-- esquema permanece na versão 10;
-- nenhuma regra da Tesouraria foi alterada;
-- nenhuma regra de mensalidades ou Mútuas foi alterada;
-- nenhuma integração com Cloudflare foi adicionada;
-- o pacote de atualização não inclui `data` nem `public`;
-- `data/dados.json` e `data/modelo.json` permanecem preservados durante a sobreposição do pacote.
-
-## Resultado acumulado da refatoração
-
-Entre as versões 6.29.0 e 6.36.0, o projeto passou a contar com:
-
-- CSS sem camada legacy;
-- carregamento sob demanda dos módulos pesados;
-- redução superior a 50% no JavaScript inicial;
-- mídia responsiva e template de aniversário otimizado;
-- renderização incremental das listas e gráficos;
-- ícones SVG locais e consistentes;
-- homologação visual em cinco telas e cinco resoluções;
-- auditorias de desempenho, mídia, segurança, acessibilidade, CSS, módulos e release;
-- backup automático antes de atualizações.
-
-**Etapas pendentes: nenhuma.**
+- etapas concluídas neste ciclo: 8 de 8;
+- etapas pendentes: 0;
+- ciclo funcional concluído.

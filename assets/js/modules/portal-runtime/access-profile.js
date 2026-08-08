@@ -2,9 +2,9 @@ import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   roleHasCapability
-} from './authorization.js?v=6.36.0';
+} from './authorization.js?v=6.44.1';
 
-export { ACCESS_ROLES } from './authorization.js?v=6.36.0';
+export { ACCESS_ROLES } from './authorization.js?v=6.44.1';
 
 const DIRECTOR_PROFILE_VERSION = 2;
 const DIRECTOR_PASSWORD_CONTEXT = 'lions-portal-director-password-v2';
@@ -169,7 +169,7 @@ export function createAccessProfileActions(context, persistence) {
   const { model, dependencies } = context;
 
   const requireAdministrator = () => {
-    if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.MANAGE_ACCESS)) {
+    if (!roleHasCapability(model, ACCESS_CAPABILITIES.MANAGE_ACCESS)) {
       throw new Error('Somente o perfil Administrador pode configurar a senha da Diretoria.');
     }
   };

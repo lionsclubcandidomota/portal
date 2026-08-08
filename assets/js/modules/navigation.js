@@ -1,8 +1,9 @@
-import { accessSnapshot, canAccessView } from './portal-runtime/authorization.js?v=6.36.0';
+import { accessSnapshot, canAccessView } from './portal-runtime/authorization.js?v=6.44.1';
 
 const DEFAULT_TITLES = {
   dashboard: 'Início',
   birthdays: 'Aniversariantes',
+  leaders: 'Dirigentes',
   treasury: 'Tesouraria',
   agenda: 'Agenda',
   notices: 'Avisos',
@@ -13,6 +14,7 @@ const DEFAULT_TITLES = {
 const DEFAULT_DESCRIPTIONS = {
   dashboard: 'O essencial do clube em um só lugar',
   birthdays: 'Consulte datas e pessoas',
+  leaders: 'Diretoria do Ano Leonístico vigente',
   treasury: 'Acompanhe saldos e movimentações',
   agenda: 'Eventos e reuniões do clube',
   notices: 'Comunicados do clube',
@@ -42,6 +44,8 @@ export function createNavigationController({
   refreshGlobalControls,
   setTreasurySection,
   logoutAdmin,
+  captureInterfaceContext = () => null,
+  restoreInterfaceContext = () => {},
   initialView = 'dashboard',
   titles = DEFAULT_TITLES,
   descriptions = DEFAULT_DESCRIPTIONS,
@@ -97,9 +101,11 @@ export function createNavigationController({
   const updateAccessUI = () => {
     const access = currentAccessPolicy();
     const directorMode = access.role === 'director';
+    const userMode = access.role === 'user';
     document.body.classList.toggle('visitor-mode', !access.authenticated);
     document.body.classList.toggle('admin-mode', access.role === 'admin');
     document.body.classList.toggle('director-mode', directorMode);
+    document.body.classList.toggle('user-mode', userMode);
     document.body.classList.toggle('authenticated-mode', access.authenticated);
 
     const settingsNav = document.getElementById('settingsNav');
@@ -121,16 +127,18 @@ export function createNavigationController({
     if (treasuryMobileNav) treasuryMobileNav.hidden = !access.canViewTreasury;
     if (lockAdminButton) {
       lockAdminButton.textContent = access.authenticated
-        ? (directorMode ? '🔒 Encerrar acesso Diretoria' : '🔒 Encerrar acesso administrativo')
+        ? (directorMode ? '🔒 Encerrar acesso Diretoria' : userMode ? '🔒 Encerrar sessão' : '🔒 Encerrar acesso administrativo')
         : '🔐 Acesso ao painel';
     }
     if (adminLabel) adminLabel.textContent = access.authenticated
-      ? (directorMode ? 'Área da Diretoria' : 'Área administrativa')
+      ? (directorMode ? 'Área da Diretoria' : userMode ? 'Meu painel' : 'Área administrativa')
       : 'Área administrativa';
-    if (adminIcon) adminIcon.setAttribute('href', `./assets/icons/ui-icons.svg#${directorMode ? 'eye' : access.authenticated ? 'tools' : 'lock'}`);
+    if (adminIcon) adminIcon.setAttribute('href', `./assets/icons/ui-icons.svg#${directorMode ? 'eye' : userMode ? 'users' : access.authenticated ? 'tools' : 'lock'}`);
     if (modeChip) modeChip.textContent = directorMode
       ? 'Diretoria · leitura'
-      : access.authenticated ? 'Administrador' : 'Visitante';
+      : userMode
+        ? (access.label || access.user?.roleName || access.user?.name || 'Usuário')
+        : access.authenticated ? 'Administrador' : 'Visitante';
 
     refreshGlobalControls?.();
   };
@@ -138,11 +146,14 @@ export function createNavigationController({
   const setView = requestedView => {
     let view = requestedView || 'dashboard';
     const access = currentAccessPolicy();
-    if (!canAccessView(access.role, view)) view = 'admin';
+    if (!canAccessView(access, view)) view = 'admin';
+
+    const previousView = currentView;
+    const preserveContext = previousView === view;
+    const contextSnapshot = preserveContext ? captureInterfaceContext?.() : null;
 
     currentView = view;
     destroyViewResources?.();
-
 
     document.querySelectorAll('.nav-item').forEach(button => {
       const active = button.dataset.view === view;
@@ -163,7 +174,8 @@ export function createNavigationController({
     closeSidebar();
     renderView(view);
     updateAccessUI();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (preserveContext) restoreInterfaceContext?.(contextSnapshot);
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToView = view => {

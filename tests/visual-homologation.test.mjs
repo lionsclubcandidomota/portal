@@ -29,29 +29,29 @@ test('regras responsivas priorizam dashboard e controles da agenda', async () =>
   assert.match(css, /topbar-date\{display:none\}/);
 });
 
-test('auditoria visual cobre cinco telas em cinco resoluções', async () => {
+test('auditoria visual cobre seis telas em cinco resoluções', async () => {
   const audit = await source('tools/visual-audit.mjs');
   for (const viewport of ['mobile-360', 'mobile-390', 'tablet-768', 'notebook-1024', 'desktop-1366']) {
     assert.match(audit, new RegExp(`name: '${viewport}'`));
   }
-  for (const view of ['dashboard', 'agenda', 'birthdays', 'notices', 'admin']) {
+  for (const view of ['dashboard', 'agenda', 'birthdays', 'leaders', 'notices', 'admin']) {
     assert.match(audit, new RegExp(`id: '${view}'`));
   }
-  for (const guard of ['horizontalOverflow', 'contentOverflow', 'appointmentOverflow', 'topbarClipped', 'bottomNavTooNarrow', 'sidebarLabelsClipped', 'loading']) {
+  for (const guard of ['horizontalOverflow', 'contentOverflow', 'appointmentOverflow', 'leaderCardOverflow', 'topbarClipped', 'bottomNavTooNarrow', 'sidebarLabelsClipped', 'loading']) {
     assert.match(audit, new RegExp(guard));
   }
   assert.match(audit, /allowsHorizontalScroll/);
   assert.match(audit, /for \(const view of visualViews\)/);
 });
 
-test('documentação preserva a homologação visual e registra a estabilização final', async () => {
+test('documentação registra a etapa atual e preserva a homologação visual', async () => {
   const release = await source('RELEASE.md');
   const refactoring = await source('REFACTORING.md');
   const visual = await source('docs/visual-audit.md');
   const changelog = await source('CHANGELOG.md');
-  assert.match(release, /Portal Lions v6\.36\.0/);
-  assert.match(refactoring, /Etapa 8 — estabilização final/);
-  assert.match(refactoring, /Etapas pendentes:\s*nenhuma/i);
-  assert.match(changelog, /6\.35\.0 — Refatoração etapa 7/);
+  assert.match(release, /Portal Lions v6\.44\.1/);
+  assert.match(refactoring, /v6\.44\.1 — correções pós-homologação/i);
+  assert.match(refactoring, /ciclo funcional concluído/i);
+  assert.match(changelog, /6\.44\.0 — Dirigentes públicos e estabilização final/);
   assert.match(visual, /audit:visual:required/);
 });

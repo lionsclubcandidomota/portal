@@ -1,19 +1,19 @@
 import { loadState, exportState, parseImportFile } from '../storage.js';
 import { fullDateFormat, parseLocalDate, formatDate, nextBirthdayDate, daysUntil, escapeHtml, normalize, fileToDataUrl, sumTreasury, toInputDate } from '../utils.js';
 import { createFinancePrivacyController } from './finance-privacy.js';
-import { createLazyTreasuryController } from './lazy-treasury-controller.js?v=6.36.0';
-import { currencyInputValue, parseCurrencyInput } from './treasury/domain.js?v=6.36.0';
-import { memberIsActive } from '../core/portal-members.js?v=6.36.0';
-import { createLazySettingsController } from './lazy-settings.js?v=6.36.0';
-import { createNavigationController } from './navigation.js?v=6.36.0';
+import { createLazyTreasuryController } from './lazy-treasury-controller.js?v=6.44.1';
+import { currencyInputValue, parseCurrencyInput } from './treasury/domain.js?v=6.44.1';
+import { memberIsActive } from '../core/portal-members.js?v=6.44.1';
+import { createLazySettingsController } from './lazy-settings.js?v=6.44.1';
+import { createNavigationController } from './navigation.js?v=6.44.1';
 import { createUiShellController } from './ui-shell.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createPublishCenterController } from './publish-center.js?v=6.36.0';
-import { createPortalRefreshController } from './portal-refresh.js?v=6.36.0';
-import { createAuditLogController } from './audit-log.js?v=6.36.0';
-import { createRecoveryCenterController } from './recovery-center.js?v=6.36.0';
-import { createPublicationReviewController } from './publication-review-controller.js?v=6.36.0';
+import { createPublishCenterController } from './publish-center.js?v=6.44.1';
+import { createPortalRefreshController } from './portal-refresh.js?v=6.44.1';
+import { createAuditLogController } from './audit-log.js?v=6.44.1';
+import { createRecoveryCenterController } from './recovery-center.js?v=6.44.1';
+import { createPublicationReviewController } from './publication-review-controller.js?v=6.44.1';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
@@ -27,7 +27,7 @@ import {
   birthdayCards
 } from './birthdays.js';
 import { avatar, empty, kpi, priorityBadge, statusBadge } from './visual-helpers.js';
-import { createLazyBirthdayArtworkShare } from './lazy-birthday-artwork.js?v=6.36.0';
+import { createLazyBirthdayArtworkShare } from './lazy-birthday-artwork.js?v=6.44.1';
 import {
   appointmentLocationText,
   appointmentTypeBadge,
@@ -36,14 +36,17 @@ import {
   getAppointments as buildAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.36.0';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.36.0';
-import { getPortalElements } from './portal-elements.js?v=6.36.0';
-import { createReadOnlyGuard } from './read-only-guard.js?v=6.36.0';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.36.0';
-import { createAgendaController } from './agenda-state.js?v=6.36.0';
-import { createLazyEntityActions } from './lazy-entity-actions.js?v=6.36.0';
-import { createLazyAdminPanelController } from './lazy-admin-panel.js?v=6.36.0';
+} from './appointments.js?v=6.44.1';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.44.1';
+import { getPortalElements } from './portal-elements.js?v=6.44.1';
+import { createReadOnlyGuard } from './read-only-guard.js?v=6.44.1';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.44.1';
+import { createAgendaController } from './agenda-state.js?v=6.44.1';
+import { createLazyEntityActions } from './lazy-entity-actions.js?v=6.44.1';
+import { createLazyAdminPanelController } from './lazy-admin-panel.js?v=6.44.1';
+import { createInterfaceContextController } from './interface-context.js?v=6.44.1';
+import { createLazyAccessManagementController } from './lazy-access-management.js?v=6.44.1';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.44.1';
 
 export function bootstrapPortal() {
   let state = loadState();
@@ -106,6 +109,12 @@ export function bootstrapPortal() {
   let runtime = null;
   let readOnlyGuard = null;
   let viewRenderer = null;
+  let navigation = null;
+  const interfaceContext = createInterfaceContextController({
+    getCurrentView: () => navigation?.currentView || 'dashboard',
+    getTreasurySection: () => treasuryFeature.section
+  });
+  const renderPreservingContext = () => interfaceContext.renderPreserving(() => render());
   const recoveryCenter = createRecoveryCenterController({
     getState: () => state,
     modalController,
@@ -116,13 +125,12 @@ export function bootstrapPortal() {
       if (navigation?.currentView === 'admin' && runtime?.adminUnlocked) renderAdmin();
     }
   });
-
   runtime = createPortalRuntimeController({
     getState: () => state,
     setState: nextState => { state = nextState; },
     confirmation,
     applySettings: () => applySettings(),
-    renderCurrentView: () => render(),
+    renderCurrentView: () => renderPreservingContext(),
     updateClock: () => uiShell.updateClock(),
     bindControllers: () => {
       navigation.bind();
@@ -146,6 +154,14 @@ export function bootstrapPortal() {
     auditLog,
     recoveryCenter
   });
+  const accessManagement = createLazyAccessManagementController({
+    getState: () => state,
+    modalController,
+    confirmation,
+    persist: runtime.persist,
+    toast: message => toast(message),
+    canManageUsers: () => runtime.can(ACCESS_CAPABILITIES.MANAGE_USERS)
+  });
   const publicationReview = createPublicationReviewController({ modalController, runtime });
   const publishCenter = createPublishCenterController({
     ...publishCenterElements,
@@ -166,12 +182,15 @@ export function bootstrapPortal() {
     confirmation,
     persist: runtime.persist,
     renderTreasuryView,
-    renderCurrentView: render,
+    renderCurrentView: renderPreservingContext,
     closeModal,
     toast,
     isAdminUnlocked: runtime.isWriteAllowed,
+    canManage: capability => runtime.can(capability),
     setView,
     selectImage: target => fileInputs?.requestImage(target),
+    captureInterfaceContext: interfaceContext.capture,
+    restoreInterfaceContext: interfaceContext.restore,
     avatar,
     empty
   });
@@ -191,7 +210,6 @@ export function bootstrapPortal() {
     openTreasuryAccountsManager,
     shareMembershipCharge
   } = entityActions;
-
   const adminPanel = createLazyAdminPanelController({
     root,
     toast,
@@ -200,9 +218,12 @@ export function bootstrapPortal() {
       getState: () => state,
       isAdminUnlocked: runtime.isAdminUnlocked,
       getAccessRole: () => runtime.accessRole,
+      getAccessPolicy: runtime.getAccessPolicy,
       canWrite: runtime.isWriteAllowed,
+      can: capability => runtime.can(capability),
       loginAdmin: runtime.connectAdminSession,
       loginDirector: runtime.connectDirectorSession,
+      loginUser: runtime.connectUserSession,
       logout: runtime.logoutAdmin,
       openForm,
       setView,
@@ -212,6 +233,7 @@ export function bootstrapPortal() {
       financePrivacy,
       auditLog,
       recoveryCenter,
+      accessManagement,
       toast
     })
   });
@@ -219,14 +241,14 @@ export function bootstrapPortal() {
   const birthdayActions = createBirthdayActions(rowActions);
   const shareBirthdayArtwork = createLazyBirthdayArtworkShare({
     getBirthdays: () => state.birthdays,
-    toast
+    toast,
+    modalController
   });
-
   const settingsPanel = createLazySettingsController({
     root,
     getState: () => state,
     isAdminUnlocked: runtime.isAdminUnlocked,
-    canWrite: runtime.isWriteAllowed,
+    canWrite: () => runtime.can(ACCESS_CAPABILITIES.MANAGE_SETTINGS),
     getAccessRole: () => runtime.accessRole,
     empty,
     parseCurrencyInput,
@@ -238,6 +260,8 @@ export function bootstrapPortal() {
     removeDirectorProfile: runtime.removeDirectorProfile,
     confirmation,
     toast,
+    captureInterfaceContext: interfaceContext.capture,
+    restoreInterfaceContext: interfaceContext.restore,
     isCurrentView: () => navigation?.currentView === 'settings'
   });
   const {
@@ -245,7 +269,6 @@ export function bootstrapPortal() {
     applyLogo: applySettingsLogo,
     render: renderSettings
   } = settingsPanel;
-
   fileInputs = createFileInputsController({
     importInput,
     imageInput,
@@ -260,8 +283,7 @@ export function bootstrapPortal() {
     },
     toast
   });
-
-  const navigation = createNavigationController({
+  navigation = createNavigationController({
     pageTitle,
     pageDescription,
     modeChip,
@@ -281,9 +303,10 @@ export function bootstrapPortal() {
     ensureAdmin,
     openForm,
     setTreasurySection,
-    logoutAdmin: runtime.logoutAdmin
+    logoutAdmin: runtime.logoutAdmin,
+    captureInterfaceContext: interfaceContext.capture,
+    restoreInterfaceContext: interfaceContext.restore
   });
-
   const uiShell = createUiShellController({
     toastRegion,
     clock,
@@ -362,7 +385,6 @@ export function bootstrapPortal() {
   function renderTreasuryView() {
     return viewRenderer?.renderTreasury();
   }
-
   const agenda = createAgendaController();
   function getAppointments() {
     return buildAppointments(state);
@@ -372,10 +394,7 @@ export function bootstrapPortal() {
     return adminPanel.render();
   }
 
-
-  function closeModal() {
-    modalController.close();
-  }
+  function closeModal() { modalController.close(); }
 
   viewRenderer = createPortalViewRenderer({
     getState: () => state,
@@ -447,6 +466,9 @@ export function bootstrapPortal() {
       rowActions,
       empty,
       bindRowActions
+    },
+    leaderDependencies: {
+      empty
     },
     treasuryDependencies: {
       financePrivacy,

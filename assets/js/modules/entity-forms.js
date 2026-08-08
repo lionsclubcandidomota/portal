@@ -1,4 +1,5 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.36.0';
+import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.44.1';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.44.1';
 import {
   escapeHtml,
   normalize,
@@ -24,6 +25,7 @@ export function createEntityFormsController({
   closeModal,
   toast,
   isAdminUnlocked,
+  canManage = () => isAdminUnlocked(),
   setView,
   openTreasuryEntryForm,
   selectImage
@@ -45,17 +47,29 @@ export function createEntityFormsController({
     notice: state().notices
   })[type];
 
-  const pageToolbar = (placeholder, button, type) => `<div class="toolbar"><div class="search"><input id="searchInput" placeholder="${escapeHtml(placeholder)}" aria-label="Pesquisar"></div><div class="toolbar-group"><button class="btn btn-primary admin-only write-only" data-new="${escapeHtml(type)}" type="button">＋ ${escapeHtml(button)}</button></div></div>`;
+  const pageToolbar = (placeholder, button, type) => {
+    const action = canManage(capabilityForType(type)) ? `<button class="btn btn-primary admin-only write-only" data-new="${escapeHtml(type)}" type="button">＋ ${escapeHtml(button)}</button>` : '';
+    return `<div class="toolbar"><div class="search"><input id="searchInput" placeholder="${escapeHtml(placeholder)}" aria-label="Pesquisar"></div><div class="toolbar-group">${action}</div></div>`;
+  };
 
-  const ensureAdmin = action => {
-    if (isAdminUnlocked()) action();
+  const capabilityForType = type => ({
+    birthday: ACCESS_CAPABILITIES.MANAGE_PEOPLE,
+    event: ACCESS_CAPABILITIES.MANAGE_AGENDA,
+    meeting: ACCESS_CAPABILITIES.MANAGE_AGENDA,
+    appointment: ACCESS_CAPABILITIES.MANAGE_AGENDA,
+    notice: ACCESS_CAPABILITIES.MANAGE_NOTICES,
+    treasury: ACCESS_CAPABILITIES.MANAGE_TREASURY
+  })[type] || ACCESS_CAPABILITIES.WRITE_DATA;
+
+  const ensureAdmin = (action, capability = ACCESS_CAPABILITIES.WRITE_DATA) => {
+    if (canManage(capability)) action();
     else {
-      toast(document.body.classList.contains('director-mode') ? 'O perfil Diretoria possui acesso somente leitura.' : 'Desbloqueie o Painel Administrativo.');
-      setView('admin');
+      toast(document.body.classList.contains('director-mode') ? 'O perfil Diretoria possui acesso somente leitura.' : document.body.classList.contains('user-mode') ? 'Seu cargo não possui permissão para esta ação.' : 'Desbloqueie o Painel Administrativo.');
+      if (!isAdminUnlocked()) setView('admin');
     }
   };
 
-  const rowActions = (type, id) => `<div class="actions admin-only write-only"><button class="btn btn-ghost btn-sm" data-edit="${escapeHtml(type)}" data-id="${escapeHtml(id)}" type="button">Editar</button><button class="btn btn-danger btn-sm" data-delete="${escapeHtml(type)}" data-id="${escapeHtml(id)}" type="button">Excluir</button></div>`;
+  const rowActions = (type, id) => canManage(capabilityForType(type)) ? `<div class="actions admin-only write-only"><button class="btn btn-ghost btn-sm" data-edit="${escapeHtml(type)}" data-id="${escapeHtml(id)}" type="button">Editar</button><button class="btn btn-danger btn-sm" data-delete="${escapeHtml(type)}" data-id="${escapeHtml(id)}" type="button">Excluir</button></div>` : '';
 
   const findDuplicateBirthday = (data, currentId = null) => {
     const memberNumber = String(data.memberNumber || '').replace(/\D/g, '');
@@ -312,16 +326,16 @@ export function createEntityFormsController({
     const search = document.getElementById('searchInput');
     if (search) search.oninput = event => draw(event.target.value);
     root.querySelectorAll('[data-new]').forEach(button => {
-      button.onclick = () => ensureAdmin(() => openForm(button.dataset.new));
+      button.onclick = () => ensureAdmin(() => openForm(button.dataset.new), capabilityForType(button.dataset.new));
     });
   };
 
   const bindRowActions = () => {
     root.querySelectorAll('[data-edit]').forEach(button => {
-      button.onclick = () => ensureAdmin(() => openForm(button.dataset.edit, button.dataset.id));
+      button.onclick = () => ensureAdmin(() => openForm(button.dataset.edit, button.dataset.id), capabilityForType(button.dataset.edit));
     });
     root.querySelectorAll('[data-delete]').forEach(button => {
-      button.onclick = () => ensureAdmin(() => deleteItem(button.dataset.delete, button.dataset.id));
+      button.onclick = () => ensureAdmin(() => deleteItem(button.dataset.delete, button.dataset.id), capabilityForType(button.dataset.delete));
     });
   };
 

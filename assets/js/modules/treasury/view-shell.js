@@ -1,7 +1,7 @@
 import { escapeHtml, money, normalize } from '../../utils.js';
 import { renderMembershipSection } from './memberships.js';
 import { renderMutualSection } from './mutuals.js';
-import { uiIcon } from '../visual-helpers.js?v=6.36.0';
+import { uiIcon } from '../visual-helpers.js?v=6.44.1';
 
 function analysisMetric(icon, label, value, note, tone = '') {
   return `<article class="treasury-analysis-metric ${tone}"><span aria-hidden="true">${icon}</span><div><small>${escapeHtml(label)}</small><strong class="sensitive-money">${escapeHtml(value)}</strong><p>${escapeHtml(note)}</p></div></article>`;
@@ -17,7 +17,7 @@ function chartCard(treasury, {
 }) {
   const collapsed = treasury.isChartCollapsed(id);
   const bodyId = `${hostId}Body`;
-  return `<article class="card col-6 treasury-chart-card ${collapsed ? 'is-collapsed' : ''}" data-treasury-chart-card="${id}" aria-labelledby="${hostId}Title">
+  return `<article class="card col-6 treasury-chart-card ${collapsed ? 'is-collapsed' : ''}" data-treasury-chart-card="${id}" aria-labelledby="${hostId}Title" aria-expanded="${String(!collapsed)}" tabindex="0">
     <div class="card-header">
       <div class="treasury-chart-heading"><span aria-hidden="true">${icon}</span><div><h3 id="${hostId}Title">${escapeHtml(title)}</h3><div class="card-subtitle">${escapeHtml(subtitle)}</div></div></div>
       <button class="btn btn-ghost btn-sm treasury-chart-toggle" type="button" data-treasury-chart-toggle="${id}" aria-expanded="${String(!collapsed)}" aria-controls="${bodyId}"><span aria-hidden="true">${collapsed ? '＋' : '−'}</span><strong>${collapsed ? 'Expandir' : 'Minimizar'}</strong></button>
@@ -46,7 +46,7 @@ function renderTreasuryHub(treasury, financePrivacy) {
         <span>${uiIcon('heart')}</span><strong>Mútuas</strong><small>Cobranças por ocorrência</small>
       </button>
     </div>
-  </section>`;
+  </section></div>`;
 }
 
 function renderPrimaryMovementAction(canWrite) {
@@ -89,7 +89,7 @@ export function renderTreasuryShell({
     : null;
   const chartIds = ['finance', 'cash-flow', 'category', 'account'];
 
-  return `${renderTreasuryHub(treasury, financePrivacy)}${renderPrimaryMovementAction(adminUnlocked)}<section class="treasury-period-card card"><div class="treasury-period-copy"><span class="treasury-period-icon">${uiIcon('calendar')}</span><div><strong>Período</strong><small>Escolha as datas que deseja consultar.</small></div></div><div class="treasury-period-controls"><select id="treasuryPeriod" aria-label="Período da tesouraria"><option value="all" ${treasury.period === 'all' ? 'selected' : ''}>Todo o período</option><option value="month" ${treasury.period === 'month' ? 'selected' : ''}>Mês atual</option><option value="30days" ${treasury.period === '30days' ? 'selected' : ''}>Últimos 30 dias</option><option value="year" ${treasury.period === 'year' ? 'selected' : ''}>Ano atual</option><option value="custom" ${treasury.period === 'custom' ? 'selected' : ''}>Personalizado</option></select><div class="treasury-custom-period ${treasury.period === 'custom' ? 'is-visible' : ''}"><label><span>De</span><input id="treasuryStart" type="date" value="${treasury.customStart}" aria-label="Data inicial"></label><span class="treasury-date-separator">até</span><label><span>Até</span><input id="treasuryEnd" type="date" value="${treasury.customEnd}" aria-label="Data final"></label><button class="btn btn-primary btn-sm treasury-apply-period" id="treasuryApplyPeriod" type="button">Aplicar</button></div></div></section>
+  return `<div class="treasury-experience">${renderTreasuryHub(treasury, financePrivacy)}${renderPrimaryMovementAction(adminUnlocked)}<section class="treasury-period-card card"><div class="treasury-period-copy"><span class="treasury-period-icon">${uiIcon('calendar')}</span><div><strong>Período</strong><small>Escolha as datas que deseja consultar.</small></div></div><div class="treasury-period-controls"><select id="treasuryPeriod" aria-label="Período da tesouraria"><option value="all" ${treasury.period === 'all' ? 'selected' : ''}>Todo o período</option><option value="month" ${treasury.period === 'month' ? 'selected' : ''}>Mês atual</option><option value="30days" ${treasury.period === '30days' ? 'selected' : ''}>Últimos 30 dias</option><option value="year" ${treasury.period === 'year' ? 'selected' : ''}>Ano atual</option><option value="custom" ${treasury.period === 'custom' ? 'selected' : ''}>Personalizado</option></select><div class="treasury-custom-period ${treasury.period === 'custom' ? 'is-visible' : ''}"><label><span>De</span><input id="treasuryStart" type="date" value="${treasury.customStart}" aria-label="Data inicial"></label><span class="treasury-date-separator">até</span><label><span>Até</span><input id="treasuryEnd" type="date" value="${treasury.customEnd}" aria-label="Data final"></label><button class="btn btn-primary btn-sm treasury-apply-period" id="treasuryApplyPeriod" type="button">Aplicar</button></div></div></section>
   <div class="treasury-period-summary">Exibindo: <strong>${treasury.periodLabel()}</strong></div>
   <section class="grid grid-kpis treasury-realized-kpis">
     ${kpi(uiIcon('wallet'), 'Saldo atual', money.format(totals.balance))}
@@ -141,6 +141,6 @@ export function renderTreasuryShell({
     ${chartCard(treasury, { id: chartIds[2], icon: '▥', title: 'Movimentação por categoria', subtitle: 'Categorias com maior impacto financeiro no período.', hostId: 'categoryChart', wrapClass: 'category-chart-wrap' })}
     ${chartCard(treasury, { id: chartIds[3], icon: '◉', title: 'Saldo por conta', subtitle: 'Participação de cada conta no saldo positivo atual.', hostId: 'accountChart' })}
     <article class="col-12 treasury-movements-area"><section class="treasury-search-panel" aria-labelledby="treasurySearchTitle"><div class="treasury-search-heading"><span aria-hidden="true">${uiIcon('search')}</span><div><strong id="treasurySearchTitle">Buscar movimentações</strong><small>Pesquise por nome, categoria, conta ou associado.</small></div></div><div class="search treasury-search-control"><input id="searchInput" type="search" placeholder="Buscar no histórico..." aria-label="Pesquisar movimentações" autocomplete="off"></div></section><div id="treasuryLists"></div></article>
-  </section>`;
+  </section></div>`;
 }
 

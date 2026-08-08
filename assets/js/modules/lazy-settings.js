@@ -1,7 +1,7 @@
 import {
   DEFAULT_LOGO,
   applyPortalAppearance
-} from './settings-appearance.js?v=6.36.0';
+} from './settings-appearance.js?v=6.44.1';
 
 function loadingView() {
   return `<section class="card feature-loading" role="status" aria-live="polite">
@@ -40,7 +40,7 @@ export function createLazySettingsController(options) {
 
   const load = () => {
     if (!controllerPromise) {
-      controllerPromise = import('./settings.js?v=6.36.0')
+      controllerPromise = import('./settings.js?v=6.44.1')
         .then(module => {
           controller = createController(module);
           return controller;
@@ -74,9 +74,13 @@ export function createLazySettingsController(options) {
 
   const applyLogo = dataUrl => {
     if (!dataUrl || !canWrite()) return false;
+    if (controller?.applyLogo) return controller.applyLogo(dataUrl);
+    const snapshot = options.captureInterfaceContext?.();
     getState().settings.logo = dataUrl;
     persist('Logo atualizado.');
     apply();
+    if (isCurrentView()) render();
+    options.restoreInterfaceContext?.(snapshot);
     return true;
   };
 

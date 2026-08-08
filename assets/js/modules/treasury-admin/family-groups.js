@@ -36,16 +36,19 @@ export function createFamilyGroupsManager(context, memberSelectorCard) {
       );
     };
 
+    const existingListExpanded = Boolean(editingGroup);
+    const existingListId = 'familyExistingGroupsList';
+
     modalBody.innerHTML = `<div class="family-manager family-manager-v2">
-      <section class="family-existing-section">
-        <div class="family-section-heading"><div><strong>Famílias cadastradas</strong><small>Edite ou exclua os grupos que realizam pagamentos em conjunto.</small></div><span class="family-count-badge">${groups.length}</span></div>
-        <div class="family-group-list">${groups.length ? groups.map(group => {
+      <section class="family-existing-section management-collapsible-section ${existingListExpanded ? 'is-expanded' : 'is-collapsed'}">
+        <button class="family-section-heading management-list-toggle" type="button" data-family-list-toggle aria-expanded="${existingListExpanded}" aria-controls="${existingListId}"><div><strong>Famílias cadastradas</strong><small>${existingListExpanded ? 'Lista aberta para edição.' : 'Recolhida para priorizar o cadastro de novos integrantes.'}</small></div><span class="management-list-toggle-meta"><span class="family-count-badge">${groups.length}</span><span class="management-list-chevron" aria-hidden="true"></span></span></button>
+        <div class="management-list-content" id="${existingListId}" ${existingListExpanded ? '' : 'hidden'}><div class="family-group-list">${groups.length ? groups.map(group => {
           const members = (group.memberIds || [])
             .map(id => currentState.birthdays.find(member => member.id === id))
             .filter(Boolean);
           const primaryName = currentState.birthdays.find(member => member.id === group.primaryMemberId)?.name || 'Não identificado';
           return `<article class="family-group-row family-group-row-v2 ${editingGroup?.id === group.id ? 'is-editing' : ''}"><div class="family-group-main"><span class="family-group-icon">👨‍👩‍👧‍👦</span><div><strong>${escapeHtml(group.name)}</strong><small>${members.length} associado(s)${group.primaryMemberId ? ` · Titular: ${escapeHtml(primaryName)}` : ''}</small>${group.notes ? `<p class="family-group-notes">${escapeHtml(group.notes)}</p>` : ''}<div class="family-group-avatars">${members.slice(0, 5).map(member => avatar(member)).join('')}${members.length > 5 ? `<span class="family-avatar-more">+${members.length - 5}</span>` : ''}</div></div></div><div class="family-group-actions"><button class="btn btn-ghost btn-sm" type="button" data-edit-family="${escapeHtml(group.id)}">Editar</button><button class="btn btn-danger-soft btn-sm" type="button" data-remove-family="${escapeHtml(group.id)}">Excluir</button></div></article>`;
-        }).join('') : empty('👨‍👩‍👧‍👦', 'Nenhuma família vinculada.')}</div>
+        }).join('') : empty('👨‍👩‍👧‍👦', 'Nenhuma família vinculada.')}</div></div>
       </section>
       <form id="familyGroupForm" class="admin-entity-form family-group-form-v2">
         <input type="hidden" name="familyId" value="${escapeHtml(editingGroup?.id || '')}">
@@ -66,6 +69,16 @@ export function createFamilyGroupsManager(context, memberSelectorCard) {
     const primarySelect = document.getElementById('familyPrimaryMember');
     const selectedCount = document.getElementById('familySelectedCount');
     const memberEmpty = document.getElementById('familyMemberEmpty');
+    const existingListToggle = modalBody.querySelector('[data-family-list-toggle]');
+    const existingListContent = document.getElementById(existingListId);
+
+    existingListToggle?.addEventListener('click', () => {
+      const opening = existingListToggle.getAttribute('aria-expanded') !== 'true';
+      existingListToggle.setAttribute('aria-expanded', String(opening));
+      existingListToggle.closest('.management-collapsible-section')?.classList.toggle('is-expanded', opening);
+      existingListToggle.closest('.management-collapsible-section')?.classList.toggle('is-collapsed', !opening);
+      if (existingListContent) existingListContent.hidden = !opening;
+    });
 
     const updateCount = () => {
       const checked = [...form.querySelectorAll('[name="memberIds"]:checked')];

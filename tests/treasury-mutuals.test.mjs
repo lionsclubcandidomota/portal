@@ -104,7 +104,7 @@ function setup() {
   return { state, treasury };
 }
 
-test('esquema v10 encerra a cobrança mensal automática e preserva os participantes', () => {
+test('migração até o esquema atual encerra a cobrança mensal automática e preserva os participantes', () => {
   const migrated = migratePortalPayload({
     schemaVersion: 9,
     data: {
@@ -126,7 +126,7 @@ test('esquema v10 encerra a cobrança mensal automática e preserva os participa
     }
   });
 
-  assert.equal(CURRENT_SCHEMA_VERSION, 10);
+  assert.equal(CURRENT_SCHEMA_VERSION, 12);
   assert.equal('monthlyAmount' in migrated.state.mutualGroups[0], false);
   assert.equal('startedMonth' in migrated.state.mutualGroups[0], false);
   assert.equal('amountHistory' in migrated.state.mutualGroups[0], false);

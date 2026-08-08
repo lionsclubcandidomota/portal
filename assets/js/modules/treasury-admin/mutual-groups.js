@@ -46,10 +46,13 @@ export function createMutualGroupsManager(context) {
       };
     };
 
+    const existingListExpanded = Boolean(editingGroup);
+    const existingListId = 'mutualExistingGroupsList';
+
     modalBody.innerHTML = `<div class="family-manager family-manager-v2 mutual-group-manager">
-      <section class="family-existing-section mutual-existing-groups">
-        <div class="family-section-heading"><div><strong>Grupos de mútuas</strong><small>Os participantes não recebem cobrança mensal. Eles são cobrados somente quando um falecimento é registrado.</small></div><span class="family-count-badge">${groups.length}</span></div>
-        <div class="family-group-list">${groups.length ? groups.map(group => {
+      <section class="family-existing-section mutual-existing-groups management-collapsible-section ${existingListExpanded ? 'is-expanded' : 'is-collapsed'}">
+        <button class="family-section-heading management-list-toggle" type="button" data-mutual-list-toggle aria-expanded="${existingListExpanded}" aria-controls="${existingListId}"><div><strong>Grupos de mútuas cadastrados</strong><small>${existingListExpanded ? 'Lista aberta para edição.' : 'Recolhida para deixar o cadastro de participantes em destaque.'}</small></div><span class="management-list-toggle-meta"><span class="family-count-badge">${groups.length}</span><span class="management-list-chevron" aria-hidden="true"></span></span></button>
+        <div class="management-list-content" id="${existingListId}" ${existingListExpanded ? '' : 'hidden'}><div class="family-group-list">${groups.length ? groups.map(group => {
           const summary = groupSummary(group);
           const members = summary.currentIds
             .map(memberId => currentState.birthdays.find(member => String(member.id) === memberId))
@@ -58,7 +61,7 @@ export function createMutualGroupsManager(context) {
             <div class="family-group-main"><span class="family-group-icon">🤲</span><div><strong>${escapeHtml(group.name)}</strong><small>${summary.currentIds.length} participante(s) ativo(s) · ${summary.eventCount} falecimento(s) registrado(s) · ${summary.paymentCount} pagamento(s)</small><p class="family-group-notes">Sem cobrança periódica automática.</p>${group.notes ? `<p class="family-group-notes">${escapeHtml(group.notes)}</p>` : ''}<div class="family-group-avatars">${members.slice(0, 5).map(member => avatar(member)).join('')}${members.length > 5 ? `<span class="family-avatar-more">+${members.length - 5}</span>` : ''}</div></div></div>
             <div class="family-group-actions"><button class="btn btn-ghost btn-sm" type="button" data-edit-mutual-group="${escapeHtml(group.id)}">Editar</button><button class="btn btn-danger-soft btn-sm" type="button" data-remove-mutual-group="${escapeHtml(group.id)}">Excluir</button></div>
           </article>`;
-        }).join('') : empty('🤲', 'Nenhum grupo de mútua cadastrado.')}</div>
+        }).join('') : empty('🤲', 'Nenhum grupo de mútua cadastrado.')}</div></div>
       </section>
       <form id="mutualGroupForm" class="admin-entity-form family-group-form-v2 mutual-group-form">
         <input type="hidden" name="groupId" value="${escapeHtml(editingGroup?.id || '')}">
@@ -92,6 +95,16 @@ export function createMutualGroupsManager(context) {
     const search = document.getElementById('mutualMemberSearch');
     const selectedCount = document.getElementById('mutualSelectedCount');
     const memberEmpty = document.getElementById('mutualMemberEmpty');
+    const existingListToggle = modalBody.querySelector('[data-mutual-list-toggle]');
+    const existingListContent = document.getElementById(existingListId);
+
+    existingListToggle?.addEventListener('click', () => {
+      const opening = existingListToggle.getAttribute('aria-expanded') !== 'true';
+      existingListToggle.setAttribute('aria-expanded', String(opening));
+      existingListToggle.closest('.management-collapsible-section')?.classList.toggle('is-expanded', opening);
+      existingListToggle.closest('.management-collapsible-section')?.classList.toggle('is-collapsed', !opening);
+      if (existingListContent) existingListContent.hidden = !opening;
+    });
 
     const updateSelection = () => {
       const selected = [...form.querySelectorAll('[name="memberIds"]:checked')];

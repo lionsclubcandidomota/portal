@@ -1,7 +1,7 @@
-import { cloneState } from '../../core/portal-state.js?v=6.36.0';
-import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.36.0';
-import { buildPublicationMessage } from './domain.js?v=6.36.0';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.36.0';
+import { cloneState } from '../../core/portal-state.js?v=6.44.1';
+import { preparePortalMediaForPublication } from '../../core/portal-media.js?v=6.44.1';
+import { buildPublicationMessage } from './domain.js?v=6.44.1';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.44.1';
 
 export function createPublicationActions(context) {
   const { dependencies, services, model } = context;
@@ -16,7 +16,7 @@ export function createPublicationActions(context) {
   };
 
   const discardPendingChanges = async ({ skipConfirmation = false } = {}) => {
-    if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.DISCARD_DATA)) {
+    if (!roleHasCapability(model, ACCESS_CAPABILITIES.DISCARD_DATA)) {
       dependencies.toast?.('Este perfil não pode descartar alterações administrativas.');
       return { ok: false, reason: 'read-only' };
     }
@@ -65,7 +65,7 @@ export function createPublicationActions(context) {
   };
 
   const commitPendingChanges = async (commitMessage = '') => {
-    if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.PUBLISH_DATA)) {
+    if (!roleHasCapability(model, ACCESS_CAPABILITIES.PUBLISH_DATA)) {
       dependencies.toast?.('Este perfil não pode publicar alterações.');
       return { ok: false, reason: 'read-only' };
     }
@@ -105,7 +105,7 @@ export function createPublicationActions(context) {
       services.saveState(state);
       const publication = preparePortalMediaForPublication(state);
       if (publication.assets.some(asset => asset.kind === 'member-photo')) {
-        const { createMemberPhotoThumbnailAssets } = await import('../../core/portal-media-thumbnails.js?v=6.36.0');
+        const { createMemberPhotoThumbnailAssets } = await import('../../core/portal-media-thumbnails.js?v=6.44.1');
         publication.assets.push(...await createMemberPhotoThumbnailAssets(publication.assets));
       }
       const result = await services.saveGitHubState(

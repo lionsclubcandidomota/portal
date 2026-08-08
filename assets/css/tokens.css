@@ -32,6 +32,7 @@
   --sidebar-width: 268px;
   --content-max: 1440px;
   --topbar-height: 88px;
+  --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
   --transition: 180ms cubic-bezier(.2,.8,.2,1);
 
   /* Escala oficial de camadas. Os valores preservam a interface atual. */

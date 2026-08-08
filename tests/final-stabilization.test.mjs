@@ -80,15 +80,18 @@ test('finalização usa um fluxo único, cria backup antes da migração e evita
   assert.match(gitignore, /\.portal-backups\//);
 });
 
-test('documentação encerra a refatoração incremental sem etapas pendentes', async () => {
+test('documentação preserva a estabilização anterior e registra o novo ciclo por etapas', async () => {
   const release = await source('RELEASE.md');
   const refactoring = await source('REFACTORING.md');
+  const roadmap = await source('docs/evolution-roadmap.md');
   const quality = await source('docs/quality-gates.md');
 
-  assert.match(release, /Portal Lions v6\.36\.0/);
-  assert.match(release, /refatoração concluída/i);
-  assert.match(refactoring, /Etapa 8 — estabilização final/);
-  assert.match(refactoring, /Etapas pendentes:\s*nenhuma/i);
+  assert.match(release, /Portal Lions v6\.44\.1/);
+  assert.match(release, /Etapa 8 de 8/i);
+  assert.match(refactoring, /refatoração estrutural das versões 6\.29\.0 a 6\.36\.0 permanece concluída/i);
+  assert.match(refactoring, /v6\.44\.1 — correções pós-homologação/i);
+  assert.match(roadmap, /Etapa 8 — Dirigentes públicos e estabilização final — concluída na v6\.44\.0/);
   assert.match(quality, /audit:modules/);
   assert.match(quality, /backup:local/);
+  assert.match(quality, /audit:integrated/);
 });

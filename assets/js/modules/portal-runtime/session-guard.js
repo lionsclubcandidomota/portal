@@ -6,7 +6,8 @@ export function createAdminSessionGuard({
   window: browserWindow = globalThis.window,
   document: browserDocument = globalThis.document,
   timeoutMs = ADMIN_SESSION_IDLE_TIMEOUT_MS,
-  onTimeout = () => {}
+  onTimeout = () => {},
+  onActivity = () => {}
 } = {}) {
   let active = false;
   let timerId = null;
@@ -32,6 +33,8 @@ export function createAdminSessionGuard({
 
   const recordActivity = () => {
     if (!active || browserDocument?.hidden) return;
+    onActivity();
+    if (!active) return;
     lastActivityAt = Date.now();
     schedule();
   };

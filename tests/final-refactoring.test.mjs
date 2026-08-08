@@ -78,11 +78,16 @@ test('sequência Visitante → Diretoria → Administrador → Visitante não pr
   assert.equal(canAccessView(model.accessRole, 'treasury'), false);
 
   applyAccessRole(model, ACCESS_ROLES.DIRECTOR);
-  assert.deepEqual(accessSnapshot(model), {
-    role: 'director', authenticated: true, readOnly: true, canWrite: false,
-    canRefresh: true, canViewTreasury: true, canViewSettings: false,
-    canPublish: false, canDiscard: false, canManageAccess: false
-  });
+  const director = accessSnapshot(model);
+  assert.equal(director.role, 'director');
+  assert.equal(director.authenticated, true);
+  assert.equal(director.readOnly, true);
+  assert.equal(director.canWrite, false);
+  assert.equal(director.canRefresh, true);
+  assert.equal(director.canViewTreasury, true);
+  assert.equal(director.canViewSettings, false);
+  assert.equal(director.canPublish, false);
+  assert.equal(director.canManageUsers, false);
 
   applyAccessRole(model, ACCESS_ROLES.ADMIN);
   assert.equal(accessSnapshot(model).canViewSettings, true);

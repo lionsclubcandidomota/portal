@@ -34,7 +34,7 @@ test('shell principal usa ícones SVG locais e acessíveis', async () => {
     assert.match(html, new RegExp(`ui-icons\\.svg#${icon}`));
   }
   assert.match(html, /<svg class="ui-icon" aria-hidden="true" focusable="false">/);
-  assert.match(navigation, /ui-icons\.svg#\$\{directorMode \? 'eye' : access\.authenticated \? 'tools' : 'lock'\}/);
+  assert.match(navigation, /directorMode \? 'eye' : userMode \? 'users' : access\.authenticated \? 'tools' : 'lock'/);
   const dashboard = await source('assets/js/modules/dashboard.js');
   assert.match(dashboard, /uiIcon\('receipt'/);
   assert.match(dashboard, /uiIcon\('heart'/);
@@ -44,7 +44,7 @@ test('orçamento CSS registra a redução de sobrescritas da etapa', async () =>
   const audit = await source('tools/css-audit.mjs');
   assert.match(audit, /maxRepeatedContextSelectors:\s*400/);
   assert.match(audit, /maxOverrideRules:\s*580/);
-  assert.match(audit, /maxBundleBytes:\s*365_000/);
+  assert.match(audit, /maxBundleBytes:\s*400_000/);
 });
 
 

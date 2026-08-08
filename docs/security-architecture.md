@@ -1,38 +1,44 @@
-# Segurança e endurecimento operacional — v6.9.0
+# Segurança e endurecimento operacional — v6.42.0
 
-A Fase 10 remove credenciais legadas dos dados públicos e reforça a sessão administrativa sem criar um servidor próprio de autenticação.
+O Portal permanece hospedado de forma estática no GitHub Pages. A segurança foi organizada em três níveis: credencial principal do Administrador, senha global de consulta da Diretoria e usuários individuais vinculados a cargos.
 
-## Dados públicos
+## Credencial do Administrador
 
-O esquema v5 elimina automaticamente campos de credencial conhecidos, incluindo usuários e senhas administrativas legadas, tokens, chaves de API e segredos. A limpeza é aplicada em:
-
-- estado local;
-- backups exportados e importados;
-- pontos de recuperação;
-- estado sincronizado;
-- arquivo publicado no GitHub.
-
-Arquivos antigos continuam sendo aceitos, mas os campos sensíveis são descartados durante a migração.
-
-## Sessão administrativa
-
-O token do GitHub:
+A credencial do GitHub:
 
 - permanece somente em memória;
-- não é salvo em Local Storage, Session Storage, auditoria ou recuperação;
-- é validado antes da conexão;
-- é apagado ao sair ou após 30 minutos sem atividade.
+- não é salva em Local Storage, Session Storage, auditoria ou recuperação;
+- é apagada ao sair ou após 30 minutos sem atividade;
+- é a única credencial capaz de publicar, importar, recuperar backups e gerenciar usuários.
 
-A conexão também confirma o acesso ao repositório configurado e bloqueia contas sem permissão de gravação quando o GitHub informa essa restrição.
+## Diretoria
+
+A senha global da Diretoria usa PBKDF2 e concede somente consulta. O valor em texto não é publicado nem persistido.
+
+## Usuários individuais
+
+As senhas individuais:
+
+- são validadas antes do cadastro;
+- usam salt aleatório por usuário;
+- são derivadas com PBKDF2-SHA-256 e 210 mil iterações;
+- são comparadas sem interrupção antecipada por byte;
+- nunca são armazenadas em texto.
+
+O estado contém `passwordSalt`, `passwordHash`, `passwordIterations` e `passwordVersion`. Como esses dados são servidos publicamente pelo GitHub Pages, uma pessoa pode tentar adivinhar senhas offline. Por isso o Portal exige senhas com letra e número, recomenda senhas longas e proíbe tratá-las como equivalentes a uma autenticação de servidor.
+
+## Limites de autorização
+
+As permissões controlam rotas, botões, formulários e persistência local. Elas não substituem uma autorização executada em servidor. A barreira final permanece a publicação pelo Administrador. Usuários individuais não recebem token do GitHub e não publicam diretamente.
+
+## Dados sensíveis
+
+Campos de credencial em texto, tokens, chaves de API e segredos continuam proibidos no estado, backups e pontos de recuperação. Derivações criptográficas de senha possuem campos próprios e validação estrutural.
 
 ## Política do navegador
 
-O HTML passa a declarar:
-
-- Content Security Policy;
-- política de referência `no-referrer`;
-- Permissions Policy com recursos sensíveis desativados.
+O HTML declara Content Security Policy, `no-referrer` e Permissions Policy com recursos sensíveis desativados.
 
 ## Verificação automática
 
-`npm run audit:security` verifica os arquivos de dados, as metatags de segurança e padrões que poderiam persistir tokens no navegador. O comando faz parte de `npm run check`.
+`npm run audit:security` verifica os dados, as metatags e padrões de persistência indevida. Os testes também validam que senhas em texto não entram no estado e que usuários ativos possuem perfis criptográficos completos.

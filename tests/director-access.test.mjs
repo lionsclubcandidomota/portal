@@ -230,7 +230,8 @@ test('atualização do painel da Diretoria permanece autenticada sem token', asy
   assert.equal(fixture.getState().settings.clubName, 'Atualizado');
   assert.equal(fixture.context.model.accessRole, ACCESS_ROLES.DIRECTOR);
   assert.equal(fixture.context.model.githubToken, '');
-  assert.ok(fixture.calls.includes('reset-interface'));
+  assert.ok(fixture.calls.includes('render'));
+  assert.ok(!fixture.calls.includes('reset-interface'));
 });
 
 test('camadas de persistência e publicação bloqueiam escrita da Diretoria', async () => {
@@ -254,17 +255,18 @@ test('camadas de persistência e publicação bloqueiam escrita da Diretoria', a
 
 test('tela de entrada mantém apenas a escolha do perfil e os campos necessários', () => {
   const html = adminLoginHtml();
-  assert.match(html, /<p>Escolha o perfil de acesso\.<\/p>/);
-  assert.match(html, /Token de acesso do GitHub/);
+  assert.match(html, /Escolha como deseja entrar e informe seus dados/);
+  assert.match(html, /Credencial de acesso/);
   assert.match(html, /Senha da Diretoria/);
   assert.match(html, /placeholder="Informe a senha da Diretoria"/);
   assert.match(html, /name="directorAccessPassword"/);
   assert.match(html, /autocomplete="new-password"/);
   assert.match(html, /id="directorPassword"[^>]*disabled/);
-  assert.doesNotMatch(html, /autocomplete="current-password"/);
+  assert.match(html, /id="portalUserPassword"[^>]*autocomplete="current-password"/);
   assert.match(html, /id="adminLoginForm"/);
+  assert.match(html, /id="userLoginForm"/);
   assert.match(html, /id="directorLoginForm"/);
-  assert.doesNotMatch(html, /token Diretoria/i);
+  assert.doesNotMatch(html, /Token de acesso|Mostrar token|token Diretoria/i);
   assert.doesNotMatch(html, /Gestão completa/i);
   assert.doesNotMatch(html, /Somente leitura/i);
   assert.doesNotMatch(html, /Credencial administrativa/i);
@@ -283,7 +285,7 @@ test('Dashboard Diretoria mantém relatórios e consultas, mas remove ações de
   assert.match(html, /Área da Diretoria/);
   assert.match(html, /Gerar relatório/);
   assert.match(html, /Histórico de alterações/);
-  assert.match(html, /Baixar backup/);
+  assert.doesNotMatch(html, /Baixar backup/);
   assert.doesNotMatch(html, /data-add=/);
   assert.doesNotMatch(html, /id="importBtn"/);
   assert.doesNotMatch(html, /id="openRecoveryCenterBtn"/);

@@ -73,11 +73,22 @@ export function locationInfo(value) {
   const url = explicitUrl || legacyUrl;
   const isVirtual = item.locationType === 'virtual' || Boolean(url);
 
-  if (isVirtual && url) {
+  if (isVirtual) {
+    if (url) {
+      return {
+        type: 'virtual',
+        url,
+        pending: false,
+        ...virtualPlatform(url)
+      };
+    }
+
     return {
       type: 'virtual',
-      url,
-      ...virtualPlatform(url)
+      url: '',
+      pending: true,
+      name: 'Evento online',
+      icon: '🌐'
     };
   }
 
@@ -94,6 +105,10 @@ export function renderLocation(value, { compact = false } = {}) {
     return `<span class="location-text">📍 ${escapeHtml(info.text)}</span>`;
   }
 
+  if (info.pending) {
+    return `<div class="virtual-location is-pending ${compact ? 'is-compact' : ''}"><span class="virtual-location-platform"><span aria-hidden="true">${info.icon}</span><span>${escapeHtml(info.name)}</span></span><span class="location-pending"><span aria-hidden="true">🕒</span><span>Link será disponibilizado</span></span></div>`;
+  }
+
   const label = compact ? 'Acessar reunião' : 'Acessar sala';
 
   return `<div class="virtual-location ${compact ? 'is-compact' : ''}"><span class="virtual-location-platform"><span aria-hidden="true">${info.icon}</span><span>${escapeHtml(info.name)}</span></span><a class="location-link" href="${escapeHtml(info.url)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">🔗</span><span>${label}</span><span class="location-link-arrow" aria-hidden="true">↗</span></a></div>`;
@@ -101,7 +116,7 @@ export function renderLocation(value, { compact = false } = {}) {
 
 export function appointmentLocationText(item) {
   const info = locationInfo(item);
-  return info.type === 'virtual' ? info.name : info.text;
+  return info.type === 'virtual' ? (info.pending ? 'Online · link será disponibilizado' : info.name) : info.text;
 }
 
 function escapeIcs(value) {
@@ -117,10 +132,10 @@ export function downloadAppointmentCalendar(item) {
   const end = new Date(start.getTime() + 60 * 60 * 1000);
   const stamp = date => `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}00`;
   const info = locationInfo(item);
-  const location = info.type === 'virtual' ? info.url : info.text;
+  const location = info.type === 'virtual' ? (info.url || 'Evento online') : info.text;
   const description = [
     item.details || '',
-    info.type === 'virtual' ? `Acesso: ${info.url}` : ''
+    info.type === 'virtual' ? (info.url ? `Acesso: ${info.url}` : 'O link de acesso será disponibilizado posteriormente.') : ''
   ].filter(Boolean).join('\n');
   const ics = [
     'BEGIN:VCALENDAR',

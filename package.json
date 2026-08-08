@@ -1,6 +1,6 @@
 {
   "name": "portal-lions-candido-mota",
-  "version": "6.36.0",
+  "version": "6.44.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,7 +19,7 @@
     "version:sync": "node tools/sync-version.mjs",
     "version:check": "node tools/sync-version.mjs --check",
     "validate": "node tools/validate.mjs",
-    "quality": "npm run version:check && npm run lint && npm test && npm run audit:modules && npm run audit:css && npm run audit:a11y && npm run audit:security && npm run audit:performance && npm run audit:media && npm run validate",
+    "quality": "npm run version:check && npm run lint && npm test && npm run audit:modules && npm run audit:integrated && npm run audit:css && npm run audit:a11y && npm run audit:security && npm run audit:performance && npm run audit:media && npm run validate",
     "check": "npm run quality",
     "backup:local": "node tools/create-local-backup.mjs",
     "data:migrate": "node tools/migrate-official-data.mjs",
@@ -30,6 +30,7 @@
     "release:check": "npm run quality && npm run release:audit && npm run release:verify",
     "release:prepare": "node tools/prepare-release.mjs",
     "homologacao": "node tools/homologation-server.mjs --open",
-    "homologacao:server": "node tools/homologation-server.mjs"
+    "homologacao:server": "node tools/homologation-server.mjs",
+    "audit:integrated": "node tools/integrated-homologation.mjs"
   }
 }

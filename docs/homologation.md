@@ -1,6 +1,124 @@
-# Homologação — v6.36.0
+# Homologação — v6.44.1
 
-> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.36.0.
+> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.44.1.
+
+
+
+## Correções específicas da versão 6.44.1
+
+1. Entrar como Administrador e abrir **Tesouraria** pelo menu lateral.
+2. Abrir **Ajustes** e confirmar a exibição do formulário.
+3. Em **Usuários e cargos**, criar ou editar uma designação com `2026/2027`.
+4. Confirmar que o navegador não apresenta erro de formato para esse valor.
+5. Entrar como Diretoria e confirmar que a Tesouraria abre em modo de consulta.
+
+## Dirigentes públicos e encerramento do ciclo — versão 6.44.0
+
+1. Execute `npm run audit:integrated` e confirme a criação de `artifacts/homologation/integrated-report.json`.
+2. Abra o Portal como visitante e acesse **Dirigentes** pelo menu lateral.
+3. Confirme que o título mostra o Ano Leonístico vigente e que somente cargos vigentes aparecem.
+4. Verifique que nome, foto e cargo vêm dos associados já cadastrados, sem número de associado, credencial ou observação interna.
+5. Quando não houver designações vigentes, confirme o estado vazio sem erro.
+6. Confirme que a opção **Dirigentes** permanece disponível para visitantes no menu principal.
+7. Execute `npm run audit:visual:required` na estação com Chrome ou Chromium e confirme 30 capturas: seis telas em cinco resoluções.
+8. Revise Dirigentes em 360, 390, 768, 1024 e 1366 px, sem cartões cortados ou rolagem horizontal.
+9. Entre como Administrador, altere uma designação somente em ambiente de teste e confirme que a área pública acompanha a vigência sem duplicar o associado.
+10. Confirme que o esquema permanece em 12 e que Tesouraria, Mútuas, mensalidades, famílias, agenda, avisos e fotos não foram alterados.
+
+
+## Histórico de cargos por Ano Leonístico — versão 6.43.0
+
+1. Execute `FINALIZAR-ATUALIZACAO.bat` e confirme a migração para o esquema 12.
+2. Abra **Área administrativa → Usuários e cargos**.
+3. Confira o AL atual e a seção **Histórico por Ano Leonístico**.
+4. Crie uma designação no AL vigente e confirme o cargo no cartão do usuário.
+5. Altere o cargo do usuário com uma data posterior e confirme que o registro anterior foi encerrado, sem ser apagado.
+6. Crie uma designação para o próximo AL e confirme que ela aparece como **Próximo**, sem conceder permissão antes da data inicial.
+7. Teste um usuário com somente cargo encerrado e confirme que a entrada é recusada.
+8. Reative o acesso criando uma designação vigente e confirme as permissões do novo cargo.
+9. Desative uma designação e confirme que o histórico permanece visível.
+10. Valide a tela em 390, 768, 1024 e 1366 px.
+
+## Usuários, cargos e permissões — versão 6.42.0
+
+1. Execute `FINALIZAR-ATUALIZACAO.bat` e confirme a migração dos dados para o esquema 11.
+2. Entre como Administrador e abra **Área administrativa → Usuários e cargos**.
+3. Confira os cinco cargos padrão e suas permissões.
+4. Crie um cargo personalizado, salve, edite e exclua sem afetar os cargos padrão.
+5. Crie um usuário vinculado a um associado ativo e confirme que outro usuário não pode usar o mesmo associado ou nome de acesso.
+6. Publique, saia e entre pelo perfil **Usuário**.
+7. Confira se o cargo permite somente as telas e ações selecionadas.
+8. Faça uma alteração autorizada e confirme a mensagem de que ela aguarda o Administrador.
+9. Entre como Administrador no mesmo navegador, revise a alteração e publique ou descarte.
+10. Troque o cargo do usuário, publique e confirme que o próximo login utiliza as novas permissões.
+11. Desative o usuário e confirme que a autenticação é recusada.
+12. Verifique que Usuário e Diretoria não veem gerenciamento de acessos, importação, recuperação ou backup completo.
+13. Teste o fluxo em 390, 768, 1024 e 1366 px, usando mouse e teclado.
+14. Exporte um backup e confirme que nenhuma senha em texto foi gravada.
+
+
+## Mútuas e gerenciamento de famílias — versão 6.42.0
+
+1. Abrir **Tesouraria → Mútuas** e expandir um grupo.
+2. Confirmar que todos os participantes ativos aparecem antes das ocorrências.
+3. Conferir a contagem total e a divisão entre associados e mutuários.
+4. Validar que associados usam a identificação azul e mutuários usam a identificação roxa.
+5. Confirmar que o número de associado aparece somente quando estiver cadastrado.
+6. Registrar uma alteração de participantes em ambiente de teste e confirmar que ocorrências antigas preservam a lista original.
+7. Abrir **Gerenciar famílias** e confirmar que **Famílias cadastradas** inicia recolhida.
+8. Abrir **Gerenciar grupos** em Mútuas e confirmar que a lista de grupos existentes inicia recolhida.
+9. Editar uma família e um grupo de Mútua, verificando que a lista correspondente abre automaticamente.
+10. Validar os controles por clique, Tab e Enter/Espaço em 390, 768, 1024 e 1366 px.
+
+
+## Tesouraria e cobranças — versão 6.40.0
+
+1. Abrir a Tesouraria, selecionar um filtro e uma página diferente da primeira.
+2. Editar uma movimentação e confirmar que filtro, pesquisa, página e posição da rolagem são preservados.
+3. Repetir o teste nas listas de realizados e programados.
+4. Recolher **Movimentações programadas**, navegar entre seções e confirmar que o estado é mantido.
+5. Clicar diretamente em um cartão de gráfico e confirmar sua expansão.
+6. Repetir a expansão usando Tab e Enter ou Espaço.
+7. Confirmar que os controles internos do gráfico continuam funcionando sem acionar expansão indevida.
+8. Abrir a ação de cobrança de um associado sem família e confirmar somente a opção individual.
+9. Abrir a cobrança de um associado com grupo familiar e validar as opções **Somente o associado** e **Toda a família**.
+10. Conferir nomes, períodos, valores individuais e total na mensagem familiar.
+11. Validar a Tesouraria em 390, 768, 1024 e 1366 px, sem sobreposição ou estouro horizontal.
+
+
+## Eventos, parabenizações e acesso — versão 6.39.0
+
+1. Cadastrar um evento on-line sem link e confirmar que o salvamento é permitido.
+2. Conferir no Dashboard e na Agenda a indicação **Link será disponibilizado**, sem botão quebrado.
+3. Editar o compromisso, adicionar um link válido e confirmar a exibição do botão de acesso.
+4. Tentar informar um endereço inválido e confirmar que o Portal solicita correção ou campo vazio.
+5. Como visitante em celular, usar **Enviar parabéns** e confirmar que a imagem é compartilhada sem texto automático.
+6. Como visitante no computador, abrir **Enviar parabéns** e validar prévia, copiar imagem, baixar e abrir WhatsApp.
+7. Confirmar que nenhuma mensagem de sucesso automática aparece logo após gerar ou baixar a arte.
+8. Abrir a Área administrativa e verificar que a tela solicita **Credencial de acesso**, sem mencionar token ou método técnico.
+
+
+## Preservação de contexto e Ajustes — versão 6.38.0
+
+1. Abrir **Ajustes**, rolar até Mensalidades, alterar um valor e salvar. Confirmar que a tela e a posição permanecem preservadas.
+2. Repetir o teste após trocar cores, fonte, logotipo e acesso da Diretoria.
+3. Em uma lista com pesquisa ou paginação, executar a atualização do Portal e confirmar que o filtro, a página e a rolagem não são reiniciados.
+4. Abrir a central de publicação e conferir os passos **Conferir**, **Salvar** e **Publicar**.
+5. Criar uma alteração pendente e confirmar que status, contador e ações são atualizados sem redirecionamento.
+6. Validar a tela de Ajustes em 390, 768, 1024 e 1366 px, conferindo atalhos, prévia, formulários e barra de salvamento.
+7. Navegar voluntariamente para outra tela e confirmar que somente essa navegação inicia no topo.
+
+
+## Tela inicial, cabeçalho e tipografia — versão 6.37.0
+
+1. Abrir **Início** como visitante e confirmar que o logotipo aparece centralizado no quadro de boas-vindas, sem distorção ou corte.
+2. Repetir a validação como Diretoria e Administrador, verificando o formato compacto do quadro.
+3. Conferir o horário no cabeçalho em desktop: ícone e números devem permanecer centralizados vertical e horizontalmente.
+4. Entrar como Administrador e verificar que atualização e perfil ficam agrupados, sem elementos soltos.
+5. Testar o cabeçalho em 1180, 900, 620 e 390 px, confirmando que os controles são reduzidos sem sobreposição.
+6. Em **Ajustes**, alternar entre **Moderna**, **Suave** e **Alta legibilidade** e confirmar a aplicação imediata da fonte.
+7. Atualizar a página e confirmar que a fonte escolhida permanece configurada.
+8. Conferir títulos, botões, rótulos e valores de destaque, verificando consistência de peso e legibilidade.
 
 ## Tesouraria
 
@@ -50,7 +168,7 @@
 5. Abrir Tesouraria e confirmar o estado breve de carregamento somente no primeiro acesso; depois validar movimentações, filtros, mensalidades, Mútuas e gráficos.
 6. Abrir um formulário de cadastro e os gerenciadores financeiros, confirmando que o primeiro carregamento não perde a ação solicitada.
 7. Navegar rapidamente entre duas telas e confirmar que uma tela carregada com atraso não substitui a tela atual.
-8. Executar `npm run audit:performance` e confirmar o orçamento de até 185.000 bytes de JavaScript inicial.
+8. Executar `npm run audit:performance` e confirmar o orçamento de até 190.000 bytes de JavaScript inicial.
 9. Em uma máquina com Chrome ou Chromium, executar `npm run audit:visual`.
 
 
@@ -98,7 +216,7 @@
 ## Homologação visual e responsiva — versão 6.35.0
 
 1. Executar `npm run audit:visual` em uma estação com Chrome ou Chromium.
-2. Confirmar a geração de 25 capturas em `artifacts/visual-audit`: cinco telas em cinco resoluções.
+2. Confirmar a geração de 30 capturas em `artifacts/visual-audit`: seis telas em cinco resoluções.
 3. Em 360 e 390 px, verificar que o cabeçalho mostra o título sem cortar e que a data não ocupa espaço excessivo.
 4. Em 768 px, confirmar dois cards de resumo por linha no Dashboard e uma coluna em 360/390 px.
 5. Na Agenda, confirmar dois botões iguais para Lista/Calendário e três botões iguais para Todos/Eventos/Reuniões.

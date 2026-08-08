@@ -41,7 +41,10 @@ export function createReadOnlyGuard({
     const now = Date.now();
     if (now - lastNoticeAt < 900) return;
     lastNoticeAt = now;
-    toast('O perfil Diretoria possui acesso somente leitura.');
+    const access = getAccessPolicy?.();
+    toast(access?.role === 'director'
+      ? 'O perfil Diretoria possui acesso somente para consulta.'
+      : 'Seu cargo possui acesso somente para consulta.');
   };
 
   const blockEvent = event => {

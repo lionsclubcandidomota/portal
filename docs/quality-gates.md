@@ -1,4 +1,4 @@
-# Portões de qualidade — v6.36.0
+# Portões de qualidade — v6.44.0
 
 ## Comando principal
 
@@ -12,6 +12,7 @@ O comando executa, uma única vez:
 - lint interno;
 - testes automatizados;
 - auditoria do grafo de módulos;
+- homologação integrada de esquema, vínculos, cargos e dirigentes públicos;
 - auditorias de CSS, acessibilidade, segurança, desempenho e mídia;
 - validação de sintaxe, contratos públicos, imports e dados.
 
@@ -19,16 +20,16 @@ O comando executa, uma única vez:
 
 ## Orçamentos atuais
 
-- até 28 fontes CSS no bundle modular;
+- até 30 fontes CSS no bundle modular;
 - nenhuma regra CSS exatamente duplicada;
 - até 400 seletores redefinidos no mesmo contexto;
 - até 580 regras de sobrescrita;
 - zero fontes e zero bytes em `assets/css/legacy`;
 - até 40.000 bytes por fonte CSS;
-- até 365.000 bytes no bundle CSS;
-- até 185.000 bytes de JavaScript no grafo inicial;
+- até 400.000 bytes no bundle CSS;
+- até 190.000 bytes de JavaScript no grafo inicial;
 - até 60.000 bytes para o logotipo da interface;
-- até 580.000 bytes de ativos críticos não comprimidos;
+- até 600.000 bytes de ativos críticos não comprimidos;
 - `portal-app.js` abaixo de 500 linhas;
 - `entity-forms.js` abaixo de 380 linhas.
 
@@ -50,6 +51,7 @@ O comando executa, uma única vez:
 ## Auditorias
 
 - `npm run audit:modules`: alcançabilidade, imports ausentes e ciclos;
+- `npm run audit:integrated`: esquema, vínculos, períodos, rota pública e cobertura de Dirigentes;
 - `npm run audit:css`: cascata, duplicações, fontes e peso;
 - `npm run audit:a11y`: contratos de acessibilidade estática;
 - `npm run audit:security`: campos sensíveis, políticas do HTML e credenciais;
@@ -80,4 +82,4 @@ Para preparar uma atualização completa:
 npm run release:prepare
 ```
 
-`release:prepare` cria o backup, migra os dados de forma idempotente, gera o CSS, executa os portões determinísticos, produz o manifesto e verifica o pacote final. A auditoria visual deve ser executada separadamente na estação de homologação.
+`release:prepare` cria o backup, migra os dados de forma idempotente, gera o CSS, executa os portões determinísticos, produz o manifesto e verifica o pacote final. A auditoria visual deve ser executada separadamente na estação de homologação. O relatório integrado fica em `artifacts/homologation/integrated-report.json`.

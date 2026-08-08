@@ -4,14 +4,18 @@ import {
   DEFAULT_CLUB_NAME,
   DEFAULT_LOGO,
   DEFAULT_PRIMARY_COLOR,
+  DEFAULT_FONT_FAMILY,
+  PORTAL_FONT_OPTIONS,
   applyPortalAppearance,
+  portalFontStack,
   resolveDisplayLogo,
+  normalizePortalFont,
   settingsFrom
-} from './settings-appearance.js?v=6.36.0';
-import { directorProfileFromState, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.36.0';
+} from './settings-appearance.js?v=6.44.1';
+import { directorProfileFromState, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.44.1';
 
 function currencyField(name, label, value, help, currencyInputValue, disabled = false) {
-  return `<div class="form-field"><label>${escapeHtml(label)}</label><div class="currency-input"><span>R$</span><input name="${escapeHtml(name)}" type="text" inputmode="decimal" value="${escapeHtml(currencyInputValue(value))}" autocomplete="off" ${disabled ? 'disabled' : ''}></div><small>${escapeHtml(help)}</small></div>`;
+  return `<div class="form-field settings-money-field"><label for="${escapeHtml(name)}">${escapeHtml(label)}</label><div class="currency-input"><span>R$</span><input id="${escapeHtml(name)}" name="${escapeHtml(name)}" type="text" inputmode="decimal" value="${escapeHtml(currencyInputValue(value))}" autocomplete="off" ${disabled ? 'disabled' : ''}></div><small>${escapeHtml(help)}</small></div>`;
 }
 
 function formatConfiguredAt(value) {
@@ -21,19 +25,25 @@ function formatConfiguredAt(value) {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(date);
 }
 
+function settingsSectionHeading(icon, eyebrow, title, description) {
+  return `<div class="settings-section-heading"><span class="settings-section-icon" aria-hidden="true">${icon}</span><div><span class="section-eyebrow">${escapeHtml(eyebrow)}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(description)}</p></div></div>`;
+}
+
 function directorProfileCard(profile, canWrite, legacyProfile = false) {
   const configured = Boolean(profile);
   const badgeLabel = configured ? 'Senha configurada' : legacyProfile ? 'Atualização necessária' : 'Não configurado';
   const badgeClass = configured ? 'badge-success' : legacyProfile ? 'badge-warning' : 'badge-muted';
-  return `<section class="card" aria-labelledby="directorProfileTitle">
-    <div class="card-header"><div><span class="section-eyebrow">Acesso</span><h3 id="directorProfileTitle">Diretoria</h3><div class="card-subtitle">Consulta completa, sem permissão para alterar dados.</div></div><span class="badge ${badgeClass}">${badgeLabel}</span></div>
-    ${configured ? `<div class="admin-grid"><div class="admin-tile"><small>Método de acesso</small><strong>Senha da Diretoria</strong><small>Acesso por senha</small></div><div class="admin-tile"><small>Configurada em</small><strong>${escapeHtml(formatConfiguredAt(profile.configuredAt))}</strong><small>por ${escapeHtml(profile.configuredBy || 'Administrador')}</small></div><div class="admin-tile"><small>Segurança</small><strong>Senha protegida</strong><small>A senha original não fica armazenada.</small></div></div>` : legacyProfile ? '<div class="notice medium is-warning"><strong>Token antigo da Diretoria detectado</strong><p>Esta versão não aceita mais token para a Diretoria. Defina uma senha abaixo e publique a alteração para liberar o novo acesso.</p></div>' : '<div class="notice medium"><strong>Nenhuma senha da Diretoria cadastrada</strong><p>Defina uma senha exclusiva para liberar o acesso completo em modo somente leitura.</p></div>'}
-    ${canWrite ? `<form id="directorAccessForm" class="form-grid" autocomplete="off">
-      <div class="form-field"><label for="directorPasswordSetting">${configured ? 'Nova senha da Diretoria' : 'Senha da Diretoria'} <span class="required-mark">*</span></label><div class="admin-token-field"><input id="directorPasswordSetting" name="directorPassword" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" minlength="10" maxlength="128" placeholder="Mínimo de 10 caracteres" required><button type="button" class="btn btn-ghost admin-token-toggle" id="toggleDirectorPasswordSetting" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button></div><small>Utilize pelo menos 10 caracteres, incluindo uma letra e um número.</small></div>
-      <div class="form-field"><label for="directorPasswordConfirm">Confirmar senha <span class="required-mark">*</span></label><div class="admin-token-field"><input id="directorPasswordConfirm" name="directorPasswordConfirm" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" minlength="10" maxlength="128" placeholder="Digite novamente" required><button type="button" class="btn btn-ghost admin-token-toggle" id="toggleDirectorPasswordConfirm" aria-label="Mostrar confirmação da senha" aria-pressed="false">Mostrar</button></div><small>A confirmação deve ser exatamente igual à senha informada.</small></div>
-      <div class="admin-security-note full-row"><span aria-hidden="true">🛡️</span><div><strong>Proteção da credencial</strong><p>O portal publica apenas um hash derivado com salt individual. Para maior segurança em um portal estático, utilize uma senha longa e exclusiva.</p></div></div>
-      <div class="form-actions full-row"><button class="btn btn-primary" type="submit">${configured || legacyProfile ? 'Definir nova senha' : 'Configurar senha da Diretoria'}</button>${configured || legacyProfile ? '<button class="btn btn-danger" id="removeDirectorProfile" type="button">Remover acesso</button>' : ''}</div>
-    </form>` : '<div class="notice medium"><strong>Configuração exclusiva do Administrador</strong><p>O perfil Diretoria pode consultar o status desta configuração, mas não pode alterá-la.</p></div>'}
+  return `<section class="card settings-section settings-access-section" aria-labelledby="directorProfileTitle">
+    <div class="settings-section-topline">${settingsSectionHeading('👁️', 'Acesso', 'Diretoria', 'Libere consulta completa sem permitir alterações.')}<span class="badge ${badgeClass}">${badgeLabel}</span></div>
+    ${configured ? `<div class="settings-status-grid"><div><small>Forma de acesso</small><strong>Senha da Diretoria</strong><span>Somente leitura</span></div><div><small>Configurada em</small><strong>${escapeHtml(formatConfiguredAt(profile.configuredAt))}</strong><span>por ${escapeHtml(profile.configuredBy || 'Administrador')}</span></div><div><small>Proteção</small><strong>Senha protegida</strong><span>A credencial original não é armazenada.</span></div></div>` : legacyProfile ? '<div class="notice medium is-warning"><strong>Atualização de acesso necessária</strong><p>Defina uma senha para substituir a configuração antiga e publique a alteração.</p></div>' : '<div class="settings-empty-access"><span aria-hidden="true">🔐</span><div><strong>Acesso ainda não configurado</strong><p>Crie uma senha exclusiva para permitir a consulta da Diretoria.</p></div></div>'}
+    ${canWrite ? `<form id="directorAccessForm" class="settings-access-form" autocomplete="off">
+      <div class="form-grid">
+        <div class="form-field"><label for="directorPasswordSetting">${configured ? 'Nova senha' : 'Senha da Diretoria'} <span class="required-mark">*</span></label><div class="admin-token-field"><input id="directorPasswordSetting" name="directorPassword" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" minlength="10" maxlength="128" placeholder="Mínimo de 10 caracteres" required><button type="button" class="btn btn-ghost admin-token-toggle" id="toggleDirectorPasswordSetting" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button></div><small>Use pelo menos 10 caracteres, com letra e número.</small></div>
+        <div class="form-field"><label for="directorPasswordConfirm">Confirmar senha <span class="required-mark">*</span></label><div class="admin-token-field"><input id="directorPasswordConfirm" name="directorPasswordConfirm" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" minlength="10" maxlength="128" placeholder="Digite novamente" required><button type="button" class="btn btn-ghost admin-token-toggle" id="toggleDirectorPasswordConfirm" aria-label="Mostrar confirmação da senha" aria-pressed="false">Mostrar</button></div><small>Digite exatamente a mesma senha.</small></div>
+      </div>
+      <div class="settings-security-note"><span aria-hidden="true">🛡️</span><p>A senha é protegida antes da publicação. Prefira uma credencial longa e exclusiva.</p></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">${configured || legacyProfile ? 'Trocar senha' : 'Configurar acesso'}</button>${configured || legacyProfile ? '<button class="btn btn-danger-soft" id="removeDirectorProfile" type="button">Remover acesso</button>' : ''}</div>
+    </form>` : '<div class="notice medium"><strong>Somente o Administrador pode alterar</strong><p>O perfil Diretoria pode apenas consultar esta configuração.</p></div>'}
   </section>`;
 }
 
@@ -53,6 +63,8 @@ export function createSettingsController({
   removeDirectorProfile,
   confirmation,
   toast = () => {},
+  captureInterfaceContext = () => null,
+  restoreInterfaceContext = () => {},
   defaultLogo = DEFAULT_LOGO
 }) {
   if (!root) throw new TypeError('createSettingsController requer root.');
@@ -81,9 +93,15 @@ export function createSettingsController({
     });
   };
 
+  const rerender = ({ restoreFocus = false } = {}) => {
+    const snapshot = captureInterfaceContext?.();
+    render();
+    restoreInterfaceContext?.(snapshot, { restoreFocus });
+  };
+
   const render = () => {
     if (!isAdminUnlocked()) {
-      root.innerHTML = `<div class="card">${empty('🔒', 'Entre no painel para consultar as configurações.')}</div>`;
+      root.innerHTML = `<div class="card">${empty('🔒', 'Entre no painel para consultar os ajustes.')}</div>`;
       return;
     }
 
@@ -93,33 +111,78 @@ export function createSettingsController({
     const clubName = settings.clubName || DEFAULT_CLUB_NAME;
     const primaryColor = settings.primaryColor || DEFAULT_PRIMARY_COLOR;
     const accentColor = settings.accentColor || DEFAULT_ACCENT_COLOR;
+    const fontFamily = normalizePortalFont(settings.fontFamily || DEFAULT_FONT_FAMILY);
+    const fontOptions = PORTAL_FONT_OPTIONS.map(option => `<option value="${escapeHtml(option.value)}" ${option.value === fontFamily ? 'selected' : ''}>${escapeHtml(option.label)}</option>`).join('');
     const profile = directorProfileFromState(state());
     const legacyDirectorProfile = hasLegacyDirectorTokenProfile(state());
+    const displayLogo = resolveDisplayLogo(settings.logo, defaultLogo);
 
-    root.innerHTML = `<div class="grid">
-      ${directorMode ? '<div class="notice medium" role="status"><strong>👁️ Somente leitura</strong><p>Apenas o Administrador pode fazer alterações.</p></div>' : ''}
-      <div class="card"><div class="card-header"><div><h3>Aparência e valores</h3><div class="card-subtitle">Identidade do clube, mensalidades e acessos.</div></div></div>
-      <form id="settingsForm" class="form-grid ${writeAllowed ? '' : 'is-readonly'}">
-        <div class="form-field full-row"><label>Nome do clube</label><input name="clubName" value="${escapeHtml(clubName)}" required ${writeAllowed ? '' : 'disabled'}></div>
-        <div class="form-field"><label>Cor do portal</label><div class="toolbar-group"><input name="primaryColor" type="color" value="${escapeHtml(primaryColor)}" style="width:70px;padding:4px" ${writeAllowed ? '' : 'disabled'}><input name="primaryText" value="${escapeHtml(primaryColor)}" ${writeAllowed ? '' : 'disabled'}></div></div>
-        <div class="form-field"><label>Cor de apoio</label><div class="toolbar-group"><input name="accentColor" type="color" value="${escapeHtml(accentColor)}" style="width:70px;padding:4px" ${writeAllowed ? '' : 'disabled'}><input name="accentText" value="${escapeHtml(accentColor)}" ${writeAllowed ? '' : 'disabled'}></div></div>
-        ${currencyField('membershipMonthlyFee', 'Mensalidade individual', settings.membershipMonthlyFee, 'Valor cobrado de um associado individual.', currencyInputValue, !writeAllowed)}
-        ${currencyField('membershipFamilyPrimaryFee', 'Mensalidade familiar — titular', settings.membershipFamilyPrimaryFee, 'Valor do titular do grupo familiar.', currencyInputValue, !writeAllowed)}
-        ${currencyField('membershipFamilyAdditionalFee', 'Mensalidade familiar — adicional', settings.membershipFamilyAdditionalFee, 'Valor de cada pessoa adicional.', currencyInputValue, !writeAllowed)}
-        <div class="form-field full-row"><label>Logo</label>${writeAllowed ? '<div class="toolbar-group"><button type="button" class="btn btn-ghost" id="logoUpload">Escolher imagem</button><button type="button" class="btn btn-ghost" id="logoReset">Restaurar logo</button></div>' : `<div class="list-item"><img class="avatar" src="${escapeHtml(resolveDisplayLogo(settings.logo, defaultLogo))}" alt="Logo atual do clube" width="40" height="40" loading="lazy" decoding="async"><div class="list-item-main"><strong>Logo atualmente publicada</strong><small>Visualização somente leitura</small></div></div>`}<small>${writeAllowed ? 'A imagem será ajustada automaticamente.' : 'A alteração da identidade visual é exclusiva do Administrador.'}</small></div>
-        ${writeAllowed ? '<div class="form-actions full-row"><button class="btn btn-primary" type="submit">Salvar ajustes</button></div>' : ''}
-      </form></div>
+    root.innerHTML = `<div class="settings-page">
+      <header class="settings-hero card">
+        <div class="settings-hero-copy"><span class="section-eyebrow">Ajustes do portal</span><h2>Personalize sem complicação</h2><p>Organize a identidade do clube, os valores padrão e o acesso da Diretoria.</p></div>
+        <nav class="settings-jump-links" aria-label="Atalhos dos ajustes"><a href="#settingsIdentity">Identidade</a><a href="#settingsAppearance">Visual</a><a href="#settingsFees">Mensalidades</a><a href="#directorProfileTitle">Acesso</a></nav>
+      </header>
+      ${directorMode ? '<div class="notice medium" role="status"><strong>👁️ Consulta somente leitura</strong><p>Você pode visualizar os ajustes, mas apenas o Administrador pode alterá-los.</p></div>' : ''}
+      <form id="settingsForm" class="settings-workspace ${writeAllowed ? '' : 'is-readonly'}">
+        <section class="card settings-section" id="settingsIdentity">
+          ${settingsSectionHeading('🦁', 'Identidade', 'Informações do clube', 'Nome e logotipo exibidos em todo o portal.')}
+          <div class="settings-identity-grid">
+            <div class="form-field"><label for="settingsClubName">Nome do clube</label><input id="settingsClubName" name="clubName" value="${escapeHtml(clubName)}" required ${writeAllowed ? '' : 'disabled'}><small>Use o nome oficial que será mostrado no menu e no título.</small></div>
+            <div class="settings-logo-panel"><img id="settingsLogoPreview" src="${escapeHtml(displayLogo)}" alt="Prévia do logotipo do clube" width="88" height="88" loading="lazy" decoding="async"><div><strong>Logotipo do portal</strong><p>A imagem é ajustada automaticamente sem distorção.</p>${writeAllowed ? '<div class="toolbar-group"><button type="button" class="btn btn-ghost btn-sm" id="logoUpload">Escolher imagem</button><button type="button" class="btn btn-ghost btn-sm" id="logoReset">Usar logo padrão</button></div>' : '<span class="badge badge-muted">Somente visualização</span>'}</div></div>
+          </div>
+        </section>
+
+        <section class="card settings-section" id="settingsAppearance">
+          ${settingsSectionHeading('🎨', 'Visual', 'Cores e leitura', 'Escolha um conjunto confortável e consistente para todas as telas.')}
+          <div class="settings-appearance-grid">
+            <div class="settings-control-stack">
+              <div class="form-field"><label for="primaryColorPicker">Cor principal</label><div class="settings-color-control"><input id="primaryColorPicker" name="primaryColor" type="color" value="${escapeHtml(primaryColor)}" ${writeAllowed ? '' : 'disabled'}><input name="primaryText" value="${escapeHtml(primaryColor)}" aria-label="Código da cor principal" ${writeAllowed ? '' : 'disabled'}></div><small>Usada no menu, botões e destaques.</small></div>
+              <div class="form-field"><label for="accentColorPicker">Cor de apoio</label><div class="settings-color-control"><input id="accentColorPicker" name="accentColor" type="color" value="${escapeHtml(accentColor)}" ${writeAllowed ? '' : 'disabled'}><input name="accentText" value="${escapeHtml(accentColor)}" aria-label="Código da cor de apoio" ${writeAllowed ? '' : 'disabled'}></div><small>Usada em detalhes e pontos de atenção.</small></div>
+              <div class="form-field portal-font-setting"><label for="portalFontFamily">Fonte do portal</label><select id="portalFontFamily" name="fontFamily" ${writeAllowed ? '' : 'disabled'}>${fontOptions}</select><small>Altera o estilo de leitura em todas as páginas.</small></div>
+            </div>
+            <div class="settings-live-preview" id="settingsLivePreview" style="--preview-primary:${escapeHtml(primaryColor)};--preview-accent:${escapeHtml(accentColor)};--preview-font:${escapeHtml(portalFontStack(fontFamily))}">
+              <span>Prévia</span><div class="settings-preview-card"><i aria-hidden="true"></i><div><strong>${escapeHtml(clubName)}</strong><small>Interface limpa e fácil de ler</small></div></div><button type="button" tabindex="-1">Ação principal</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card settings-section" id="settingsFees">
+          ${settingsSectionHeading('💳', 'Mensalidades', 'Valores padrão', 'Defina os valores sugeridos ao registrar novos pagamentos.')}
+          <div class="settings-fee-grid">
+            ${currencyField('membershipMonthlyFee', 'Individual', settings.membershipMonthlyFee, 'Valor de um associado individual.', currencyInputValue, !writeAllowed)}
+            ${currencyField('membershipFamilyPrimaryFee', 'Família — titular', settings.membershipFamilyPrimaryFee, 'Valor do responsável pelo grupo familiar.', currencyInputValue, !writeAllowed)}
+            ${currencyField('membershipFamilyAdditionalFee', 'Família — adicional', settings.membershipFamilyAdditionalFee, 'Valor de cada integrante adicional.', currencyInputValue, !writeAllowed)}
+          </div>
+        </section>
+        ${writeAllowed ? '<div class="settings-savebar"><div><strong>Revise antes de salvar</strong><small>As mudanças ficam pendentes até serem publicadas.</small></div><button class="btn btn-primary" type="submit">Salvar ajustes</button></div>' : ''}
+      </form>
       ${directorProfileCard(profile, writeAllowed, legacyDirectorProfile)}
     </div>`;
 
     const form = document.getElementById('settingsForm');
     if (form && writeAllowed) {
-      const synchronizeColorFields = (pickerName, textName) => {
-        form.elements[pickerName].oninput = event => { form.elements[textName].value = event.target.value; };
-        form.elements[textName].oninput = event => { form.elements[pickerName].value = event.target.value; };
+      const preview = document.getElementById('settingsLivePreview');
+      const previewTitle = preview?.querySelector('strong');
+      const synchronizeColorFields = (pickerName, textName, variable) => {
+        const picker = form.elements[pickerName];
+        const text = form.elements[textName];
+        picker.oninput = event => {
+          text.value = event.target.value;
+          preview?.style.setProperty(variable, event.target.value);
+        };
+        text.oninput = event => {
+          picker.value = event.target.value;
+          preview?.style.setProperty(variable, event.target.value);
+        };
       };
-      synchronizeColorFields('primaryColor', 'primaryText');
-      synchronizeColorFields('accentColor', 'accentText');
+      synchronizeColorFields('primaryColor', 'primaryText', '--preview-primary');
+      synchronizeColorFields('accentColor', 'accentText', '--preview-accent');
+      form.elements.clubName?.addEventListener('input', event => {
+        if (previewTitle) previewTitle.textContent = String(event.target.value || DEFAULT_CLUB_NAME);
+      });
+      form.elements.fontFamily?.addEventListener('change', event => {
+        preview?.style.setProperty('--preview-font', portalFontStack(event.target.value));
+      });
       form.querySelectorAll('.currency-input input').forEach(input => {
         input.addEventListener('blur', () => {
           input.value = currencyInputValue(parseCurrencyInput(input.value));
@@ -129,6 +192,7 @@ export function createSettingsController({
       document.getElementById('logoReset')?.addEventListener('click', () => {
         state().settings.logo = defaultLogo;
         persist('Logo padrão restaurado.');
+        rerender();
       });
       form.onsubmit = event => {
         event.preventDefault();
@@ -137,11 +201,13 @@ export function createSettingsController({
         currentSettings.clubName = String(data.get('clubName') || '').trim();
         currentSettings.primaryColor = String(data.get('primaryText') || DEFAULT_PRIMARY_COLOR).trim();
         currentSettings.accentColor = String(data.get('accentText') || DEFAULT_ACCENT_COLOR).trim();
+        currentSettings.fontFamily = normalizePortalFont(data.get('fontFamily'));
         currentSettings.membershipMonthlyFee = parseCurrencyInput(data.get('membershipMonthlyFee'));
         currentSettings.membershipFamilyPrimaryFee = parseCurrencyInput(data.get('membershipFamilyPrimaryFee'));
         currentSettings.membershipFamilyAdditionalFee = parseCurrencyInput(data.get('membershipFamilyAdditionalFee'));
-        persist('Configurações atualizadas.');
-        render();
+        persist('Ajustes atualizados.');
+        rerender();
+        toast('Ajustes salvos neste navegador. Publique quando terminar.');
       };
     }
 
@@ -165,13 +231,11 @@ export function createSettingsController({
           return;
         }
         button.disabled = true;
-        button.textContent = 'Protegendo senha…';
+        button.textContent = 'Protegendo…';
         try {
           await configureDirectorProfile(password);
-          passwordInput.value = '';
-          confirmInput.value = '';
-          toast('Senha da Diretoria configurada. Publique as alterações para disponibilizar o acesso.');
-          render();
+          toast('Acesso da Diretoria configurado. Publique a alteração para disponibilizá-lo.');
+          rerender();
         } catch (error) {
           passwordInput.value = '';
           confirmInput.value = '';
@@ -179,22 +243,22 @@ export function createSettingsController({
           confirmInput.type = 'password';
           toast(error?.message || 'Não foi possível configurar a senha da Diretoria.');
           button.disabled = false;
-          button.textContent = profile || legacyDirectorProfile ? 'Definir nova senha' : 'Configurar senha da Diretoria';
+          button.textContent = profile || legacyDirectorProfile ? 'Trocar senha' : 'Configurar acesso';
           passwordInput.focus();
         }
       });
       document.getElementById('removeDirectorProfile')?.addEventListener('click', async () => {
         const approved = await confirmation?.askConfirmation?.({
           title: 'Remover o acesso da Diretoria?',
-          message: 'A senha configurada deixará de liberar o acesso somente leitura após a publicação desta alteração.',
+          message: 'A senha configurada deixará de liberar a consulta após a publicação.',
           icon: '👁️',
           confirmText: 'Remover acesso',
           tone: 'danger'
         });
         if (!approved) return;
         await removeDirectorProfile();
-        toast('Acesso Diretoria removido. Publique as alterações para concluir.');
-        render();
+        toast('Acesso da Diretoria removido. Publique a alteração para concluir.');
+        rerender();
       });
     }
   };
@@ -203,7 +267,7 @@ export function createSettingsController({
     if (!dataUrl || !canWrite()) return false;
     state().settings.logo = dataUrl;
     persist('Logo atualizado.');
-    render();
+    rerender();
     return true;
   };
 

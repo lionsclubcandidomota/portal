@@ -8,6 +8,8 @@ export function createTreasuryAdminContext({
   renderCurrentView,
   closeModal,
   toast,
+  captureInterfaceContext = () => null,
+  restoreInterfaceContext = () => {},
   avatar,
   empty
 }) {
@@ -34,6 +36,8 @@ export function createTreasuryAdminContext({
     renderCurrentView,
     closeModal,
     toast,
+    captureInterfaceContext,
+    restoreInterfaceContext,
     avatar,
     empty
   };

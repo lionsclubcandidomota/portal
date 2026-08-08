@@ -1,5 +1,5 @@
-import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.36.0';
-import { normalizeGitHubToken } from './core/portal-security.js?v=6.36.0';
+import { createPortalEnvelope, migratePortalPayload } from './core/portal-schema.js?v=6.44.1';
+import { normalizeGitHubToken } from './core/portal-security.js?v=6.44.1';
 
 export const GITHUB_CONFIG = Object.freeze({
   owner: 'lionsclubcandidomota',
@@ -78,12 +78,12 @@ async function parseJsonResponse(response, fallbackMessage) {
 }
 
 function throwGitHubAccessError(response, fallback = 'Falha ao acessar o GitHub.') {
-  if (response.status === 401) throw new Error('Token inválido ou expirado.');
+  if (response.status === 401) throw new Error('Credencial inválida ou expirada.');
   if (response.status === 403 && response.headers?.get?.('x-ratelimit-remaining') === '0') {
     throw new Error('O limite de consultas do GitHub foi atingido. Aguarde alguns minutos e tente novamente.');
   }
-  if (response.status === 403) throw new Error('O token não possui permissão de acesso ao repositório.');
-  if (response.status === 404) throw new Error('Repositório ou arquivo data/dados.json não encontrado para este token.');
+  if (response.status === 403) throw new Error('A credencial não possui permissão de acesso ao Portal.');
+  if (response.status === 404) throw new Error('Não foi possível localizar os dados do Portal com esta credencial.');
   throw new Error(`${fallback} (${response.status}).`);
 }
 
@@ -281,7 +281,7 @@ export async function loadRepositoryAuthorization(token) {
   const receivedFullName = String(repository.full_name || '').toLocaleLowerCase('en-US');
 
   if (receivedFullName && receivedFullName !== expectedFullName) {
-    throw new Error('O token foi associado a um repositório diferente do portal configurado.');
+    throw new Error('A credencial está vinculada a uma instalação diferente do Portal.');
   }
 
   const unavailable = Boolean(repository.archived || repository.disabled);
@@ -291,7 +291,7 @@ export async function loadRepositoryAuthorization(token) {
   if (unavailable) {
     warning = 'O repositório do portal está arquivado ou desativado e não aceita publicações.';
   } else if (repository.permissions?.push === false) {
-    warning = 'O GitHub não confirmou permissão de escrita para este token. O acesso administrativo foi liberado, mas a publicação poderá exigir outro token.';
+    warning = 'O Portal não confirmou permissão de escrita para esta credencial. O acesso foi liberado, mas talvez seja necessário usar outra credencial para publicar.';
   }
 
   return {

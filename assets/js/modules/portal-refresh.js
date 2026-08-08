@@ -106,7 +106,7 @@ export function createPortalRefreshController({
         return result;
       }
       if (result?.ok) {
-        toast?.('Painel atualizado. Filtros e pesquisas foram redefinidos, e a sessão foi mantida.');
+        toast?.('Painel atualizado. Você permaneceu na mesma tela, com filtros e posição preservados.');
       }
       return result;
     } catch (error) {

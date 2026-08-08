@@ -3,11 +3,11 @@ import {
   createPortalEnvelope,
   migratePortalPayload,
   validatePortalState
-} from '../../core/portal-schema.js?v=6.36.0';
+} from '../../core/portal-schema.js?v=6.44.1';
 import {
   findSensitivePortalFields,
   stripSensitivePortalFields
-} from '../../core/portal-security.js?v=6.36.0';
+} from '../../core/portal-security.js?v=6.44.1';
 
 export const RECOVERY_SNAPSHOT_VERSION = 1;
 export const MAX_RECOVERY_SNAPSHOTS = 12;
@@ -369,7 +369,7 @@ export function diagnosePortalIntegrity(inputState) {
     sensitiveFields.length ? 'error' : 'ok',
     sensitiveFields.length
       ? `${sensitiveFields.length} campo(s) sensível(is) foram encontrados no estado do portal.`
-      : 'Nenhuma credencial, token ou segredo foi encontrado nos dados do portal.',
+      : 'Nenhuma credencial ou segredo foi encontrado nos dados do Portal.',
     sensitiveFields.length
   ));
 

@@ -17,7 +17,7 @@ function allButtonsHaveType(html) {
 test('versão estável usa o mesmo identificador no pacote e no cache do HTML', async () => {
   const html = await readFile(path.join(projectRoot, 'index.html'), 'utf8');
   const versions = [...html.matchAll(/\?v=(\d+\.\d+\.\d+)/g)].map(match => match[1]);
-  assert.equal(packageJson.version, '6.36.0');
+  assert.equal(packageJson.version, '6.44.1');
   assert.ok(versions.length > 0);
   assert.deepEqual([...new Set(versions)], [packageJson.version]);
   assert.doesNotMatch(html, /upgrade-insecure-requests/, 'a CSP não deve forçar HTTPS no servidor local de homologação');

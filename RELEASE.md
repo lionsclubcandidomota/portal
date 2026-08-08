@@ -1,33 +1,31 @@
-# Portal Lions v6.36.0
+# Portal Lions v6.44.1
 
-## Etapa 8 — estabilização final da refatoração
+## Correção de estabilidade
 
-A v6.36.0 encerra a refatoração incremental iniciada na v6.29.0. Esta entrega não altera regras de negócio nem dados do Portal. O foco é garantir que o código publicado permaneça enxuto, verificável e seguro para futuras atualizações.
+O ciclo funcional anterior permanece concluído na **Etapa 8 de 8**. Esta versão é uma correção pós-homologação.
 
-### Alterações
+A v6.44.1 corrige duas regressões encontradas depois da publicação da v6.44.0. Não há migração de dados nem mudança no esquema.
 
-- Remoção de dois módulos comprovadamente sem uso no grafo real da aplicação:
-  - `assets/js/modules/treasury.js`;
-  - `assets/js/modules/treasury-admin/categories.js`.
-- Nova auditoria `audit:modules`, que percorre imports estáticos e dinâmicos a partir de `assets/js/app.js`.
-- Bloqueio automático de módulos órfãos, imports locais ausentes e dependências circulares.
-- Contratos da Tesouraria validados diretamente nos módulos usados em produção, sem fachada redundante.
-- Novo backup local automático de `data/dados.json` e `data/modelo.json` antes de qualquer migração ou geração de release.
-- Retenção automática dos 10 backups locais mais recentes em `.portal-backups`.
-- Fluxo de finalização consolidado no comando `npm run release:prepare`, evitando executar os mesmos testes e auditorias várias vezes.
-- `FINALIZAR-ATUALIZACAO.bat` agora verifica a presença dos arquivos de dados, cria o backup e executa um único pipeline oficial.
-- Correção do `.gitignore`: o iniciador de homologação volta a ser publicável, enquanto backups e artefatos locais permanecem fora do Git.
-- Portões de qualidade e documentação revisados para a versão consolidada.
+### Tesouraria e Ajustes
+
+A navegação recebia um resumo da sessão com a propriedade `role`, enquanto a verificação de rotas procurava apenas `accessRole`. Como resultado, as telas restritas eram interpretadas como acesso de visitante e redirecionadas para a Área administrativa.
+
+A política agora reconhece os dois formatos usados internamente e preserva as permissões corretas:
+
+- Administrador: Tesouraria, Ajustes e Área administrativa;
+- Diretoria: Tesouraria em consulta e Área administrativa;
+- usuários individuais: conforme as permissões do cargo vigente.
+
+### Ano Leonístico
+
+O campo possuía uma expressão de validação escrita dentro de uma string JavaScript. A barra invertida era consumida antes de chegar ao HTML, fazendo o navegador validar literalmente `dddd/dddd`.
+
+O campo agora utiliza o padrão HTML seguro `[0-9]{4}/[0-9]{4}` e aceita normalmente valores como `2026/2027`.
 
 ### Compatibilidade
 
-- esquema de dados: 10;
-- sem Cloudflare, D1 ou Worker;
-- publicação continua pelo fluxo atual do GitHub;
-- pacote de atualização não contém `data` nem `public`;
-- Tesouraria, mensalidades, Mútuas, associados, fotos e demais cadastros são preservados;
-- a regra de Mútua continua gerando cobrança somente após o registro de falecimento.
-
-## Refatoração concluída
-
-As oito etapas planejadas foram concluídas. Novas melhorias devem ser tratadas como versões evolutivas independentes, sempre preservando os portões de qualidade e o fluxo de backup estabelecidos nesta entrega.
+- versão do Portal: 6.44.1;
+- esquema dos dados: 12;
+- nenhuma coleção é criada, removida ou regravada;
+- o pacote incremental não inclui `data` nem `public`;
+- a atualização de versão dos módulos força a renovação do cache do navegador.

@@ -1,12 +1,12 @@
-import { migratePortalPayload } from '../../core/portal-schema.js?v=6.36.0';
-import { cloneState } from '../../core/portal-state.js?v=6.36.0';
-import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.36.0';
+import { migratePortalPayload } from '../../core/portal-schema.js?v=6.44.1';
+import { cloneState } from '../../core/portal-state.js?v=6.44.1';
+import { ACCESS_CAPABILITIES, roleHasCapability } from './authorization.js?v=6.44.1';
 
 export function createPersistenceActions(context) {
   const { dependencies, services, model } = context;
 
   const persist = (message = 'Alteração registrada') => {
-    if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.WRITE_DATA)) {
+    if (!roleHasCapability(model, ACCESS_CAPABILITIES.WRITE_DATA)) {
       const safeState = model.lastSyncedState || services.loadState();
       context.replaceCurrentState(cloneState(safeState));
       dependencies.renderCurrentView?.();
@@ -41,7 +41,7 @@ export function createPersistenceActions(context) {
   };
 
   const importState = async (importedState, file = null) => {
-    if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.WRITE_DATA)) {
+    if (!roleHasCapability(model, ACCESS_CAPABILITIES.WRITE_DATA)) {
       dependencies.toast?.('O perfil Diretoria não pode importar dados.');
       return { ok: false, reason: 'read-only' };
     }
@@ -58,7 +58,7 @@ export function createPersistenceActions(context) {
   };
 
   const restoreState = async (nextState, details = {}) => {
-    if (!roleHasCapability(model.accessRole, ACCESS_CAPABILITIES.WRITE_DATA)) {
+    if (!roleHasCapability(model, ACCESS_CAPABILITIES.WRITE_DATA)) {
       dependencies.toast?.('O perfil Diretoria não pode restaurar dados.');
       return { ok: false, reason: 'read-only' };
     }

@@ -190,7 +190,7 @@ test('menu Configurações e sua rota ficam exclusivos do perfil Administrador',
   assert.match(navigation, /settingsNav\.style\.display = access\.canViewSettings \? '' : 'none'/);
   assert.match(navigation, /settingsNav\.setAttribute\('aria-hidden', String\(!access\.canViewSettings\)\)/);
   assert.match(navigation, /settingsNav\.tabIndex = access\.canViewSettings \? 0 : -1/);
-  assert.match(navigation, /if \(!canAccessView\(access\.role, view\)\) view = 'admin'/);
+  assert.match(navigation, /if \(!canAccessView\(access, view\)\) view = 'admin'/);
   assert.match(authorization, /settings:\s*ACCESS_CAPABILITIES\.VIEW_SETTINGS/);
   assert.match(baseCss, /body:not\(\.admin-mode\) #settingsNav/);
 });
@@ -213,7 +213,7 @@ test('acesso da Diretoria inicia vazio e o menu usa Área administrativa', async
   assert.match(view, /autocomplete="new-password"/);
   assert.match(view, /id="directorPassword"[^>]*disabled/);
   assert.match(loginState, /resetSecretField\(directorInput, directorToggle, 'senha'\)/);
-  assert.match(loginState, /directorInput\.disabled = !directorMode/);
+  assert.match(loginState, /directorInput\.disabled = activeMode !== LOGIN_MODES\.DIRECTOR/);
   assert.match(controller, /get\('directorAccessPassword'\)/);
   assert.match(css, /\.admin-login-form\[hidden\]\{display:none!important\}/);
 });

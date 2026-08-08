@@ -1,4 +1,4 @@
-export function createLazyBirthdayArtworkShare({ getBirthdays, toast }) {
+export function createLazyBirthdayArtworkShare({ getBirthdays, toast, modalController }) {
   if (typeof getBirthdays !== 'function') {
     throw new TypeError('createLazyBirthdayArtworkShare requer getBirthdays().');
   }
@@ -9,8 +9,8 @@ export function createLazyBirthdayArtworkShare({ getBirthdays, toast }) {
   let controllerPromise = null;
   return async personId => {
     if (!controllerPromise) {
-      controllerPromise = import('./birthday-artwork.js?v=6.36.0')
-        .then(({ createBirthdayArtworkController }) => createBirthdayArtworkController({ getBirthdays, toast }))
+      controllerPromise = import('./birthday-artwork.js?v=6.44.1')
+        .then(({ createBirthdayArtworkController }) => createBirthdayArtworkController({ getBirthdays, toast, modalController }))
         .catch(error => {
           controllerPromise = null;
           throw error;

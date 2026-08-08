@@ -1,11 +1,11 @@
 const STATUS_LABELS = {
-  offline: 'Somente local',
-  pending: 'Alterações pendentes',
-  syncing: 'Criando commit…',
-  publishing: 'Publicando no site…',
-  published: 'Disponível no site',
-  synced: 'Sincronizado',
-  error: 'Falha na sincronização'
+  offline: 'Trabalho local',
+  pending: 'Mudanças para publicar',
+  syncing: 'Salvando mudanças…',
+  publishing: 'Atualizando o portal…',
+  published: 'Portal atualizado',
+  synced: 'Tudo em dia',
+  error: 'Não foi possível publicar'
 };
 
 const DEFAULT_EDIT_AUTOCLOSE_MS = 4800;
@@ -147,42 +147,46 @@ export function createPublishCenterController({
       if (statusIcon) statusIcon.textContent = '!';
     } else if (status === 'syncing') {
       percent = 35;
-      title.textContent = 'Salvando alterações';
-      detail.textContent = 'Criando a atualização no GitHub…';
+      title.textContent = 'Salvando mudanças';
+      detail.textContent = 'Preparando a publicação…';
       if (statusIcon) statusIcon.textContent = '↻';
     } else if (status === 'publishing') {
       percent = 88;
-      title.textContent = 'Publicando alterações';
-      detail.textContent = statusMessage || 'O envio foi concluído. Finalizando a atualização pública…';
+      title.textContent = 'Atualizando o portal';
+      detail.textContent = statusMessage || 'As mudanças foram enviadas. Finalizando a publicação…';
       if (statusIcon) statusIcon.textContent = '↑';
     } else if (status === 'synced') {
       percent = 100;
-      title.textContent = 'Portal sincronizado';
+      title.textContent = 'Tudo em dia';
       detail.textContent = lastSyncInfo?.publishedAt
         ? `Última publicação em ${formatSyncDate(lastSyncInfo.publishedAt)}.`
-        : 'Nenhuma alteração pendente.';
+        : 'Nenhuma mudança esperando publicação.';
       if (statusIcon) statusIcon.textContent = '✓';
     } else if (status === 'published') {
       percent = 100;
-      title.textContent = 'Publicação concluída';
-      detail.textContent = 'As informações já estão disponíveis no portal.';
+      title.textContent = 'Portal atualizado';
+      detail.textContent = 'As informações já estão disponíveis para todos.';
       if (statusIcon) statusIcon.textContent = '✓';
     } else if (status === 'error') {
       percent = 100;
-      title.textContent = 'Falha na publicação';
-      detail.textContent = statusMessage || 'As alterações continuam salvas neste navegador.';
+      title.textContent = 'Não foi possível publicar';
+      detail.textContent = statusMessage || 'As mudanças continuam seguras neste navegador.';
       if (statusIcon) statusIcon.textContent = '!';
     } else if (pendingChanges > 0) {
       percent = 12;
-      title.textContent = `${displayCount} alteraç${displayCount === 1 ? 'ão' : 'ões'} pendente${displayCount === 1 ? '' : 's'}`;
-      detail.textContent = attentionMessage || 'Publique as alterações antes de concluir o trabalho.';
+      title.textContent = githubToken
+        ? `${displayCount} mudança${displayCount === 1 ? '' : 's'} para publicar`
+        : `${displayCount} mudança${displayCount === 1 ? '' : 's'} aguardando o Administrador`;
+      detail.textContent = attentionMessage || (githubToken
+        ? 'Confira e publique quando terminar o trabalho.'
+        : 'As alterações estão salvas neste navegador. Entre como Administrador para publicá-las.');
       if (statusIcon) statusIcon.textContent = '•';
     } else {
       percent = 100;
-      title.textContent = 'Portal sincronizado';
+      title.textContent = 'Tudo em dia';
       detail.textContent = lastSyncInfo?.publishedAt
         ? `Última publicação em ${formatSyncDate(lastSyncInfo.publishedAt)}.`
-        : 'Nenhuma alteração pendente.';
+        : 'Nenhuma mudança esperando publicação.';
       if (statusIcon) statusIcon.textContent = '✓';
     }
 
@@ -204,8 +208,8 @@ export function createPublishCenterController({
       reviewSummary.textContent = reviewCount > 0
         ? `${reviewCount} alteraç${reviewCount === 1 ? 'ão' : 'ões'} em ${reviewAreaCount} área${reviewAreaCount === 1 ? '' : 's'}`
         : pendingChanges > 0
-          ? 'Verifique as diferenças antes de publicar'
-          : 'Nenhuma alteração para revisar';
+          ? 'Confira o que mudou antes de publicar'
+          : 'Nenhuma mudança para conferir';
     }
 
     if (sendButton) {
@@ -214,7 +218,7 @@ export function createPublishCenterController({
         ? 'Salvando…'
         : status === 'publishing'
           ? 'Publicando…'
-          : 'Publicar alterações';
+          : 'Publicar agora';
     }
     if (discardButton) discardButton.disabled = pendingChanges === 0 || isBusy;
   };

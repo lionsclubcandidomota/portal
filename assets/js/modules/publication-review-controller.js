@@ -2,7 +2,7 @@ let publicationReviewPromise = null;
 
 function loadPublicationReviewHtml() {
   if (!publicationReviewPromise) {
-    publicationReviewPromise = import('./publication-review.js?v=6.36.0')
+    publicationReviewPromise = import('./publication-review.js?v=6.44.1')
       .then(module => module.publicationReviewHtml)
       .catch(error => {
         publicationReviewPromise = null;

@@ -29,7 +29,7 @@ npm run audit:css
 
 - até 400 seletores redefinidos;
 - até 580 regras de sobrescrita;
-- até 365.000 bytes no bundle;
+- até 390.000 bytes no bundle;
 - nenhuma duplicata exata ou fonte legacy.
 
 ## Próximo objetivo

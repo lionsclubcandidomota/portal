@@ -1,4 +1,4 @@
-import { normalize } from '../utils.js';
+import { escapeHtml, normalize } from '../utils.js';
 
 function loadCanvasImage(src) {
   return new Promise((resolve, reject) => {
@@ -221,9 +221,31 @@ function shareFileName(person) {
   return `feliz-aniversario-${slug}.png`;
 }
 
+export function birthdaySharePayload(person, file) {
+  return {
+    title: `Feliz aniversário, ${person.name}!`,
+    files: [file]
+  };
+}
+
+export function birthdayDesktopShareHtml(person, previewUrl, { canCopy = false } = {}) {
+  return `<section class="birthday-share-dialog">
+    <div class="birthday-share-preview"><img src="${escapeHtml(previewUrl)}" alt="Arte de aniversário de ${escapeHtml(person.name)}"></div>
+    <div class="birthday-share-copy"><span class="admin-eyebrow">Homenagem pronta</span><h3>Enviar parabéns</h3><p>Escolha como usar a imagem. Nenhuma mensagem será adicionada automaticamente.</p></div>
+    <div class="birthday-share-actions">
+      ${canCopy ? '<button class="btn btn-primary" type="button" data-birthday-copy>Copiar imagem</button>' : ''}
+      <button class="btn btn-ghost" type="button" data-birthday-download>Baixar imagem</button>
+      <button class="btn btn-ghost" type="button" data-birthday-whatsapp>Abrir WhatsApp</button>
+      <button class="btn btn-ghost" type="button" data-close-modal>Fechar</button>
+    </div>
+    <p class="birthday-share-status" data-birthday-share-status aria-live="polite"></p>
+  </section>`;
+}
+
 export function createBirthdayArtworkController({
   getBirthdays,
   toast,
+  modalController = null,
   createArtwork = createBirthdayArtwork
 }) {
   if (typeof getBirthdays !== 'function') {
@@ -234,10 +256,16 @@ export function createBirthdayArtworkController({
     throw new TypeError('createBirthdayArtworkController requer toast().');
   }
 
-  const setButtonBusy = (button, busy) => {
-    if (!button) return;
-    button.disabled = busy;
-    button.textContent = busy ? 'Criando arte…' : '🎉 Desejar parabéns';
+  let previewUrl = '';
+
+  const setButtonsBusy = (personId, busy) => {
+    const selectorId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+      ? CSS.escape(personId)
+      : String(personId).replace(/["\\]/g, '\\$&');
+    document.querySelectorAll(`[data-birthday-share="${selectorId}"]`).forEach(button => {
+      button.disabled = busy;
+      button.textContent = busy ? 'Criando arte…' : '🎉 Enviar parabéns';
+    });
   };
 
   const downloadArtwork = (blob, fileName) => {
@@ -249,40 +277,95 @@ export function createBirthdayArtworkController({
     window.setTimeout(() => URL.revokeObjectURL(url), 2000);
   };
 
+  const canCopyArtwork = () => Boolean(
+    navigator.clipboard?.write
+    && typeof ClipboardItem === 'function'
+  );
+
+  const copyArtwork = async blob => {
+    if (!canCopyArtwork()) return false;
+    await navigator.clipboard.write([
+      new ClipboardItem({ [blob.type || 'image/png']: blob })
+    ]);
+    return true;
+  };
+
+  const openDesktopShare = (person, blob, fileName) => {
+    if (!modalController?.open) {
+      downloadArtwork(blob, fileName);
+      return;
+    }
+
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(blob);
+    const body = modalController.open(
+      `Parabéns para ${person.name}`,
+      birthdayDesktopShareHtml(person, previewUrl, { canCopy: canCopyArtwork() })
+    );
+    const status = body.querySelector('[data-birthday-share-status]');
+    const setStatus = message => {
+      if (status) status.textContent = message;
+    };
+
+    body.querySelector('[data-birthday-download]')?.addEventListener('click', () => {
+      downloadArtwork(blob, fileName);
+      setStatus('Imagem baixada.');
+    });
+
+    body.querySelector('[data-birthday-copy]')?.addEventListener('click', async event => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        await copyArtwork(blob);
+        button.textContent = 'Imagem copiada';
+        setStatus('Agora cole a imagem na conversa desejada.');
+      } catch {
+        button.disabled = false;
+        setStatus('Não foi possível copiar. Use a opção de baixar a imagem.');
+      }
+    });
+
+    body.querySelector('[data-birthday-whatsapp]')?.addEventListener('click', async () => {
+      const target = window.open('about:blank', '_blank');
+      if (target) target.opener = null;
+      let copied = false;
+      try {
+        copied = await copyArtwork(blob);
+      } catch {
+        copied = false;
+      }
+      if (!copied) downloadArtwork(blob, fileName);
+      if (target) target.location.href = 'https://web.whatsapp.com/';
+      setStatus(copied
+        ? 'Imagem copiada. Escolha a conversa e cole a imagem.'
+        : 'Imagem baixada. Anexe o arquivo na conversa do WhatsApp.');
+    });
+  };
+
   const share = async personId => {
     const person = getBirthdays().find(item => item.id === personId);
     if (!person) return;
 
-    const selectorId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-      ? CSS.escape(personId)
-      : String(personId).replace(/["\\]/g, '\\$&');
-    const button = document.querySelector(`[data-birthday-share="${selectorId}"]`);
-    setButtonBusy(button, true);
+    setButtonsBusy(personId, true);
 
     try {
       const blob = await createArtwork(person);
       const fileName = shareFileName(person);
       const file = new File([blob], fileName, { type: 'image/png' });
-      const text = `Feliz aniversário, ${person.name}! 🎉 Uma homenagem do Lions Clube de Cândido Mota.`;
       const canShareFile = navigator.share
         && (!navigator.canShare || navigator.canShare({ files: [file] }));
 
       if (canShareFile) {
-        await navigator.share({
-          title: `Feliz aniversário, ${person.name}!`,
-          text,
-          files: [file]
-        });
+        await navigator.share(birthdaySharePayload(person, file));
       } else {
-        downloadArtwork(blob, fileName);
-        toast('A arte foi baixada e está pronta para compartilhar.');
+        openDesktopShare(person, blob, fileName);
       }
     } catch (error) {
       if (error?.name !== 'AbortError') {
         toast('Não foi possível criar a homenagem de aniversário.');
       }
     } finally {
-      setButtonBusy(button, false);
+      setButtonsBusy(personId, false);
     }
   };
 

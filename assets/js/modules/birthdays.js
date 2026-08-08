@@ -1,5 +1,5 @@
-import { renderHtmlIfChanged } from './visual-helpers.js?v=6.36.0';
-import { memberIsActive as isActiveMember, memberStatusKey, memberStatusLabel } from '../core/portal-members.js?v=6.36.0';
+import { renderHtmlIfChanged } from './visual-helpers.js?v=6.44.1';
+import { memberIsActive as isActiveMember, memberStatusKey, memberStatusLabel } from '../core/portal-members.js?v=6.44.1';
 
 export function createBirthdaysController() {
   let monthFilter = 'all';
@@ -49,7 +49,7 @@ export function birthdayDisplayDate(birthDate, parseLocalDate) {
 
 export function birthdayShareButton(person, until) {
   return until === 0
-    ? `<button class="btn btn-primary btn-sm birthday-wish-btn" type="button" data-birthday-share="${person.id}">🎉 Desejar parabéns</button>`
+    ? `<button class="btn btn-primary btn-sm birthday-wish-btn" type="button" data-birthday-share="${person.id}">🎉 Enviar parabéns</button>`
     : '';
 }
 

@@ -70,7 +70,7 @@ test('parseImportFile aceita modelo v2 com coleções na raiz', async () => {
 
 test('parseImportFile bloqueia backups criados por esquema futuro', async () => {
   const file = {
-    text: async () => JSON.stringify({ schemaVersion: 12, data: {} })
+    text: async () => JSON.stringify({ schemaVersion: 13, data: {} })
   };
 
   await assert.rejects(

@@ -1,14 +1,17 @@
-import { ADMIN_PERIOD_STORAGE, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.36.0';
-import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.36.0';
-import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.36.0';
+import { ADMIN_PERIOD_STORAGE, createAdminDashboardModel } from './admin-dashboard/domain.js?v=6.44.1';
+import { adminDashboardHtml } from './admin-dashboard/view.js?v=6.44.1';
+import { bindAdminLogin } from './admin-dashboard/login-controller.js?v=6.44.1';
 export function createAdminPanelController({
   root,
   getState,
   isAdminUnlocked,
   getAccessRole = () => 'visitor',
+  getAccessPolicy = () => null,
   canWrite = () => false,
+  can = () => false,
   loginAdmin,
   loginDirector,
+  loginUser,
   logout,
   openForm,
   setView,
@@ -18,6 +21,7 @@ export function createAdminPanelController({
   financePrivacy,
   auditLog,
   recoveryCenter,
+  accessManagement,
   reports,
   toast
 }) {
@@ -40,6 +44,7 @@ export function createAdminPanelController({
     root,
     loginAdmin,
     loginDirector,
+    loginUser,
     onSuccess: () => render(),
     toast
   });
@@ -52,10 +57,12 @@ export function createAdminPanelController({
     });
     const writeAllowed = canWrite();
     const accessRole = getAccessRole();
+    const accessPolicy = getAccessPolicy();
     root.innerHTML = adminDashboardHtml(model, {
       financePrivacyButton: financePrivacy.buttonHtml({ compact: true }),
       canWrite: writeAllowed,
       accessRole,
+      accessPolicy,
       auditSummary: auditLog?.getSummary?.(),
       recoverySummary: recoveryCenter?.getSummary?.()
     });
@@ -111,9 +118,10 @@ export function createAdminPanelController({
       button.addEventListener('click', () => setView(button.dataset.manage));
     });
     root.querySelector('#exportBtn')?.addEventListener('click', () => exportState(state));
-    if (writeAllowed) root.querySelector('#importBtn')?.addEventListener('click', requestImport);
+    if (accessPolicy?.canImport) root.querySelector('#importBtn')?.addEventListener('click', requestImport);
     root.querySelector('#openAuditLogBtn')?.addEventListener('click', () => auditLog?.open?.());
-    if (writeAllowed) root.querySelector('#openRecoveryCenterBtn')?.addEventListener('click', () => recoveryCenter?.open?.());
+    if (accessPolicy?.canImport) root.querySelector('#openRecoveryCenterBtn')?.addEventListener('click', () => recoveryCenter?.open?.());
+    if (accessPolicy?.canManageUsers) root.querySelector('#openAccessManagementBtn')?.addEventListener('click', () => accessManagement?.open?.());
     reports?.bindDashboard?.(root, {
       bounds: model.bounds,
       periodPreset: model.periodPreset,

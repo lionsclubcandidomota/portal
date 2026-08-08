@@ -1,10 +1,10 @@
-# Auditoria visual — v6.36.0
+# Auditoria visual — v6.44.0
 
 ## Cobertura
 
-A auditoria percorre automaticamente cinco telas — Início, Agenda, Aniversariantes, Avisos e Área administrativa — nas larguras de 360, 390, 768, 1024 e 1366 pixels.
+A auditoria percorre automaticamente seis telas — Início, Agenda, Aniversariantes, Dirigentes, Avisos e Área administrativa — nas larguras de 360, 390, 768, 1024 e 1366 pixels.
 
-Cada execução pode gerar até 25 imagens PNG em `artifacts/visual-audit`, além de `report.json` com as medições estruturadas.
+Cada execução pode gerar até 30 imagens PNG em `artifacts/visual-audit`, além de `report.json` com as medições estruturadas.
 
 ## Comandos
 
@@ -18,6 +18,7 @@ A execução falha quando encontra:
 - rolagem horizontal inesperada no documento ou conteúdo principal;
 - elementos fora da área útil, exceto dentro de contêineres com rolagem horizontal intencional;
 - compromissos ultrapassando o card do Dashboard;
+- cartões de dirigentes ultrapassando a grade pública;
 - título do cabeçalho cortado;
 - itens da navegação móvel menores que o limite seguro;
 - rótulos do menu lateral truncados;
@@ -25,4 +26,4 @@ A execução falha quando encontra:
 
 ## Uso no release
 
-`FINALIZAR-ATUALIZACAO.bat` executa a auditoria opcional antes de gerar o manifesto. Na estação oficial de homologação, execute também o modo `required` para que a indisponibilidade do navegador seja tratada como falha.
+`INICIAR-HOMOLOGACAO.bat` executa a homologação integrada antes de abrir o Portal. A auditoria visual permanece separada para a estação com navegador compatível. Na estação oficial de homologação, execute também o modo `required` para que a indisponibilidade do navegador seja tratada como falha.

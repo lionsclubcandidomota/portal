@@ -73,7 +73,7 @@ test('envelope remove segredos tanto dos dados quanto dos metadados', () => {
 
 test('normalização do token rejeita entradas vazias, curtas ou com espaços', () => {
   assert.equal(normalizeGitHubToken('  github_pat_example123  '), 'github_pat_example123');
-  assert.throws(() => normalizeGitHubToken(''), /Informe um token/);
+  assert.throws(() => normalizeGitHubToken(''), /Informe sua credencial/);
   assert.throws(() => normalizeGitHubToken('curto'), /muito curto/);
   assert.throws(() => normalizeGitHubToken('token com espaço'), /espaços/);
 });

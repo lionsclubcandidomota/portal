@@ -6,7 +6,7 @@ import {
   parseLocalDate
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
-import { renderHtmlIfChanged } from '../visual-helpers.js?v=6.36.0';
+import { renderHtmlIfChanged } from '../visual-helpers.js?v=6.44.1';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
 
 
@@ -160,17 +160,30 @@ export function summarizeMovementFilter(items, movementFilter, treasury) {
 
 export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers }) {
   const { bindToolbar, bindRowActions } = helpers;
-  let treasurySearchQuery = '';
-  let movementFilter = 'all';
 
-  const draw = (query = treasurySearchQuery) => {
-    treasurySearchQuery = query;
+  const scheduledHeading = (count, expanded) => `<div class="timeline-heading treasury-scheduled-heading">
+    <div class="timeline-heading-main">
+      <span aria-hidden="true">🗓️</span>
+      <div><h3>Programados</h3><p>Valores previstos que ainda não alteram o saldo.</p></div>
+    </div>
+    <div class="treasury-timeline-heading-actions">
+      <span class="timeline-count">${count}</span>
+      <button class="btn btn-ghost btn-sm treasury-scheduled-toggle" type="button" data-scheduled-toggle aria-expanded="${String(expanded)}" aria-controls="treasuryScheduledBody">
+        <span aria-hidden="true">${expanded ? '−' : '＋'}</span>
+        <strong>${expanded ? 'Recolher' : 'Expandir'}</strong>
+      </button>
+    </div>
+  </div>`;
+
+  const draw = (query = treasury.movementSearch) => {
+    treasury.movementSearch = query;
+    const movementFilter = treasury.movementFilter;
     const searchMatched = periodItems.filter(item => {
       const account = treasury.accountFor(item);
       const members = treasury.membersFor(item);
       return normalize(
         `${item.description} ${item.category} ${account?.name || ''} ${members.map(member => `${member.name} ${member.memberNumber || ''}`).join(' ')}`
-      ).includes(normalize(query));
+      ).includes(normalize(treasury.movementSearch));
     });
     const matchesFilter = item => {
       if (movementFilter === 'scheduled') return treasury.isProgrammed(item);
@@ -191,6 +204,8 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
     treasury.scheduledPage = scheduledPage.page;
     treasury.completedPage = completedPage.page;
 
+    const search = root.querySelector('#searchInput');
+    if (search && search.value !== treasury.movementSearch) search.value = treasury.movementSearch;
     const lists = root.querySelector('#treasuryLists');
     if (!lists) return;
 
@@ -203,12 +218,13 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
     };
     const summary = summarizeMovementFilter(filtered, movementFilter, treasury);
     const filterButton = (key, label) => `<button type="button" class="treasury-movement-filter ${movementFilter === key ? 'is-active' : ''}" data-movement-filter="${key}" aria-pressed="${String(movementFilter === key)}"><span>${label}</span><strong>${counts[key]}</strong></button>`;
+    const scheduledExpanded = treasury.scheduledExpanded;
     const scheduledSection = movementFilter === 'completed'
       ? ''
-      : `<section class="timeline-section">${timelineHeading('🗓️', 'Programados', 'Valores previstos que ainda não alteram o saldo.', scheduled.length)}${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</section>`;
+      : `<section class="timeline-section treasury-scheduled-section ${scheduledExpanded ? 'is-expanded' : 'is-collapsed'}">${scheduledHeading(scheduled.length, scheduledExpanded)}<div id="treasuryScheduledBody" class="treasury-scheduled-body" ${scheduledExpanded ? '' : 'hidden'}>${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</div></section>`;
     const completedSection = movementFilter === 'scheduled'
       ? ''
-      : `<section class="timeline-section is-history">${timelineHeading('🧾', 'Realizados', 'Entradas recebidas e despesas pagas.', completed.length, true)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
+      : `<section class="timeline-section is-history">${timelineHeading('🧾', 'Realizados', 'Entradas recebidas e despesas pagas.', completed.length)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
 
     const changed = renderHtmlIfChanged(
       lists,
@@ -220,11 +236,16 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
 
     root.querySelectorAll('[data-movement-filter]').forEach(button => {
       button.addEventListener('click', () => {
-        movementFilter = button.dataset.movementFilter || 'all';
+        treasury.movementFilter = button.dataset.movementFilter || 'all';
         treasury.scheduledPage = 1;
         treasury.completedPage = 1;
-        draw(treasurySearchQuery);
+        draw(treasury.movementSearch);
       });
+    });
+
+    root.querySelector('[data-scheduled-toggle]')?.addEventListener('click', () => {
+      treasury.toggleScheduledExpanded();
+      draw(treasury.movementSearch);
     });
 
     root.querySelectorAll('[data-treasury-page]').forEach(button => {
@@ -235,7 +256,7 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
         } else {
           treasury.completedPage = next;
         }
-        draw(treasurySearchQuery);
+        draw(treasury.movementSearch);
         root.querySelector('#treasuryLists')?.scrollIntoView({
           behavior: 'smooth',
           block: 'start'
@@ -245,9 +266,10 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
   };
 
   bindToolbar(query => {
+    treasury.movementSearch = query;
     treasury.scheduledPage = 1;
     treasury.completedPage = 1;
     draw(query);
   });
-  draw();
+  draw(treasury.movementSearch);
 }

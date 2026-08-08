@@ -126,6 +126,16 @@ if (typeof portalViewRenderer.createPortalViewRenderer !== 'function') {
 }
 console.log('Bootstrap e renderização das páginas permanecem separados.');
 
+const leadersPath = path.join(projectRoot, 'assets', 'js', 'modules', 'leaders.js');
+const leadersModule = await import(`${pathToFileURL(leadersPath).href}?validate=${Date.now()}`);
+for (const exportName of ['currentPublicLeaders', 'publicLeadershipSummary', 'renderLeaders']) {
+  if (typeof leadersModule[exportName] !== 'function') {
+    console.error(`Export público ausente na área de dirigentes: ${exportName}.`);
+    process.exit(1);
+  }
+}
+console.log('Área pública de dirigentes vinculada ao histórico do Ano Leonístico validada.');
+
 const treasuryAdminFacadePath = path.join(projectRoot, 'assets', 'js', 'modules', 'treasury-admin.js');
 const treasuryAdminFacadeSource = await readFile(treasuryAdminFacadePath, 'utf8');
 const treasuryAdminModule = await import(`${pathToFileURL(treasuryAdminFacadePath).href}?validate=${Date.now()}`);

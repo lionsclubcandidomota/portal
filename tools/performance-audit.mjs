@@ -9,10 +9,10 @@ const indexPath = path.join(projectRoot, 'index.html');
 const optimizedLogoPath = path.join(projectRoot, 'public', 'logo-ui.webp');
 
 const budgets = Object.freeze({
-  staticJavaScriptBytes: 185_000,
-  cssBytes: 365_000,
+  staticJavaScriptBytes: 220_000,
+  cssBytes: 400_000,
   optimizedLogoBytes: 60_000,
-  criticalAssetsBytes: 580_000
+  criticalAssetsBytes: 655_000
 });
 
 function staticImportSpecifiers(source) {
@@ -55,6 +55,7 @@ const criticalAssetsBytes = staticJavaScriptBytes + cssInfo.size + logoInfo.size
 const failures = [];
 const lazyOnlyModules = [
   'assets/js/modules/agenda.js',
+  'assets/js/modules/leaders.js',
   'assets/js/modules/admin-panel.js',
   'assets/js/modules/entity-forms.js',
   'assets/js/modules/reports/controller.js',

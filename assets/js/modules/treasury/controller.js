@@ -34,7 +34,6 @@ import {
   periodBounds as getPeriodBounds,
   referenceMonth as getReferenceMonth
 } from './domain.js';
-
 export function createTreasuryController({
   getState,
   parseLocalDate,
@@ -48,13 +47,15 @@ export function createTreasuryController({
   if (typeof getState !== 'function') {
     throw new TypeError('createTreasuryController requer getState().');
   }
-
   let section = normalizeTreasurySection(initialSection);
   let period = 'all';
   let customStart = '';
   let customEnd = '';
   let scheduledPage = 1;
   let completedPage = 1;
+  let movementFilter = 'all';
+  let movementSearch = '';
+  let scheduledExpanded = true;
   let membershipMonth = '';
   let membershipStart = '';
   let membershipEnd = '';
@@ -72,7 +73,6 @@ export function createTreasuryController({
   const expandedMutualGroups = new Set();
   let chartToken = null;
   const collapsedCharts = new Set(['finance', 'cash-flow', 'category', 'account']);
-
   const state = () => getState();
   const isMembershipEntry = item => checkMembershipEntry(item, normalize);
   const isMutualEntry = item => checkMutualEntry(item, normalize);
@@ -89,7 +89,6 @@ export function createTreasuryController({
   const mutualReferenceMonth = item => getMutualReferenceMonth(item, parseLocalDate);
   const mutualReferenceDate = item => getMutualReferenceDate(item, parseLocalDate);
   const status = createStatusHelpers({ parseDate: parseLocalDate, todayStart });
-
   const accounts = () => {
     const current = state();
     if (!Array.isArray(current.treasuryAccounts)) current.treasuryAccounts = [];
@@ -98,67 +97,53 @@ export function createTreasuryController({
     }
     return current.treasuryAccounts;
   };
-
   const categories = () => {
     const current = state();
     if (!Array.isArray(current.treasuryCategories)) {
       current.treasuryCategories = [...DEFAULT_CATEGORIES];
     }
-
     const usedCategories = (current.treasury || [])
       .filter(item => !isMembershipEntry(item) && !isMutualEntry(item))
       .map(item => String(item?.category || '').trim())
       .filter(Boolean);
-
     usedCategories.forEach(category => {
       if (!current.treasuryCategories.some(item => normalize(item) === normalize(category))) {
         current.treasuryCategories.push(category);
       }
     });
-
     return [...new Set(current.treasuryCategories)]
       .sort((first, second) => first.localeCompare(second, 'pt-BR'));
   };
-
   const accountFor = item => {
     const availableAccounts = accounts();
     return availableAccounts.find(account => account.id === item?.accountId) || availableAccounts[0];
   };
-
   const membersFor = item => memberIds(item)
     .map(id => state().birthdays.find(member => member.id === id))
     .filter(Boolean);
-
   const memberFor = item => membersFor(item)[0] || null;
-
   const membershipAllocationFor = (item, memberId) => {
     const allocations = Array.isArray(item?.memberAllocations) ? item.memberAllocations : [];
     const stored = allocations.find(allocation => allocation?.memberId === memberId);
     if (stored && Number.isFinite(Number(stored.amount))) return Number(stored.amount);
-
     const ids = memberIds(item);
     return ids.includes(memberId)
       ? Number(item?.entry || 0) / Math.max(1, ids.length)
       : 0;
   };
-
   const membershipFee = () => Math.max(0, Number(state().settings.membershipMonthlyFee || 0));
   const membershipFamilyPrimaryFee = () => Math.max(0, Number(state().settings.membershipFamilyPrimaryFee || 0));
   const membershipFamilyAdditionalFee = () => Math.max(0, Number(state().settings.membershipFamilyAdditionalFee || 0));
-
   const familyGroups = () => {
     const current = state();
     if (!Array.isArray(current.familyGroups)) current.familyGroups = [];
     return current.familyGroups;
   };
-
   const familyGroupForMember = memberId => familyGroups()
     .find(group => Array.isArray(group.memberIds) && group.memberIds.includes(memberId)) || null;
-
   const mutualGroups = () => {
     const current = state();
     if (!Array.isArray(current.mutualGroups)) current.mutualGroups = [];
-
     // Preserve a identidade do array e dos grupos. Gestores administrativos podem
     // manter uma referência ao grupo enquanto consultam participantes; substituir
     // o objeto durante essa consulta faria a nova ocorrência ser gravada em uma
@@ -176,22 +161,18 @@ export function createTreasuryController({
     });
     return current.mutualGroups;
   };
-
   const mutualGroupFor = groupId => mutualGroups()
     .find(item => String(item?.id) === String(groupId || '')) || null;
-
   const mutualEventFor = (groupId, eventId) => {
     const group = mutualGroupFor(groupId);
     return group?.events.find(event => String(event.id) === String(eventId || '')) || null;
   };
-
   const mutualEvents = (groupId = '') => {
     const groups = groupId ? [mutualGroupFor(groupId)].filter(Boolean) : mutualGroups();
     return groups.flatMap(group => (group.events || []).map(event => ({ group, event })))
       .sort((first, second) => String(second.event.occurrenceDate || '')
         .localeCompare(String(first.event.occurrenceDate || '')));
   };
-
   const mutualChargeFor = (groupId, eventId, memberId) => {
     const group = mutualGroupFor(groupId);
     const event = mutualEventFor(groupId, eventId);
@@ -209,7 +190,6 @@ export function createTreasuryController({
       key: mutualChargeKey(group.id, event.id, normalizedMemberId)
     };
   };
-
   const mutualMembersForEvent = (groupId, eventId) => {
     const group = mutualGroupFor(groupId);
     const event = mutualEventFor(groupId, eventId);
@@ -218,7 +198,6 @@ export function createTreasuryController({
       .map(id => state().birthdays.find(member => String(member.id) === String(id)))
       .filter(Boolean);
   };
-
   const mutualActiveMembers = groupId => {
     const group = mutualGroupFor(groupId);
     if (!group) return [];
@@ -226,7 +205,6 @@ export function createTreasuryController({
       .map(id => state().birthdays.find(member => String(member.id) === String(id)))
       .filter(Boolean);
   };
-
   const mutualMembersForMonth = (groupId, month) => {
     const group = mutualGroupFor(groupId);
     if (!group) return [];
@@ -235,7 +213,6 @@ export function createTreasuryController({
       .map(id => state().birthdays.find(member => String(member.id) === String(id)))
       .filter(Boolean);
   };
-
   const mutualPaymentsFor = (groupId, memberId, eventId = '') => state().treasury.filter(item => (
     isMutualEntry(item)
     && !status.isProgrammed(item)
@@ -243,14 +220,11 @@ export function createTreasuryController({
     && String(item.mutualMemberId || item.memberId || '') === String(memberId || '')
     && (!eventId || String(item.mutualEventId || '') === String(eventId))
   ));
-
   const mutualIsPaid = (groupId, memberId, eventId = '') => mutualPaymentsFor(groupId, memberId, eventId).length > 0;
-
   const mutualPaymentConflicts = keys => (keys || []).flatMap(key => {
     const [groupId, eventId, memberId] = String(key || '').split('::');
     return mutualIsPaid(groupId, memberId, eventId) ? [{ key, groupId, eventId, memberId }] : [];
   });
-
   const toggleMutualSelection = (key, selected) => {
     const normalizedKey = String(key || '');
     if (!normalizedKey) return mutualSelectedCharges.size;
@@ -258,9 +232,7 @@ export function createTreasuryController({
     else mutualSelectedCharges.delete(normalizedKey);
     return mutualSelectedCharges.size;
   };
-
   const clearMutualSelection = () => mutualSelectedCharges.clear();
-
   const isMutualGroupExpanded = groupId => expandedMutualGroups.has(String(groupId || ''));
   const setMutualGroupExpanded = (groupId, expanded) => {
     const key = String(groupId || '');
@@ -271,18 +243,15 @@ export function createTreasuryController({
   };
   const toggleMutualGroup = groupId => setMutualGroupExpanded(groupId, !isMutualGroupExpanded(groupId));
   const collapseMutualGroups = () => expandedMutualGroups.clear();
-
   const paymentsFor = (memberId, month) => state().treasury.filter(item =>
     isMembershipEntry(item)
     && !status.isProgrammed(item)
     && memberIds(item).includes(memberId)
     && coveredMonths(item).includes(month)
   );
-
   const monthIsPaid = (memberId, month) => paymentsFor(memberId, month).length > 0;
   const paidMonthsFor = (memberId, months) => (months || []).filter(month => monthIsPaid(memberId, month));
   const pendingMonthsFor = (memberId, months) => (months || []).filter(month => !monthIsPaid(memberId, month));
-
   const membershipExpectedAmountForMember = memberId => {
     const group = familyGroupForMember(memberId);
     if (!group) return membershipFee();
@@ -290,7 +259,6 @@ export function createTreasuryController({
       ? membershipFamilyPrimaryFee()
       : membershipFamilyAdditionalFee();
   };
-
   const paymentConflicts = (ids, months) => {
     const conflicts = [];
     for (const memberId of ids) {
@@ -300,13 +268,11 @@ export function createTreasuryController({
     }
     return conflicts;
   };
-
   const accountSummaries = (items = state().treasury) => accounts().map(account => {
     const primaryAccountId = accounts()[0]?.id;
     const accountItems = (items || []).filter(item => (item.accountId || primaryAccountId) === account.id);
     const totals = sumTreasury(accountItems);
     const initialBalance = Number(account.initialBalance || 0);
-
     return {
       ...account,
       initialBalance,
@@ -319,9 +285,7 @@ export function createTreasuryController({
       count: accountItems.length
     };
   });
-
   const pagination = (items, page, key) => paginate(items, page, key, pageSize);
-
   const periodBounds = (selectedPeriod = period) => getPeriodBounds({
     selectedPeriod,
     customStart,
@@ -329,7 +293,6 @@ export function createTreasuryController({
     parseDate: parseLocalDate,
     todayStart
   });
-
   const itemsForPeriod = () => filterItemsByPeriod(state().treasury, periodBounds(), parseLocalDate);
   const periodLabel = () => PERIOD_LABELS[period] || PERIOD_LABELS.all;
   const isChartCollapsed = chartId => collapsedCharts.has(String(chartId || ''));
@@ -353,6 +316,9 @@ export function createTreasuryController({
     customEnd = '';
     scheduledPage = 1;
     completedPage = 1;
+    movementFilter = 'all';
+    movementSearch = '';
+    scheduledExpanded = true;
     membershipMonth = '';
     membershipStart = '';
     membershipEnd = '';
@@ -372,7 +338,6 @@ export function createTreasuryController({
     collapsedCharts.clear();
     ['finance', 'cash-flow', 'category', 'account'].forEach(chartId => collapsedCharts.add(chartId));
   };
-
   return {
     get section() { return section; },
     set section(value) {
@@ -389,6 +354,21 @@ export function createTreasuryController({
     set scheduledPage(value) { scheduledPage = Number(value) || 1; },
     get completedPage() { return completedPage; },
     set completedPage(value) { completedPage = Number(value) || 1; },
+    get movementFilter() { return movementFilter; },
+    set movementFilter(value) {
+      const normalized = String(value || 'all');
+      movementFilter = ['all', 'completed', 'scheduled', 'entries', 'exits'].includes(normalized)
+        ? normalized
+        : 'all';
+    },
+    get movementSearch() { return movementSearch; },
+    set movementSearch(value) { movementSearch = String(value || ''); },
+    get scheduledExpanded() { return scheduledExpanded; },
+    set scheduledExpanded(value) { scheduledExpanded = value !== false; },
+    toggleScheduledExpanded() {
+      scheduledExpanded = !scheduledExpanded;
+      return scheduledExpanded;
+    },
     get membershipMonth() { return membershipMonth; },
     set membershipMonth(value) { membershipMonth = String(value || ''); },
     get membershipStart() { return membershipStart; },

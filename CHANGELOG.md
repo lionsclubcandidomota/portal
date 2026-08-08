@@ -1,4 +1,89 @@
+# Histórico de versões
+
+## 6.44.1 — Correção de acesso e Ano Leonístico
+
+- Corrige a autorização das rotas restritas quando a navegação recebe o resumo da sessão autenticada.
+- Restaura o acesso à Tesouraria e aos Ajustes para o Administrador.
+- Mantém a Tesouraria disponível para a Diretoria em modo de consulta.
+- Corrige a validação HTML do campo Ano Leonístico para aceitar valores como `2026/2027`.
+- Adiciona instrução de formato no próprio campo e teste de regressão para as rotas restritas.
+- Mantém o esquema 12 e não altera dados operacionais.
+
+## 6.44.0 — Dirigentes públicos e estabilização final
+
+- Cria a área pública **Dirigentes** para o Ano Leonístico vigente.
+- Reutiliza associados, cargos e designações sem duplicar cadastros.
+- Oculta credenciais, permissões, números e observações internas.
+- Adiciona navegação pública própria para Dirigentes.
+- Amplia a auditoria visual para seis telas em cinco resoluções.
+- Adiciona homologação integrada de esquema, vínculos e períodos.
+- Integra a verificação ao iniciador local de homologação.
+- Mantém o esquema 12 e todos os dados operacionais existentes.
+- Encerra as oito etapas do ciclo funcional.
+
+## 6.43.0 — Histórico de cargos por Ano Leonístico
+
+- Atualiza o esquema de dados para a versão 12.
+- Vincula cargos a associados por Ano Leonístico e período de vigência.
+- Preserva cargos anteriores sem sobrescrever o histórico.
+- Encerra automaticamente permissões quando a designação deixa de vigorar.
+- Ativa permissões do novo cargo quando a nova designação entra em vigor.
+- Migra usuários existentes para uma designação no AL atual.
+- Bloqueia períodos ativos sobrepostos para o mesmo associado.
+- Adiciona gerenciamento e visualização do histórico por AL.
+- Mantém Tesouraria, Mútuas, mensalidades, famílias, agenda, avisos e mídias.
+
+## 6.42.0 — Evolução funcional etapa 6
+
+- Adiciona usuários e senhas individuais vinculados aos associados.
+- Cria cargos padrão e permite cargos personalizados.
+- Centraliza permissões de consulta e edição por cargo.
+- Adiciona entrada específica para Usuário na Área administrativa.
+- Protege publicação, backups, importação, recuperação e gestão de acessos para o Administrador.
+- Armazena somente derivação PBKDF2-SHA-256 das senhas, com salt individual.
+- Atualiza o esquema para a versão 11 sem alterar dados operacionais.
+- Mantém alterações de usuários pendentes até a publicação pelo Administrador no mesmo navegador.
+
+## 6.40.0 — Evolução funcional etapa 4
+
+- Moderniza a interface da Tesouraria e reduz o peso visual das movimentações.
+- Permite expandir gráficos clicando diretamente no cartão ou usando o teclado.
+- Torna a seção de movimentações programadas recolhível.
+- Preserva filtro, pesquisa, paginação e rolagem após editar uma movimentação.
+- Adiciona cobrança somente ao associado ou para toda a família.
+- Mantém o esquema 10 e não altera dados operacionais.
+
 # Changelog
+
+## 6.39.0 — Evolução funcional etapa 3
+
+- Permite cadastrar eventos e reuniões on-line antes da disponibilização do link.
+- Identifica compromissos on-line sem link em Agenda, Dashboard, calendário e relatórios.
+- Remove o texto automático do compartilhamento de aniversários.
+- Remove a confirmação automática após gerar ou baixar a homenagem.
+- Disponibiliza no computador opções públicas para copiar, baixar e abrir o WhatsApp.
+- Simplifica a entrada administrativa para solicitar somente a credencial de acesso.
+- Substitui mensagens técnicas de token por linguagem mais clara.
+- Mantém esquema 10 e todos os dados e regras existentes.
+
+## 6.38.0 — Evolução funcional etapa 2
+
+- Preserva tela, seção, rolagem e foco após salvar ou atualizar informações.
+- Impede que a atualização remota redirecione o usuário para o Início.
+- Mantém filtros, paginação e estados internos durante novas renderizações.
+- Moderniza a central de publicação com linguagem simples e fluxo Conferir, Salvar e Publicar.
+- Reorganiza Ajustes em Identidade, Visual, Mensalidades e Acesso.
+- Adiciona prévia ao vivo, atalhos internos e barra de salvamento responsiva.
+- Mantém esquema 10 e todos os dados e regras existentes.
+
+## 6.37.0 — Evolução funcional etapa 1
+
+- Reestrutura a imagem de boas-vindas e centraliza o logotipo do clube.
+- Cria card semântico e centralizado para o horário.
+- Agrupa sessão, atualização e sincronização no cabeçalho autenticado.
+- Padroniza tipografia e pesos visuais da interface.
+- Adiciona escolha de fonte em Ajustes, sem dependência externa.
+- Mantém esquema 10 e todos os dados e regras existentes.
 
 ## 6.36.0 — Refatoração etapa 8 e estabilização final
 

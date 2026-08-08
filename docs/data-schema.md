@@ -1,60 +1,72 @@
-# Esquema de dados do Portal — v10
+# Esquema de dados do Portal — v12
 
-O esquema v10 altera a regra das Mútuas: grupos não geram cobranças mensais. Uma cobrança existe somente quando o Administrador registra o falecimento de um associado do Distrito.
+O esquema v12 preserva usuários, cargos e permissões do esquema v11 e acrescenta o histórico de cargos por Ano Leonístico.
 
 ```json
 {
-  "schemaVersion": 10,
-  "version": 10,
+  "schemaVersion": 12,
+  "version": 12,
   "data": {
-    "mutualGroups": [
+    "accessRoles": [
       {
-        "id": "mu_exemplo",
-        "name": "Mútua 658",
-        "notes": "",
-        "memberships": [
-          {
-            "id": "mum_exemplo",
-            "memberId": "b_participante",
-            "joinedMonth": "2026-08",
-            "endedMonth": ""
-          }
-        ],
-        "events": [
-          {
-            "id": "mue_exemplo",
-            "deceasedName": "Associado do Distrito",
-            "occurrenceDate": "2026-08-15",
-            "amount": 15,
-            "participantIds": ["b_participante"],
-            "notes": "Comunicado do Distrito",
-            "createdAt": "2026-08-16T12:00:00.000Z"
-          }
-        ]
+        "id": "role-treasurer",
+        "name": "Tesoureiro",
+        "active": true,
+        "permissions": ["view-treasury", "manage-treasury"]
+      }
+    ],
+    "portalUsers": [
+      {
+        "id": "usr_exemplo",
+        "memberId": "b_associado",
+        "username": "associado.exemplo",
+        "roleId": "role-treasurer",
+        "active": true,
+        "passwordVersion": 1,
+        "passwordSalt": "32 caracteres hexadecimais",
+        "passwordHash": "64 caracteres hexadecimais",
+        "passwordIterations": 210000
+      }
+    ],
+    "leadershipAssignments": [
+      {
+        "id": "leadership_exemplo",
+        "memberId": "b_associado",
+        "roleId": "role-treasurer",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30",
+        "active": true,
+        "notes": "Eleito para o período."
       }
     ]
   }
 }
 ```
 
-## Regras das Mútuas
+## Regras
 
-- `memberships` mantém o histórico de participação no grupo.
-- A ausência de itens em `events` significa que não existem cobranças abertas, independentemente da quantidade de meses transcorridos.
-- Cada item de `events` representa um falecimento e guarda uma lista imutável de `participantIds`.
-- `amount` é o valor individual devido por cada participante daquela ocorrência.
-- Alterar o grupo não modifica eventos já registrados.
-- Uma baixa financeira usa `mutualGroupId`, `mutualEventId`, `mutualMemberId` e uma chave `grupo::evento::participante`.
-- Movimentações antigas da categoria Mútua continuam preservadas no histórico financeiro.
+- `accessRoles` define cargos e permissões.
+- `portalUsers` define credenciais individuais vinculadas a associados ativos.
+- `leadershipAssignments` preserva o histórico de cargos.
+- `lionYear` usa o formato `AAAA/AAAA`, com anos consecutivos.
+- `startsOn` e `endsOn` devem estar dentro do Ano Leonístico informado.
+- O cargo efetivo é calculado pela data atual; `portalUsers[].roleId` permanece como compatibilidade, mas não reativa um cargo vencido quando existe histórico.
+- Cargos inativos, usuários inativos e designações desativadas não concedem acesso.
+- A senha em texto nunca integra o estado.
 
-## Migração v9 → v10
+## Migração v11 → v12
 
-- `monthlyAmount`, `startedMonth` e `amountHistory` deixam de fazer parte do grupo normalizado.
-- Os participantes existentes são preservados em `memberships`.
-- Nenhum evento é criado automaticamente a partir dos meses anteriores.
-- Cobranças mensais que ainda não tinham baixa deixam de existir.
-- Entradas e saídas já registradas na Tesouraria não são apagadas nem recalculadas.
+- cria `leadershipAssignments`;
+- converte o cargo atual de cada usuário existente em uma designação do Ano Leonístico vigente;
+- mantém `roleId` no usuário para compatibilidade;
+- não altera os demais módulos operacionais;
+- pode ser executada novamente sem duplicar registros.
 
-Os anexos financeiros e as situações `Ativo`, `Mútua` e `Inativo` permanecem conforme o esquema v9.
+## Mútuas preservadas
 
-- `createdDate` registra a data local em que a cobrança foi gerada; `createdAt` mantém o instante técnico completo.
+A cobrança continua sendo criada somente por ocorrência de falecimento. Não existe cobrança mensal automática de Mútua.
+
+## Projeção pública de Dirigentes
+
+A tela pública não cria uma coleção nova. Ela cruza `leadershipAssignments`, `accessRoles` e `birthdays` em tempo de execução. Somente designações vigentes do Ano Leonístico atual são exibidas. `portalUsers`, hashes de senha, permissões, números de associado e observações internas não fazem parte da projeção pública.

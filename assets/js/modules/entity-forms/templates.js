@@ -1,4 +1,4 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../../core/portal-members.js?v=6.36.0';
+import { MEMBER_STATUS, memberStatusLabel } from '../../core/portal-members.js?v=6.44.1';
 import { escapeHtml, toInputDate } from '../../utils.js';
 import { markdownEditor } from '../markdown.js';
 
@@ -30,7 +30,7 @@ export function locationFormValues(item = {}) {
 export function locationFieldsHtml(item = {}, requiredMark = '') {
   const location = locationFormValues(item);
 
-  return `<div class="form-field full-row"><label>Tipo do local ${requiredMark}</label><div class="location-type-picker"><label><input type="radio" name="locationType" value="physical" ${location.type === 'physical' ? 'checked' : ''}> <span>📍 Presencial</span></label><label><input type="radio" name="locationType" value="virtual" ${location.type === 'virtual' ? 'checked' : ''}> <span>🌐 Virtual</span></label></div></div><div class="form-field full-row" data-location-physical><label>Local ${requiredMark}</label><input name="location" value="${escapeHtml(location.physical)}" placeholder="Ex.: Sede do Lions Clube"><small>Informe o endereço ou nome do local.</small></div><div class="form-field full-row" data-location-virtual><label>Link da reunião ${requiredMark}</label><input name="onlineUrl" type="url" value="${escapeHtml(location.url)}" placeholder="https://meet.google.com/..."><small>Google Meet, Microsoft Teams, Zoom, Webex ou outro endereço seguro.</small></div>`;
+  return `<div class="form-field full-row"><label>Tipo do local ${requiredMark}</label><div class="location-type-picker"><label><input type="radio" name="locationType" value="physical" ${location.type === 'physical' ? 'checked' : ''}> <span>📍 Presencial</span></label><label><input type="radio" name="locationType" value="virtual" ${location.type === 'virtual' ? 'checked' : ''}> <span>🌐 Online</span></label></div></div><div class="form-field full-row" data-location-physical><label>Local ${requiredMark}</label><input name="location" value="${escapeHtml(location.physical)}" placeholder="Ex.: Sede do Lions Clube"><small>Informe o endereço ou nome do local.</small></div><div class="form-field full-row" data-location-virtual><label>Link de acesso <span class="optional-mark">opcional</span></label><input name="onlineUrl" type="url" value="${escapeHtml(location.url)}" placeholder="Pode ser adicionado depois"><small>Deixe em branco quando o link ainda não estiver disponível.</small></div>`;
 }
 
 export function setupLocationFields(form) {
@@ -42,7 +42,7 @@ export function setupLocationFields(form) {
     if (physicalField) physicalField.hidden = isVirtual;
     if (virtualField) virtualField.hidden = !isVirtual;
     if (form.elements.location) form.elements.location.required = !isVirtual;
-    if (form.elements.onlineUrl) form.elements.onlineUrl.required = isVirtual;
+    if (form.elements.onlineUrl) form.elements.onlineUrl.required = false;
   };
 
   form.querySelectorAll('[name="locationType"]').forEach(radio => {
@@ -55,9 +55,10 @@ export function normalizeLocationData(data) {
   data.locationType = data.locationType || 'physical';
 
   if (data.locationType === 'virtual') {
-    data.onlineUrl = normalizeExternalUrl(data.onlineUrl);
+    const rawOnlineUrl = String(data.onlineUrl || '').trim();
+    data.onlineUrl = normalizeExternalUrl(rawOnlineUrl);
     data.location = '';
-    if (!data.onlineUrl) throw new Error('Informe um link válido para a reunião virtual.');
+    if (rawOnlineUrl && !data.onlineUrl) throw new Error('Confira o link informado ou deixe o campo em branco.');
   } else {
     data.location = String(data.location || '').trim();
     data.onlineUrl = '';

@@ -1,9 +1,9 @@
-import { adminLoginHtml } from './view.js?v=6.36.0';
+import { adminLoginHtml } from './view.js?v=6.44.1';
 import {
   bindSecretVisibility,
   createLoginFormState,
   resetSecretField
-} from './login-form-state.js?v=6.36.0';
+} from './login-form-state.js?v=6.44.1';
 
 function bindProfileTabs(tabs, loginState) {
   tabs.forEach((tab, index) => {
@@ -29,44 +29,73 @@ function restoreSubmit(button, label) {
   button.textContent = label;
 }
 
-export function bindAdminLogin({ root, loginAdmin, loginDirector, onSuccess, toast }) {
+export function bindAdminLogin({ root, loginAdmin, loginDirector, loginUser, onSuccess, toast }) {
   root.innerHTML = adminLoginHtml();
   const adminForm = root.querySelector('#adminLoginForm');
+  const userForm = root.querySelector('#userLoginForm');
   const directorForm = root.querySelector('#directorLoginForm');
-  const adminInput = root.querySelector('#adminGithubToken');
+  const adminInput = root.querySelector('#adminCredential');
+  const userInput = root.querySelector('#portalUsername');
+  const userPassword = root.querySelector('#portalUserPassword');
   const directorInput = root.querySelector('#directorPassword');
-  const adminToggle = root.querySelector('#toggleAdminToken');
+  const adminToggle = root.querySelector('#toggleAdminCredential');
+  const userToggle = root.querySelector('#togglePortalUserPassword');
   const directorToggle = root.querySelector('#toggleDirectorPassword');
   const tabs = [...root.querySelectorAll('[data-login-mode]')];
   const loginState = createLoginFormState({
     adminForm,
+    userForm,
     directorForm,
     adminInput,
+    userInput,
+    userPassword,
     directorInput,
     adminToggle,
+    userToggle,
     directorToggle,
     tabs
   });
 
   bindProfileTabs(tabs, loginState);
-  bindSecretVisibility(adminInput, adminToggle, 'token');
+  bindSecretVisibility(adminInput, adminToggle, 'credencial');
+  bindSecretVisibility(userPassword, userToggle, 'senha');
   bindSecretVisibility(directorInput, directorToggle, 'senha');
 
   adminForm?.addEventListener('submit', async event => {
     event.preventDefault();
     const button = event.currentTarget.querySelector('button[type="submit"]');
-    const token = String(new FormData(event.currentTarget).get('token') || '').trim();
+    const credential = String(new FormData(event.currentTarget).get('credential') || '').trim();
     setSubmitting(button, 'Conectando…');
     try {
-      const session = await loginAdmin(token);
+      const session = await loginAdmin(credential);
       onSuccess();
       if (session?.authorization?.warning) toast(session.authorization.warning);
-      else toast('Acesso administrativo liberado e dados carregados do GitHub.');
+      else toast('Acesso administrativo liberado.');
     } catch (error) {
-      resetSecretField(adminInput, adminToggle, 'token');
-      toast(error.message || 'Não foi possível conectar ao GitHub.');
-      restoreSubmit(button, 'Conectar como Administrador');
+      resetSecretField(adminInput, adminToggle, 'credencial');
+      toast(error.message || 'Não foi possível validar a credencial.');
+      restoreSubmit(button, 'Entrar como Administrador');
       adminInput.focus();
+    }
+  });
+
+  userForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const button = event.currentTarget.querySelector('button[type="submit"]');
+    const data = new FormData(event.currentTarget);
+    const username = String(data.get('portalUsername') || '').trim();
+    const password = String(data.get('portalUserPassword') || '');
+    setSubmitting(button, 'Validando…');
+    try {
+      const session = await loginUser(username, password);
+      userPassword.value = '';
+      onSuccess();
+      toast(`Bem-vindo, ${session?.actor?.name || 'usuário'}.`);
+    } catch (error) {
+      resetSecretField(userPassword, userToggle, 'senha');
+      toast(error.message || 'Não foi possível validar o usuário.');
+      restoreSubmit(button, 'Entrar com meu usuário');
+      userPassword.focus();
     }
   });
 

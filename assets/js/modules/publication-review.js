@@ -14,6 +14,7 @@ const FIELD_LABELS = {
   logo: 'Logotipo',
   primaryColor: 'Cor principal',
   accentColor: 'Cor de destaque',
+  fontFamily: 'Fonte do portal',
   membershipMonthlyFee: 'Mensalidade individual',
   membershipFamilyPrimaryFee: 'Mensalidade do titular',
   membershipFamilyAdditionalFee: 'Mensalidade adicional',
@@ -63,6 +64,7 @@ const SETTINGS_FIELDS = [
   'logo',
   'primaryColor',
   'accentColor',
+  'fontFamily',
   'membershipMonthlyFee',
   'membershipFamilyPrimaryFee',
   'membershipFamilyAdditionalFee',
@@ -218,6 +220,9 @@ function buildLookups(previousState, currentState) {
 }
 
 function formatValue(field, value, lookups, position = 'after') {
+  if (field === 'fontFamily') {
+    return ({ modern: 'Moderna', humanist: 'Suave', accessible: 'Alta legibilidade' })[String(value || '')] || 'Moderna';
+  }
   if (field === 'attachments') {
     const attachments = Array.isArray(value) ? value : [];
     if (!attachments.length) return 'Nenhum anexo';
@@ -272,7 +277,7 @@ function formatValue(field, value, lookups, position = 'after') {
   if (field === 'accessProfiles') {
     const configured = Boolean(value?.director?.passwordHash);
     const legacy = Boolean(value?.director?.fingerprint);
-    return configured ? 'Senha da Diretoria configurada' : legacy ? 'Token antigo da Diretoria pendente de substituição' : 'Perfil Diretoria não configurado';
+    return configured ? 'Senha da Diretoria configurada' : legacy ? 'Configuração antiga da Diretoria pendente de substituição' : 'Perfil Diretoria não configurado';
   }
   if (field === 'familyGroupId') {
     return lookups.groups.get(String(value || '')) || (value ? 'Grupo removido' : 'Sem grupo familiar');

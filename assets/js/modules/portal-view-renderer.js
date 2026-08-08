@@ -1,6 +1,7 @@
 import { renderDashboard } from './dashboard.js';
 import { renderNotices } from './notices.js';
 import { renderBirthdays } from './birthdays.js';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.44.1';
 
 function loadingView(title, description) {
   return `<section class="card feature-loading" role="status" aria-live="polite">
@@ -32,7 +33,8 @@ export function createPortalViewRenderer(options) {
     noticeDependencies,
     treasuryDependencies,
     renderAdmin,
-    renderSettings
+    renderSettings,
+    leaderDependencies = {}
   } = options;
 
   if (typeof getState !== 'function' || typeof getRuntime !== 'function' || typeof getNavigation !== 'function') {
@@ -40,13 +42,30 @@ export function createPortalViewRenderer(options) {
   }
 
   let agendaRenderer = null;
+  let leadersRenderer = null;
+  let leadersPromise = null;
   let agendaPromise = null;
   let treasuryFeature = null;
   let treasuryPromise = null;
 
+  const loadLeadersRenderer = () => {
+    if (!leadersPromise) {
+      leadersPromise = import('./leaders.js?v=6.44.1')
+        .then(module => {
+          leadersRenderer = module.renderLeaders;
+          return leadersRenderer;
+        })
+        .catch(error => {
+          leadersPromise = null;
+          throw error;
+        });
+    }
+    return leadersPromise;
+  };
+
   const loadAgendaRenderer = () => {
     if (!agendaPromise) {
-      agendaPromise = import('./agenda.js?v=6.36.0')
+      agendaPromise = import('./agenda.js?v=6.44.1')
         .then(module => {
           agendaRenderer = module.renderAgenda;
           return agendaRenderer;
@@ -64,7 +83,7 @@ export function createPortalViewRenderer(options) {
     if (!treasuryPromise) {
       treasuryPromise = Promise.all([
         loadTreasuryController(),
-        import('./treasury/view.js?v=6.36.0')
+        import('./treasury/view.js?v=6.44.1')
       ])
         .then(([treasury, module]) => {
           treasuryFeature = Object.freeze({ treasury, renderer: module.renderTreasury });
@@ -103,7 +122,7 @@ export function createPortalViewRenderer(options) {
     renderer(agenda, {
       root,
       ...agendaDependencies,
-      isAdminUnlocked: getRuntime().isWriteAllowed
+      isAdminUnlocked: () => getRuntime().can(ACCESS_CAPABILITIES.MANAGE_AGENDA)
     });
   }
 
@@ -132,10 +151,30 @@ export function createPortalViewRenderer(options) {
     });
   }
 
+  function runLeadersRenderer(renderer) {
+    renderer(getState(), { root, ...leaderDependencies });
+  }
+
+  function renderLeadersView() {
+    if (leadersRenderer) {
+      runLeadersRenderer(leadersRenderer);
+      return undefined;
+    }
+    root.innerHTML = loadingView('Carregando dirigentes', 'Preparando a diretoria do Ano Leonístico…');
+    return loadLeadersRenderer()
+      .then(renderer => {
+        if (getNavigation().currentView === 'leaders') runLeadersRenderer(renderer);
+      })
+      .catch(error => {
+        console.error('Falha ao carregar os Dirigentes.', error);
+        if (getNavigation().currentView === 'leaders') root.innerHTML = loadErrorView();
+      });
+  }
+
   function runTreasuryRenderer(feature) {
     feature.renderer(getState(), feature.treasury, {
       root,
-      adminUnlocked: getRuntime().canWrite,
+      adminUnlocked: getRuntime().can(ACCESS_CAPABILITIES.MANAGE_TREASURY),
       ...treasuryDependencies,
       isTreasuryView: () => getNavigation().currentView === 'treasury'
     });
@@ -162,6 +201,7 @@ export function createPortalViewRenderer(options) {
     const renderers = {
       dashboard: renderDashboardView,
       birthdays: renderBirthdaysView,
+      leaders: renderLeadersView,
       treasury: renderTreasuryView,
       agenda: renderAgendaView,
       notices: renderNoticesView,
@@ -173,6 +213,7 @@ export function createPortalViewRenderer(options) {
 
   function preload(view) {
     if (view === 'agenda') return loadAgendaRenderer();
+    if (view === 'leaders') return loadLeadersRenderer();
     if (view === 'treasury') return loadTreasuryFeature();
     return Promise.resolve();
   }
@@ -182,6 +223,7 @@ export function createPortalViewRenderer(options) {
     render,
     renderAgenda: renderAgendaView,
     renderBirthdays: renderBirthdaysView,
+    renderLeaders: renderLeadersView,
     renderDashboard: renderDashboardView,
     renderNotices: renderNoticesView,
     renderTreasury: renderTreasuryView

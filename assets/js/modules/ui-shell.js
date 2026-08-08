@@ -80,7 +80,10 @@ export function createUiShellController({
 
   const updateClock = () => {
     const now = new Date();
-    if (clock) clock.textContent = now.toLocaleTimeString('pt-BR');
+    if (clock) {
+      clock.textContent = now.toLocaleTimeString('pt-BR');
+      clock.dateTime = now.toISOString();
+    }
     if (currentDate) currentDate.textContent = fullDateFormat.format(now);
   };
 

@@ -40,7 +40,7 @@ call npm run release:prepare
 if errorlevel 1 goto :erro
 
 echo.
-echo Atualizacao 6.36.0 concluida e validada.
+echo Atualizacao 6.44.0 concluida e validada.
 echo Uma copia dos dados anteriores foi salva em .portal-backups.
 pause
 exit /b 0
