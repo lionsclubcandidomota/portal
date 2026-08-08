@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-08T14:05:03.691Z",
-  "deploymentId": "1786197903690-1666a2d4-a669-44d7-9c32-b0feac6516f4",
+  "updatedAt": "2026-08-08T14:07:10.151Z",
+  "deploymentId": "1786198030151-509a396c-d5f8-44ce-9539-f5b327df925d",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -794,6 +794,18 @@
         "membershipPlan": "family",
         "familyGroupId": "f_ms7u6fcz_4zy7h4",
         "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: julho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_mskg6giz_cnm4dz",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "Saldo Inicial",
+        "description": "AL 2026/2027",
+        "entry": 18.47,
+        "exit": 0,
+        "notes": "Saldo que foi passado para a nova diretoria.",
+        "status": "Recebido",
         "attachments": []
       }
     ],
