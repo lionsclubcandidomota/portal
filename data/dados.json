@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-08T02:19:41.486Z",
-  "deploymentId": "1786155581486-a8ffa7b3-d398-46d5-9d3b-d7fd62d9806b",
+  "updatedAt": "2026-08-08T12:45:23.515Z",
+  "deploymentId": "1786193123515-d88d981f-ee6b-45d5-969d-b766dfc568d6",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -35,7 +35,7 @@
         "memberNumber": "26766037",
         "name": "João Augusto Batista de Paula",
         "birthDate": "1995-01-02",
-        "photo": "./public/members/b_ms3xe4af_85o3yp-0vufniq.jpg",
+        "photo": "./public/members/b_ms3xe4af_85o3yp-1xwzg41.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -71,7 +71,7 @@
         "memberNumber": "2952240",
         "name": "Daniel Flávio Gozzi",
         "birthDate": "1981-03-18",
-        "photo": "./public/members/b_ms3xh5de_4qya3j-0wm9squ.jpg",
+        "photo": "./public/members/b_ms3xh5de_4qya3j-0lmscuw.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -80,7 +80,7 @@
         "memberNumber": "6268378",
         "name": "Denis Coelho",
         "birthDate": "1984-08-26",
-        "photo": "./public/members/b_ms3xhsbp_w6a41l-1meip7w.jpg",
+        "photo": "./public/members/b_ms3xhsbp_w6a41l-0ypsu5j.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -116,7 +116,7 @@
         "memberNumber": "3180578",
         "name": "Luiz Henrique Franciscatte",
         "birthDate": "1979-08-22",
-        "photo": "./public/members/b_ms3xlpvb_50kztj-06h8bs9.jpg",
+        "photo": "./public/members/b_ms3xlpvb_50kztj-1wypju9.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -134,7 +134,7 @@
         "memberNumber": "3180579",
         "name": "Marcos Antônio de Almeida",
         "birthDate": "1974-10-30",
-        "photo": "./public/members/b_ms3xmsdr_8ui1ex-0j8m4in.jpg",
+        "photo": "./public/members/b_ms3xmsdr_8ui1ex-112w8qd.jpg",
         "membershipNotes": "PIX recebido junto com a mensalidade da Sueli Neves (esposa)",
         "active": true,
         "status": "Ativo"
@@ -162,7 +162,7 @@
         "memberNumber": "1269624",
         "name": "Mario Gozzi",
         "birthDate": "1954-04-15",
-        "photo": "./public/members/b_ms3xnxct_7h4wxe-08qplbh.jpg",
+        "photo": "./public/members/b_ms3xnxct_7h4wxe-0ucc51o.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -198,7 +198,7 @@
         "memberNumber": "5431884",
         "name": "Regina Freire",
         "birthDate": "1979-09-06",
-        "photo": "./public/members/b_ms3xpn5s_svjeqa-1uz2u8u.jpg",
+        "photo": "./public/members/b_ms3xpn5s_svjeqa-04mh3eo.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -216,7 +216,7 @@
         "memberNumber": "5422283",
         "name": "Roberto Freire",
         "birthDate": "1964-10-26",
-        "photo": "./public/members/b_ms3xq92x_jjequd-0ilo1gj.jpg",
+        "photo": "./public/members/b_ms3xq92x_jjequd-0r3hzuz.jpg",
         "status": "Ativo",
         "active": true
       },
@@ -262,7 +262,7 @@
         "memberNumber": "26766028",
         "name": "Vitoria Caroline Zibordi",
         "birthDate": "2000-04-27",
-        "photo": "./public/members/b_ms3xrshl_znpzq8-0svxf3e.jpg",
+        "photo": "./public/members/b_ms3xrshl_znpzq8-1fte53c.jpg",
         "status": "Ativo",
         "active": true
       },
