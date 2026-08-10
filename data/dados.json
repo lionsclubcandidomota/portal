@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-08T14:11:17.705Z",
-  "deploymentId": "1786198277705-97cb0720-aab7-4b12-8c30-ee5d99a4a42e",
+  "updatedAt": "2026-08-10T19:08:48.208Z",
+  "deploymentId": "1786388928207-912caab2-6ee4-433f-a3e9-562f468cbf29",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -993,9 +993,9 @@
         "name": "💻 Treinamento de Tecnologia da Informação (TI)",
         "date": "2026-08-10",
         "time": "19:30",
-        "locationType": "physical",
-        "location": "Online - O link ficara disponível no dia",
-        "onlineUrl": "",
+        "locationType": "virtual",
+        "location": "",
+        "onlineUrl": "https://meet.google.com/buv-cdin-bem",
         "description": "📅 No dia 10 de agosto (segunda-feira), teremos o treinamento de Tecnologia da Informação (TI), que será conduzido pelo CL João Augusto Batista de Paula (LC Cândido Mota).\n\n💻 Este treinamento é de extrema importância para os(as) Assessores(as) de Marketing dos Clubes, mas é aberto e recomendado a TODOS os associados, independentemente de exercerem cargos. Quanto maior a participação, mais fortalecemos o trabalho dos nossos Clubes! 🤝\n\n📌 Organizem-se em seus Clubes e incentivem a participação de todos!\n\n🏆 Lembramos que os treinamentos são critérios obrigatórios para a conquista do Prêmio Excelência de Clube de Lions Internacional.\n\n🎖️ E tem mais: o Distrito premiará os Clubes que participarem de todos os treinamentos do Ano Leonístico 2026/2027!\n\n💙 Contamos com a presença e o comprometimento de todos para fazermos um excelente trabalho neste AL 2026/2027.\n\n🙌 Sua participação é fundamental! Esperamos vocês! 🦁",
         "status": "Confirmado"
       },
