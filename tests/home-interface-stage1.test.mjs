@@ -90,7 +90,7 @@ test('tipografia e responsividade da etapa 1 permanecem cobertas por CSS e Ajust
   const [css, settings, review] = await Promise.all([
     source('assets/css/components/modern-interface.css'),
     source('assets/js/modules/settings.js'),
-    source('assets/js/modules/publication-review.js')
+    source('assets/js/modules/publication-review-domain.js')
   ]);
 
   assert.match(css, /Evolução funcional — etapa 1: início, cabeçalho e tipografia/);

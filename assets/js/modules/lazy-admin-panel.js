@@ -16,10 +16,11 @@ export function createLazyAdminPanelController({ root, createOptions, toast }) {
   async function load() {
     if (!controllerPromise) {
       controllerPromise = Promise.all([
-        import('./admin-panel.js?v=6.46.5'),
-        import('./reports/controller.js?v=6.46.5')
-      ]).then(([adminModule, reportsModule]) => {
+        import('./admin-panel.js?v=6.46.7'),
+        import('./reports/controller.js?v=6.46.7')
+      ]).then(async ([adminModule, reportsModule]) => {
         const options = createOptions();
+        await options.recoveryCenter?.initialize?.();
         const reports = reportsModule.createReportsController({
           getState: options.getState,
           toast: options.toast

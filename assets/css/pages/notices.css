@@ -25,7 +25,7 @@
   .notice-desktop-table .notice-period-cell{gap:3px;font-size:.82rem}
   .notice-desktop-table .notice-period-cell strong,.notice-desktop-table .notice-period-cell small{white-space:normal;overflow-wrap:anywhere}
   .notice-desktop-table td:last-child .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
-  .notice-desktop-table td:last-child .btn{width:100%;min-width:0;padding:9px 8px}
+  
   .visitor-mode .notice-desktop-table tr{grid-template-columns:minmax(0,1fr) auto}
   .visitor-mode .notice-desktop-table td:nth-child(4){display:none}
   .notice-desktop-table tr:has(td[colspan]){display:block;padding:0;border:0;box-shadow:none;background:transparent}

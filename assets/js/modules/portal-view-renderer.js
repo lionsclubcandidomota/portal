@@ -1,7 +1,7 @@
 import { renderDashboard } from './dashboard.js';
 import { renderNotices } from './notices.js';
 import { renderBirthdays } from './birthdays.js';
-import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.5';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.7';
 
 function loadingView(title, description) {
   return `<section class="card feature-loading" role="status" aria-live="polite">
@@ -50,7 +50,7 @@ export function createPortalViewRenderer(options) {
 
   const loadLeadersRenderer = () => {
     if (!leadersPromise) {
-      leadersPromise = import('./leaders.js?v=6.46.5')
+      leadersPromise = import('./leaders.js?v=6.46.7')
         .then(module => {
           leadersRenderer = module.renderLeaders;
           return leadersRenderer;
@@ -65,7 +65,7 @@ export function createPortalViewRenderer(options) {
 
   const loadAgendaRenderer = () => {
     if (!agendaPromise) {
-      agendaPromise = import('./agenda.js?v=6.46.5')
+      agendaPromise = import('./agenda.js?v=6.46.7')
         .then(module => {
           agendaRenderer = module.renderAgenda;
           return agendaRenderer;
@@ -83,7 +83,7 @@ export function createPortalViewRenderer(options) {
     if (!treasuryPromise) {
       treasuryPromise = Promise.all([
         loadTreasuryController(),
-        import('./treasury/view.js?v=6.46.5')
+        import('./treasury/view.js?v=6.46.7')
       ])
         .then(([treasury, module]) => {
           treasuryFeature = Object.freeze({ treasury, renderer: module.renderTreasury });

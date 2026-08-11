@@ -1,4 +1,4 @@
-# Carregamento sob demanda — v6.36.0
+# Carregamento sob demanda — v6.46.7
 
 ## Grafo inicial
 
@@ -16,6 +16,12 @@ A entrada `assets/js/app.js` carrega o shell, o estado, o Dashboard, aniversaria
 | Ajustes completos | `lazy-settings.js` | abertura ou intenção de abrir Ajustes |
 | Revisão de publicação | `publication-review-controller.js` | clique em Revisar alterações |
 | Arte de aniversário | `lazy-birthday-artwork.js` | ação Desejar parabéns |
+| Painel de Publicação | `lazy-publish-center.js` | perfil com escrita e abertura do painel |
+| Central de Recuperação | `lazy-recovery-center.js` | área administrativa ou operação crítica de snapshot |
+| Histórico de alterações | `audit-log/controller.js` | abertura do histórico |
+| GitHub administrativo | `portal-runtime/controller.js` | operação que exige autenticação/escrita |
+| Mídia para publicação | `portal-runtime/publication.js` | preparação efetiva de uma publicação |
+| Acesso individual | `portal-runtime/session.js` | tentativa de login pelo perfil Usuário |
 
 ## Dashboard financeiro
 
@@ -33,3 +39,15 @@ A entrada `assets/js/app.js` carrega o shell, o estado, o Dashboard, aniversaria
 - renderizações atrasadas validam se a tela ainda está ativa;
 - a seção da Tesouraria escolhida antes do carregamento é preservada;
 - o orçamento impede o retorno acidental de módulos ao grafo inicial.
+
+
+## Contrato de estabilização — etapa 4
+
+O comando `npm run audit:lazy` faz parte do portão oficial de qualidade. Ele verifica que:
+
+- todos os imports dinâmicos locais usam o `?v=` correspondente à versão atual do `package.json`;
+- os pontos de entrada definidos como lazy continuam possuindo referência dinâmica ativa;
+- módulos administrativos e pesados protegidos não retornam ao grafo estático iniciado por `assets/js/app.js`;
+- as fronteiras de carregamento sob demanda permanecem sincronizadas com os contratos centrais em `tools/quality-contracts.mjs`.
+
+Na base final da v6.46.7 são protegidas 19 entradas lazy e 24 módulos fora do bootstrap.

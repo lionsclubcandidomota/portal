@@ -6,7 +6,7 @@ import {
   parseLocalDate
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
-import { renderHtmlIfChanged, uiIcon } from '../visual-helpers.js?v=6.46.5';
+import { renderHtmlIfChanged, uiIcon } from '../visual-helpers.js?v=6.46.7';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
 
 

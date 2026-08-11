@@ -85,8 +85,9 @@ test('documentação preserva a estabilização anterior e registra o novo ciclo
   const refactoring = await source('REFACTORING.md');
   const roadmap = await source('docs/evolution-roadmap.md');
   const quality = await source('docs/quality-gates.md');
+  const packageVersion = JSON.parse(await source('package.json')).version;
 
-  assert.match(release, /Portal Lions v6\.46\.5/);
+  assert.match(release, new RegExp(`Portal Lions v${packageVersion.replaceAll('.', '\\.')}`));
   assert.match(release, /estabilização do pacote/i);
   assert.match(release, /data\/modelo\.json/);
   assert.match(refactoring, /refatoração estrutural das versões 6\.29\.0 a 6\.36\.0 permanece concluída/i);

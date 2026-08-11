@@ -1,7 +1,7 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
 import { normalizeTreasuryEntryPayload, resolveTreasuryEntryStatus } from './domain.js';
 import { bindTreasuryAttachmentPicker, renderTreasuryAttachmentPicker } from './attachments.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.5';
+import { uiIcon } from '../visual-helpers.js?v=6.46.7';
 
 export function createTreasuryEntryManager(context) {
   const {

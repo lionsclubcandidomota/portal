@@ -1,7 +1,7 @@
 import { escapeHtml, money, normalize } from '../../utils.js';
 import { renderMembershipSection } from './memberships.js';
 import { renderMutualSection } from './mutuals.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.5';
+import { uiIcon } from '../visual-helpers.js?v=6.46.7';
 
 function analysisMetric(icon, label, value, note, tone = '') {
   return `<article class="treasury-analysis-metric ${tone}"><span aria-hidden="true">${uiIcon(icon)}</span><div><small>${escapeHtml(label)}</small><strong class="sensitive-money">${escapeHtml(value)}</strong><p>${escapeHtml(note)}</p></div></article>`;

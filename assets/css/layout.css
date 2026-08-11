@@ -57,13 +57,7 @@
 .nav-item.active > span:first-child { background: rgba(245,197,66,.18); }
 .nav-divider { margin: 11px 9px; background: rgba(255,255,255,.12); }
 .main-content { min-height: 100vh; background: transparent; }
-.topbar {
-  min-height: var(--topbar-height);
-  padding: 16px clamp(18px,3vw,38px);
-  background: rgba(255,255,255,.86);
-  backdrop-filter: blur(22px) saturate(150%);
-  border-bottom: 1px solid rgba(201,213,227,.78);
-}
+
 
 .topbar-date { display: inline-block; margin-top: 4px; color: #8a96a8; font-size: .75rem; }
 .mode-chip, .clock {

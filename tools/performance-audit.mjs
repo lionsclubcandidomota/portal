@@ -1,46 +1,14 @@
 import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { collectStaticGraph } from './module-graph-utils.mjs';
+import { lazyOnlyModules, performanceBudgets as budgets } from './quality-contracts.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const entryPath = path.join(projectRoot, 'assets', 'js', 'app.js');
 const cssPath = path.join(projectRoot, 'assets', 'css', 'app.css');
 const indexPath = path.join(projectRoot, 'index.html');
 const optimizedLogoPath = path.join(projectRoot, 'public', 'logo-ui.webp');
-
-const budgets = Object.freeze({
-  staticJavaScriptBytes: 225_000,
-  cssBytes: 446_000,
-  optimizedLogoBytes: 60_000,
-  criticalAssetsBytes: 706_000
-});
-
-function staticImportSpecifiers(source) {
-  const matches = source.matchAll(/\bimport\s+(?:[\s\S]*?\s+from\s+)?["']([^"']+)["']/g);
-  return [...matches].map(match => match[1]);
-}
-
-async function collectStaticGraph(entry) {
-  const pending = [path.resolve(entry)];
-  const visited = new Set();
-
-  while (pending.length) {
-    const current = pending.pop();
-    if (visited.has(current)) continue;
-    visited.add(current);
-    const source = await readFile(current, 'utf8');
-
-    for (const specifierWithQuery of staticImportSpecifiers(source)) {
-      const specifier = specifierWithQuery.split('?')[0];
-      if (!specifier.startsWith('.')) continue;
-      let resolved = path.resolve(path.dirname(current), specifier);
-      if (!path.extname(resolved)) resolved += '.js';
-      pending.push(resolved);
-    }
-  }
-
-  return visited;
-}
 
 const [graph, cssInfo, logoInfo, indexHtml, entrySource] = await Promise.all([
   collectStaticGraph(entryPath),
@@ -53,20 +21,8 @@ const staticJavaScriptSizes = await Promise.all([...graph].map(async file => (aw
 const staticJavaScriptBytes = staticJavaScriptSizes.reduce((total, size) => total + size, 0);
 const criticalAssetsBytes = staticJavaScriptBytes + cssInfo.size + logoInfo.size;
 const failures = [];
-const lazyOnlyModules = [
-  'assets/js/modules/agenda.js',
-  'assets/js/modules/leaders.js',
-  'assets/js/modules/admin-panel.js',
-  'assets/js/modules/entity-forms.js',
-  'assets/js/modules/reports/controller.js',
-  'assets/js/modules/settings.js',
-  'assets/js/modules/publication-review.js',
-  'assets/js/modules/treasury-admin.js',
-  'assets/js/modules/treasury/controller.js',
-  'assets/js/modules/treasury/view.js',
-  'assets/js/modules/treasury/charts.js'
-];
 const staticRelativeFiles = new Set([...graph].map(file => path.relative(projectRoot, file).replaceAll('\\', '/')));
+
 for (const modulePath of lazyOnlyModules) {
   if (staticRelativeFiles.has(modulePath)) failures.push(`${modulePath} voltou ao carregamento inicial`);
 }

@@ -3,11 +3,11 @@ import { destroyTreasuryCharts } from './charts.js';
 import { buildMembershipViewModel } from './memberships.js';
 import { buildMutualViewModel } from './mutuals.js';
 import { bindTreasuryMovementLists, categorySummaries } from './movements.js';
-import { renderTreasuryShell } from './view-shell.js?v=6.46.5';
-import { bindTreasuryOverview } from './view-overview.js?v=6.46.5';
-import { bindMembershipSection } from './view-memberships.js?v=6.46.5';
-import { bindMutualSection } from './view-mutuals.js?v=6.46.5';
-import { bindTreasuryCharts } from './view-charts.js?v=6.46.5';
+import { renderTreasuryShell } from './view-shell.js?v=6.46.7';
+import { bindTreasuryOverview } from './view-overview.js?v=6.46.7';
+import { bindMembershipSection } from './view-memberships.js?v=6.46.7';
+import { bindMutualSection } from './view-mutuals.js?v=6.46.7';
+import { bindTreasuryCharts } from './view-charts.js?v=6.46.7';
 
 export function renderTreasury(state, treasury, helpers) {
   const { root, isTreasuryView } = helpers;

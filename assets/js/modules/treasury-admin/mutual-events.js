@@ -1,5 +1,5 @@
 import { escapeHtml, formatDate, money, normalize, uid } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.5';
+import { uiIcon } from '../visual-helpers.js?v=6.46.7';
 
 function eventPaymentCount(treasury, group, event) {
   return (event.participantIds || []).reduce(

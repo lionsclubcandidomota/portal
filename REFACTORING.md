@@ -1,4 +1,4 @@
-# Registro técnico — Portal v6.46.4
+# Registro técnico — Portal v6.46.7
 
 ## Ciclos concluídos
 
@@ -121,3 +121,79 @@ O módulo `integrated-homologation.mjs` valida o esquema, referências, período
 - A arquitetura fica temporariamente congelada: novas alterações estruturais devem ser justificadas por uma necessidade funcional mensurável.
 - Evoluções visuais devem preferir correções locais e remoção de regras antigas em vez de novas camadas globais de sobrescrita.
 
+
+
+## v6.46.7 — novo ciclo de refatoração, etapa 1
+
+### Higiene do release
+
+- A versão declarada no `package.json`, nos cache-busters `?v=`, no CSS gerado e na documentação passa a ser 6.46.7.
+- Os testes de contrato deixam de fixar uma versão histórica e passam a validar dinamicamente a versão declarada pelo pacote.
+- O manifesto é regenerado a partir da árvore real da versão antes da validação final.
+- `data/dados.json` e `data/modelo.json` são preservados byte a byte nesta etapa.
+- Nenhuma regra funcional, permissão, coleção ou mídia é alterada.
+
+### Próximas etapas
+
+1. consolidar CSS redundante e recuperar margem no orçamento do bundle;
+2. corrigir a auditoria de desempenho para seguir também reexports estáticos;
+3. reduzir o grafo JavaScript inicial por carregamento sob demanda, sem quebrar os contratos existentes;
+4. recalibrar os limites somente depois de medir a nova base.
+
+## v6.46.7 — novo ciclo de refatoração, etapa 2
+
+### Consolidação CSS conservadora
+
+- Foram removidas somente regras integralmente substituídas por outra ocorrência posterior do mesmo seletor no mesmo contexto (`@media`, `@supports`, `@container` ou `@layer`).
+- Nenhuma regra parcialmente complementar foi mesclada nesta etapa, reduzindo o risco de alteração visual da cascata.
+- Regras CSS: 4.602 → 4.381.
+- Seletores redefinidos: 438 → 330.
+- Sobrescritas: 617 → 426.
+- Bundle CSS: 445.734 → 428.408 bytes.
+- A quantidade de fontes permanece em 33; a etapa reduz dívida técnica sem introduzir uma nova camada de estilos.
+- Os novos limites do auditor impedem que o ganho obtido seja perdido silenciosamente em versões futuras.
+
+### Próximas etapas
+
+1. corrigir a auditoria de desempenho para seguir também reexports estáticos;
+2. reduzir o grafo JavaScript inicial por carregamento sob demanda;
+3. estabilizar e recalibrar os limites finais após a nova medição completa.
+
+## v6.46.7 — novo ciclo de refatoração, etapa 3
+
+### Auditoria real do JavaScript e carregamento sob demanda
+
+- `performance-audit.mjs` passa a seguir tanto imports estáticos quanto reexports `export ... from`.
+- A medição correta da base da etapa 2 revelou 71 módulos estáticos e 378.503 bytes de JavaScript no grafo inicial.
+- A revisão de publicação foi separada em domínio (`publication-review-domain.js`) e interface (`publication-review.js`), preservando o cálculo no núcleo e deixando a interface sob demanda.
+- A Central de Recuperação deixa o bootstrap e passa a ser inicializada quando a área administrativa é carregada ou quando uma operação crítica exige snapshot.
+- O Painel de Publicação passa a usar um controlador lazy e só carrega sua implementação completa quando existe perfil com permissão de escrita.
+- A interface do Histórico de Alterações passa a ser carregada somente ao abrir o histórico.
+- A integração com GitHub foi separada em configuração, leitura pública e operações administrativas; autenticação/escrita permanecem fora do grafo inicial.
+- A preparação de mídia para publicação também passa a ser carregada apenas no momento de publicar.
+- Resultado: 66 módulos estáticos e 301.158 bytes no grafo inicial, redução de 77.345 bytes (aprox. 20,4%) sobre a medição correta.
+- Ativos críticos passaram de 844.725 para 767.380 bytes mantendo o mesmo CSS e logotipo.
+- O novo orçamento impede regressão acima de 315.000 bytes de JavaScript estático e 785.000 bytes de ativos críticos.
+
+### Próxima etapa
+
+1. estabilizar a base após as refatorações de CSS e JavaScript;
+2. revisar contratos, documentação e limites finais;
+3. executar a homologação completa e encerrar o ciclo sem alterar o esquema de dados.
+
+## v6.46.7 — novo ciclo de refatoração, etapa 4
+
+### Estabilização final e contratos de qualidade
+
+- O parser de dependências JavaScript passa a ser compartilhado pelas auditorias de módulo e desempenho, evitando métricas divergentes para imports, reexports e imports dinâmicos.
+- Os orçamentos de desempenho e as fronteiras de carregamento sob demanda ficam centralizados em `tools/quality-contracts.mjs`.
+- A nova auditoria `audit:lazy` valida todos os imports dinâmicos locais, exige o cache-buster da versão atual e impede que módulos protegidos retornem ao bootstrap.
+- A base final protege 19 entradas lazy e 24 módulos fora do carregamento inicial.
+- Os orçamentos finais permanecem em 315.000 bytes de JavaScript estático, 435.000 bytes de CSS e 785.000 bytes de ativos críticos.
+- O ciclo v6.46.7 é encerrado sem alterar o esquema 12, os arquivos oficiais de dados ou regras funcionais do Portal.
+
+### Política após o encerramento
+
+- Novas evoluções devem respeitar os portões de CSS, desempenho e lazy loading antes de ampliar qualquer orçamento.
+- Um módulo pesado só deve voltar ao bootstrap quando houver necessidade funcional mensurável e justificativa registrada.
+- Alterações estruturais futuras devem ser feitas em ciclos curtos, preservando os contratos definidos nesta estabilização.

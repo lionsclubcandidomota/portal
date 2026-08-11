@@ -1,11 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CURRENT_SCHEMA_VERSION } from '../assets/js/core/portal-schema.js';
-import {
-  GITHUB_CONFIG,
-  loadPublicGitHubPayload,
-  saveGitHubState
-} from '../assets/js/github.js';
+import { GITHUB_CONFIG } from '../assets/js/github-config.js';
+import { loadPublicGitHubPayload } from '../assets/js/github-public.js';
+import { saveGitHubState } from '../assets/js/github-admin.js';
 
 test('configuração do GitHub aponta para o repositório público correto', () => {
   assert.deepEqual(GITHUB_CONFIG, {
@@ -128,7 +126,7 @@ test('publicação bloqueia quando o JSON remoto mudou desde a conexão', async 
 });
 
 test('identificação do usuário autenticado preserva apenas dados públicos necessários', async t => {
-  const { loadAuthenticatedGitHubUser } = await import('../assets/js/github.js');
+  const { loadAuthenticatedGitHubUser } = await import('../assets/js/github-admin.js');
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async () => ({
     ok: true,
@@ -154,7 +152,7 @@ test('identificação do usuário autenticado preserva apenas dados públicos ne
 });
 
 test('autorização do repositório confirma permissão de publicação', async t => {
-  const { loadRepositoryAuthorization } = await import('../assets/js/github.js');
+  const { loadRepositoryAuthorization } = await import('../assets/js/github-admin.js');
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async () => ({
     ok: true,
@@ -182,7 +180,7 @@ test('autorização do repositório confirma permissão de publicação', async 
 });
 
 test('autorização informa token sem permissão de gravação sem bloquear a homologação', async t => {
-  const { loadRepositoryAuthorization } = await import('../assets/js/github.js');
+  const { loadRepositoryAuthorization } = await import('../assets/js/github-admin.js');
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async () => ({
     ok: true,
@@ -201,7 +199,7 @@ test('autorização informa token sem permissão de gravação sem bloquear a ho
 });
 
 test('conexão administrativa exige a leitura do repositório, mas não falha por verificações auxiliares', async t => {
-  const { connectGitHub } = await import('../assets/js/github.js');
+  const { connectGitHub } = await import('../assets/js/github-admin.js');
   const previousFetch = globalThis.fetch;
   const encoded = Buffer.from(JSON.stringify({
     app: 'Lions',

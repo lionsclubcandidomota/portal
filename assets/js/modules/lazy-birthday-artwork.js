@@ -9,7 +9,7 @@ export function createLazyBirthdayArtworkShare({ getBirthdays, toast, modalContr
   let controllerPromise = null;
   return async personId => {
     if (!controllerPromise) {
-      controllerPromise = import('./birthday-artwork.js?v=6.46.5')
+      controllerPromise = import('./birthday-artwork.js?v=6.46.7')
         .then(({ createBirthdayArtworkController }) => createBirthdayArtworkController({ getBirthdays, toast, modalController }))
         .catch(error => {
           controllerPromise = null;

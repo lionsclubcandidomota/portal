@@ -9,7 +9,7 @@
 }
 
 /* Utilitários que substituem estilos inline antigos */
-.admin-login-card { max-width: 620px; margin: 50px auto; }
+
 .admin-tile-icon { font-size: 1.8rem; }
 .calendar-title { min-width: 0; text-align: center; }
 .calendar-title h3 { margin: 0; text-transform: capitalize; }
@@ -147,12 +147,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .agenda-desktop-table table,
   #datedGenericLists table { table-layout: fixed; }
 
-  .agenda-desktop-table th:nth-child(1) { width: 115px; }
-  .agenda-desktop-table th:nth-child(2) { width: 38%; }
-  .agenda-desktop-table th:nth-child(3) { width: 145px; }
-  .agenda-desktop-table th:nth-child(4) { width: 19%; }
-  .agenda-desktop-table th:nth-child(5) { width: 120px; }
-  .agenda-desktop-table th:nth-child(6) { width: 100px; }
+  
+  
+  
+  
+  
+  
 
   #datedGenericLists th:nth-child(1) { width: auto; }
   #datedGenericLists th:nth-child(2) { width: 140px; }

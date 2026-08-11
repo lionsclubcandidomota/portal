@@ -1,5 +1,5 @@
 * { box-sizing: border-box; }
-html { background: var(--bg); }
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -13,7 +13,7 @@ body {
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 a { color: inherit; }
-::selection { background: rgba(245,197,66,.45); }
+
 :focus-visible { outline: 3px solid rgba(7,88,159,.24); outline-offset: 2px; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #c5d1df; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }

@@ -1,5 +1,5 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.46.5';
-import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.5';
+import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.46.7';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.7';
 import {
   escapeHtml,
   normalize,
@@ -7,7 +7,7 @@ import {
   uid
 } from '../utils.js';
 import { setupMarkdownEditors } from './markdown.js';
-import { uiIcon } from './visual-helpers.js?v=6.46.5';
+import { uiIcon } from './visual-helpers.js?v=6.46.7';
 import {
   entityFormHtml,
   normalizeLocationData,

@@ -1,41 +1,14 @@
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { moduleSpecifiers, resolveLocalSpecifier, walkJavaScriptFiles } from './module-graph-utils.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sourceRoot = path.join(projectRoot, 'assets', 'js');
 const entryPath = path.join(sourceRoot, 'app.js');
 const failures = [];
 
-async function walk(directory) {
-  const result = [];
-  for (const entry of await readdir(directory)) {
-    const absolutePath = path.join(directory, entry);
-    const info = await stat(absolutePath);
-    if (info.isDirectory()) result.push(...await walk(absolutePath));
-    else if (absolutePath.endsWith('.js')) result.push(path.resolve(absolutePath));
-  }
-  return result;
-}
-
-function moduleSpecifiers(source) {
-  const patterns = [
-    /(?:^|[;\n])\s*import\s+(?:[\w*$\s{},]+?\s+from\s+)?["']([^"']+)["']/gm,
-    /(?:^|[;\n])\s*export\s+(?:\*|\{[^}]*\})\s+from\s+["']([^"']+)["']/gm,
-    /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g
-  ];
-  return patterns.flatMap(pattern => [...source.matchAll(pattern)].map(match => match[1]));
-}
-
-function resolveSpecifier(importer, specifierWithQuery) {
-  const specifier = specifierWithQuery.split('?')[0].split('#')[0];
-  if (!specifier.startsWith('.')) return null;
-  let resolved = path.resolve(path.dirname(importer), specifier);
-  if (!path.extname(resolved)) resolved += '.js';
-  return resolved;
-}
-
-const files = (await walk(sourceRoot)).sort((first, second) => first.localeCompare(second));
+const files = (await walkJavaScriptFiles(sourceRoot)).sort((first, second) => first.localeCompare(second));
 const fileSet = new Set(files);
 const graph = new Map();
 
@@ -43,7 +16,7 @@ for (const file of files) {
   const source = await readFile(file, 'utf8');
   const dependencies = [];
   for (const specifier of moduleSpecifiers(source)) {
-    const dependency = resolveSpecifier(file, specifier);
+    const dependency = resolveLocalSpecifier(file, specifier);
     if (!dependency) continue;
     if (!fileSet.has(dependency)) {
       failures.push(`${path.relative(projectRoot, file)} importa módulo ausente: ${specifier}`);
@@ -99,5 +72,4 @@ if (failures.length) {
 }
 
 const edgeCount = [...graph.values()].reduce((total, dependencies) => total + dependencies.length, 0);
-
 console.log(`Grafo de módulos aprovado: ${files.length} módulos alcançáveis, ${edgeCount} dependências e nenhuma referência órfã ou circular.`);

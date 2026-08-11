@@ -84,4 +84,4 @@ A auditoria confere os arquivos referenciados, as duas miniaturas, os limites de
 
 ## Publicação atômica
 
-`assets/js/github.js` verifica o SHA atual, cria os blobs, monta uma única árvore, cria o commit e atualiza a branch sem `force`. O JSON nunca é publicado apontando para um arquivo preparado em outro commit.
+`assets/js/github-admin.js` verifica o SHA atual, cria os blobs, monta uma única árvore, cria o commit e atualiza a branch sem `force`. O JSON nunca é publicado apontando para um arquivo preparado em outro commit.

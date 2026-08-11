@@ -1,6 +1,6 @@
 import { escapeHtml, formatDate, money, toInputDate, uid } from '../../utils.js';
 import { buildMemberAllocations, calculateMembershipBase } from './domain.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.5';
+import { uiIcon } from '../visual-helpers.js?v=6.46.7';
 
 export function createMembershipPaymentManager(context, memberSelectorCard) {
   const {

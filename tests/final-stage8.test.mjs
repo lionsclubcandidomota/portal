@@ -42,13 +42,15 @@ test('homologação visual inclui Dirigentes e verifica os cartões públicos', 
 });
 
 test('documentação encerra as oito etapas e mantém o esquema 12', async () => {
-  const [release, refactoring, schema, changelog] = await Promise.all([
+  const [release, refactoring, schema, changelog, packageSource] = await Promise.all([
     source('RELEASE.md'),
     source('REFACTORING.md'),
     source('docs/data-schema.md'),
-    source('CHANGELOG.md')
+    source('CHANGELOG.md'),
+    source('package.json')
   ]);
-  assert.match(release, /Portal Lions v6\.46\.5/i);
+  const packageVersion = JSON.parse(packageSource).version;
+  assert.match(release, new RegExp(`Portal Lions v${packageVersion.replaceAll('.', '\\.')}`, 'i'));
   assert.match(refactoring, /ciclo funcional concluído/i);
   assert.match(schema, /Esquema de dados do Portal — v12/);
   assert.match(changelog, /6\.44\.0 — Dirigentes públicos e estabilização final/);

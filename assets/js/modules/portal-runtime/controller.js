@@ -1,31 +1,41 @@
 import { loadState, saveState } from '../../storage.js';
 import {
-  connectGitHub,
   loadPublicGitHubPayload,
-  saveGitHubState,
   waitForPagesDeployment
-} from '../../github.js?v=6.46.5';
-import { createPortalRuntimeContext } from './context.js?v=6.46.5';
-import { createPersistenceActions } from './persistence.js?v=6.46.5';
-import { createAdminSessionActions } from './session.js?v=6.46.5';
-import { createPublicationActions } from './publication.js?v=6.46.5';
-import { createRemoteSyncActions } from './remote-sync.js?v=6.46.5';
-import { createBootstrapAction } from './bootstrap.js?v=6.46.5';
-import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.46.5';
-import { createAccessProfileActions } from './access-profile.js?v=6.46.5';
+} from '../../github-public.js?v=6.46.7';
+
+let githubAdminPromise = null;
+
+function loadGitHubAdmin() {
+  if (!githubAdminPromise) {
+    githubAdminPromise = import('../../github-admin.js?v=6.46.7').catch(error => {
+      githubAdminPromise = null;
+      throw error;
+    });
+  }
+  return githubAdminPromise;
+}
+import { createPortalRuntimeContext } from './context.js?v=6.46.7';
+import { createPersistenceActions } from './persistence.js?v=6.46.7';
+import { createAdminSessionActions } from './session.js?v=6.46.7';
+import { createPublicationActions } from './publication.js?v=6.46.7';
+import { createRemoteSyncActions } from './remote-sync.js?v=6.46.7';
+import { createBootstrapAction } from './bootstrap.js?v=6.46.7';
+import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.46.7';
+import { createAccessProfileActions } from './access-profile.js?v=6.46.7';
 import {
   ACCESS_CAPABILITIES,
   accessSnapshot,
   canAccessView,
   roleHasCapability
-} from './authorization.js?v=6.46.5';
+} from './authorization.js?v=6.46.7';
 
 export function createPortalRuntimeController(dependencies) {
   const services = {
-    connectGitHub,
+    connectGitHub: async (...args) => (await loadGitHubAdmin()).connectGitHub(...args),
     loadPublicGitHubPayload,
     loadState,
-    saveGitHubState,
+    saveGitHubState: async (...args) => (await loadGitHubAdmin()).saveGitHubState(...args),
     saveState,
     waitForPagesDeployment
   };

@@ -1,4 +1,4 @@
-import { buildPublicationReview } from '../publication-review.js?v=6.46.5';
+import { buildPublicationReview } from '../publication-review-domain.js?v=6.46.7';
 import {
   auditLogSummary,
   closeAuditBatch,
@@ -10,9 +10,29 @@ import {
   linkAuditPublication,
   normalizeAuditActor,
   pendingAuditBatchId
-} from './domain.js?v=6.46.5';
-import { createAuditLogStore } from './storage.js?v=6.46.5';
-import { auditLogHtml } from './view.js?v=6.46.5';
+} from './domain.js?v=6.46.7';
+import { createAuditLogStore } from './storage.js?v=6.46.7';
+
+let auditLogViewPromise = null;
+
+function loadAuditLogView() {
+  if (!auditLogViewPromise) {
+    auditLogViewPromise = import('./view.js?v=6.46.7')
+      .then(module => module.auditLogHtml)
+      .catch(error => {
+        auditLogViewPromise = null;
+        throw error;
+      });
+  }
+  return auditLogViewPromise;
+}
+
+function auditLogLoadingHtml() {
+  return `<section class="feature-loading" role="status" aria-live="polite">
+    <span class="feature-loading-spinner" aria-hidden="true"></span>
+    <div><strong>Carregando histórico</strong><small>Organizando as alterações registradas…</small></div>
+  </section>`;
+}
 
 export function createAuditLogController({
   storage = globalThis.localStorage,
@@ -78,30 +98,40 @@ export function createAuditLogController({
     toast?.('Histórico exportado.');
   };
 
-  const renderOpenView = ({ initial = false } = {}) => {
-    const model = {
-      summary: auditLogSummary(entries),
-      batches: groupAuditBatches(entries, { status: filter, query }),
-      filter,
-      query
-    };
-    const html = auditLogHtml(model);
-    const body = initial
-      ? modalController.open('Histórico de alterações', html)
-      : modalController.setContent(html);
-    body.querySelector('#auditLogFilter')?.addEventListener('change', event => {
-      filter = event.currentTarget.value;
-      renderOpenView();
-    });
-    body.querySelector('#auditLogSearch')?.addEventListener('input', event => {
-      query = event.currentTarget.value;
-      const position = Number(event.currentTarget.selectionStart || 0);
-      renderOpenView();
-      const input = modalController.body.querySelector('#auditLogSearch');
-      input?.focus();
-      input?.setSelectionRange(position, position);
-    });
-    body.querySelector('#auditLogExport')?.addEventListener('click', exportHistory);
+  const renderOpenView = async ({ initial = false } = {}) => {
+    const placeholder = initial
+      ? modalController.open('Histórico de alterações', auditLogLoadingHtml())
+      : modalController.body;
+    try {
+      const auditLogHtml = await loadAuditLogView();
+      if (placeholder?.isConnected === false) return;
+      const model = {
+        summary: auditLogSummary(entries),
+        batches: groupAuditBatches(entries, { status: filter, query }),
+        filter,
+        query
+      };
+      const body = modalController.setContent(auditLogHtml(model));
+      body.querySelector('#auditLogFilter')?.addEventListener('change', event => {
+        filter = event.currentTarget.value;
+        void renderOpenView();
+      });
+      body.querySelector('#auditLogSearch')?.addEventListener('input', event => {
+        query = event.currentTarget.value;
+        const position = Number(event.currentTarget.selectionStart || 0);
+        void renderOpenView().then(() => {
+          const input = modalController.body.querySelector('#auditLogSearch');
+          input?.focus();
+          input?.setSelectionRange(position, position);
+        });
+      });
+      body.querySelector('#auditLogExport')?.addEventListener('click', exportHistory);
+    } catch (error) {
+      console.error('Falha ao carregar o histórico de alterações.', error);
+      if (placeholder?.isConnected !== false) {
+        modalController.setContent('<section class="empty-state" role="alert"><div class="empty-icon" aria-hidden="true">!</div><h3>Histórico indisponível</h3><p>Feche esta janela e tente novamente.</p></section>');
+      }
+    }
   };
 
   const open = () => renderOpenView({ initial: true });

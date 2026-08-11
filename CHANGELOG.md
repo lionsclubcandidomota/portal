@@ -1,8 +1,31 @@
-## v6.46.5 — Ajuste visual do botão Atualizar Portal
+## v6.46.7 — Refatoração técnica, etapa 4 — estabilização final
+- centraliza os contratos de orçamento e fronteiras de lazy loading usados pelas auditorias técnicas;
+- adiciona `audit:lazy` ao pipeline oficial, validando imports dinâmicos versionados, pontos de entrada lazy ativos e módulos pesados fora do bootstrap;
+- compartilha a leitura do grafo de módulos entre as auditorias, evitando divergência entre importações estáticas, reexports e imports dinâmicos;
+- mantém os orçamentos finais em 315 KB de JavaScript estático, 435 KB de CSS e 785 KB de ativos críticos;
+- encerra o ciclo de refatoração v6.46.7 sem alteração funcional ou migração de dados.
+
+## v6.46.7 — Refatoração técnica, etapa 3 — desempenho e lazy loading
+- corrige a auditoria do grafo inicial para contabilizar também `export ... from`, eliminando a subestimação anterior do JavaScript estático;
+- separa cálculo e interface da revisão de publicação, mantendo apenas o domínio necessário no carregamento inicial;
+- move Central de Recuperação, Painel de Publicação, interface do histórico de alterações, escrita administrativa no GitHub e preparação pesada de mídia para carregamento sob demanda;
+- divide a integração GitHub em `github-public.js`, `github-admin.js` e `github-config.js`, deixando as rotinas administrativas fora do bootstrap público;
+- reduz o grafo JavaScript inicial correto de 378.503 para 301.158 bytes (aproximadamente 20,4%);
+- recalibra o orçamento de desempenho para a métrica corrigida: 315 KB de JavaScript estático e 785 KB de ativos críticos;
+- preserva regras funcionais, esquema 12 e arquivos oficiais de dados.
+
+## v6.46.7 — Higiene do release e base da refatoração
+- sincroniza a versão interna do Portal com o pacote v6.46.7;
+- atualiza os cache-busters dos módulos e do CSS para evitar reaproveitamento de arquivos antigos pelo navegador;
+- regenera o manifesto a partir do conteúdo real do pacote;
+- mantém `data/dados.json` e `data/modelo.json` preservados byte a byte;
+- estabelece esta versão como base estável para a refatoração incremental de CSS e desempenho.
+
+## Ajustes posteriores à v6.46.5 — Botão Atualizar Portal
 - centraliza o texto do botão **Atualizar Portal** no rodapé do menu lateral, equilibrando o espaço visual em relação ao ícone;
 - durante a atualização, mantém o quadrado do ícone imóvel e anima somente o SVG com as duas flechas de atualização.
 
-## v6.46.5 — Correção de miniaturas dos dirigentes
+## Ajustes posteriores à v6.46.5 — Miniaturas e Agenda
 ### Ajustes de interface — Agenda da página inicial
 - Corrige a compressão dos cards da Agenda na página inicial quando o usuário está autenticado, usando uma coluna interna no card de meia largura.
 - Reorganiza compromissos online para manter plataforma e botão de acesso lado a lado quando houver espaço, empilhando apenas em telas pequenas.
@@ -11,7 +34,7 @@
 - adiciona as miniaturas responsivas ausentes (`96px` e `192px`) do associado cuja foto original já existia, eliminando o `404` na página pública de Dirigentes;
 - torna a auditoria de mídia obrigatória no portão de qualidade, impedindo que um release seja aprovado com miniaturas de associados faltando.
 
-## v6.46.5 — Ajustes de publicação e GitHub Pages
+## Ajustes posteriores à v6.46.5 — Publicação e GitHub Pages
 - padroniza o ícone do aviso superior de publicação em andamento para usar as duas flechas de atualização, alinhado ao cartão interno do painel, mantendo o fundo do ícone estável enquanto apenas o SVG anima;
 - atualiza o workflow próprio do GitHub Pages para actions compatíveis com Node 24 (`checkout@v5`, `configure-pages@v6`, `upload-pages-artifact@v5` e `deploy-pages@v5`), eliminando o aviso de depreciação do runtime Node.js 20;
 - publica apenas os arquivos estáticos necessários (`index.html`, `assets`, `data` e `public`) no artefato do Pages.
@@ -302,3 +325,12 @@
 - Permite baixa individual ou em lote, com um movimento financeiro por participante.
 - Atualiza dashboard, relatórios, recuperação, revisão de publicação e testes para o novo fluxo.
 - Mantém o Portal no modelo atual com dados em `data/dados.json`, sem migração para Cloudflare, D1 ou R2.
+
+## 6.46.7 — Refatoração etapa 2
+
+- Remove 221 regras CSS totalmente anuladas por definições posteriores com o mesmo seletor e o mesmo contexto responsivo.
+- Reduz os seletores redefinidos de 438 para 330 e as sobrescritas de 617 para 426.
+- Reduz o bundle CSS de 445.734 para 428.408 bytes sem criar novas fontes de estilo.
+- Recalibra os limites impeditivos para 350 seletores redefinidos, 450 sobrescritas, fonte máxima de 38 KB e bundle máximo de 435 KB.
+- Preserva a ordem histórica das 33 fontes CSS e não altera regras funcionais, dados ou permissões.
+

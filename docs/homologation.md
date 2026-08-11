@@ -1,20 +1,21 @@
-# Homologação — v6.46.5
+# Homologação — v6.46.7
 
-> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.46.5.
+> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.46.7.
 
 
-## Estabilização do pacote — versão 6.46.5
+## Consolidação do pacote — versão 6.46.7
 
 1. Execute `FINALIZAR-ATUALIZACAO.bat` e confirme a aprovação do pipeline completo.
 2. Confirme que `data/dados.json` continua no esquema 12 e que seu conteúdo operacional não foi alterado.
 3. Confirme que `data/modelo.json` está no esquema 12 e contém `accessRoles`, `portalUsers` e `leadershipAssignments`.
 4. Execute `npm run release:verify` e confirme que o manifesto reconhece todos os arquivos atuais.
-5. Em 360 e 390 px, revise **Tesouraria → Movimentações, Contas, Mensalidades e Mútuas**, sem cortes ou rolagem horizontal inesperada.
-6. Abra **Mútuas → Gerenciar grupos** e **Registrar falecimento**, verificando cartões, listas, rolagem interna e botões.
-7. Abra **Usuários e cargos** e valide as seções recolhíveis, retratos e histórico por Ano Leonístico.
-8. Como visitante, abra **Dirigentes**, alterne entre o AL atual e os anteriores e confirme as fotografias e o estado vazio quando aplicável.
-9. Abra o **Painel de Publicação** e confirme hierarquia, progresso, botões e responsividade.
-10. Atualize a página e confirme ausência de erros no console.
+5. Execute `npm run audit:lazy` e confirme que todos os imports dinâmicos estão versionados e os módulos protegidos permanecem fora do bootstrap.
+6. Em 360 e 390 px, revise **Tesouraria → Movimentações, Contas, Mensalidades e Mútuas**, sem cortes ou rolagem horizontal inesperada.
+7. Abra **Mútuas → Gerenciar grupos** e **Registrar falecimento**, verificando cartões, listas, rolagem interna e botões.
+8. Abra **Usuários e cargos** e valide as seções recolhíveis, retratos e histórico por Ano Leonístico.
+9. Como visitante, abra **Dirigentes**, alterne entre o AL atual e os anteriores e confirme as fotografias e o estado vazio quando aplicável.
+10. Abra o **Painel de Publicação** e confirme hierarquia, progresso, botões e responsividade.
+11. Atualize a página e confirme ausência de erros no console.
 
 > A arquitetura está congelada após esta estabilização. Correções posteriores devem ser locais e acompanhadas de testes de regressão.
 

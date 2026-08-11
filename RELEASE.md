@@ -1,35 +1,53 @@
-# Portal Lions v6.46.5
+# Portal Lions v6.46.7
 
-> Versão de estabilização do pacote v6.46.4. Não adiciona funcionalidades nem altera as regras operacionais do Portal.
+> Versão de consolidação do ciclo 6.46.x e ponto de partida para a refatoração técnica incremental do Portal.
 
 ## Objetivo
 
-A versão 6.46.5 corrige inconsistências do pacote de distribuição antes de novas evoluções:
+A versão 6.46.7 sincroniza a identificação do pacote com o código efetivamente distribuído e restabelece uma base de release verificável antes das próximas refatorações. Ela preserva a **estabilização do pacote** iniciada na v6.46.5, sem reabrir regras funcionais já consolidadas.
 
-- atualiza `data/modelo.json` do esquema 7 para o esquema 12;
-- mantém `data/dados.json` integralmente preservado;
-- regenera o manifesto com todos os arquivos atuais, inclusive imagens e miniaturas;
-- torna a auditoria do release responsável por validar tanto os dados oficiais quanto o modelo de instalação;
-- elimina a versão antiga fixa na mensagem do finalizador;
-- documenta a homologação visual prioritária e o congelamento temporário da arquitetura.
+- sincroniza `package.json`, cache-busters `?v=`, CSS gerado e documentação para **6.46.7**;
+- regenera `release-manifest.json` a partir do conteúdo real do pacote;
+- preserva integralmente `data/dados.json` e `data/modelo.json`;
+- mantém o esquema de dados na versão **12**;
+- mantém o workflow próprio do GitHub Pages com Actions compatíveis com Node.js 24;
+- mantém obrigatória a auditoria de mídia para impedir releases com miniaturas de associados ausentes;
+- não altera regras financeiras, permissões, usuários, cargos, dirigentes, agenda, avisos ou publicação.
+
+## Refatoração técnica concluída — etapa 4
+
+Além da higiene de release e da consolidação CSS, esta base utiliza a auditoria corrigida do grafo JavaScript. O carregamento inicial passou de **378.503 bytes para 301.158 bytes** na métrica real, que inclui reexports estáticos.
+
+Ficam fora do bootstrap e são carregados somente quando necessários: Central de Recuperação, interface completa do Painel de Publicação, interface do Histórico de Alterações, operações administrativas do GitHub, preparação de mídia para publicação e interface da revisão de alterações.
+
+A etapa 4 encerra o ciclo com uma auditoria dedicada de lazy loading. O pipeline valida **19 imports dinâmicos/pontos de entrada** e protege **24 módulos** contra retorno acidental ao carregamento inicial, além de exigir o `?v=` sincronizado com a versão do pacote.
+
+Os orçamentos oficiais finais são **315.000 bytes** para JavaScript estático, **435.000 bytes** para CSS e **785.000 bytes** para ativos críticos. A estabilização não altera o esquema 12 nem o conteúdo operacional dos arquivos oficiais de dados.
 
 ## Compatibilidade de dados
 
 - Esquema atual: **12**.
-- `data/dados.json`: não modificado nesta versão.
-- `data/modelo.json`: migrado de forma idempotente para o esquema 12.
-- Nenhuma movimentação, cobrança, grupo, usuário, cargo, dirigente, associado ou mídia é alterado.
+- `data/dados.json`: preservado byte a byte nesta etapa.
+- `data/modelo.json`: preservado byte a byte nesta etapa.
+- Nenhuma movimentação, cobrança, grupo, usuário, cargo, dirigente, associado ou mídia é alterado pela higiene do release.
 
-## Pacote incremental
+## Pipeline de release
 
-A atualização incremental inclui `data/modelo.json`, pois esse é um dos arquivos corrigidos. Ela não inclui:
+O pipeline oficial continua sendo:
 
-- `data/dados.json`;
-- fotos, miniaturas ou outros arquivos da pasta `public`.
+```cmd
+npm run release:prepare
+```
+
+Ele executa backup local, migração idempotente, geração do CSS, portões de qualidade, manifesto, auditoria do release e verificação final do manifesto.
+
+A validação direta do pacote pode ser executada por:
+
+```cmd
+npm run release:check
+```
 
 ## Homologação
-
-O pipeline executa testes, auditorias de módulos, integração, CSS, acessibilidade, segurança, desempenho, mídia, dados e manifesto.
 
 A auditoria visual automatizada permanece disponível por:
 
@@ -37,8 +55,8 @@ A auditoria visual automatizada permanece disponível por:
 npm run audit:visual:required
 ```
 
-Caso o navegador da estação não seja compatível, a revisão manual deve seguir `docs/homologation.md`, priorizando Tesouraria móvel, Mútuas, Usuários e cargos, Dirigentes e Painel de Publicação.
+A revisão manual deve seguir `docs/homologation.md`, priorizando Tesouraria, Mútuas, Usuários e cargos, Dirigentes, Agenda inicial e Painel de Publicação em desktop e mobile.
 
-## Política após esta versão
+## Política após a etapa 4
 
-A arquitetura fica congelada temporariamente. Novas versões devem priorizar correções pontuais e evitar novas camadas gerais de CSS ou reestruturações de módulos sem uma justificativa funcional e testes de regressão correspondentes.
+O ciclo de refatoração v6.46.7 fica encerrado nesta base. Evoluções posteriores devem ser incrementais e mensuráveis, preservando os orçamentos de CSS/JavaScript e os contratos de lazy loading. Qualquer ampliação de orçamento deve ser justificada por uma necessidade funcional concreta e acompanhada de testes de regressão.

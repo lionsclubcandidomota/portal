@@ -42,9 +42,9 @@ test('shell principal usa ícones SVG locais e acessíveis', async () => {
 
 test('orçamento CSS registra a redução de sobrescritas da etapa', async () => {
   const audit = await source('tools/css-audit.mjs');
-  assert.match(audit, /maxRepeatedContextSelectors:\s*440/);
-  assert.match(audit, /maxOverrideRules:\s*625/);
-  assert.match(audit, /maxBundleBytes:\s*446_000/);
+  assert.match(audit, /maxRepeatedContextSelectors:\s*350/);
+  assert.match(audit, /maxOverrideRules:\s*450/);
+  assert.match(audit, /maxBundleBytes:\s*435_000/);
 });
 
 

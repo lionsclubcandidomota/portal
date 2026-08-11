@@ -3,6 +3,7 @@ import { readFile, stat } from 'node:fs/promises';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { performanceBudgets } from '../tools/quality-contracts.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -51,8 +52,9 @@ test('orçamento de desempenho faz parte da validação oficial', async () => {
   assert.match(packageJson.scripts.quality, /audit:performance/);
   assert.equal(packageJson.scripts['audit:media'], 'node tools/media-audit.mjs');
   assert.match(packageJson.scripts.quality, /audit:media/);
-  assert.match(audit, /staticJavaScriptBytes:\s*225_000/);
-  assert.match(audit, /criticalAssetsBytes:\s*706_000/);
+  assert.match(audit, /performanceBudgets as budgets/);
+  assert.equal(performanceBudgets.staticJavaScriptBytes, 315_000);
+  assert.equal(performanceBudgets.criticalAssetsBytes, 785_000);
 });
 
 
