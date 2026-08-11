@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-11T15:22:12.548Z",
-  "deploymentId": "1786461732547-678069a2-1967-4435-8c9e-97ef99c60abd",
+  "updatedAt": "2026-08-11T19:39:03.608Z",
+  "deploymentId": "1786477143608-5fbdf94c-1aa0-4203-9d04-7af9e72b531b",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -1073,7 +1073,7 @@
         "onlineUrl": "",
         "theme": "🦁 Reunião de Alinhamento",
         "notes": "🎉 No dia 13 de setembro acontece a 2ª edição do nosso APAEXONADOS!\n\n📋 Para alinharmos todos os detalhes e organizarmos esse grande evento, teremos uma reunião na próxima terça-feira, dia 11 de agosto, na sede. 🏢\n\n🤝 Contamos com a presença de todos! Juntos vamos fazer mais uma edição inesquecível! 💙✨",
-        "status": "Em andamento"
+        "status": "Cancelado"
       }
     ],
     "notices": [
