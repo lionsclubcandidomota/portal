@@ -109,7 +109,7 @@ export function renderLocation(value, { compact = false } = {}) {
     return `<div class="virtual-location is-pending ${compact ? 'is-compact' : ''}"><span class="virtual-location-platform"><span aria-hidden="true">${info.icon}</span><span>${escapeHtml(info.name)}</span></span><span class="location-pending"><span aria-hidden="true">🕒</span><span>Link será disponibilizado</span></span></div>`;
   }
 
-  const label = compact ? 'Acessar reunião' : 'Acessar sala';
+  const label = compact ? 'Acessar' : 'Acessar sala';
 
   return `<div class="virtual-location ${compact ? 'is-compact' : ''}"><span class="virtual-location-platform"><span aria-hidden="true">${info.icon}</span><span>${escapeHtml(info.name)}</span></span><a class="location-link" href="${escapeHtml(info.url)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">🔗</span><span>${label}</span><span class="location-link-arrow" aria-hidden="true">↗</span></a></div>`;
 }

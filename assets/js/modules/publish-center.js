@@ -157,7 +157,7 @@ export function createPublishCenterController({
       percent = 88;
       title.textContent = 'Atualizando o portal';
       detail.textContent = statusMessage || 'As mudanças foram enviadas. Finalizando a publicação…';
-      if (statusIcon) statusIcon.innerHTML = uiIcon('upload');
+      if (statusIcon) statusIcon.innerHTML = uiIcon('refresh');
     } else if (status === 'synced') {
       percent = 100;
       title.textContent = 'Tudo em dia';

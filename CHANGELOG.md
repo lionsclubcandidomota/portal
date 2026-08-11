@@ -1,3 +1,17 @@
+## v6.46.5 — Correção de miniaturas dos dirigentes
+### Ajustes de interface — Agenda da página inicial
+- Corrige a compressão dos cards da Agenda na página inicial quando o usuário está autenticado, usando uma coluna interna no card de meia largura.
+- Reorganiza compromissos online para manter plataforma e botão de acesso lado a lado quando houver espaço, empilhando apenas em telas pequenas.
+- Evita que cards mais curtos sejam esticados visualmente pela altura de outro compromisso na mesma linha.
+
+- adiciona as miniaturas responsivas ausentes (`96px` e `192px`) do associado cuja foto original já existia, eliminando o `404` na página pública de Dirigentes;
+- torna a auditoria de mídia obrigatória no portão de qualidade, impedindo que um release seja aprovado com miniaturas de associados faltando.
+
+## v6.46.5 — Ajustes de publicação e GitHub Pages
+- padroniza o ícone do aviso superior de publicação em andamento para usar as duas flechas de atualização, alinhado ao cartão interno do painel, mantendo o fundo do ícone estável enquanto apenas o SVG anima;
+- atualiza o workflow próprio do GitHub Pages para actions compatíveis com Node 24 (`checkout@v5`, `configure-pages@v6`, `upload-pages-artifact@v5` e `deploy-pages@v5`), eliminando o aviso de depreciação do runtime Node.js 20;
+- publica apenas os arquivos estáticos necessários (`index.html`, `assets`, `data` e `public`) no artefato do Pages.
+
 # Changelog
 
 ## Ajustes de layout — 11/08/2026

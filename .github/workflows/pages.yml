@@ -1,0 +1,53 @@
+name: Publicar portal no GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Preparar artefato estático
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código-fonte
+        uses: actions/checkout@v5
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Montar diretório de publicação
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -R assets _site/assets
+          cp -R data _site/data
+          cp -R public _site/public
+          touch _site/.nojekyll
+
+      - name: Enviar artefato do Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    name: Publicar no GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Implantar artefato
+        id: deployment
+        uses: actions/deploy-pages@v5

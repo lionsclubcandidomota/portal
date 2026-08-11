@@ -34,6 +34,7 @@ const appSources = await Promise.all(appFiles.map(async file => ({
 
 for (const required of [
   '.gitignore',
+  '.github/workflows/pages.yml',
   'CHANGELOG.md',
   'REFACTORING.md',
   'RELEASE.md',
@@ -69,6 +70,31 @@ if (prepareRelease.indexOf('tools/create-local-backup.mjs') > prepareRelease.ind
 }
 if (!String(packageJson.scripts?.quality || '').includes('npm run audit:modules')) {
   failures.push('o portão quality não executa audit:modules');
+}
+
+if (!String(packageJson.scripts?.quality || '').includes('npm run audit:media:required')) {
+  failures.push('o portão quality deve reprovar releases com miniaturas de associados ausentes');
+}
+
+
+const pagesWorkflowPath = path.join(projectRoot, '.github', 'workflows', 'pages.yml');
+try {
+  const pagesWorkflow = await readFile(pagesWorkflowPath, 'utf8');
+  for (const [action, version] of [
+    ['actions/checkout', 'v5'],
+    ['actions/configure-pages', 'v6'],
+    ['actions/upload-pages-artifact', 'v5'],
+    ['actions/deploy-pages', 'v5']
+  ]) {
+    if (!pagesWorkflow.includes(`${action}@${version}`)) {
+      failures.push(`workflow do Pages deve usar ${action}@${version}`);
+    }
+  }
+  if (!/branches:\s*\n\s*- main/m.test(pagesWorkflow)) {
+    failures.push('workflow do Pages deve publicar a branch main');
+  }
+} catch {
+  // A ausência do arquivo já é registrada na lista de obrigatórios acima.
 }
 
 for (const documentPath of ['CHANGELOG.md', 'RELEASE.md', 'docs/homologation.md']) {

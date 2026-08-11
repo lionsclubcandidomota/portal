@@ -16,6 +16,7 @@ const includedRoots = [
 ];
 const includedFiles = [
   '.editorconfig',
+  '.github/workflows/pages.yml',
   '.gitignore',
   'CHANGELOG.md',
   'REFACTORING.md',

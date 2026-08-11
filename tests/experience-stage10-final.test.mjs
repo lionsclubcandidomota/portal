@@ -23,7 +23,7 @@ test('Painel de Publicação usa fluxo visual em três etapas e ações claras',
   assert.match(css, /\.publication-workspace\s*\{/);
   assert.match(css, /\.publication-status-card\s*\{/);
   assert.match(css, /\.publication-workspace-actions\s*\{/);
-  assert.match(controller, /uiIcon\('upload'\)/);
+  assert.match(controller, /uiIcon\('refresh'\)/);
   assert.match(controller, /data-publication-status-count/);
 });
 

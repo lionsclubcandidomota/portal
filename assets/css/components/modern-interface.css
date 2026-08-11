@@ -191,7 +191,6 @@ tbody tr:hover { background: #fbfcfe; }
 .empty { padding: 32px 14px; }
 .empty .empty-icon { font-size: 2rem; }
 
-/* Dashboard: cards mais leves e compromissos sem sobreposição */
 .dashboard-hero.is-admin-compact { min-height: 124px; padding: 22px 25px; }
 .dashboard-kpis.is-admin-compact { gap: 12px; margin-top: 14px; }
 .dashboard-kpis.is-admin-compact .kpi-card { min-height: 82px; padding: 13px 14px; }
@@ -207,9 +206,11 @@ tbody tr:hover { background: #fbfcfe; }
 .dashboard-appointments-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 10px;
   min-width: 0;
 }
+.dashboard-main-grid.is-admin-compact .dashboard-appointments-grid {grid-template-columns: 1fr; }
 .dashboard-appointments-grid > .appointment-home-item {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr) auto;
@@ -239,7 +240,7 @@ tbody tr:hover { background: #fbfcfe; }
 .appointment-home-date { color: var(--muted); font-size: .72rem; }
 .appointment-home-location { min-width: 0; color: var(--muted); font-size: .72rem; }
 .appointment-home-location .location-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.appointment-home-location .virtual-location { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; min-width: 0; }
+.appointment-home-location .virtual-location { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 5px; min-width: 0; }
 .appointment-home-location .virtual-location-platform { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .appointment-home-location .location-link { min-height: 28px; max-width: 100%; padding: 4px 7px; font-size: .68rem; }
 .appointment-home-type { grid-area: type; align-self: start; min-width: 0; }
@@ -298,7 +299,6 @@ tbody tr:hover { background: #fbfcfe; }
 .portal-toast { border-radius: 14px; }
 .initial-loading { border-radius: 22px; }
 
-/* Tablet e notebook */
 @media (max-width: 1240px) {
   :root { --sidebar-width: 232px; }
   .clock { display: none; }

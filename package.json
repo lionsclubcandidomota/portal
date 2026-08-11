@@ -19,7 +19,7 @@
     "version:sync": "node tools/sync-version.mjs",
     "version:check": "node tools/sync-version.mjs --check",
     "validate": "node tools/validate.mjs",
-    "quality": "npm run version:check && npm run lint && npm test && npm run audit:modules && npm run audit:integrated && npm run audit:css && npm run audit:a11y && npm run audit:security && npm run audit:performance && npm run audit:media && npm run validate",
+    "quality": "npm run version:check && npm run lint && npm test && npm run audit:modules && npm run audit:integrated && npm run audit:css && npm run audit:a11y && npm run audit:security && npm run audit:performance && npm run audit:media:required && npm run validate",
     "check": "npm run quality",
     "backup:local": "node tools/create-local-backup.mjs",
     "data:migrate": "node tools/migrate-official-data.mjs",
