@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-10T19:08:48.208Z",
-  "deploymentId": "1786388928207-912caab2-6ee4-433f-a3e9-562f468cbf29",
+  "updatedAt": "2026-08-11T12:48:20.493Z",
+  "deploymentId": "1786452500492-5bcbac93-5952-45fd-9258-591c6eb699f7",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -876,6 +876,18 @@
         "description": "Boleto Taxa Internacional ",
         "entry": 0,
         "exit": 3185.31,
+        "notes": "",
+        "status": "Programado",
+        "attachments": []
+      },
+      {
+        "id": "t_msonoi38_tlri7q",
+        "date": "2026-08-30",
+        "accountId": "acc-current",
+        "category": "Associação Internacional de Lions Clubes",
+        "description": "Taxa Distrital",
+        "entry": 0,
+        "exit": 1800,
         "notes": "",
         "status": "Programado",
         "attachments": []
