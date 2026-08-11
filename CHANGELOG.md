@@ -1,3 +1,7 @@
+## v6.46.5 — Ajuste visual do botão Atualizar Portal
+- centraliza o texto do botão **Atualizar Portal** no rodapé do menu lateral, equilibrando o espaço visual em relação ao ícone;
+- durante a atualização, mantém o quadrado do ícone imóvel e anima somente o SVG com as duas flechas de atualização.
+
 ## v6.46.5 — Correção de miniaturas dos dirigentes
 ### Ajustes de interface — Agenda da página inicial
 - Corrige a compressão dos cards da Agenda na página inicial quando o usuário está autenticado, usando uma coluna interna no card de meia largura.

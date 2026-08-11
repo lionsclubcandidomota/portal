@@ -10,7 +10,7 @@
 }
 .sidebar-refresh-button{
   display:grid;
-  grid-template-columns:38px minmax(0,1fr);
+  grid-template-columns:38px 1fr 38px;
   align-items:center;
   gap:10px;
   width:100%;
@@ -20,7 +20,7 @@
   border-radius:15px;
   background:rgba(255,255,255,.1);
   color:#fff;
-  text-align:left;
+  text-align:center;
   box-shadow:0 10px 26px rgba(0,24,51,.12);
   transition:background var(--transition),border-color var(--transition),transform var(--transition);
 }
@@ -45,7 +45,7 @@
 .sidebar-refresh-copy strong{font-size:.82rem;line-height:1.2}
 .sidebar-refresh-copy small{color:rgba(255,255,255,.62);font-size:.66rem;line-height:1.2}
 .sidebar-footer-note{color:rgba(255,255,255,.42);font-size:.63rem;text-align:center;letter-spacing:.08em;text-transform:uppercase}
-.sidebar-refresh-button.is-loading .sidebar-refresh-icon{animation:portalRefreshSpin .85s linear infinite}
+.sidebar-refresh-button.is-loading .sidebar-refresh-icon .ui-icon{animation:portalRefreshSpin .85s linear infinite}
 @keyframes portalRefreshSpin{to{transform:rotate(360deg)}}
 
 /* Banners institucionais compartilhados. */

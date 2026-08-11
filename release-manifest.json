@@ -2,7 +2,7 @@
   "application": "portal-lions-candido-mota",
   "version": "6.46.5",
   "schemaVersion": 12,
-  "generatedAt": "2026-08-11T14:58:27.709Z",
+  "generatedAt": "2026-08-11T15:17:03.767Z",
   "summary": {
     "files": 364,
     "javascript": 198,
@@ -10,7 +10,7 @@
     "tests": 67,
     "memberImages": 28,
     "memberThumbnails": 56,
-    "totalBytes": 9524754
+    "totalBytes": 9525384
   },
   "files": [
     {
@@ -30,8 +30,8 @@
     },
     {
       "path": "assets/css/app.css",
-      "bytes": 445728,
-      "sha256": "a8c84b819e977c45acae36c9ded5ade76d809755ad696a4844639499daaf5274"
+      "bytes": 445734,
+      "sha256": "3d9ac7f2ad1ffc7a4793ad25479500b500f95ca8678fa228400d146c53d92e8b"
     },
     {
       "path": "assets/css/base.css",
@@ -155,8 +155,8 @@
     },
     {
       "path": "assets/css/pages/portal-experience.css",
-      "bytes": 9638,
-      "sha256": "92446eda9b314f016ad566e9d17fb356e4ca8c014b073d56b0956d6f289baa7c"
+      "bytes": 9644,
+      "sha256": "2f9565cf7ce797bf7cd40e2d618f0b99e413c4a90e26f398a0494a2659477090"
     },
     {
       "path": "assets/css/pages/responsive-workflows.css",
@@ -770,8 +770,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 18182,
-      "sha256": "27656fa5ceca7316507e43ba653e7ddaefc47b557c342da47ac10e5425e70660"
+      "bytes": 18497,
+      "sha256": "043bb233b2b25da97603dbaa32879c62642e2ec8a77950f780e278e315eb85b7"
     },
     {
       "path": "data/dados.json",
@@ -1485,8 +1485,8 @@
     },
     {
       "path": "tests/experience-stage9-public.test.mjs",
-      "bytes": 4750,
-      "sha256": "11e42690a3bf3721dd818224bd3ca89ad76ec778e5c02859ecf7b20cb99b603c"
+      "bytes": 5053,
+      "sha256": "fbbc4fc1c880457e145db95822b32059a51c1a791b38d8a3589552062eaf6711"
     },
     {
       "path": "tests/final-refactoring.test.mjs",

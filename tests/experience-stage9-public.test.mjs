@@ -39,6 +39,9 @@ test('botão de atualização fica no rodapé do menu lateral e preserva a tela'
   assert.match(html, /Manter tela e posição/);
   assert.doesNotMatch(html, /topbar-session[\s\S]{0,500}id="portalRefreshButton"/);
   assert.match(css, /\.sidebar-refresh-button\s*\{/);
+  assert.match(css, /grid-template-columns:38px 1fr 38px/);
+  assert.match(css, /\.sidebar-refresh-button\.is-loading \.sidebar-refresh-icon \.ui-icon\{animation:portalRefreshSpin/);
+  assert.doesNotMatch(css, /\.sidebar-refresh-button\.is-loading \.sidebar-refresh-icon\{animation:portalRefreshSpin/);
   assert.doesNotMatch(controller, /location\.reload/);
 });
 
