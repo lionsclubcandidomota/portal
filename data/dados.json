@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-11T12:48:20.493Z",
-  "deploymentId": "1786452500492-5bcbac93-5952-45fd-9258-591c6eb699f7",
+  "updatedAt": "2026-08-11T14:13:54.843Z",
+  "deploymentId": "1786457634843-c1e50161-c9ce-48ac-813a-48f72abde28a",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -1016,9 +1016,9 @@
         "name": "📊 Treinamento de Métricas e Portal Lions",
         "date": "2026-08-11",
         "time": "19:30",
-        "locationType": "physical",
-        "location": "Online - O link ficara disponível no dia",
-        "onlineUrl": "",
+        "locationType": "virtual",
+        "location": "",
+        "onlineUrl": "https://meet.google.com/wbj-munk-cmn",
         "description": "📅 No dia 11 de agosto (terça-feira), teremos o treinamento de Métricas e Portal Lions, que será conduzido pela PMJF Karina Casanova Lima.\n\n📊 Este treinamento é de extrema importância para os(as) Secretários(as) dos Clubes, mas é aberto e recomendado a TODOS os associados, independentemente de exercerem cargos. Conhecer as métricas e utilizar corretamente o Portal Lions fortalece a gestão do Clube e contribui para o sucesso de nossas ações! 🤝\n\n📌 Organizem-se em seus Clubes e incentivem a participação de todos!\n\n🏆 Lembramos que os treinamentos são critérios obrigatórios para a conquista do Prêmio Excelência de Clube de Lions Internacional.\n\n🎖️ E tem mais: o Distrito premiará os Clubes que participarem de todos os treinamentos do Ano Leonístico 2026/2027!\n\n💙 Contamos com a presença e o comprometimento de todos para realizarmos um excelente trabalho neste AL 2026/2027.\n\n🙌 Sua participação faz a diferença! Esperamos vocês! 🦁",
         "status": "Confirmado"
       },
