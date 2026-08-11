@@ -145,6 +145,7 @@ export function summarizeMovementFilter(items, movementFilter, treasury) {
   const entries = summaryItems.reduce((sum, item) => sum + Number(item.entry || 0), 0);
   const exits = summaryItems.reduce((sum, item) => sum + Number(item.exit || 0), 0);
   const scheduled = movementFilter === 'scheduled';
+  const overdue = movementFilter === 'overdue';
   const completed = movementFilter === 'completed' || movementFilter === 'all';
 
   return {
@@ -152,9 +153,9 @@ export function summarizeMovementFilter(items, movementFilter, treasury) {
     exits,
     result: entries - exits,
     count: summaryItems.length,
-    entryLabel: scheduled ? 'Entradas programadas' : completed ? 'Entradas realizadas' : 'Entradas exibidas',
-    exitLabel: scheduled ? 'Saídas programadas' : completed ? 'Saídas realizadas' : 'Saídas exibidas',
-    resultLabel: scheduled ? 'Saldo previsto' : completed ? 'Resultado realizado' : 'Resultado exibido'
+    entryLabel: overdue ? 'Entradas vencidas' : scheduled ? 'Entradas programadas' : completed ? 'Entradas realizadas' : 'Entradas exibidas',
+    exitLabel: overdue ? 'Saídas vencidas' : scheduled ? 'Saídas programadas' : completed ? 'Saídas realizadas' : 'Saídas exibidas',
+    resultLabel: overdue ? 'Saldo vencido' : scheduled ? 'Saldo previsto' : completed ? 'Resultado realizado' : 'Resultado exibido'
   };
 }
 
@@ -188,6 +189,7 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
     const matchesFilter = item => {
       if (movementFilter === 'scheduled') return treasury.isProgrammed(item);
       if (movementFilter === 'completed') return !treasury.isProgrammed(item);
+      if (movementFilter === 'overdue') return treasury.isOverdue(item);
       if (movementFilter === 'entries') return Number(item.entry || 0) > 0;
       if (movementFilter === 'exits') return Number(item.exit || 0) > 0;
       return true;
@@ -213,6 +215,7 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
       all: searchMatched.length,
       scheduled: searchMatched.filter(item => treasury.isProgrammed(item)).length,
       completed: searchMatched.filter(item => !treasury.isProgrammed(item)).length,
+      overdue: searchMatched.filter(item => treasury.isOverdue(item)).length,
       entries: searchMatched.filter(item => Number(item.entry || 0) > 0).length,
       exits: searchMatched.filter(item => Number(item.exit || 0) > 0).length
     };
@@ -222,13 +225,13 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
     const scheduledSection = movementFilter === 'completed'
       ? ''
       : `<section class="timeline-section treasury-scheduled-section ${scheduledExpanded ? 'is-expanded' : 'is-collapsed'}">${scheduledHeading(scheduled.length, scheduledExpanded)}<div id="treasuryScheduledBody" class="treasury-scheduled-body" ${scheduledExpanded ? '' : 'hidden'}>${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</div></section>`;
-    const completedSection = movementFilter === 'scheduled'
+    const completedSection = ['scheduled', 'overdue'].includes(movementFilter)
       ? ''
       : `<section class="timeline-section is-history">${timelineHeading(uiIcon('receipt'), 'Realizados', 'Entradas recebidas e despesas pagas.', completed.length)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
 
     const changed = renderHtmlIfChanged(
       lists,
-      `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Movimentações</span><h3>Histórico financeiro</h3><p>Filtre os lançamentos para conferir os valores.</p></div><div class="treasury-movement-balance ${summary.result >= 0 ? 'is-positive' : 'is-negative'}"><small>${summary.resultLabel}</small><strong class="sensitive-money">${money.format(summary.result)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summary.entryLabel}</small><strong class="sensitive-money">${money.format(summary.entries)}</strong></span><span><small>${summary.exitLabel}</small><strong class="sensitive-money">${money.format(summary.exits)}</strong></span><span><small>Registros</small><strong>${summary.count}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section>${scheduledSection}${completedSection}`
+      `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Movimentações</span><h3>Histórico financeiro</h3><p>Filtre os lançamentos para conferir os valores.</p></div><div class="treasury-movement-balance ${summary.result >= 0 ? 'is-positive' : 'is-negative'}"><small>${summary.resultLabel}</small><strong class="sensitive-money">${money.format(summary.result)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summary.entryLabel}</small><strong class="sensitive-money">${money.format(summary.entries)}</strong></span><span><small>${summary.exitLabel}</small><strong class="sensitive-money">${money.format(summary.exits)}</strong></span><span><small>Registros</small><strong>${summary.count}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('overdue', 'Vencidas')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section>${scheduledSection}${completedSection}`
     );
 
     if (!changed) return;

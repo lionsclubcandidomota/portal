@@ -9,7 +9,10 @@ import { appointmentListItem } from '../assets/js/modules/appointments.js';
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const treasury = {
   isProgrammed(item) {
-    return ['Programado', 'Agendado', 'Pendente'].includes(item.status);
+    return ['Programado', 'Agendado', 'Pendente', 'Vencida', 'Vencido'].includes(item.status);
+  },
+  isOverdue(item) {
+    return ['Vencida', 'Vencido'].includes(item.status);
   }
 };
 
@@ -41,6 +44,24 @@ test('filtro geral mantém o cálculo histórico somente com realizados', () => 
   assert.equal(summary.exits, 100);
   assert.equal(summary.result, 200);
   assert.equal(summary.count, 2);
+});
+
+test('filtro Vencidas apresenta o resumo apenas dos lançamentos vencidos', () => {
+  const overdue = [
+    { id: 'o-in', entry: 150, exit: 0, status: 'Vencida' },
+    { id: 'o-out', entry: 0, exit: 40, status: 'Vencida' }
+  ];
+  const summary = summarizeMovementFilter(overdue, 'overdue', treasury);
+
+  assert.deepEqual(summary, {
+    entries: 150,
+    exits: 40,
+    result: 110,
+    count: 2,
+    entryLabel: 'Entradas vencidas',
+    exitLabel: 'Saídas vencidas',
+    resultLabel: 'Saldo vencido'
+  });
 });
 
 test('compromisso do Dashboard usa estrutura responsiva sem bloco dentro de small', async () => {

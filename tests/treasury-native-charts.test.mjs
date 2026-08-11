@@ -4,6 +4,7 @@ import {
   buildCashFlowSeries,
   buildConicGradient,
   chartPercent,
+  clampTooltipPosition,
   renderTreasuryCharts
 } from '../assets/js/modules/treasury/charts.js';
 
@@ -12,6 +13,26 @@ test('percentual dos gráficos permanece dentro do intervalo válido', () => {
   assert.equal(chartPercent(-10, 100), 0);
   assert.equal(chartPercent(200, 100), 100);
   assert.equal(chartPercent(10, 0), 0);
+});
+
+test('tooltip dos gráficos permanece visível nas bordas do card', () => {
+  assert.deepEqual(clampTooltipPosition({
+    hostWidth: 600,
+    hostHeight: 300,
+    tooltipWidth: 240,
+    tooltipHeight: 60,
+    pointerX: 40,
+    pointerY: 20
+  }), { x: 130, y: 68 });
+
+  assert.deepEqual(clampTooltipPosition({
+    hostWidth: 600,
+    hostHeight: 300,
+    tooltipWidth: 240,
+    tooltipHeight: 60,
+    pointerX: 580,
+    pointerY: 290
+  }), { x: 470, y: 278 });
 });
 
 test('gradiente circular ignora valores inválidos e não produz NaN', () => {

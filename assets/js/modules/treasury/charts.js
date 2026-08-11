@@ -60,6 +60,22 @@ export function chartPercent(value, total) {
   return Math.max(0, Math.min(100, (finitePositive(value) / safeTotal) * 100));
 }
 
+export function clampTooltipPosition({ hostWidth, hostHeight, tooltipWidth, tooltipHeight, pointerX, pointerY }) {
+  const width = Math.max(0, safeNumber(hostWidth));
+  const height = Math.max(0, safeNumber(hostHeight));
+  const tipWidth = Math.max(0, safeNumber(tooltipWidth));
+  const tipHeight = Math.max(0, safeNumber(tooltipHeight));
+  const horizontalInset = Math.min(width / 2, tipWidth / 2 + 10);
+  const minX = horizontalInset;
+  const maxX = Math.max(minX, width - horizontalInset);
+  const rawX = Number.isFinite(Number(pointerX)) ? Number(pointerX) : width / 2;
+  const maxY = Math.max(0, height - 8);
+  const minY = Math.min(maxY, tipHeight + 8);
+  const rawY = Number.isFinite(Number(pointerY)) ? Number(pointerY) - 12 : minY;
+
+  return { x: Math.max(minX, Math.min(maxX, rawX)), y: Math.max(minY, Math.min(maxY, rawY)) };
+}
+
 export function buildConicGradient(items, fallback = '#dfe5ec') {
   const normalized = items
     .map(item => ({ ...item, value: finitePositive(item.value) }))
@@ -387,8 +403,16 @@ function bindChartInteractions(root) {
       const pointerY = Number.isFinite(event?.clientY) && event.clientY > 0
         ? event.clientY - hostRect.top
         : targetRect.top - hostRect.top;
-      tooltip.style.setProperty('--tooltip-x', `${Math.max(16, Math.min(hostRect.width - 16, pointerX))}px`);
-      tooltip.style.setProperty('--tooltip-y', `${Math.max(18, pointerY - 12)}px`);
+      const tooltipPosition = clampTooltipPosition({
+        hostWidth: hostRect.width,
+        hostHeight: hostRect.height,
+        tooltipWidth: tooltip.offsetWidth,
+        tooltipHeight: tooltip.offsetHeight,
+        pointerX,
+        pointerY
+      });
+      tooltip.style.setProperty('--tooltip-x', `${tooltipPosition.x}px`);
+      tooltip.style.setProperty('--tooltip-y', `${tooltipPosition.y}px`);
       highlightSeries(target.dataset.chartSeries || '');
     };
 

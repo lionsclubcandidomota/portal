@@ -50,4 +50,5 @@ test('central de publicação usa linguagem direta e mantém o trabalho em conte
   assert.match(controller, /Tudo em dia/);
   assert.match(controller, /mudança\$\{displayCount === 1/);
   assert.match(css, /central de publicação mais clara e compacta/);
+  assert.match(css, /#publishCenterDiscard\{grid-column:2;width:100%\!important\}/);
 });

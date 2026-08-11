@@ -1,5 +1,15 @@
 # Changelog
 
+## Ajustes de layout — 11/08/2026
+
+- Corrige o posicionamento dos tooltips dos gráficos para que permaneçam totalmente visíveis, sem serem recortados nas bordas dos cards.
+- Reposiciona o botão **Desfazer** para a coluna da direita no rodapé do Painel de Publicação, abaixo de **Publicar agora**, mantendo a separação de segurança entre as ações.
+- Mantém cada gráfico expandido na própria coluna no desktop, usando o espaço vertical abaixo do cartão em vez de ocupar a largura inteira.
+- Adiciona o filtro **Vencidas** ao Histórico Financeiro, com contagem e resumo próprios.
+- Mantém os gráficos financeiros em duas colunas no desktop e uma coluna no mobile.
+- Harmoniza o Histórico Financeiro com os cards e controles visuais da Tesouraria.
+- Corrige a abertura do painel de publicação no celular e melhora a separação entre Desfazer e Publicar agora.
+
 ## 6.46.5 — Estabilização do pacote e integridade do release
 
 - Migra `data/modelo.json` do esquema 7 para o esquema 12.

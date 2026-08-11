@@ -357,7 +357,7 @@ export function createTreasuryController({
     get movementFilter() { return movementFilter; },
     set movementFilter(value) {
       const normalized = String(value || 'all');
-      movementFilter = ['all', 'completed', 'scheduled', 'entries', 'exits'].includes(normalized)
+      movementFilter = ['all', 'completed', 'scheduled', 'overdue', 'entries', 'exits'].includes(normalized)
         ? normalized
         : 'all';
     },

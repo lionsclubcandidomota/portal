@@ -24,13 +24,13 @@ function createController() {
 
 test('filtros, pesquisa, páginas e recolhimento de programados permanecem no controlador', () => {
   const controller = createController();
-  controller.movementFilter = 'scheduled';
+  controller.movementFilter = 'overdue';
   controller.movementSearch = 'evento beneficente';
   controller.scheduledPage = 3;
   controller.completedPage = 2;
   controller.scheduledExpanded = false;
 
-  assert.equal(controller.movementFilter, 'scheduled');
+  assert.equal(controller.movementFilter, 'overdue');
   assert.equal(controller.movementSearch, 'evento beneficente');
   assert.equal(controller.scheduledPage, 3);
   assert.equal(controller.completedPage, 2);
@@ -101,6 +101,7 @@ test('programados podem ser recolhidos e edição restaura o contexto da Tesoura
   assert.match(movements, /treasury\.toggleScheduledExpanded\(\)/);
   assert.match(movements, /treasury\.movementFilter/);
   assert.match(movements, /treasury\.movementSearch/);
+  assert.match(movements, /filterButton\('overdue', 'Vencidas'\)/);
   assert.match(entries, /captureInterfaceContext\?\.\(\)/);
   assert.match(entries, /restoreInterfaceContext\?\.\(interfaceSnapshot/);
   assert.match(entries, /renderTreasuryView\(\)/);
@@ -113,6 +114,8 @@ test('camada visual da Tesouraria usa acabamento leve e responsivo', async () =>
   assert.match(css, /Evolução funcional — etapa 4: Tesouraria e cobranças/);
   assert.match(css, /\.treasury-experience\{/);
   assert.match(css, /treasury-chart-card\.is-collapsed/);
+  assert.match(css, /treasury-chart-card\[aria-expanded=true\]\{grid-column:span 6\}/);
+  assert.match(css, /@media\(max-width:900px\)\{\.treasury-experience \.treasury-chart-card\[aria-expanded=true\]\{grid-column:span 12\}/);
   assert.match(css, /treasury-scheduled-section\.is-collapsed/);
   assert.match(css, /\.membership-charge-choice-grid/);
   assert.match(css, /@media\(max-width:700px\)/);
