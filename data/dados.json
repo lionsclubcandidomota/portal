@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-11T19:39:03.608Z",
-  "deploymentId": "1786477143608-5fbdf94c-1aa0-4203-9d04-7af9e72b531b",
+  "updatedAt": "2026-08-13T17:33:56.085Z",
+  "deploymentId": "1786642436085-e789b0ef-190f-43e0-94fc-e968303782ea",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -891,6 +891,92 @@
         "notes": "",
         "status": "Programado",
         "attachments": []
+      },
+      {
+        "id": "t_msrsra4f_wnw3xd",
+        "date": "2026-03-13",
+        "paymentDate": "2026-03-13",
+        "description": "Mensalidade - Amanda Cristina Gozzi, Daniel Flávio Gozzi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 180,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xfobh_l0tq8n",
+        "memberIds": [
+          "b_ms3xfobh_l0tq8n",
+          "b_ms3xh5de_4qya3j"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xfobh_l0tq8n",
+            "memberName": "Amanda Cristina Gozzi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-01",
+              "2026-02",
+              "2026-03",
+              "2026-04",
+              "2026-05",
+              "2026-06"
+            ],
+            "amount": 90
+          },
+          {
+            "memberId": "b_ms3xh5de_4qya3j",
+            "memberName": "Daniel Flávio Gozzi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-01",
+              "2026-02",
+              "2026-03",
+              "2026-04",
+              "2026-05",
+              "2026-06"
+            ],
+            "amount": 90
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xfobh_l0tq8n",
+            "name": "Amanda Cristina Gozzi",
+            "role": "Familiar",
+            "amount": 90
+          },
+          {
+            "memberId": "b_ms3xh5de_4qya3j",
+            "name": "Daniel Flávio Gozzi",
+            "role": "Familiar",
+            "amount": 90
+          }
+        ],
+        "referenceMonth": "2026-01",
+        "coveredMonths": [
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u9632_68wm2f",
+        "notes": "Pagamento conjunto: Amanda, Maria, Daniel e Mario\nFamiliar: Amanda Cristina Gozzi — R$ 90,00\nFamiliar: Daniel Flávio Gozzi — R$ 90,00\nMeses quitados: janeiro de 2026, fevereiro de 2026, março de 2026, abril de 2026, maio de 2026, junho de 2026",
+        "attachments": [
+          {
+            "id": "att_msrsrtgz_lhj6vf",
+            "name": "Daniel e Amanda .jpg",
+            "type": "image/jpeg",
+            "size": 43314,
+            "originalSize": 32162,
+            "optimized": true,
+            "url": "./public/treasury/t_msrsra4f_wnw3xd/att_msrsrtgz_lhj6vf-12jnsef.jpg"
+          }
+        ]
       }
     ],
     "events": [
