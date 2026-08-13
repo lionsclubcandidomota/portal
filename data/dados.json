@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-13T17:33:56.085Z",
-  "deploymentId": "1786642436085-e789b0ef-190f-43e0-94fc-e968303782ea",
+  "updatedAt": "2026-08-13T17:40:22.632Z",
+  "deploymentId": "1786642822631-4c759199-f143-4ac6-8b8c-41214d0d9596",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -402,7 +402,7 @@
           "b_ms3xnxct_7h4wxe"
         ],
         "primaryMemberId": "b_ms3xnxct_7h4wxe",
-        "notes": ""
+        "notes": "Daniel realiza o pagamento semestralmente, junto com a parcela de sua esposa, Amanda."
       },
       {
         "id": "f_ms7uat8h_x2b3d3",
