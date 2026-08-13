@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-13T17:40:22.632Z",
-  "deploymentId": "1786642822631-4c759199-f143-4ac6-8b8c-41214d0d9596",
+  "updatedAt": "2026-08-13T17:51:34.183Z",
+  "deploymentId": "1786643494183-89c2a354-a726-4f49-92ad-2e8769ca30ac",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -894,7 +894,7 @@
       },
       {
         "id": "t_msrsra4f_wnw3xd",
-        "date": "2026-03-13",
+        "date": "2026-08-13",
         "paymentDate": "2026-03-13",
         "description": "Mensalidade - Amanda Cristina Gozzi, Daniel Flávio Gozzi",
         "category": "Mensalidades",
