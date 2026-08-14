@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-13T17:51:34.183Z",
-  "deploymentId": "1786643494183-89c2a354-a726-4f49-92ad-2e8769ca30ac",
+  "updatedAt": "2026-08-14T17:47:52.789Z",
+  "deploymentId": "1786729672788-067c2ab6-2095-4b01-92d3-c30dfabead0f",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -977,6 +977,372 @@
             "url": "./public/treasury/t_msrsra4f_wnw3xd/att_msrsrtgz_lhj6vf-12jnsef.jpg"
           }
         ]
+      },
+      {
+        "id": "t_mst8nsij_6s311m",
+        "date": "2026-01-02",
+        "paymentDate": "2026-01-02",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-01"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-01"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-01",
+        "coveredMonths": [
+          "2026-01"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: janeiro de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_mst8o3fr_hj6x7m",
+        "date": "2026-02-01",
+        "paymentDate": "2026-02-01",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-02"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-02"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-02",
+        "coveredMonths": [
+          "2026-02"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: fevereiro de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_mst8ob56_z2iztc",
+        "date": "2026-03-01",
+        "paymentDate": "2026-03-01",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-03"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-03"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-03",
+        "coveredMonths": [
+          "2026-03"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: março de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_mst8ojgw_je72dt",
+        "date": "2026-04-01",
+        "paymentDate": "2026-04-01",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-04"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-04"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-04",
+        "coveredMonths": [
+          "2026-04"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: abril de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_mst8orpa_aze6aj",
+        "date": "2026-05-01",
+        "paymentDate": "2026-05-01",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-05"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-05"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-05",
+        "coveredMonths": [
+          "2026-05"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: maio de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_mst8p1bs_bies1q",
+        "date": "2026-06-01",
+        "paymentDate": "2026-06-01",
+        "description": "Mensalidade - João Augusto Batista de Paula, Vitoria Caroline Zibordi",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 55,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xe4af_85o3yp",
+        "memberIds": [
+          "b_ms3xe4af_85o3yp",
+          "b_ms3xrshl_znpzq8"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "memberName": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-06"
+            ],
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "memberName": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "monthlyAmount": 15,
+            "months": [
+              "2026-06"
+            ],
+            "amount": 15
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xe4af_85o3yp",
+            "name": "João Augusto Batista de Paula",
+            "role": "Titular",
+            "amount": 40
+          },
+          {
+            "memberId": "b_ms3xrshl_znpzq8",
+            "name": "Vitoria Caroline Zibordi",
+            "role": "Familiar",
+            "amount": 15
+          }
+        ],
+        "referenceMonth": "2026-06",
+        "coveredMonths": [
+          "2026-06"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u6fcz_4zy7h4",
+        "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: junho de 2026",
+        "attachments": []
       }
     ],
     "events": [
