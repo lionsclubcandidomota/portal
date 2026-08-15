@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-14T17:47:52.789Z",
-  "deploymentId": "1786729672788-067c2ab6-2095-4b01-92d3-c30dfabead0f",
+  "updatedAt": "2026-08-15T14:30:18.051Z",
+  "deploymentId": "1786804218051-39c7ec00-1afe-4c49-b9a9-345a7a327e74",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -1483,7 +1483,7 @@
         "location": "Apae de Cândido Mota",
         "onlineUrl": "",
         "description": "**2ª edição do nosso APAEXONADOS**",
-        "status": "Em planejamento"
+        "status": "Cancelado"
       }
     ],
     "meetings": [
