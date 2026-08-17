@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-15T14:30:18.051Z",
-  "deploymentId": "1786804218051-39c7ec00-1afe-4c49-b9a9-345a7a327e74",
+  "updatedAt": "2026-08-17T21:30:11.928Z",
+  "deploymentId": "1787002211928-89bdc90c-7a06-473b-a8e6-673597b22cf4",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -20,10 +20,10 @@
           "credentialType": "password",
           "enabled": true,
           "label": "Diretoria",
-          "salt": "b529e5b0377178380c3c1e7451a74798",
-          "passwordHash": "5dfdf265aeebaae1a706f37e5dedbf91627edbd48c0308946a453066e3bb70de",
+          "salt": "467d99351d86d0b20c9aac14a223a08f",
+          "passwordHash": "e7b941934e533543f31cc742266eead31b2160afdcddae9e9d58cff56824fc6c",
           "iterations": 210000,
-          "configuredAt": "2026-08-01T02:15:45.561Z",
+          "configuredAt": "2026-08-17T21:30:02.695Z",
           "configuredBy": "lionsclubcandidomota"
         }
       },
