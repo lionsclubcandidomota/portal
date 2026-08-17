@@ -4,6 +4,13 @@ import {
   buildFamilyMembershipChargeMessage,
   buildMembershipChargeMessage
 } from './domain.js';
+import {
+  blobToDataUrl,
+  buildChargeSvg,
+  downloadBlob,
+  svgMarkupToDataUrl,
+  svgToPngBlob
+} from './sharing-image-utils.js';
 
 export function createMembershipChargeSharer(context) {
   const {
@@ -14,6 +21,25 @@ export function createMembershipChargeSharer(context) {
     showModal,
     closeModal
   } = context;
+
+  const assetCache = new Map();
+
+  const fetchAssetAsDataUrl = async assetPath => {
+    const path = String(assetPath || '').trim();
+    if (!path) return '';
+    if (assetCache.has(path)) return assetCache.get(path);
+
+    const promise = fetch(new URL(path, window.location.href))
+      .then(response => {
+        if (!response.ok) throw new Error(`Falha ao carregar ativo: ${path}`);
+        return response.blob();
+      })
+      .then(blobToDataUrl)
+      .catch(() => '');
+
+    assetCache.set(path, promise);
+    return promise;
+  };
 
   const shareText = async (title, text) => {
     if (navigator.share) {
@@ -44,9 +70,14 @@ export function createMembershipChargeSharer(context) {
     return true;
   };
 
-  const individualPayload = (member, months, clubName) => {
+  const buildIndividualPayload = async (member, months, clubName) => {
     const expectedMonthlyAmount = treasury.membershipExpectedAmountForMember(member.id);
     const expectedTotal = expectedMonthlyAmount * months.length;
+    const [avatarDataUrl, clubLogoDataUrl] = await Promise.all([
+      fetchAssetAsDataUrl(member.photo),
+      fetchAssetAsDataUrl('./public/logo.png')
+    ]);
+
     return {
       title: `Mensalidade — ${clubName}`,
       text: buildMembershipChargeMessage({
@@ -54,35 +85,348 @@ export function createMembershipChargeSharer(context) {
         monthLabels: months.map(treasury.monthLabel),
         expectedTotal,
         clubName
-      })
+      }),
+      image: {
+        variant: 'individual',
+        clubName,
+        clubLogoDataUrl,
+        title: 'Mensalidades',
+        subtitle: 'Associado',
+        responsibleLabel: 'Associado',
+        responsibleName: member.name,
+        responsibleAvatar: avatarDataUrl,
+        badgeLabel: 'Associado',
+        linkedMembers: [],
+        rows: months.map(month => ({ label: treasury.monthLabel(month), amount: expectedMonthlyAmount })),
+        totalLabel: 'Total',
+        total: expectedTotal,
+        note: 'Mensalidades selecionadas.',
+        footer: ''
+      },
+      filename: `cobranca-individual-${String(member.name || 'associado').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'associado'}.png`
     };
   };
 
-  const familyPayload = (group, requestedMonths, clubName) => {
+  const buildFamilySelectionState = (group, requestedMonths) => {
+    const entries = (group?.memberIds || [])
+      .map(id => state().birthdays.find(item => item.id === id))
+      .filter(item => item && treasury.memberIsActive(item))
+      .map(member => {
+        const pendingMonths = requestedMonths.filter(month => !treasury.monthIsPaid(member.id, month));
+        const monthlyAmount = treasury.membershipExpectedAmountForMember(member.id);
+        return {
+          id: member.id,
+          name: member.name,
+          isPrimary: member.id === group.primaryMemberId,
+          pendingMonths,
+          pendingCount: pendingMonths.length,
+          monthlyAmount,
+          total: monthlyAmount * pendingMonths.length,
+          selected: pendingMonths.length > 0
+        };
+      });
+
+    return entries.filter(item => item.pendingCount > 0);
+  };
+
+  const buildFamilyPayload = async (group, requestedMonths, clubName, selectedMemberIds = null) => {
+    const selectedSet = Array.isArray(selectedMemberIds) && selectedMemberIds.length ? new Set(selectedMemberIds) : null;
     const members = (group.memberIds || [])
       .map(id => state().birthdays.find(item => item.id === id))
-      .filter(item => item && treasury.memberIsActive(item));
+      .filter(item => item && treasury.memberIsActive(item) && (!selectedSet || selectedSet.has(item.id)));
+
+    const pendingCharges = members.flatMap(member => {
+      const pendingMonths = requestedMonths.filter(month => !treasury.monthIsPaid(member.id, month));
+      return pendingMonths.map(month => ({
+        member,
+        month,
+        amount: treasury.membershipExpectedAmountForMember(member.id)
+      }));
+    });
+
     const memberCharges = members.map(member => {
       const pendingMonths = requestedMonths.filter(month => !treasury.monthIsPaid(member.id, month));
       return {
+        memberId: member.id,
         memberName: member.name,
         monthLabels: pendingMonths.map(treasury.monthLabel),
         expectedTotal: treasury.membershipExpectedAmountForMember(member.id) * pendingMonths.length
       };
     }).filter(item => item.monthLabels.length);
 
+    const clubLogoDataUrl = await fetchAssetAsDataUrl('./public/logo.png');
+    const chargeMembers = await Promise.all(members.map(async member => ({
+      name: member.name,
+      role: member.id === group.primaryMemberId ? 'Titular' : 'Familiar',
+      avatar: await fetchAssetAsDataUrl(member.photo)
+    })));
+
+    const responsibleMember = members.find(member => member.id === group.primaryMemberId) || members[0] || null;
+    const responsibleAvatar = responsibleMember ? await fetchAssetAsDataUrl(responsibleMember.photo) : '';
+    const total = memberCharges.reduce((sum, item) => sum + Number(item.expectedTotal || 0), 0);
+    const titularCharges = pendingCharges.filter(item => item.member.id === group.primaryMemberId);
+    const titularTotal = titularCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const titularMonthsCount = new Set(titularCharges.map(item => item.month)).size;
+    const titularMonthlyAmount = titularMonthsCount ? titularTotal / titularMonthsCount : 0;
+
+    const familyCharges = pendingCharges.filter(item => item.member.id !== group.primaryMemberId);
+    const familyMembersTotal = familyCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const familyMonthsCount = new Set(familyCharges.map(item => item.month)).size;
+    const familyMonthlyAmount = familyMonthsCount ? familyMembersTotal / familyMonthsCount : 0;
+
+    const monthTotals = requestedMonths.map(month => ({
+      month,
+      label: treasury.monthLabel(month),
+      amount: pendingCharges
+        .filter(item => item.month === month)
+        .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+    })).filter(item => item.amount > 0);
+
     return {
       memberCharges,
       title: `Mensalidades da ${group.name} — ${clubName}`,
       text: buildFamilyMembershipChargeMessage({
         familyName: group.name,
-        memberCharges,
+        memberCharges: memberCharges.map(({ memberName, monthLabels, expectedTotal }) => ({ memberName, monthLabels, expectedTotal })),
         clubName
-      })
+      }),
+      image: {
+        variant: 'family',
+        clubName,
+        clubLogoDataUrl,
+        title: 'Mensalidades',
+        subtitle: 'Grupo familiar',
+        responsibleLabel: 'Responsável',
+        responsibleName: responsibleMember?.name || group.name,
+        responsibleAvatar,
+        badgeLabel: 'Grupo familiar',
+        linkedMembers: chargeMembers,
+        summaryStats: [
+          {
+            label: 'Titular',
+            detail: titularMonthsCount
+              ? `${money.format(titularMonthlyAmount)} x ${titularMonthsCount} ${titularMonthsCount === 1 ? 'mês' : 'meses'}`
+              : 'Sem pendências',
+            amount: titularTotal
+          },
+          {
+            label: 'Família',
+            detail: familyMonthsCount
+              ? `${money.format(familyMonthlyAmount)} x ${familyMonthsCount} ${familyMonthsCount === 1 ? 'mês' : 'meses'}`
+              : 'Sem pendências',
+            amount: familyMembersTotal
+          }
+        ],
+        tableTitle: 'Valores mensais consolidados',
+        rows: monthTotals.map(item => ({
+          label: item.label,
+          amount: item.amount
+        })),
+        totalLabel: 'Total familiar',
+        total,
+        note: 'Resumo do grupo selecionado.',
+        footer: ''
+      },
+      filename: `cobranca-familiar-${String(group.name || 'familia').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'familia'}.png`
     };
   };
 
-  const shareMembershipCharge = async (memberId, months = []) => {
+  const openImagePreview = async ({ payloadPromise, optionLabel, back }) => {
+    modalBody.innerHTML = `<section class="membership-charge-preview-shell"><div class="membership-charge-preview-loading">${uiIcon('image')}<strong>Gerando prévia da imagem</strong><small>Montando a cobrança visual de ${escapeHtml(optionLabel)}…</small></div></section>`;
+    showModal('Prévia da cobrança');
+
+    try {
+      const payload = await payloadPromise;
+      const svg = buildChargeSvg(payload.image);
+      const svgDataUrl = svgMarkupToDataUrl(svg.markup);
+      modalBody.innerHTML = `<section class="membership-charge-preview-shell" aria-labelledby="membershipChargePreviewTitle">
+        <div class="membership-charge-preview-toolbar">
+          <div>
+            <span class="admin-eyebrow">Imagem da cobrança</span>
+            <h3 id="membershipChargePreviewTitle">Prévia pronta para compartilhamento</h3>
+            <p>${escapeHtml(optionLabel)} · revise e baixe a imagem em PNG.</p>
+          </div>
+          <div class="membership-charge-preview-actions">
+            <button class="btn btn-ghost" type="button" data-membership-preview-back>${uiIcon('chevron-right')} Voltar</button>
+            <button class="btn btn-primary" type="button" data-membership-preview-download>${uiIcon('download')} Baixar PNG</button>
+          </div>
+        </div>
+        <div class="membership-charge-preview-stage">
+          <img class="membership-charge-preview-image" src="${svgDataUrl}" alt="Prévia da cobrança em imagem" width="${svg.width}" height="${svg.height}">
+        </div>
+      </section>`;
+
+      modalBody.querySelector('[data-membership-preview-back]')?.addEventListener('click', back);
+      modalBody.querySelector('[data-membership-preview-download]')?.addEventListener('click', async () => {
+        try {
+          const pngBlob = await svgToPngBlob(svg.markup, svg.width, svg.height);
+          downloadBlob(pngBlob, payload.filename);
+          toast('Imagem da cobrança gerada com sucesso.');
+        } catch (error) {
+          console.error(error);
+          toast('Não foi possível gerar o PNG da cobrança.');
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      modalBody.innerHTML = `<section class="membership-charge-preview-shell"><div class="membership-charge-preview-loading is-error">${uiIcon('warning')}<strong>Não foi possível gerar a prévia</strong><small>Tente novamente em alguns instantes.</small><div class="form-actions"><button class="btn btn-ghost" type="button" data-membership-preview-back>Voltar</button></div></div></section>`;
+      modalBody.querySelector('[data-membership-preview-back]')?.addEventListener('click', back);
+    }
+  };
+
+  // Targets renderizados neste fluxo: data-membership-charge-target="member" e data-membership-charge-target="family".
+  const renderOptionCard = ({ type, title, detail, helper, value, icon, style = '' }) => `<article class="membership-charge-option ${style}" data-membership-card="${type}">
+      <div class="membership-charge-option-summary">
+        <span class="membership-charge-option-icon" aria-hidden="true">${uiIcon(icon)}</span>
+        <div class="membership-charge-option-copy">
+          <span class="membership-charge-option-kicker">Cobrança</span>
+          <strong>${escapeHtml(title)}</strong>
+          <small class="membership-charge-option-detail">${escapeHtml(detail)}</small>
+        </div>
+      </div>
+      <p class="membership-charge-option-helper">${escapeHtml(helper || 'Escolha como deseja compartilhar esta cobrança.')}</p>
+      <div class="membership-charge-option-total">
+        <span>Total previsto</span>
+        <b>${escapeHtml(value)}</b>
+      </div>
+      <div class="membership-charge-option-actions">
+        <button class="btn btn-ghost" type="button" data-membership-charge-action="text" data-membership-charge-target="${type}">${uiIcon('message')} Mensagem</button>
+        <button class="btn btn-primary" type="button" data-membership-charge-action="image" data-membership-charge-target="${type}">${uiIcon('image')} Imagem</button>
+      </div>
+    </article>`;
+
+  const openFamilySelectionModal = ({ group, requestedMonths, clubName, action, back, memberPayloadPromise, memberSummary, familySummary }) => {
+    const entries = buildFamilySelectionState(group, requestedMonths);
+
+    if (!entries.length) {
+      toast('Nenhum familiar possui mensalidades pendentes neste período.');
+      back();
+      return;
+    }
+
+    const render = () => {
+      const selectedCount = entries.filter(item => item.selected).length;
+      modalBody.innerHTML = `<section class="membership-charge-selector" aria-labelledby="membershipChargeSelectorTitle">
+        <div class="membership-charge-choice-intro"><span aria-hidden="true">${uiIcon('family')}</span><div><h3 id="membershipChargeSelectorTitle">Quem fará parte desta cobrança?</h3><p>Selecione os associados/familiares que devem compor a cobrança compartilhada.</p></div></div>
+        <div class="membership-charge-selector-list">${entries.map(item => `<label class="membership-charge-selector-item ${item.selected ? 'is-selected' : ''} ${item.isPrimary ? 'is-primary' : ''}">
+            <input type="checkbox" data-membership-family-member value="${escapeHtml(item.id)}" ${item.selected ? 'checked' : ''}>
+            <span class="membership-charge-selector-copy">
+              <strong>${escapeHtml(item.name)}</strong>
+              <small>${item.isPrimary ? 'Titular' : 'Familiar'} · ${escapeHtml(money.format(item.monthlyAmount))} x ${item.pendingCount} ${item.pendingCount === 1 ? 'mês' : 'meses'} · total ${escapeHtml(money.format(item.total))}</small>
+            </span>
+          </label>`).join('')}</div>
+        <div class="membership-charge-selector-footer">
+          <small>${selectedCount} participante(s) selecionado(s)</small>
+          <div class="form-actions">
+            <button class="btn btn-ghost" type="button" data-membership-selector-back>Voltar</button>
+            <button class="btn btn-primary" type="button" data-membership-selector-confirm ${selectedCount ? '' : 'disabled'}>Continuar</button>
+          </div>
+        </div>
+      </section>`;
+      showModal('Selecionar participantes');
+
+      modalBody.querySelectorAll('[data-membership-family-member]').forEach(input => {
+        input.addEventListener('change', event => {
+          const targetId = event.currentTarget.value;
+          const entry = entries.find(item => item.id === targetId);
+          if (entry) entry.selected = event.currentTarget.checked;
+          render();
+        });
+      });
+
+      modalBody.querySelector('[data-membership-selector-back]')?.addEventListener('click', back);
+      modalBody.querySelector('[data-membership-selector-confirm]')?.addEventListener('click', async () => {
+        const selectedIds = entries.filter(item => item.selected).map(item => item.id);
+        if (!selectedIds.length) {
+          toast('Selecione pelo menos um participante.');
+          return;
+        }
+
+        const familyPayloadPromise = buildFamilyPayload(group, requestedMonths, clubName, selectedIds);
+        if (action === 'text') {
+          closeModal();
+          const payload = await familyPayloadPromise;
+          await shareText(payload.title, payload.text);
+          return;
+        }
+
+        openImagePreview({
+          payloadPromise: familyPayloadPromise,
+          optionLabel: 'grupo familiar selecionado',
+          back: () => openFamilySelectionModal({ group, requestedMonths, clubName, action, back, memberPayloadPromise, memberSummary, familySummary })
+        });
+      });
+    };
+
+    render();
+  };
+
+  const openChoiceModal = ({ memberPayloadPromise, familyPayloadPromise = null, memberSummary, familySummary = null }) => {
+    const cards = [renderOptionCard({
+      type: 'member',
+      title: 'Somente o associado',
+      detail: memberSummary.detail,
+      helper: memberSummary.helper,
+      value: money.format(memberSummary.total),
+      icon: 'user'
+    })];
+
+    if (familySummary) {
+      cards.push(renderOptionCard({
+        type: 'family',
+        title: 'Toda a família',
+        detail: familySummary.detail,
+        helper: familySummary.helper,
+        value: money.format(familySummary.total),
+        icon: 'family',
+        style: 'is-family'
+      }));
+    }
+
+    modalBody.innerHTML = `<section class="membership-charge-choice" aria-labelledby="membershipChargeChoiceTitle">
+      <div class="membership-charge-choice-intro"><span aria-hidden="true">${uiIcon('message')}</span><div><h3 id="membershipChargeChoiceTitle">Como deseja compartilhar a cobrança?</h3><p>Escolha o destinatário e o formato: mensagem de texto ou imagem personalizada.</p></div></div>
+      <div class="membership-charge-choice-grid">${cards.join('')}</div>
+      <div class="form-actions"><button class="btn btn-ghost" type="button" data-close-modal>Cancelar</button></div>
+    </section>`;
+    showModal('Enviar cobrança');
+
+    modalBody.querySelectorAll('[data-membership-charge-action]').forEach(button => {
+      button.addEventListener('click', async event => {
+        const target = event.currentTarget.dataset.membershipChargeTarget;
+        const action = event.currentTarget.dataset.membershipChargeAction;
+        if (target === 'family' && familyPayloadPromise) {
+          openFamilySelectionModal({
+            group: familySummary.group,
+            requestedMonths: familySummary.requestedMonths,
+            clubName: familySummary.clubName,
+            action,
+            back: () => openChoiceModal({ memberPayloadPromise, familyPayloadPromise, memberSummary, familySummary }),
+            memberPayloadPromise,
+            memberSummary,
+            familySummary
+          });
+          return;
+        }
+
+        const payloadPromise = memberPayloadPromise;
+
+        if (action === 'text') {
+          closeModal();
+          const payload = await payloadPromise;
+          await shareText(payload.title, payload.text);
+          return;
+        }
+
+        openImagePreview({
+          payloadPromise,
+          optionLabel: 'somente o associado',
+          back: () => openChoiceModal({ memberPayloadPromise, familyPayloadPromise, memberSummary, familySummary })
+        });
+      });
+    });
+  };
+
+  return async (memberId, months = []) => {
     const member = state().birthdays.find(item => item.id === memberId);
     if (!member) {
       toast('Associado não encontrado.');
@@ -96,43 +440,38 @@ export function createMembershipChargeSharer(context) {
     }
 
     const clubName = state().settings?.clubName || 'Lions Clube';
-    const memberPayload = individualPayload(member, pendingMonths, clubName);
+    const memberPayloadPromise = buildIndividualPayload(member, pendingMonths, clubName);
     const group = treasury.familyGroupForMember(memberId);
+
     if (!group) {
-      await shareText(memberPayload.title, memberPayload.text);
+      openChoiceModal({
+        memberPayloadPromise,
+        memberSummary: {
+          total: treasury.membershipExpectedAmountForMember(memberId) * pendingMonths.length,
+          detail: member.name,
+          helper: `${pendingMonths.length} mês(es) pendente(s)`
+        }
+      });
       return;
     }
 
-    const groupPayload = familyPayload(group, pendingMonths, clubName);
-    if (!groupPayload.memberCharges.length) {
-      await shareText(memberPayload.title, memberPayload.text);
-      return;
-    }
-    const familyTotal = groupPayload.memberCharges.reduce((sum, item) => sum + Number(item.expectedTotal || 0), 0);
-
-    modalBody.innerHTML = `<section class="membership-charge-choice" aria-labelledby="membershipChargeChoiceTitle">
-      <div class="membership-charge-choice-intro"><span aria-hidden="true">${uiIcon('message')}</span><div><h3 id="membershipChargeChoiceTitle">Quem deve receber a mensagem?</h3><p>Escolha entre uma cobrança individual ou um resumo de toda a família.</p></div></div>
-      <div class="membership-charge-choice-grid">
-        <button class="membership-charge-option" type="button" data-membership-charge-target="member">
-          <span aria-hidden="true">${uiIcon('user')}</span><div><strong>Somente o associado</strong><small>${escapeHtml(member.name)} · ${pendingMonths.length} mês(es)</small></div><b>${money.format(treasury.membershipExpectedAmountForMember(memberId) * pendingMonths.length)}</b>
-        </button>
-        <button class="membership-charge-option is-family" type="button" data-membership-charge-target="family">
-          <span aria-hidden="true">${uiIcon('family')}</span><div><strong>Toda a família</strong><small>${escapeHtml(group.name)} · ${groupPayload.memberCharges.length} integrante(s) com pendências</small></div><b>${money.format(familyTotal)}</b>
-        </button>
-      </div>
-      <div class="form-actions"><button class="btn btn-ghost" type="button" data-close-modal>Cancelar</button></div>
-    </section>`;
-    showModal('Enviar cobrança');
-
-    modalBody.querySelector('[data-membership-charge-target="member"]')?.addEventListener('click', async () => {
-      closeModal();
-      await shareText(memberPayload.title, memberPayload.text);
-    });
-    modalBody.querySelector('[data-membership-charge-target="family"]')?.addEventListener('click', async () => {
-      closeModal();
-      await shareText(groupPayload.title, groupPayload.text);
+    const familyPayload = await buildFamilyPayload(group, pendingMonths, clubName);
+    openChoiceModal({
+      memberPayloadPromise,
+      familyPayloadPromise: familyPayload.memberCharges.length ? Promise.resolve(familyPayload) : null,
+      memberSummary: {
+        total: treasury.membershipExpectedAmountForMember(memberId) * pendingMonths.length,
+        detail: member.name,
+        helper: `${pendingMonths.length} mês(es) pendente(s)`
+      },
+      familySummary: familyPayload.memberCharges.length ? {
+        total: familyPayload.memberCharges.reduce((sum, item) => sum + Number(item.expectedTotal || 0), 0),
+        detail: group.name,
+        helper: `${familyPayload.memberCharges.length} integrante(s) · ${familyPayload.image.rows.length} competência(s)`,
+        group,
+        requestedMonths: pendingMonths,
+        clubName
+      } : null
     });
   };
-
-  return shareMembershipCharge;
 }
