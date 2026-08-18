@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-18T10:49:51.608Z",
-  "deploymentId": "1787050191608-bfa534dd-7f90-41fe-b91f-cec6b5fa7202",
+  "updatedAt": "2026-08-18T14:33:22.625Z",
+  "deploymentId": "1787063602625-2a2eba16-0e41-419b-9879-3324032deb4d",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -326,7 +326,7 @@
         "id": "acc-current",
         "name": "SicoobCrediceripa - CC",
         "type": "Conta corrente",
-        "initialBalance": 18.47,
+        "initialBalance": 0,
         "active": true
       },
       {
@@ -356,6 +356,7 @@
       "Taxa bancária",
       "Doação",
       "Outros",
+      "AL - 2025/2026",
       "Associação Internacional de Lions Clubes",
       "Camisetas",
       "Saldo Inicial"
@@ -1342,6 +1343,326 @@
         "membershipPlan": "family",
         "familyGroupId": "f_ms7u6fcz_4zy7h4",
         "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: junho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msyquqy4_utau6s",
+        "date": "2026-01-02",
+        "paymentDate": "2026-01-02",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-01"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-01",
+        "coveredMonths": [
+          "2026-01"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: janeiro de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msyqv0ad_uzjyq2",
+        "date": "2026-01-02",
+        "paymentDate": "2026-01-02",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-01"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-01",
+        "coveredMonths": [
+          "2026-01"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: janeiro de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msyqvunp_ko9zmk",
+        "date": "2026-02-02",
+        "paymentDate": "2026-02-02",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-02"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-02",
+        "coveredMonths": [
+          "2026-02"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: fevereiro de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msyqw2kx_5dh9vs",
+        "date": "2026-02-02",
+        "paymentDate": "2026-02-02",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-02"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-02",
+        "coveredMonths": [
+          "2026-02"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: fevereiro de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msyr5e2a_2yn4fx",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Tigremaq Comercio de Maquinas e Im",
+        "entry": 0,
+        "exit": 800,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyr6js0_rt5vnd",
+        "date": "2026-01-01",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Saldo Inicial",
+        "entry": 5530.46,
+        "exit": 0,
+        "notes": "Valor referente ao saldo inicial da conta para o ano de 2026",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msyr7zm7_gbhf1r",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Andreia Regina Domingue",
+        "entry": 0,
+        "exit": 300,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyrbukk_rj9heh",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 390,
+        "notes": "",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyrcfu5_uancpd",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 400,
+        "notes": "Cantor",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyrd8bc_ap6vtc",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 726.26,
+        "notes": "Mercado Marcos Juquita",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyrehmb_25rroi",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Casa de Carnes Frazao LTDA",
+        "entry": 0,
+        "exit": 289.88,
+        "notes": "Açougue Frazão",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyrfpsr_wawnw9",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 384,
+        "notes": "Cerveja Confraternização Lions",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyrg7u9_u6b9jx",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 603.2,
+        "notes": "Açougue Denis",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyrgrd9_8pqkwc",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 56.83,
+        "notes": "Mercado Rogerio",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyrhb2p_mydn3l",
+        "date": "2026-01-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 411,
+        "notes": "Mercado Roberto",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyril3e_nvmse9",
+        "date": "2026-01-14",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 325.83,
+        "notes": "Brancalhão",
+        "status": "Pago",
         "attachments": []
       }
     ],
