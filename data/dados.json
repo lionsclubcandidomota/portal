@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-18T15:14:37.929Z",
-  "deploymentId": "1787066077928-e8af62b4-0faf-40e0-9322-c1fb4dab1052",
+  "updatedAt": "2026-08-18T15:42:00.524Z",
+  "deploymentId": "1787067720524-8ef2e2ef-b9a9-4a1e-9920-b54c75df324b",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -794,18 +794,6 @@
         "membershipPlan": "family",
         "familyGroupId": "f_ms7u6fcz_4zy7h4",
         "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: julho de 2026",
-        "attachments": []
-      },
-      {
-        "id": "t_mskg6giz_cnm4dz",
-        "date": "2026-06-25",
-        "accountId": "acc-current",
-        "category": "Saldo Inicial",
-        "description": "AL 2026/2027",
-        "entry": 18.47,
-        "exit": 0,
-        "notes": "Saldo que foi passado para a nova diretoria.",
-        "status": "Recebido",
         "attachments": []
       },
       {
@@ -2538,6 +2526,334 @@
         "entry": 0,
         "exit": 899,
         "notes": "10.573.521/0001-91",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyt9o2y_sjy9ct",
+        "date": "2026-06-01",
+        "paymentDate": "2026-06-01",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-06"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-06",
+        "coveredMonths": [
+          "2026-06"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: junho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msyt9yde_eeu05o",
+        "date": "2026-06-01",
+        "paymentDate": "2026-06-01",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-06"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-06",
+        "coveredMonths": [
+          "2026-06"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: junho de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msytf7u0_g2nicg",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Luiz H B Franciscatte",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytfpnj_d87sgn",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Daniel Flavio Gozzi\nMutua 657",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytgl4w_cvcoxv",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Marcos Antônio de Almeida Agencia de Via\nMutua chamada 657",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msythhm7_6a379p",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mario Sergio Gozzi\nMutua chamada 657",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msyti3ui_qbjffh",
+        "date": "2026-06-01",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mario Sergio Gozzi\nMutua 657 Brancalhão",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytn1g8_4lm6oo",
+        "date": "2026-06-02",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 210,
+        "notes": "02.248.416/0001-59\nChamada da mutua 657 Cândido Mota",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msytnqdc_74tavp",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Luiz H B Franciscatte",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytpcjw_2kduay",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mario Sergio Gozzi\nMutua 658 Brancalhão",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytpup3_bca6lv",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Daniel Flavio Gozzi\nMutua 658",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytqa0k_jky670",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mario Sergio Gozzi\nMutua 658",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytqs9y_ce3my1",
+        "date": "2026-06-16",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 60,
+        "exit": 0,
+        "notes": "Roberto Martins Freire",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytrdm2_jowa0y",
+        "date": "2026-06-17",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 45,
+        "exit": 0,
+        "notes": "Larissa Iaia Baldesserra",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytsix8_weqle3",
+        "date": "2026-06-22",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Marcos Antônio de Almeida Agencia de Via\nMutua 658",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytu7ay_aymszu",
+        "date": "2026-06-18",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 210,
+        "notes": "02.248.416 0001-59",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msytv2zn_kw0vg6",
+        "date": "2026-06-24",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 300,
+        "notes": "Cozinheira",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msytvvoc_17oygb",
+        "date": "2026-06-24",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Resgate RDC",
+        "entry": 2000,
+        "exit": 0,
+        "notes": "",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msytxghl_f63ce2",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Mario Sergio Gozzi",
+        "entry": 0,
+        "exit": 626.76,
+        "notes": "Cessão de Posse",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msyty492_b26mdz",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 760,
+        "notes": "Cessão de Posse",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msytyo7t_n3c5ok",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 320,
+        "notes": "Cessão de Posse",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msytz1dd_2qgfy3",
+        "date": "2026-06-25",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 325,
+        "notes": "Cessão de Posse",
         "status": "Pago",
         "attachments": []
       }
