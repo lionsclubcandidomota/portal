@@ -152,7 +152,7 @@ export function birthdayRows(items, helpers){
             : (until <= 7 ? 'Aniversário próximo' : 'Associado ativo'))
       : (until <= 7 ? 'Aniversário próximo' : '');
     const memberNumberCell = showMemberNumber ? `<td><strong>${escapeHtml(x.memberNumber || '—')}</strong></td>` : '';
-    return `<tr>${memberNumberCell}<td><div class="list-item">${avatar(x)}<div class="list-item-main"><strong>${escapeHtml(x.name)}</strong>${memberStatusText ? `<small>${memberStatusText}</small>` : ''}</div></div></td><td>${birthdayDisplayDate(x.birthDate, parseLocalDate)}</td><td><span class="birthday-status ${status.className}">${uiIcon(status.icon, 'birthday-status-icon')} ${status.text}</span></td><td>${birthdayActions(x,until)}</td></tr>`;
+    return `<tr>${memberNumberCell}<td><div class="list-item">${avatar(x)}<div class="list-item-main"><strong>${escapeHtml(x.name)}</strong>${memberStatusText ? `<small>${memberStatusText}</small>` : ''}</div></div></td><td class="birthday-date-cell ${until===0?'is-today':''}"><span class="birthday-date-value">${birthdayDisplayDate(x.birthDate, parseLocalDate)}</span></td><td><span class="birthday-status ${status.className}">${uiIcon(status.icon, 'birthday-status-icon')} ${status.text}</span></td><td>${birthdayActions(x,until)}</td></tr>`;
   }).join('');
 }
 
@@ -181,7 +181,7 @@ export function birthdayCards(items, helpers){
     const meta = `${memberMeta}${statusMeta}`;
     return `<article class="birthday-mobile-card ${until===0?'is-today':until<=7?'is-soon':''}">
       <div class="birthday-mobile-person">${avatar(x)}<div><h4>${escapeHtml(x.name)}</h4>${meta ? `<small>${meta}</small>` : ''}</div></div>
-      <div class="birthday-mobile-grid"><div><span>Aniversário</span><strong>${birthdayDisplayDate(x.birthDate, parseLocalDate)}</strong></div></div>
+      <div class="birthday-mobile-grid"><div class="birthday-mobile-date ${until===0?'is-today':''}"><span>Aniversário</span><strong>${birthdayDisplayDate(x.birthDate, parseLocalDate)}</strong></div></div>
       <div class="birthday-mobile-next ${status.className}"><span>${uiIcon(status.icon, 'birthday-status-icon')} ${status.text}</span></div>
       <div class="birthday-mobile-actions">${birthdayActions(x,until)}</div>
     </article>`;

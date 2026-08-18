@@ -1,4 +1,3 @@
-/* v3.5 — camada estrutural, usabilidade e correções responsivas */
 :root {
   --primary-soft: #e5f1ff;
   --accent-soft: #fff2d8;
@@ -8,13 +7,10 @@
   --touch-size: 44px;
 }
 
-/* Utilitários que substituem estilos inline antigos */
-
 .admin-tile-icon { font-size: 1.8rem; }
 .calendar-title { min-width: 0; text-align: center; }
 .calendar-title h3 { margin: 0; text-transform: capitalize; }
 
-/* Estados de foco e alvos de toque consistentes */
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .btn, .icon-btn, .nav-item, .bottom-nav-item { min-height: var(--touch-size); }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [role="button"]:focus-visible {
@@ -22,7 +18,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline-offset: 2px;
 }
 
-/* Calendário clicável em desktop e mobile */
 .calendar-card { overflow: hidden; }
 .calendar-day { position: relative; min-width: 0; transition: border-color .18s ease, background .18s ease, transform .18s ease; }
 .calendar-day.has-items { cursor: pointer; }
@@ -50,7 +45,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .calendar-day-item-content small { margin-top: 4px; color: var(--muted); }
 .calendar-day-item-arrow { font-size: 1.5rem; color: var(--muted); }
 
-/* Validação contextual */
 .form-validation-alert {
   display: grid; gap: 4px; padding: 13px 14px; border: 1px solid #efb7b9;
   border-left: 4px solid var(--danger); border-radius: 12px; background: var(--danger-soft); color: #8f2026;
@@ -58,7 +52,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .form-validation-alert span { font-size: .9rem; }
 [aria-invalid="true"] { border-color: var(--danger) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 14%, transparent) !important; }
 
-/* Consolidação responsiva: novos ajustes usam apenas 1024, 700 e 420px */
 @media (max-width: 1024px) {
   .calendar-event-button { padding-inline: 5px; }
 }
@@ -99,7 +92,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 
-/* v3.5.1 — compromissos anteriores e resumo de aniversários */
 .calendar-event-button.calendar-event.is-past {
   background: #e9edf1;
   color: #626b77;
@@ -138,11 +130,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   }
 }
 
-/* Notificações semânticas — v6.26 */
 .toast-region{position:fixed;z-index:var(--z-toast);top:92px;right:18px;display:grid;gap:10px;width:min(410px,calc(100vw - 36px));pointer-events:none}.portal-toast{--toast-tone:var(--primary);position:relative;display:grid;grid-template-columns:40px minmax(0,1fr) 32px;align-items:start;gap:11px;overflow:hidden;padding:13px 12px 15px;border:1px solid color-mix(in srgb,var(--toast-tone) 30%,var(--border));border-left:4px solid var(--toast-tone);border-radius:16px;background:color-mix(in srgb,var(--toast-tone) 4%,rgba(255,255,255,.98));box-shadow:0 16px 42px rgba(15,32,55,.18);pointer-events:auto;animation:portalToastEnter .24s cubic-bezier(.2,.8,.2,1) both}.portal-toast.is-success{--toast-tone:var(--success)}.portal-toast.is-warning{--toast-tone:#b77900}.portal-toast.is-error{--toast-tone:var(--danger)}.portal-toast-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--toast-tone) 13%,#fff);color:var(--toast-tone);font-size:1rem;font-weight:900}.portal-toast-copy{min-width:0;padding-top:1px}.portal-toast-copy strong{display:block;color:var(--text);font-size:.82rem}.portal-toast-copy p{margin:3px 0 0;color:var(--text-soft,var(--muted));font-size:.75rem;line-height:1.45;overflow-wrap:anywhere}.portal-toast-close{display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:1.15rem;line-height:1}.portal-toast-close:hover,.portal-toast-close:focus-visible{background:var(--surface-2);color:var(--text);outline:none}.portal-toast-progress{position:absolute;inset:auto 0 0;height:3px;background:var(--toast-tone);transform-origin:left;animation:portalToastProgress var(--toast-duration,4200ms) linear both}.portal-toast.is-leaving{animation:portalToastLeave .18s ease both}.toast{display:none!important}@keyframes portalToastEnter{from{opacity:0;transform:translate3d(18px,-4px,0) scale(.98)}to{opacity:1;transform:none}}@keyframes portalToastLeave{to{opacity:0;transform:translate3d(16px,0,0) scale(.98)}}@keyframes portalToastProgress{from{transform:scaleX(1)}to{transform:scaleX(0)}}@media(max-width:700px){.toast-region{top:76px;right:10px;left:10px;width:auto}.portal-toast{grid-template-columns:36px minmax(0,1fr) 30px;padding:11px 10px 14px}.portal-toast-icon{width:36px;height:36px}}@media(prefers-reduced-motion:reduce){.portal-toast,.portal-toast.is-leaving,.portal-toast-progress{animation:none}}
 
-/* ===== Conteúdo estruturado consolidado ===== */
-/* v3.5.2 — textos estruturados em tabelas desktop */
 @media (min-width: 701px) {
   .agenda-desktop-table table,
   #datedGenericLists table { table-layout: fixed; }
@@ -231,7 +220,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 
-/* v3.5.3 — correções de expansão e espaçamento de data da Agenda */
 @media (min-width: 701px) {
   .agenda-date-block {
     display: grid;
@@ -259,7 +247,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   }
 }
 
-/* Carregamento sob demanda consolidado — etapa 6 */
 .feature-loading {
   min-height: 180px;
   display: flex;

@@ -1,6 +1,3 @@
-/* Portal Lions v6.0 — menu de ações das mensalidades */
-
-/* O menu de cobrança deve sempre ficar acima dos cards vizinhos. */
 .membership-list {
   position: relative;
   isolation: isolate;

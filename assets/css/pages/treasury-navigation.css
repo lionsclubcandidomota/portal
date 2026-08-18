@@ -1,6 +1,3 @@
-/* Portal Lions v6.0 — navegação simplificada da Tesouraria */
-
-/* Tesouraria sem submenu: as áreas permanecem no hub principal. */
 #treasuryNav[hidden] {
   display: none !important;
 }
@@ -15,5 +12,4 @@
 @media(max-width:980px){.treasury-hub-grid.is-simplified{grid-template-columns:1fr 1fr}.treasury-hub-card.is-primary{grid-column:1/-1}}@media(max-width:700px){.treasury-primary-action{grid-template-columns:48px minmax(0,1fr)}.treasury-primary-action-icon{width:48px;height:48px;border-radius:14px}.treasury-primary-action-button{grid-column:1/-1;width:100%}}@media(max-width:520px){.treasury-hub-grid.is-simplified{grid-template-columns:1fr}.treasury-hub-card.is-primary{grid-column:auto}.form-field-label-row,.inline-category-manager-heading{align-items:stretch;flex-direction:column}.inline-category-toggle{width:100%}.inline-category-editor>div{grid-template-columns:1fr}.inline-category-actions .btn{flex:1 1 100%}}
 .treasury-hub-card.is-active{position:relative;border:2px solid var(--primary);box-shadow:inset 4px 0 var(--accent),0 0 0 3px #dcecf8}.treasury-hub-card.is-active:after{content:"ATUAL";position:absolute;top:7px;right:8px;color:var(--primary);font-size:.5rem;font-weight:900}
 
-/* Iconografia da navegação financeira — etapa 6 */
 .treasury-hub-card>span .ui-icon{width:24px;height:24px}.treasury-primary-action-icon .ui-icon{width:25px;height:25px}.treasury-period-icon .ui-icon{width:21px;height:21px}.treasury-search-heading>span .ui-icon{width:20px;height:20px}.treasury-projection-card .card-header h3,.treasury-accounts-card .card-header h3{display:flex;align-items:center;gap:8px}.treasury-projection-card .dashboard-title-icon,.treasury-accounts-card .dashboard-title-icon{width:19px;height:19px}

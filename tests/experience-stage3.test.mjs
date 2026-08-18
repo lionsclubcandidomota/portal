@@ -87,6 +87,17 @@ test('visitante encontra ação de parabéns no computador e alternativas de env
   assert.match(desktop, /Abrir WhatsApp/);
 });
 
+test('aniversário do dia mantém destaque e ação de parabéns em desktop e mobile', async () => {
+  const birthdaysSource = await readFile(path.join(projectRoot, 'assets/js/modules/birthdays.js'), 'utf8');
+  const birthdayCss = await readFile(path.join(projectRoot, 'assets/css/pages/admin-operations.css'), 'utf8');
+
+  assert.match(birthdaysSource, /birthday-date-cell \$\{until===0\?'is-today':''\}/);
+  assert.match(birthdaysSource, /birthday-mobile-date \$\{until===0\?'is-today':''\}/);
+  assert.match(birthdayCss, /birthday-mobile-date\.is-today/);
+  assert.match(birthdayCss, /visitor-mode \.birthdays-desktop-table table th:last-child/);
+  assert.match(birthdayCss, /visitor-mode \.birthdays-desktop-table table td:last-child/);
+});
+
 test('entrada administrativa solicita credencial sem expor token ou GitHub', () => {
   const html = adminLoginHtml();
 

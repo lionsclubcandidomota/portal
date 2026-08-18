@@ -20,7 +20,7 @@ test('oculta número do associado nas linhas de visitante', () => {
   const html = birthdayRows([person], { ...helpers, showMemberStatus: false, showMemberNumber: false });
   assert.doesNotMatch(html, /123456|Nº do associado/);
   assert.match(html, /Ana Teste/);
-  assert.equal((html.match(/<td>/g) || []).length, 4);
+  assert.equal((html.match(/<td(?:\s|>)/g) || []).length, 4);
 });
 
 test('oculta número do associado nos cartões de visitante', () => {
