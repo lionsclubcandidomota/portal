@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-17T23:32:09.501Z",
-  "deploymentId": "1787009529501-30725958-3e92-481b-afe0-ef3ff1256d1f",
+  "updatedAt": "2026-08-18T10:49:51.608Z",
+  "deploymentId": "1787050191608-bfa534dd-7f90-41fe-b91f-cec6b5fa7202",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -242,7 +242,7 @@
         "id": "b_ms3xrctq_knqsof",
         "memberNumber": "6050963",
         "name": "Sueli Neves",
-        "birthDate": "1974-08-07",
+        "birthDate": "1974-08-18",
         "photo": "./public/members/b_ms3xrctq_knqsof-11zsuyd.jpg",
         "membershipNotes": "PIX recebido junto com a mensalidade do Marcos Antônio de Almeida (Marido)",
         "status": "Ativo",
