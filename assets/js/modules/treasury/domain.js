@@ -18,6 +18,7 @@ export const DEFAULT_CATEGORIES = Object.freeze([
   'Combustível',
   'Taxa bancária',
   'Doação',
+  'Transferência entre contas',
   'Outros'
 ]);
 

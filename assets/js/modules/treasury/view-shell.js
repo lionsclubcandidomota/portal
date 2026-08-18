@@ -35,7 +35,7 @@ function renderTreasuryHub(treasury, financePrivacy) {
     <div class="treasury-mobile-nav-intro" aria-hidden="true"><span>${uiIcon('list')}</span><div><strong>Escolha uma área</strong><small>Todas as opções estão disponíveis abaixo.</small></div></div>
     <div class="treasury-hub-grid is-simplified">
       <button type="button" class="treasury-hub-card is-primary ${treasury.section === 'movements' ? 'is-active' : ''}" data-treasury-section="movements" ${treasury.section === 'movements' ? 'aria-current="page"' : ''}>
-        <span>${uiIcon('transfer')}</span><strong>Movimentações</strong><small>Entradas, saídas e valores programados</small>
+        <span>${uiIcon('transfer')}</span><strong>Movimentações</strong><small>Entradas, saídas, transferências e valores programados</small>
       </button>
       <button type="button" class="treasury-hub-card ${treasury.section === 'overview' ? 'is-active' : ''}" data-treasury-section="overview" ${treasury.section === 'overview' ? 'aria-current="page"' : ''}>
         <span>${uiIcon('bank')}</span><strong>Contas</strong><small>Saldos atuais e previstos</small>
@@ -57,9 +57,13 @@ function renderPrimaryMovementAction(canWrite) {
     <div class="treasury-primary-action-copy">
       <span class="section-eyebrow">Novo registro</span>
       <h3 id="newMovementTitle">Adicionar movimentação</h3>
-      <p>Registre uma entrada, saída ou valor programado.</p>
+      <p>Registre entradas, saídas, valores programados ou movimente saldo entre contas internas.</p>
     </div>
-    <button class="btn btn-primary treasury-primary-action-button" type="button" data-new="treasury">${uiIcon('plus')} Adicionar</button>
+    <div class="treasury-primary-action-buttons" aria-label="Escolha o tipo de movimentação">
+      <button class="btn treasury-primary-action-button is-entry" type="button" data-new-treasury-kind="entry">${uiIcon('download')} Entrada</button>
+      <button class="btn treasury-primary-action-button is-exit" type="button" data-new-treasury-kind="exit">${uiIcon('upload')} Saída</button>
+      <button class="btn treasury-primary-action-button is-transfer" type="button" data-new-treasury-kind="transfer">${uiIcon('transfer')} Transferência</button>
+    </div>
   </section>`;
 }
 

@@ -11,7 +11,6 @@ import {
   svgMarkupToDataUrl,
   svgToPngBlob
 } from './sharing-image-utils.js';
-
 export function createMembershipChargeSharer(context) {
   const {
     state,
@@ -21,14 +20,11 @@ export function createMembershipChargeSharer(context) {
     showModal,
     closeModal
   } = context;
-
   const assetCache = new Map();
-
   const fetchAssetAsDataUrl = async assetPath => {
     const path = String(assetPath || '').trim();
     if (!path) return '';
     if (assetCache.has(path)) return assetCache.get(path);
-
     const promise = fetch(new URL(path, window.location.href))
       .then(response => {
         if (!response.ok) throw new Error(`Falha ao carregar ativo: ${path}`);
@@ -36,11 +32,9 @@ export function createMembershipChargeSharer(context) {
       })
       .then(blobToDataUrl)
       .catch(() => '');
-
     assetCache.set(path, promise);
     return promise;
   };
-
   const shareText = async (title, text) => {
     if (navigator.share) {
       try {
@@ -50,13 +44,11 @@ export function createMembershipChargeSharer(context) {
         if (error?.name === 'AbortError') return false;
       }
     }
-
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
       toast('Mensagem copiada. Agora é só colar no WhatsApp.');
       return true;
     }
-
     const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.setAttribute('readonly', '');
@@ -69,7 +61,40 @@ export function createMembershipChargeSharer(context) {
     toast('Mensagem copiada. Agora é só colar no WhatsApp.');
     return true;
   };
-
+  const shareImagePayload = async (payload, svgMarkup, width, height) => {
+    const pngBlob = await svgToPngBlob(svgMarkup, width, height);
+    const shareFile = typeof File === 'function'
+      ? new File([pngBlob], payload.filename, { type: 'image/png' })
+      : null;
+    if (navigator.share && shareFile && (!navigator.canShare || navigator.canShare({ files: [shareFile] }))) {
+      try {
+        await navigator.share({
+          title: payload.title,
+          text: payload.text,
+          files: [shareFile]
+        });
+        return true;
+      } catch (error) {
+        if (error?.name === 'AbortError') return false;
+      }
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: payload.title, text: payload.text });
+        downloadBlob(pngBlob, payload.filename);
+        toast('Texto compartilhado. O PNG também foi baixado para você anexar no WhatsApp.');
+        return true;
+      } catch (error) {
+        if (error?.name === 'AbortError') return false;
+      }
+    }
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(payload.text);
+    }
+    downloadBlob(pngBlob, payload.filename);
+    toast('Imagem baixada e texto copiado. Agora é só anexar o PNG no WhatsApp.');
+    return true;
+  };
   const buildIndividualPayload = async (member, months, clubName) => {
     const expectedMonthlyAmount = treasury.membershipExpectedAmountForMember(member.id);
     const expectedTotal = expectedMonthlyAmount * months.length;
@@ -77,7 +102,6 @@ export function createMembershipChargeSharer(context) {
       fetchAssetAsDataUrl(member.photo),
       fetchAssetAsDataUrl('./public/logo.png')
     ]);
-
     return {
       title: `Mensalidade — ${clubName}`,
       text: buildMembershipChargeMessage({
@@ -106,7 +130,6 @@ export function createMembershipChargeSharer(context) {
       filename: `cobranca-individual-${String(member.name || 'associado').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'associado'}.png`
     };
   };
-
   const buildFamilySelectionState = (group, requestedMonths) => {
     const entries = (group?.memberIds || [])
       .map(id => state().birthdays.find(item => item.id === id))
@@ -125,16 +148,13 @@ export function createMembershipChargeSharer(context) {
           selected: pendingMonths.length > 0
         };
       });
-
     return entries.filter(item => item.pendingCount > 0);
   };
-
   const buildFamilyPayload = async (group, requestedMonths, clubName, selectedMemberIds = null) => {
     const selectedSet = Array.isArray(selectedMemberIds) && selectedMemberIds.length ? new Set(selectedMemberIds) : null;
     const members = (group.memberIds || [])
       .map(id => state().birthdays.find(item => item.id === id))
       .filter(item => item && treasury.memberIsActive(item) && (!selectedSet || selectedSet.has(item.id)));
-
     const pendingCharges = members.flatMap(member => {
       const pendingMonths = requestedMonths.filter(month => !treasury.monthIsPaid(member.id, month));
       return pendingMonths.map(month => ({
@@ -143,7 +163,6 @@ export function createMembershipChargeSharer(context) {
         amount: treasury.membershipExpectedAmountForMember(member.id)
       }));
     });
-
     const memberCharges = members.map(member => {
       const pendingMonths = requestedMonths.filter(month => !treasury.monthIsPaid(member.id, month));
       return {
@@ -153,14 +172,12 @@ export function createMembershipChargeSharer(context) {
         expectedTotal: treasury.membershipExpectedAmountForMember(member.id) * pendingMonths.length
       };
     }).filter(item => item.monthLabels.length);
-
     const clubLogoDataUrl = await fetchAssetAsDataUrl('./public/logo.png');
     const chargeMembers = await Promise.all(members.map(async member => ({
       name: member.name,
       role: member.id === group.primaryMemberId ? 'Titular' : 'Familiar',
       avatar: await fetchAssetAsDataUrl(member.photo)
     })));
-
     const responsibleMember = members.find(member => member.id === group.primaryMemberId) || members[0] || null;
     const responsibleAvatar = responsibleMember ? await fetchAssetAsDataUrl(responsibleMember.photo) : '';
     const total = memberCharges.reduce((sum, item) => sum + Number(item.expectedTotal || 0), 0);
@@ -168,12 +185,10 @@ export function createMembershipChargeSharer(context) {
     const titularTotal = titularCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const titularMonthsCount = new Set(titularCharges.map(item => item.month)).size;
     const titularMonthlyAmount = titularMonthsCount ? titularTotal / titularMonthsCount : 0;
-
     const familyCharges = pendingCharges.filter(item => item.member.id !== group.primaryMemberId);
     const familyMembersTotal = familyCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const familyMonthsCount = new Set(familyCharges.map(item => item.month)).size;
     const familyMonthlyAmount = familyMonthsCount ? familyMembersTotal / familyMonthsCount : 0;
-
     const monthTotals = requestedMonths.map(month => ({
       month,
       label: treasury.monthLabel(month),
@@ -181,7 +196,6 @@ export function createMembershipChargeSharer(context) {
         .filter(item => item.month === month)
         .reduce((sum, item) => sum + Number(item.amount || 0), 0)
     })).filter(item => item.amount > 0);
-
     return {
       memberCharges,
       title: `Mensalidades da ${group.name} — ${clubName}`,
@@ -230,11 +244,9 @@ export function createMembershipChargeSharer(context) {
       filename: `cobranca-familiar-${String(group.name || 'familia').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'familia'}.png`
     };
   };
-
   const openImagePreview = async ({ payloadPromise, optionLabel, back }) => {
     modalBody.innerHTML = `<section class="membership-charge-preview-shell"><div class="membership-charge-preview-loading">${uiIcon('image')}<strong>Gerando prévia da imagem</strong><small>Montando a cobrança visual de ${escapeHtml(optionLabel)}…</small></div></section>`;
     showModal('Prévia da cobrança');
-
     try {
       const payload = await payloadPromise;
       const svg = buildChargeSvg(payload.image);
@@ -244,10 +256,11 @@ export function createMembershipChargeSharer(context) {
           <div>
             <span class="admin-eyebrow">Imagem da cobrança</span>
             <h3 id="membershipChargePreviewTitle">Prévia pronta para compartilhamento</h3>
-            <p>${escapeHtml(optionLabel)} · revise e baixe a imagem em PNG.</p>
+            <p>${escapeHtml(optionLabel)} · revise, compartilhe no aparelho/WhatsApp ou baixe a imagem em PNG.</p>
           </div>
           <div class="membership-charge-preview-actions">
-            <button class="btn btn-ghost" type="button" data-membership-preview-back>${uiIcon('chevron-right')} Voltar</button>
+            <button class="btn btn-ghost" type="button" data-membership-preview-back>← Voltar para opções</button>
+            <button class="btn btn-ghost" type="button" data-membership-preview-share>${uiIcon('upload')} Compartilhar</button>
             <button class="btn btn-primary" type="button" data-membership-preview-download>${uiIcon('download')} Baixar PNG</button>
           </div>
         </div>
@@ -255,8 +268,15 @@ export function createMembershipChargeSharer(context) {
           <img class="membership-charge-preview-image" src="${svgDataUrl}" alt="Prévia da cobrança em imagem" width="${svg.width}" height="${svg.height}">
         </div>
       </section>`;
-
       modalBody.querySelector('[data-membership-preview-back]')?.addEventListener('click', back);
+      modalBody.querySelector('[data-membership-preview-share]')?.addEventListener('click', async () => {
+        try {
+          await shareImagePayload(payload, svg.markup, svg.width, svg.height);
+        } catch (error) {
+          console.error(error);
+          toast('Não foi possível compartilhar a imagem da cobrança.');
+        }
+      });
       modalBody.querySelector('[data-membership-preview-download]')?.addEventListener('click', async () => {
         try {
           const pngBlob = await svgToPngBlob(svg.markup, svg.width, svg.height);
@@ -273,7 +293,6 @@ export function createMembershipChargeSharer(context) {
       modalBody.querySelector('[data-membership-preview-back]')?.addEventListener('click', back);
     }
   };
-
   // Targets renderizados neste fluxo: data-membership-charge-target="member" e data-membership-charge-target="family".
   const renderOptionCard = ({ type, title, detail, helper, value, icon, style = '' }) => `<article class="membership-charge-option ${style}" data-membership-card="${type}">
       <div class="membership-charge-option-summary">
@@ -290,20 +309,17 @@ export function createMembershipChargeSharer(context) {
         <b>${escapeHtml(value)}</b>
       </div>
       <div class="membership-charge-option-actions">
-        <button class="btn btn-ghost" type="button" data-membership-charge-action="text" data-membership-charge-target="${type}">${uiIcon('message')} Mensagem</button>
-        <button class="btn btn-primary" type="button" data-membership-charge-action="image" data-membership-charge-target="${type}">${uiIcon('image')} Imagem</button>
+        <button class="btn btn-ghost" type="button" data-membership-charge-action="text" data-membership-charge-target="${type}">${uiIcon('message')} Copiar texto</button>
+        <button class="btn btn-primary" type="button" data-membership-charge-action="image" data-membership-charge-target="${type}">${uiIcon('image')} Gerar imagem</button>
       </div>
     </article>`;
-
   const openFamilySelectionModal = ({ group, requestedMonths, clubName, action, back, memberPayloadPromise, memberSummary, familySummary }) => {
     const entries = buildFamilySelectionState(group, requestedMonths);
-
     if (!entries.length) {
       toast('Nenhum familiar possui mensalidades pendentes neste período.');
       back();
       return;
     }
-
     const render = () => {
       const selectedCount = entries.filter(item => item.selected).length;
       modalBody.innerHTML = `<section class="membership-charge-selector" aria-labelledby="membershipChargeSelectorTitle">
@@ -324,7 +340,6 @@ export function createMembershipChargeSharer(context) {
         </div>
       </section>`;
       showModal('Selecionar participantes');
-
       modalBody.querySelectorAll('[data-membership-family-member]').forEach(input => {
         input.addEventListener('change', event => {
           const targetId = event.currentTarget.value;
@@ -333,7 +348,6 @@ export function createMembershipChargeSharer(context) {
           render();
         });
       });
-
       modalBody.querySelector('[data-membership-selector-back]')?.addEventListener('click', back);
       modalBody.querySelector('[data-membership-selector-confirm]')?.addEventListener('click', async () => {
         const selectedIds = entries.filter(item => item.selected).map(item => item.id);
@@ -341,7 +355,6 @@ export function createMembershipChargeSharer(context) {
           toast('Selecione pelo menos um participante.');
           return;
         }
-
         const familyPayloadPromise = buildFamilyPayload(group, requestedMonths, clubName, selectedIds);
         if (action === 'text') {
           closeModal();
@@ -349,7 +362,6 @@ export function createMembershipChargeSharer(context) {
           await shareText(payload.title, payload.text);
           return;
         }
-
         openImagePreview({
           payloadPromise: familyPayloadPromise,
           optionLabel: 'grupo familiar selecionado',
@@ -357,10 +369,8 @@ export function createMembershipChargeSharer(context) {
         });
       });
     };
-
     render();
   };
-
   const openChoiceModal = ({ memberPayloadPromise, familyPayloadPromise = null, memberSummary, familySummary = null }) => {
     const cards = [renderOptionCard({
       type: 'member',
@@ -370,7 +380,6 @@ export function createMembershipChargeSharer(context) {
       value: money.format(memberSummary.total),
       icon: 'user'
     })];
-
     if (familySummary) {
       cards.push(renderOptionCard({
         type: 'family',
@@ -382,14 +391,12 @@ export function createMembershipChargeSharer(context) {
         style: 'is-family'
       }));
     }
-
     modalBody.innerHTML = `<section class="membership-charge-choice" aria-labelledby="membershipChargeChoiceTitle">
       <div class="membership-charge-choice-intro"><span aria-hidden="true">${uiIcon('message')}</span><div><h3 id="membershipChargeChoiceTitle">Como deseja compartilhar a cobrança?</h3><p>Escolha o destinatário e o formato: mensagem de texto ou imagem personalizada.</p></div></div>
       <div class="membership-charge-choice-grid">${cards.join('')}</div>
       <div class="form-actions"><button class="btn btn-ghost" type="button" data-close-modal>Cancelar</button></div>
     </section>`;
     showModal('Enviar cobrança');
-
     modalBody.querySelectorAll('[data-membership-charge-action]').forEach(button => {
       button.addEventListener('click', async event => {
         const target = event.currentTarget.dataset.membershipChargeTarget;
@@ -407,16 +414,13 @@ export function createMembershipChargeSharer(context) {
           });
           return;
         }
-
         const payloadPromise = memberPayloadPromise;
-
         if (action === 'text') {
           closeModal();
           const payload = await payloadPromise;
           await shareText(payload.title, payload.text);
           return;
         }
-
         openImagePreview({
           payloadPromise,
           optionLabel: 'somente o associado',
@@ -425,24 +429,20 @@ export function createMembershipChargeSharer(context) {
       });
     });
   };
-
   return async (memberId, months = []) => {
     const member = state().birthdays.find(item => item.id === memberId);
     if (!member) {
       toast('Associado não encontrado.');
       return;
     }
-
     const pendingMonths = [...new Set(months)].filter(Boolean);
     if (!pendingMonths.length) {
       toast('Não há mensalidades pendentes no período selecionado.');
       return;
     }
-
     const clubName = state().settings?.clubName || 'Lions Clube';
     const memberPayloadPromise = buildIndividualPayload(member, pendingMonths, clubName);
     const group = treasury.familyGroupForMember(memberId);
-
     if (!group) {
       openChoiceModal({
         memberPayloadPromise,
@@ -454,7 +454,6 @@ export function createMembershipChargeSharer(context) {
       });
       return;
     }
-
     const familyPayload = await buildFamilyPayload(group, pendingMonths, clubName);
     openChoiceModal({
       memberPayloadPromise,

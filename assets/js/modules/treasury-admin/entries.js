@@ -2,6 +2,11 @@ import { escapeHtml, normalize, uid } from '../../utils.js';
 import { normalizeTreasuryEntryPayload, resolveTreasuryEntryStatus } from './domain.js';
 import { bindTreasuryAttachmentPicker, renderTreasuryAttachmentPicker } from './attachments.js';
 import { uiIcon } from '../visual-helpers.js?v=6.46.7';
+import {
+  TRANSFER_CATEGORY,
+  bindTreasuryMovementKindController,
+  buildTreasuryEntryFormHtml
+} from './entry-form-ui.js';
 
 export function createTreasuryEntryManager(context) {
   const {
@@ -19,48 +24,62 @@ export function createTreasuryEntryManager(context) {
     restoreInterfaceContext
   } = context;
 
+  const ensureTransferCategory = () => {
+    if (!Array.isArray(state().treasuryCategories)) state().treasuryCategories = [];
+    if (!state().treasuryCategories.some(category => normalize(category) === normalize(TRANSFER_CATEGORY))) {
+      state().treasuryCategories.push(TRANSFER_CATEGORY);
+      state().treasuryCategories = [...new Set(state().treasuryCategories)]
+        .filter(Boolean)
+        .sort((first, second) => first.localeCompare(second, 'pt-BR'));
+    }
+  };
+
   const categoryOptions = selected => `<option value="">Selecione uma categoria</option>${treasury.categories().map(category => `<option value="${escapeHtml(category)}" ${normalize(selected) === normalize(category) ? 'selected' : ''}>${escapeHtml(category)}</option>`).join('')}`;
 
-  const treasuryEntryFormHtml = item => {
-    const value = key => escapeHtml(item[key] ?? '');
-    const required = '<span class="required-mark">*</span>';
-    const section = (icon, title, subtitle, content) => `<section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon(icon)}</span><div><h3>${title}</h3><p>${subtitle}</p></div></div><div class="form-grid admin-form-section-grid">${content}</div></section>`;
-    const accounts = treasury.accounts();
-    const statusMode = treasury.isProgrammed(item) ? 'Programado' : 'Efetivado';
+  const transferEntriesFor = transferGroupId => state().treasury.filter(entry => String(entry.transferGroupId || '') === String(transferGroupId || ''));
 
-    const content = section(
-      'receipt',
-      'Identificação da movimentação',
-      'Registre somente movimentações financeiras gerais. Mensalidades e mútuas são recebidas pelos módulos próprios.',
-      `<div class="form-field"><label>Data ${required}</label><input name="date" type="date" value="${value('date')}" autocomplete="off" required><small>${item?.id ? 'Confira a data antes de salvar as alterações.' : 'Preenchimento manual obrigatório para evitar movimentações na data errada.'}</small></div>
-      <div class="form-field"><label>Conta ${required}</label><select name="accountId" required>${accounts.filter(account => account.active !== false || account.id === item.accountId).map(account => `<option value="${escapeHtml(account.id)}" ${(item.accountId || accounts[0]?.id) === account.id ? 'selected' : ''}>${escapeHtml(account.name)}</option>`).join('')}</select><small>A movimentação afetará o saldo desta conta.</small></div>
-      <div class="form-field full-row treasury-category-form-field">
-        <div class="form-field-label-row"><label for="treasuryEntryCategory">Categoria ${required}</label><button class="btn btn-ghost btn-sm inline-category-toggle" id="inlineCategoryToggle" type="button" aria-expanded="false" aria-controls="inlineCategoryManager">${uiIcon('settings')}<span>Gerenciar categorias</span></button></div>
-        <select id="treasuryEntryCategory" name="category" required>${categoryOptions(item.category)}</select>
-        <small>Crie ou renomeie categorias aqui, sem interromper o cadastro da movimentação.</small>
-        <div class="inline-category-manager" id="inlineCategoryManager" hidden>
-          <div class="inline-category-manager-heading"><div><strong>Gerenciamento rápido</strong><small>Para renomear ou excluir, selecione primeiro uma categoria acima.</small></div><button class="icon-btn inline-category-close" id="inlineCategoryClose" type="button" aria-label="Fechar gerenciamento de categorias">×</button></div>
-          <div class="inline-category-editor"><label for="inlineCategoryName">Nome da categoria</label><div><input id="inlineCategoryName" type="text" maxlength="80" placeholder="Ex.: Manutenção da sede" autocomplete="off"><button class="btn btn-primary" id="inlineCategoryAdd" type="button">Adicionar</button></div></div>
-          <div class="inline-category-actions"><button class="btn btn-ghost btn-sm" id="inlineCategoryRename" type="button">Renomear selecionada</button><button class="btn btn-danger-soft btn-sm" id="inlineCategoryDelete" type="button">Excluir selecionada</button></div>
-          <p class="inline-category-status" id="inlineCategoryStatus" aria-live="polite"></p>
-        </div>
-      </div>
-      <div class="form-field full-row"><label>Descrição ${required}</label><input name="description" value="${value('description')}" required placeholder="Ex.: Compra de papel, pagamento de cartório ou patrocínio de evento"></div>
-      <div class="form-field"><label>Situação ${required}</label><select name="statusMode" required><option value="Programado" ${statusMode === 'Programado' ? 'selected' : ''}>Programado</option><option value="Efetivado" ${statusMode === 'Efetivado' ? 'selected' : ''}>Efetivado</option></select><small>Programado não altera o saldo. Ao efetivar, uma entrada vira “Recebido” e uma saída vira “Pago”.</small></div>`
-    ) + section(
-      'money',
-      'Valores',
-      'Preencha entrada ou saída. Evite informar os dois na mesma movimentação.',
-      `<div class="form-field money-field"><label>Entrada (R$)</label><input name="entry" type="number" step="0.01" min="0" value="${value('entry') || 0}" inputmode="decimal"></div><div class="form-field money-field"><label>Saída (R$)</label><input name="exit" type="number" step="0.01" min="0" value="${value('exit') || 0}" inputmode="decimal"></div><div class="form-field full-row"><label>Observações</label><textarea name="notes" rows="4" placeholder="Ex.: forma de pagamento, fornecedor, projeto relacionado ou documento de referência">${value('notes')}</textarea></div>`
-    ) + section(
-      'paperclip',
-      'Comprovantes e documentos',
-      'Anexe recibos, notas fiscais, comprovantes ou outros documentos relacionados à movimentação.',
-      `<div class="form-field full-row">${renderTreasuryAttachmentPicker(item.attachments || [])}<small>Imagens são otimizadas automaticamente antes da publicação. PDFs e documentos compatíveis são preservados para manter a legibilidade.</small></div>`
-    );
-
-    return `<form id="treasuryEntryForm" class="admin-entity-form"><div class="admin-form-intro"><span>Campos marcados com ${required} são obrigatórios.</span></div>${item?.id ? '' : `<div class="operation-safety-note" role="note"><span aria-hidden="true">${uiIcon('shield')}</span><div><strong>Data sem preenchimento automático</strong><small>Escolha conscientemente a data real da movimentação antes de concluir.</small></div></div>`}${content}<div class="form-actions admin-form-actions"><button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button><button class="btn btn-primary" type="submit">${item?.id ? 'Salvar movimentação' : 'Adicionar movimentação'}</button></div></form>`;
+  const resolveTransferParts = entries => {
+    const list = Array.isArray(entries) ? entries : [];
+    return {
+      source: list.find(entry => entry.transferRole === 'source' || Number(entry.exit || 0) > 0) || list[0] || null,
+      destination: list.find(entry => entry.transferRole === 'destination' || Number(entry.entry || 0) > 0) || list[1] || list[0] || null
+    };
   };
+
+  const buildTransferFormItem = rawItem => {
+    const groupId = String(rawItem?.transferGroupId || rawItem?.id || '');
+    const entries = transferEntriesFor(groupId);
+    const { source, destination } = resolveTransferParts(entries);
+    const reference = source || destination || rawItem || {};
+    const statusMode = treasury.isProgrammed(reference) ? 'Programado' : 'Efetivado';
+
+    return {
+      id: groupId,
+      transferGroupId: groupId,
+      movementKind: 'transfer',
+      date: source?.date || destination?.date || rawItem?.date || '',
+      sourceAccountId: source?.sourceAccountId || source?.accountId || rawItem?.sourceAccountId || '',
+      destinationAccountId: source?.destinationAccountId || destination?.accountId || rawItem?.destinationAccountId || '',
+      transferAmount: Number(source?.transferAmount || destination?.transferAmount || source?.exit || destination?.entry || 0),
+      category: String(source?.category || rawItem?.category || TRANSFER_CATEGORY),
+      description: String(source?.transferLabel || rawItem?.transferLabel || source?.description || rawItem?.description || 'Transferência entre contas'),
+      notes: String(source?.notes || destination?.notes || rawItem?.notes || ''),
+      statusMode,
+      attachments: Array.isArray(source?.attachments) ? source.attachments : []
+    };
+  };
+
+  const treasuryEntryFormHtml = item => {
+    ensureTransferCategory();
+    return buildTreasuryEntryFormHtml({
+      item,
+      accounts: treasury.accounts(),
+      categories: treasury.categories(),
+      isProgrammed: treasury.isProgrammed
+    });
+  };
+
+  const bindMovementKindController = form => bindTreasuryMovementKindController(form);
 
   const bindInlineCategoryManager = form => {
     const select = form.elements.category;
@@ -85,7 +104,7 @@ export function createTreasuryEntryManager(context) {
 
     const selectedCategory = () => String(select.value || '').trim();
     const requestedName = () => String(nameInput.value || '').trim();
-    const isSystemCategory = category => ['mensalidades', 'mutuas'].includes(normalize(category));
+    const isSystemCategory = category => ['mensalidades', 'mutuas', normalize(TRANSFER_CATEGORY)].includes(normalize(category));
     const duplicateFor = (name, original = '') => treasury.categories().find(category => (
       normalize(category) === normalize(name)
       && normalize(category) !== normalize(original)
@@ -97,6 +116,7 @@ export function createTreasuryEntryManager(context) {
     };
 
     const openPanel = () => {
+      if (toggle.disabled) return;
       panel.hidden = false;
       toggle.setAttribute('aria-expanded', 'true');
       nameInput.value = selectedCategory();
@@ -145,7 +165,7 @@ export function createTreasuryEntryManager(context) {
         return;
       }
       if (isSystemCategory(original)) {
-        setStatus('Mensalidades e Mútuas são categorias do sistema e não podem ser renomeadas.', 'is-error');
+        setStatus('Mensalidades, Mútuas e Transferências são categorias do sistema e não podem ser renomeadas.', 'is-error');
         return;
       }
       if (!name) {
@@ -186,7 +206,7 @@ export function createTreasuryEntryManager(context) {
         return;
       }
       if (isSystemCategory(category)) {
-        setStatus('Mensalidades e Mútuas são categorias do sistema e não podem ser excluídas.', 'is-error');
+        setStatus('Mensalidades, Mútuas e Transferências são categorias do sistema e não podem ser excluídas.', 'is-error');
         return;
       }
       const usageCount = state().treasury.filter(entry => (
@@ -217,20 +237,33 @@ export function createTreasuryEntryManager(context) {
     });
   };
 
-  const openTreasuryEntryForm = (id = null) => {
+  const openTreasuryEntryForm = (idOrPreset = null) => {
     const interfaceSnapshot = captureInterfaceContext?.();
     const collection = state().treasury;
-    const item = id ? collection.find(entry => entry.id === id) : {};
-    if (id && !item) {
+    const preset = (idOrPreset && typeof idOrPreset === 'object' && !Array.isArray(idOrPreset)) ? idOrPreset : null;
+    const id = preset ? (preset.id || null) : idOrPreset;
+    const rawItem = id ? collection.find(entry => entry.id === id) : (preset || {});
+    if (id && !rawItem) {
       toast('Movimentação financeira não encontrada.');
       return;
     }
 
-    modalBody.innerHTML = treasuryEntryFormHtml(item);
-    showModal(`${id ? 'Editar' : 'Nova'} movimentação financeira`);
+    const editingTransfer = Boolean(rawItem?.transferGroupId);
+    const editingTransferEntries = editingTransfer ? transferEntriesFor(rawItem.transferGroupId) : [];
+    const formItem = editingTransfer ? buildTransferFormItem(rawItem) : rawItem;
+
+    modalBody.innerHTML = treasuryEntryFormHtml(formItem);
+    const initialKind = formItem.movementKind === 'transfer' || formItem.transferGroupId
+      ? 'transfer'
+      : formItem.movementKind === 'exit' || Number(formItem.exit || 0) > 0
+        ? 'exit'
+        : 'entry';
+    const operationTitle = initialKind === 'entry' ? 'entrada' : initialKind === 'exit' ? 'saída' : 'transferência';
+    showModal(`${id ? 'Editar' : 'Nova'} ${operationTitle}`);
     const form = document.getElementById('treasuryEntryForm');
+    bindMovementKindController(form);
     bindInlineCategoryManager(form);
-    const attachmentPicker = bindTreasuryAttachmentPicker(form, item.attachments || [], { toast });
+    const attachmentPicker = bindTreasuryAttachmentPicker(form, formItem.attachments || [], { toast });
 
     form.onsubmit = event => {
       event.preventDefault();
@@ -240,33 +273,93 @@ export function createTreasuryEntryManager(context) {
         submit.textContent = 'Salvando…';
       }
 
-      try {
-        const { data, statusMode } = normalizeTreasuryEntryPayload(
-          Object.fromEntries(new FormData(form).entries()),
-          { defaultAccountId: treasury.accounts()[0]?.id || '' }
-        );
-        data.status = resolveTreasuryEntryStatus({
-          date: data.date,
-          entry: data.entry,
-          statusMode
-        });
-        data.attachments = attachmentPicker.getAttachments();
+      const snapshot = collection.map(entry => JSON.parse(JSON.stringify(entry)));
 
-        const original = id ? JSON.parse(JSON.stringify(item)) : null;
-        const created = id ? null : { id: uid('t'), ...data };
-        if (id) Object.assign(item, data);
-        else collection.push(created);
+      try {
+        ensureTransferCategory();
+        const normalized = normalizeTreasuryEntryPayload(
+          Object.fromEntries(new FormData(form).entries()),
+          { defaultAccountId: treasury.accounts()[0]?.id || '', transferCategory: TRANSFER_CATEGORY }
+        );
+        const attachments = attachmentPicker.getAttachments();
+        const kind = normalized.movementKind;
+        const currentIds = id
+          ? (editingTransfer ? editingTransferEntries.map(entry => entry.id) : [rawItem.id])
+          : [];
+
+        if (currentIds.length) {
+          currentIds.forEach(currentId => {
+            const index = collection.findIndex(entry => entry.id === currentId);
+            if (index >= 0) collection.splice(index, 1);
+          });
+        }
+
+        if (kind === 'transfer') {
+          const data = normalized.data;
+          const transferGroupId = editingTransfer ? String(rawItem.transferGroupId) : uid('tt');
+          const { source: existingSource, destination: existingDestination } = resolveTransferParts(editingTransferEntries);
+          const transferAmount = Number(data.transferAmount || 0);
+          const status = normalized.statusMode === 'Efetivado'
+            ? 'Efetivado'
+            : resolveTreasuryEntryStatus({
+              date: data.date,
+              entry: 0,
+              statusMode: normalized.statusMode
+            });
+          const baseDescription = String(data.description || '').trim() || 'Transferência entre contas';
+          const shared = {
+            date: data.date,
+            category: data.category || TRANSFER_CATEGORY,
+            notes: String(data.notes || '').trim(),
+            status,
+            transferGroupId,
+            movementKind: 'transfer',
+            transferLabel: baseDescription,
+            sourceAccountId: data.sourceAccountId,
+            destinationAccountId: data.destinationAccountId,
+            transferAmount,
+            memberId: '',
+            memberIds: [],
+            coveredMonths: []
+          };
+
+          collection.push({
+            id: existingSource?.id || uid('t'),
+            ...shared,
+            accountId: data.sourceAccountId,
+            description: baseDescription,
+            entry: 0,
+            exit: transferAmount,
+            transferRole: 'source',
+            attachments
+          });
+          collection.push({
+            id: existingDestination?.id || uid('t'),
+            ...shared,
+            accountId: data.destinationAccountId,
+            description: baseDescription,
+            entry: transferAmount,
+            exit: 0,
+            transferRole: 'destination',
+            attachments: []
+          });
+        } else {
+          const data = normalized.data;
+          data.status = resolveTreasuryEntryStatus({
+            date: data.date,
+            entry: data.entry,
+            statusMode: normalized.statusMode
+          });
+          data.attachments = attachmentPicker.getAttachments();
+          data.movementKind = kind;
+          collection.push({ id: id && !editingTransfer ? rawItem.id : uid('t'), ...data });
+        }
 
         try {
-          persist(id ? 'Movimentação atualizada.' : 'Movimentação adicionada.');
+          const operationLabel = kind === 'entry' ? 'Entrada' : kind === 'exit' ? 'Saída' : 'Transferência';
+          persist(`${operationLabel} ${id ? 'atualizada' : 'adicionada'}.`);
         } catch (error) {
-          if (id && original) {
-            Object.keys(item).forEach(key => delete item[key]);
-            Object.assign(item, original);
-          } else if (created) {
-            const createdIndex = collection.indexOf(created);
-            if (createdIndex >= 0) collection.splice(createdIndex, 1);
-          }
+          collection.splice(0, collection.length, ...snapshot);
           if (error?.name === 'QuotaExceededError') {
             throw new Error('Não há espaço local suficiente para estes anexos. Remova um arquivo ou reduza o tamanho antes de salvar.');
           }
@@ -277,11 +370,17 @@ export function createTreasuryEntryManager(context) {
         else renderCurrentView();
         restoreInterfaceContext?.(interfaceSnapshot, { restoreFocus: false });
       } catch (error) {
+        collection.splice(0, collection.length, ...snapshot);
         toast(error.message || 'Não foi possível salvar a movimentação.');
       } finally {
         if (submit) {
           submit.disabled = false;
-          submit.textContent = id ? 'Salvar movimentação' : 'Adicionar movimentação';
+          const kind = form.elements.movementKind?.value || 'entry';
+          submit.textContent = kind === 'entry'
+            ? (id ? 'Salvar entrada' : 'Adicionar entrada')
+            : kind === 'exit'
+              ? (id ? 'Salvar saída' : 'Adicionar saída')
+              : (id ? 'Salvar transferência' : 'Adicionar transferência');
         }
       }
     };

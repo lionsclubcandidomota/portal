@@ -298,23 +298,35 @@ export function createEntityFormsController({
       return;
     }
 
+    const isTransfer = type === 'treasury' && item.transferGroupId;
     const labels = {
       birthday: 'aniversariante',
-      treasury: 'lançamento',
+      treasury: isTransfer ? 'transferência' : 'lançamento',
       event: 'evento',
       meeting: 'reunião',
       notice: 'aviso'
     };
-    const name = item.name || item.theme || item.title || item.description || 'este registro';
+    const name = item.name || item.theme || item.title || item.transferLabel || item.description || 'este registro';
     const approved = await confirmation.askConfirmation({
       title: `Excluir ${labels[type] || 'registro'}?`,
       message: `Você está prestes a excluir “${name}”. A exclusão ficará pendente até a próxima publicação e poderá ser desfeita usando “Descartar alterações”.`,
       icon: 'trash',
-      confirmText: 'Excluir registro',
+      confirmText: isTransfer ? 'Excluir transferência' : 'Excluir registro',
       tone: 'danger'
     });
 
     if (!approved) return;
+
+    if (isTransfer) {
+      const groupId = String(item.transferGroupId);
+      for (let index = collection.length - 1; index >= 0; index -= 1) {
+        if (String(collection[index].transferGroupId || '') === groupId) collection.splice(index, 1);
+      }
+      persist('Transferência excluída.');
+      renderCurrentView();
+      return;
+    }
+
     const index = collection.findIndex(entry => entry.id === id);
     if (index >= 0) {
       collection.splice(index, 1);

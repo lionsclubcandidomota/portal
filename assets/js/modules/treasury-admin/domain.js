@@ -99,20 +99,74 @@ Obrigado(a)!
 Tesouraria do ${clubName}`;
 }
 
-export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '' } = {}) {
+export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '', transferCategory = 'Transferência entre contas' } = {}) {
   const data = { ...raw };
-  data.category = String(data.category || '').trim();
-  data.entry = Number(data.entry || 0);
-  data.exit = Number(data.exit || 0);
-  data.accountId = String(data.accountId || defaultAccountId || '').trim();
+  const rawKind = String(data.movementKind || '').trim();
+  const legacyEntry = Number(data.entry || 0);
+  const legacyExit = Number(data.exit || 0);
+  const legacyPayload = !rawKind && !Object.prototype.hasOwnProperty.call(data, 'amount');
+  if (legacyPayload) {
+    if (!legacyEntry && !legacyExit) throw new Error('Informe um valor de entrada ou saída.');
+    if (legacyEntry && legacyExit) throw new Error('Informe apenas entrada ou saída, não os dois valores.');
+  }
+  const movementKind = ['entry', 'exit', 'transfer'].includes(rawKind)
+    ? rawKind
+    : (rawKind === 'movement' || !rawKind)
+      ? (legacyExit > 0 && legacyEntry <= 0 ? 'exit' : 'entry')
+      : 'entry';
   const statusMode = String(data.statusMode || 'Programado').trim();
   delete data.statusMode;
 
-  if (!data.entry && !data.exit) throw new Error('Informe um valor de entrada ou saída.');
-  if (data.entry && data.exit) throw new Error('Informe apenas entrada ou saída, não os dois valores.');
-  if (!data.category) throw new Error('Selecione uma categoria.');
+  if (movementKind === 'transfer') {
+    const sourceAccountId = String(data.sourceAccountId || defaultAccountId || '').trim();
+    const destinationAccountId = String(data.destinationAccountId || '').trim();
+    const transferAmount = Number(data.transferAmount || data.amount || 0);
+    const description = String(data.description || '').trim();
+    const notes = String(data.notes || '').trim();
+    const date = String(data.date || '').trim();
 
-  return { data, statusMode };
+    if (!sourceAccountId) throw new Error('Selecione a conta de origem da transferência.');
+    if (!destinationAccountId) throw new Error('Selecione a conta de destino da transferência.');
+    if (sourceAccountId === destinationAccountId) throw new Error('Escolha contas diferentes para origem e destino da transferência.');
+    if (!(transferAmount > 0)) throw new Error('Informe o valor da transferência.');
+
+    return {
+      movementKind,
+      statusMode,
+      data: {
+        movementKind,
+        date,
+        description,
+        notes,
+        category: transferCategory,
+        sourceAccountId,
+        destinationAccountId,
+        transferAmount
+      }
+    };
+  }
+
+  const amount = Number(data.amount || data.entry || data.exit || 0);
+  const category = String(data.category || '').trim();
+  const accountId = String(data.accountId || defaultAccountId || '').trim();
+
+  if (!accountId) throw new Error(`Selecione a conta ${movementKind === 'entry' ? 'que receberá a entrada' : 'de onde sairá o valor'}.`);
+  if (!(amount > 0)) throw new Error(`Informe o valor da ${movementKind === 'entry' ? 'entrada' : 'saída'}.`);
+  if (!category) throw new Error('Selecione uma categoria.');
+
+  return {
+    movementKind,
+    statusMode,
+    data: {
+      ...data,
+      movementKind,
+      accountId,
+      category,
+      amount,
+      entry: movementKind === 'entry' ? amount : 0,
+      exit: movementKind === 'exit' ? amount : 0
+    }
+  };
 }
 
 export function resolveTreasuryEntryStatus({ date = '', entry = 0, statusMode = 'Programado' } = {}, now = new Date()) {

@@ -69,8 +69,14 @@ export function bindTreasuryOverview({ root, treasury, helpers, rerender }) {
     });
   });
 
-  root.querySelectorAll('[data-new="treasury"]').forEach(button => {
-    button.addEventListener('click', () => ensureAdmin(() => openForm('treasury')));
+  root.querySelectorAll('[data-new-treasury-kind]').forEach(button => {
+    button.addEventListener('click', () => {
+      const movementKind = button.dataset.newTreasuryKind || 'entry';
+      const preset = movementKind === 'transfer'
+        ? { movementKind, category: 'Transferência entre contas', description: 'Transferência entre contas' }
+        : { movementKind };
+      ensureAdmin(() => openForm('treasury', preset));
+    });
   });
 
   root.querySelectorAll(SENSITIVE_MONEY_SELECTOR)
