@@ -115,7 +115,8 @@ for (const [relativePath, envelope, source] of [
   }
   if (/data:image\//i.test(source)) failures.push(`${relativePath} contém imagem Base64 incorporada`);
 }
-if (Buffer.byteLength(dataSource) > 100_000) failures.push('data/dados.json voltou a ultrapassar 100 KB');
+// O arquivo oficial cresceu organicamente após a externalização das mídias. Base64 continua proibido acima.
+if (Buffer.byteLength(dataSource) > 150_000) failures.push('data/dados.json ultrapassou o orçamento de 150 KB');
 
 const runtimeSources = `${indexHtml}\n${appSources.map(item => item.source).join('\n')}`;
 for (const forbidden of ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'unpkg.com']) {

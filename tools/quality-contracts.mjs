@@ -1,8 +1,8 @@
 export const performanceBudgets = Object.freeze({
   staticJavaScriptBytes: 315_000,
-  cssBytes: 435_000,
+  cssBytes: 430_000,
   optimizedLogoBytes: 60_000,
-  criticalAssetsBytes: 785_000
+  criticalAssetsBytes: 775_000
 });
 
 export const lazyOnlyModules = Object.freeze([

@@ -8,6 +8,8 @@ import { bindTreasuryOverview } from './view-overview.js?v=6.46.7';
 import { bindMembershipSection } from './view-memberships.js?v=6.46.7';
 import { bindMutualSection } from './view-mutuals.js?v=6.46.7';
 import { bindTreasuryCharts } from './view-charts.js?v=6.46.7';
+import { financialTreasuryItems } from './movement-domain.js';
+import { consolidateTreasuryMovements } from './movement-transfer-domain.js';
 
 export function renderTreasury(state, treasury, helpers) {
   const { root, isTreasuryView } = helpers;
@@ -18,7 +20,11 @@ export function renderTreasury(state, treasury, helpers) {
   treasury.chartToken = treasuryChartToken;
 
   const periodItems = treasury.itemsForPeriod();
-  const totals = sumTreasury(periodItems);
+  const financialPeriodItems = financialTreasuryItems(periodItems);
+  const logicalPeriodItems = consolidateTreasuryMovements(periodItems);
+  const totals = sumTreasury(financialPeriodItems);
+  totals.realizedCount = logicalPeriodItems.filter(item => !treasury.isProgrammed(item)).length;
+  totals.programmedCount = logicalPeriodItems.filter(item => treasury.isProgrammed(item)).length;
   const accountSummaries = treasury.accountSummaries(periodItems);
   const membershipModel = buildMembershipViewModel(state, treasury);
   const mutualModel = buildMutualViewModel(state, treasury);
@@ -45,7 +51,7 @@ export function renderTreasury(state, treasury, helpers) {
     totals,
     accountSummaries,
     categories,
-    periodItems,
+    periodItems: financialPeriodItems,
     isTreasuryView
   });
 }

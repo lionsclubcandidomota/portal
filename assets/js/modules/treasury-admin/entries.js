@@ -1,5 +1,5 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
-import { normalizeTreasuryEntryPayload, resolveTreasuryEntryStatus } from './domain.js';
+import { normalizeTreasuryEntryPayload, resolveTreasuryEntryStatus, resolveTreasuryTransferStatus } from './domain.js';
 import { bindTreasuryAttachmentPicker, renderTreasuryAttachmentPicker } from './attachments.js';
 import { uiIcon } from '../visual-helpers.js?v=6.46.7';
 import {
@@ -7,6 +7,12 @@ import {
   bindTreasuryMovementKindController,
   buildTreasuryEntryFormHtml
 } from './entry-form-ui.js';
+import {
+  TREASURY_MOVEMENT_KIND,
+  treasuryMovementKind,
+  treasuryMovementLabel
+} from '../treasury/movement-domain.js';
+import { buildTreasuryTransferPair, resolveTransferParts, transferEntriesFor, treasuryOperationEntryIds } from '../treasury/movement-transfer-domain.js';
 
 export function createTreasuryEntryManager(context) {
   const {
@@ -36,19 +42,9 @@ export function createTreasuryEntryManager(context) {
 
   const categoryOptions = selected => `<option value="">Selecione uma categoria</option>${treasury.categories().map(category => `<option value="${escapeHtml(category)}" ${normalize(selected) === normalize(category) ? 'selected' : ''}>${escapeHtml(category)}</option>`).join('')}`;
 
-  const transferEntriesFor = transferGroupId => state().treasury.filter(entry => String(entry.transferGroupId || '') === String(transferGroupId || ''));
-
-  const resolveTransferParts = entries => {
-    const list = Array.isArray(entries) ? entries : [];
-    return {
-      source: list.find(entry => entry.transferRole === 'source' || Number(entry.exit || 0) > 0) || list[0] || null,
-      destination: list.find(entry => entry.transferRole === 'destination' || Number(entry.entry || 0) > 0) || list[1] || list[0] || null
-    };
-  };
-
   const buildTransferFormItem = rawItem => {
     const groupId = String(rawItem?.transferGroupId || rawItem?.id || '');
-    const entries = transferEntriesFor(groupId);
+    const entries = transferEntriesFor(state().treasury, groupId);
     const { source, destination } = resolveTransferParts(entries);
     const reference = source || destination || rawItem || {};
     const statusMode = treasury.isProgrammed(reference) ? 'Programado' : 'Efetivado';
@@ -56,7 +52,7 @@ export function createTreasuryEntryManager(context) {
     return {
       id: groupId,
       transferGroupId: groupId,
-      movementKind: 'transfer',
+      movementKind: TREASURY_MOVEMENT_KIND.TRANSFER,
       date: source?.date || destination?.date || rawItem?.date || '',
       sourceAccountId: source?.sourceAccountId || source?.accountId || rawItem?.sourceAccountId || '',
       destinationAccountId: source?.destinationAccountId || destination?.accountId || rawItem?.destinationAccountId || '',
@@ -249,16 +245,12 @@ export function createTreasuryEntryManager(context) {
     }
 
     const editingTransfer = Boolean(rawItem?.transferGroupId);
-    const editingTransferEntries = editingTransfer ? transferEntriesFor(rawItem.transferGroupId) : [];
+    const editingTransferEntries = editingTransfer ? transferEntriesFor(state().treasury, rawItem.transferGroupId) : [];
     const formItem = editingTransfer ? buildTransferFormItem(rawItem) : rawItem;
 
     modalBody.innerHTML = treasuryEntryFormHtml(formItem);
-    const initialKind = formItem.movementKind === 'transfer' || formItem.transferGroupId
-      ? 'transfer'
-      : formItem.movementKind === 'exit' || Number(formItem.exit || 0) > 0
-        ? 'exit'
-        : 'entry';
-    const operationTitle = initialKind === 'entry' ? 'entrada' : initialKind === 'exit' ? 'saída' : 'transferência';
+    const initialKind = treasuryMovementKind(formItem);
+    const operationTitle = treasuryMovementLabel(initialKind).toLocaleLowerCase('pt-BR');
     showModal(`${id ? 'Editar' : 'Nova'} ${operationTitle}`);
     const form = document.getElementById('treasuryEntryForm');
     bindMovementKindController(form);
@@ -284,7 +276,7 @@ export function createTreasuryEntryManager(context) {
         const attachments = attachmentPicker.getAttachments();
         const kind = normalized.movementKind;
         const currentIds = id
-          ? (editingTransfer ? editingTransferEntries.map(entry => entry.id) : [rawItem.id])
+          ? treasuryOperationEntryIds(collection, rawItem)
           : [];
 
         if (currentIds.length) {
@@ -294,55 +286,31 @@ export function createTreasuryEntryManager(context) {
           });
         }
 
-        if (kind === 'transfer') {
+        if (kind === TREASURY_MOVEMENT_KIND.TRANSFER) {
           const data = normalized.data;
           const transferGroupId = editingTransfer ? String(rawItem.transferGroupId) : uid('tt');
           const { source: existingSource, destination: existingDestination } = resolveTransferParts(editingTransferEntries);
           const transferAmount = Number(data.transferAmount || 0);
-          const status = normalized.statusMode === 'Efetivado'
-            ? 'Efetivado'
-            : resolveTreasuryEntryStatus({
-              date: data.date,
-              entry: 0,
-              statusMode: normalized.statusMode
-            });
+          const status = resolveTreasuryTransferStatus({
+            date: data.date,
+            statusMode: normalized.statusMode
+          });
           const baseDescription = String(data.description || '').trim() || 'Transferência entre contas';
-          const shared = {
+          const pair = buildTreasuryTransferPair({
+            transferGroupId,
+            sourceEntryId: existingSource?.id || '',
+            destinationEntryId: existingDestination?.id || '',
             date: data.date,
             category: data.category || TRANSFER_CATEGORY,
-            notes: String(data.notes || '').trim(),
+            notes: data.notes,
             status,
-            transferGroupId,
-            movementKind: 'transfer',
-            transferLabel: baseDescription,
+            description: baseDescription,
             sourceAccountId: data.sourceAccountId,
             destinationAccountId: data.destinationAccountId,
             transferAmount,
-            memberId: '',
-            memberIds: [],
-            coveredMonths: []
-          };
-
-          collection.push({
-            id: existingSource?.id || uid('t'),
-            ...shared,
-            accountId: data.sourceAccountId,
-            description: baseDescription,
-            entry: 0,
-            exit: transferAmount,
-            transferRole: 'source',
             attachments
-          });
-          collection.push({
-            id: existingDestination?.id || uid('t'),
-            ...shared,
-            accountId: data.destinationAccountId,
-            description: baseDescription,
-            entry: transferAmount,
-            exit: 0,
-            transferRole: 'destination',
-            attachments: []
-          });
+          }, { createId: () => uid('t') });
+          collection.push(...pair);
         } else {
           const data = normalized.data;
           data.status = resolveTreasuryEntryStatus({
@@ -356,7 +324,7 @@ export function createTreasuryEntryManager(context) {
         }
 
         try {
-          const operationLabel = kind === 'entry' ? 'Entrada' : kind === 'exit' ? 'Saída' : 'Transferência';
+          const operationLabel = treasuryMovementLabel(kind);
           persist(`${operationLabel} ${id ? 'atualizada' : 'adicionada'}.`);
         } catch (error) {
           collection.splice(0, collection.length, ...snapshot);
@@ -375,12 +343,9 @@ export function createTreasuryEntryManager(context) {
       } finally {
         if (submit) {
           submit.disabled = false;
-          const kind = form.elements.movementKind?.value || 'entry';
-          submit.textContent = kind === 'entry'
-            ? (id ? 'Salvar entrada' : 'Adicionar entrada')
-            : kind === 'exit'
-              ? (id ? 'Salvar saída' : 'Adicionar saída')
-              : (id ? 'Salvar transferência' : 'Adicionar transferência');
+          const kind = treasuryMovementKind({ movementKind: form.elements.movementKind?.value || TREASURY_MOVEMENT_KIND.ENTRY });
+          const operationLabel = treasuryMovementLabel(kind).toLocaleLowerCase('pt-BR');
+          submit.textContent = `${id ? 'Salvar' : 'Adicionar'} ${operationLabel}`;
         }
       }
     };

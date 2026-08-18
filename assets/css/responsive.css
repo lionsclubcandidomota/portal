@@ -5,7 +5,6 @@
   .app-shell { display: block; }
   .main-content { margin-left: 0; }
   .sidebar {
-    width: min(86vw,320px);
     transform: translateX(-105%);
     transition: transform var(--transition);
     box-shadow: var(--shadow-lg);
@@ -17,13 +16,7 @@
   
   .admin-syncbar { width: calc(100% - 30px); margin: 14px 15px 0; }
   .mobile-bottom-nav {
-    left: 12px; right: 12px; bottom: max(10px,env(safe-area-inset-bottom));
-    width: auto;
     padding: 7px;
-    border: 1px solid rgba(201,213,227,.9);
-    border-radius: 20px;
-    background: rgba(255,255,255,.93);
-    box-shadow: 0 18px 48px rgba(16,32,56,.18);
     backdrop-filter: blur(18px) saturate(150%);
   }
   .mobile-bottom-nav button { border-radius: 14px; }

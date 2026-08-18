@@ -13,6 +13,10 @@ import {
   mutualEventMemberIds,
   normalizeMutualGroup
 } from './domain.js?v=6.46.7';
+import {
+  financialTreasuryItems,
+  uniqueTreasuryMovementCount
+} from './movement-domain.js?v=6.46.7';
 
 function accountSummaries(state) {
   const storedAccounts = Array.isArray(state?.treasuryAccounts) ? state.treasuryAccounts : [];
@@ -80,9 +84,12 @@ export function buildTreasuryDashboardSummary(state) {
       })
   ));
   const mutualPaidCharges = mutualCharges.filter(charge => charge.payment);
+  const finance = sumTreasury(financialTreasuryItems(movements));
+  finance.realizedCount = uniqueTreasuryMovementCount(movements.filter(item => !status.isProgrammed(item)));
+  finance.programmedCount = uniqueTreasuryMovementCount(movements.filter(item => status.isProgrammed(item)));
 
   return Object.freeze({
-    finance: sumTreasury(movements),
+    finance,
     currentMembershipMonth,
     currentMembershipLabel: monthLabel(currentMembershipMonth),
     activeMembersCount: activeMembers.length,
@@ -97,7 +104,7 @@ export function buildTreasuryDashboardSummary(state) {
       0
     ),
     mutualActiveGroupCount: normalizedGroups.filter(group => mutualActiveMemberIds(group).length > 0).length,
-    overdueMovementCount: movements.filter(item => status.isOverdue(item)).length,
+    overdueMovementCount: uniqueTreasuryMovementCount(movements.filter(item => status.isOverdue(item))),
     activeAccountCount: accountSummaries(state).filter(account => account.active !== false).length
   });
 }

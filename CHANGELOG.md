@@ -1,4 +1,12 @@
 ## v6.46.7 — Refatoração técnica, etapa 4 — estabilização final
+
+## Refatoração pós-movimentações — Etapa 1
+
+- Consolidação conservadora do CSS após os fluxos de Entrada, Saída e Transferência.
+- Remoção de declarações mortas e recuperação de margem no bundle.
+- Novos limites de qualidade para impedir regressão de tamanho do CSS.
+- Portão de release dos dados ajustado para 150 KB; imagens Base64 continuam proibidas separadamente.
+
 - centraliza os contratos de orçamento e fronteiras de lazy loading usados pelas auditorias técnicas;
 - adiciona `audit:lazy` ao pipeline oficial, validando imports dinâmicos versionados, pontos de entrada lazy ativos e módulos pesados fora do bootstrap;
 - compartilha a leitura do grafo de módulos entre as auditorias, evitando divergência entre importações estáticas, reexports e imports dinâmicos;
@@ -334,3 +342,23 @@
 - Recalibra os limites impeditivos para 350 seletores redefinidos, 450 sobrescritas, fonte máxima de 38 KB e bundle máximo de 435 KB.
 - Preserva a ordem histórica das 33 fontes CSS e não altera regras funcionais, dados ou permissões.
 
+
+## 6.46.7 — Refatoração pós-movimentações, etapa 2
+
+- Centraliza Entrada, Saída e Transferência em um domínio financeiro único.
+- Consolida os dois lançamentos internos de uma transferência como uma operação no histórico e na paginação.
+- Adiciona filtro próprio de Transferências e impede que transferências apareçam nos filtros de Entradas/Saídas.
+- Mantém transferências nos saldos individuais das contas, mas as exclui das receitas, despesas e resultado financeiro geral.
+- Preserva compatibilidade com movimentações históricas sem `movementKind`.
+- Adiciona regressões específicas para classificação, pareamento e neutralidade financeira das transferências.
+
+## 6.46.7 — Refatoração pós-movimentações, etapa 3
+
+- Fecha o ciclo de estabilização de Entrada, Saída e Transferência com regressões de criação, edição, exclusão lógica, status e saldos por conta.
+- Corrige uma dependência incorreta no módulo lazy de formulários administrativos que poderia impedir a abertura de ações da Tesouraria em runtime.
+- Centraliza a construção do par contábil da transferência, preservando os IDs de origem/destino durante edições e mantendo anexos somente no lançamento de origem.
+- Centraliza a identificação dos registros físicos pertencentes a uma operação lógica para edição e exclusão atômica da transferência.
+- Adiciona rollback na exclusão de transferência quando a persistência falha, evitando remoção parcial do par origem/destino.
+- Formaliza os status de transferência: Efetivado para operações concluídas, Programado para futuras e Vencida quando uma programação passa da data.
+- Mantém transferências neutras no resultado geral do clube e ativas apenas nos saldos atual/projetado das contas envolvidas.
+- Amplia a suíte para 374 regressões sem alterar o esquema 12 nem os arquivos oficiais de dados.

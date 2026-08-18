@@ -1,5 +1,6 @@
 import { uiIcon } from '../visual-helpers.js?v=6.46.7';
 import { memberCanJoinMutual, memberIsActive, memberIsInactive, memberIsMutual, memberStatusKey, memberStatusLabel } from '../../core/portal-members.js?v=6.46.7';
+import { TREASURY_TRANSFER_CATEGORY, isTreasuryTransfer } from './movement-domain.js';
 
 export const DEFAULT_ACCOUNTS = Object.freeze([
   { id: 'acc-current', name: 'Conta corrente', type: 'Conta corrente', initialBalance: 0, active: true },
@@ -18,7 +19,7 @@ export const DEFAULT_CATEGORIES = Object.freeze([
   'Combustível',
   'Taxa bancária',
   'Doação',
-  'Transferência entre contas',
+  TREASURY_TRANSFER_CATEGORY,
   'Outros'
 ]);
 
@@ -292,10 +293,13 @@ export function createStatusHelpers({ parseDate, todayStart }) {
     const raw = String(item?.status || '').trim();
     const normalizedStatus = raw.toLocaleLowerCase('pt-BR');
     if (normalizedStatus === 'realizado') {
+      if (isTreasuryTransfer(item)) return 'Efetivado';
       return Number(item?.entry || 0) > 0 ? 'Recebido' : 'Pago';
     }
     if (raw) return raw;
-    return isProgrammed(item) ? 'Programado' : (Number(item?.entry || 0) > 0 ? 'Recebido' : 'Pago');
+    if (isProgrammed(item)) return 'Programado';
+    if (isTreasuryTransfer(item)) return 'Efetivado';
+    return Number(item?.entry || 0) > 0 ? 'Recebido' : 'Pago';
   };
 
   const statusClass = item => isOverdue(item)

@@ -8,6 +8,8 @@ import {
 } from '../utils.js';
 import { setupMarkdownEditors } from './markdown.js';
 import { uiIcon } from './visual-helpers.js?v=6.46.7';
+import { isTreasuryTransfer } from './treasury/movement-domain.js?v=6.46.7';
+import { treasuryOperationEntryIds } from './treasury/movement-transfer-domain.js?v=6.46.7';
 import {
   entityFormHtml,
   normalizeLocationData,
@@ -298,7 +300,7 @@ export function createEntityFormsController({
       return;
     }
 
-    const isTransfer = type === 'treasury' && item.transferGroupId;
+    const isTransfer = type === 'treasury' && isTreasuryTransfer(item);
     const labels = {
       birthday: 'aniversariante',
       treasury: isTransfer ? 'transferência' : 'lançamento',
@@ -318,11 +320,18 @@ export function createEntityFormsController({
     if (!approved) return;
 
     if (isTransfer) {
-      const groupId = String(item.transferGroupId);
+      const transferIds = new Set(treasuryOperationEntryIds(collection, item));
+      const snapshot = collection.map(entry => ({ ...entry }));
       for (let index = collection.length - 1; index >= 0; index -= 1) {
-        if (String(collection[index].transferGroupId || '') === groupId) collection.splice(index, 1);
+        if (transferIds.has(collection[index].id)) collection.splice(index, 1);
       }
-      persist('Transferência excluída.');
+      try {
+        persist('Transferência excluída.');
+      } catch (error) {
+        collection.splice(0, collection.length, ...snapshot);
+        toast(error.message || 'Não foi possível excluir a transferência.');
+        return;
+      }
       renderCurrentView();
       return;
     }

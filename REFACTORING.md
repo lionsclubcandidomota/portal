@@ -1,5 +1,13 @@
 # Registro técnico — Portal v6.46.7
 
+## Consolidação pós-movimentações — Etapa 1 (CSS)
+
+- Removidas 700 declarações CSS totalmente sobrescritas pelo mesmo seletor/contexto/propriedade.
+- Bundle CSS reduzido de 442.072 para 425.011 bytes sem alteração funcional.
+- Orçamento preventivo reduzido para 430.000 bytes de CSS e 775.000 bytes de ativos críticos.
+- Dados oficiais preservados byte a byte.
+
+
 ## Ciclos concluídos
 
 A refatoração estrutural das versões 6.29.0 a 6.36.0 permanece concluída. O ciclo funcional das versões 6.37.0 a 6.44.0 também está encerrado, com todas as oito etapas entregues.
@@ -197,3 +205,36 @@ O módulo `integrated-homologation.mjs` valida o esquema, referências, período
 - Novas evoluções devem respeitar os portões de CSS, desempenho e lazy loading antes de ampliar qualquer orçamento.
 - Um módulo pesado só deve voltar ao bootstrap quando houver necessidade funcional mensurável e justificativa registrada.
 - Alterações estruturais futuras devem ser feitas em ciclos curtos, preservando os contratos definidos nesta estabilização.
+
+## v6.46.7 — refatoração pós-movimentações, etapa 2
+
+### Domínio unificado de Entrada, Saída e Transferência
+
+- `treasury/movement-domain.js` passa a ser a fonte única para identificar o tipo lógico da operação, seu valor, rótulo, chave lógica e separação entre resultado financeiro e transferência interna.
+- `treasury/movement-transfer-domain.js` concentra o pareamento dos dois lançamentos contábeis de uma transferência e sua consolidação em uma única operação de interface.
+- Formulário, normalização, edição, exclusão, histórico e status passam a reutilizar essas regras em vez de inferências locais repetidas.
+- Lançamentos antigos sem `movementKind` continuam classificados por `entry`/`exit`, preservando compatibilidade com o histórico existente.
+- Transferências continuam movimentando corretamente o saldo de cada conta, porém deixam de inflar receitas, despesas, gráficos de fluxo e resultado financeiro geral.
+- O Histórico Financeiro ganha filtro exclusivo de Transferências; filtros de Entradas e Saídas não incluem mais os lados contábeis internos da transferência.
+- Paginação, indicadores e quantidade de operações tratam o par origem/destino como uma única movimentação lógica.
+- O domínio básico permanece pequeno no bootstrap e o pareamento completo fica junto da Tesouraria carregada sob demanda.
+- Novos testes protegem classificação, pareamento, neutralidade financeira e compatibilidade das três operações.
+
+## v6.46.7 — refatoração pós-movimentações, etapa 3
+
+### Estabilização e integridade das movimentações
+
+- A etapa encerra o ciclo iniciado após a criação das três operações explícitas: Entrada, Saída e Transferência.
+- `treasury/movement-transfer-domain.js` passa a construir o par contábil da transferência e a resolver todos os IDs físicos pertencentes à operação lógica.
+- Edição de transferência preserva os IDs dos dois lados quando o par já existe; criação mantém IDs distintos e um mesmo `transferGroupId`.
+- Exclusão reutiliza a mesma resolução lógica e remove origem/destino em conjunto. Se `persist()` falhar, o estado anterior é restaurado antes de informar o erro.
+- `treasury-admin/domain.js` centraliza o status da transferência para diferenciar efetivada, programada e vencida sem tratar o débito/crédito interno como receita ou despesa.
+- Foi corrigido o import de `transferEntriesFor` no módulo lazy `entity-forms.js`; uma regressão agora importa esse módulo diretamente para impedir falhas semelhantes fora do bootstrap.
+- As regressões verificam conta de origem diferente da conta de destino, valor obrigatório, simetria do par, preservação de IDs, anexos, neutralidade financeira, saldos atuais e projetados e consolidação em uma única operação de interface.
+- Nenhum orçamento de CSS ou JavaScript foi ampliado e não há migração de dados nesta etapa.
+
+### Fechamento do ciclo
+
+- Entrada, Saída e Transferência ficam estabilizadas como operações lógicas distintas.
+- Novas evoluções na Tesouraria devem reutilizar `movement-domain.js` e `movement-transfer-domain.js`, evitando voltar a inferir tipos diretamente pelos campos `entry`/`exit` fora da camada de compatibilidade.
+- Alterações futuras em transferências devem preservar a regra contábil: dois lançamentos internos para os saldos das contas, uma operação para a interface e zero impacto em receitas/despesas gerais.

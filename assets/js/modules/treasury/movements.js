@@ -8,6 +8,17 @@ import {
 import { timelineHeading } from '../timeline.js';
 import { renderHtmlIfChanged, uiIcon } from '../visual-helpers.js?v=6.46.7';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
+import {
+  TREASURY_MOVEMENT_KIND,
+  financialTreasuryItems,
+  isTreasuryEntry,
+  isTreasuryExit,
+  isTreasuryTransfer,
+  treasuryMovementAmount,
+  treasuryMovementKind,
+  treasuryMovementLabel
+} from './movement-domain.js';
+import { consolidateTreasuryMovements } from './movement-transfer-domain.js';
 
 
 function attachmentIcon(type = '') {
@@ -34,53 +45,18 @@ function treasuryAttachmentGallery(item) {
 
 export function treasuryCards(items, emptyText, treasury, helpers) {
   const { empty, rowActions } = helpers;
+  const logicalItems = consolidateTreasuryMovements(items);
 
-  if (!items.length) {
+  if (!logicalItems.length) {
     return `<div class="mobile-card-empty">${empty('money', emptyText)}</div>`;
   }
 
-  const displayItems = [];
-  const seenTransfers = new Set();
-
-  items.forEach(item => {
-    const groupId = String(item.transferGroupId || '').trim();
-    if (!groupId) {
-      displayItems.push(item);
-      return;
-    }
-    if (seenTransfers.has(groupId)) return;
-    seenTransfers.add(groupId);
-
-    const groupItems = items.filter(candidate => String(candidate.transferGroupId || '').trim() === groupId);
-    const source = groupItems.find(candidate => candidate.transferRole === 'source' || Number(candidate.exit || 0) > 0) || groupItems[0] || item;
-    const destination = groupItems.find(candidate => candidate.transferRole === 'destination' || Number(candidate.entry || 0) > 0) || groupItems[1] || source;
-    const transferAmount = Number(source.transferAmount || destination.transferAmount || source.exit || destination.entry || 0);
-
-    displayItems.push({
-      ...source,
-      id: source.id || destination.id || item.id,
-      description: source.transferLabel || source.description || 'Transferência entre contas',
-      entry: 0,
-      exit: 0,
-      transferAmount,
-      transferRole: 'paired',
-      sourceAccountId: source.sourceAccountId || source.accountId || '',
-      destinationAccountId: source.destinationAccountId || destination.accountId || '',
-      notes: source.notes || destination.notes || '',
-      attachments: Array.isArray(source.attachments) && source.attachments.length
-        ? source.attachments
-        : (Array.isArray(destination.attachments) ? destination.attachments : [])
-    });
-  });
-
-  return displayItems.map(item => {
-    const isTransfer = Boolean(item.transferGroupId);
-    const transferAmount = Number(item.transferAmount || item.exit || item.entry || 0);
-    const value = isTransfer
-      ? money.format(transferAmount)
-      : (item.entry ? money.format(item.entry) : money.format(item.exit || 0));
-    const valueType = isTransfer ? 'transfer' : (item.entry ? 'entry' : 'exit');
-    const account = !isTransfer ? treasury.accountFor(item) : null;
+  return logicalItems.map(item => {
+    const kind = treasuryMovementKind(item);
+    const isTransfer = kind === TREASURY_MOVEMENT_KIND.TRANSFER;
+    const value = money.format(treasuryMovementAmount(item));
+    const valueType = kind;
+    const account = isTransfer ? null : treasury.accountFor(item);
     const sourceAccount = isTransfer ? treasury.accountFor({ accountId: item.sourceAccountId }) : null;
     const destinationAccount = isTransfer ? treasury.accountFor({ accountId: item.destinationAccountId }) : null;
     const members = treasury.membersFor(item);
@@ -106,18 +82,18 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
           : (item.notes || 'Sem observações adicionais');
     const movementLabel = isTransfer
       ? 'Transferência entre contas'
-      : (item.entry ? 'Entrada financeira' : 'Saída financeira');
-    const movementTypeLabel = isTransfer ? 'Transferência' : (item.entry ? 'Entrada' : 'Saída');
+      : (kind === TREASURY_MOVEMENT_KIND.ENTRY ? 'Entrada financeira' : 'Saída financeira');
+    const movementTypeLabel = treasuryMovementLabel(kind);
     const attachmentCount = Array.isArray(item.attachments) ? item.attachments.length : 0;
-    const recordIcon = isTransfer ? uiIcon('transfer') : (item.entry ? '↗' : '↘');
+    const recordIcon = isTransfer ? uiIcon('transfer') : (kind === TREASURY_MOVEMENT_KIND.ENTRY ? '↗' : '↘');
     const footerCopy = isTransfer
       ? 'Edite os dados ou exclua esta transferência entre contas.'
       : 'Edite os dados ou exclua este registro.';
     const amountMarkup = isTransfer
-      ? `${value}`
-      : `${item.entry ? '+' : '−'} ${value}`;
+      ? value
+      : `${kind === TREASURY_MOVEMENT_KIND.ENTRY ? '+' : '−'} ${value}`;
 
-    return `<article class="expandable-record-card treasury-record-card ${treasury.statusClass(item)} ${!isTransfer && item.entry ? 'is-entry' : ''} ${!isTransfer && !item.entry ? 'is-exit' : ''} ${membership || mutual ? 'is-membership' : ''} ${mutual ? 'is-mutual' : ''} ${isTransfer ? 'is-transfer' : ''}" data-expandable-card>
+    return `<article class="expandable-record-card treasury-record-card ${treasury.statusClass(item)} ${kind === TREASURY_MOVEMENT_KIND.ENTRY ? 'is-entry' : ''} ${kind === TREASURY_MOVEMENT_KIND.EXIT ? 'is-exit' : ''} ${membership || mutual ? 'is-membership' : ''} ${mutual ? 'is-mutual' : ''} ${isTransfer ? 'is-transfer' : ''}" data-expandable-card>
       <button class="expandable-record-summary treasury-record-summary" type="button" data-card-toggle aria-expanded="false" aria-label="Ver detalhes de ${escapeHtml(item.description)}">
         <span class="record-icon treasury-record-icon" aria-hidden="true">${recordIcon}</span>
         <span class="record-summary-main treasury-summary-description"><strong>${escapeHtml(item.description)}</strong><small>${escapeHtml(secondaryText)}${attachmentCount ? ` · ${attachmentCount} anexo${attachmentCount === 1 ? '' : 's'}` : ''}</small></span>
@@ -126,36 +102,22 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
         <span class="treasury-summary-field treasury-summary-date"><small>Data</small><strong>${formatDate(item.date)}</strong></span>
         <span class="treasury-summary-field treasury-summary-type"><small>Movimento</small><span class="treasury-type-chip ${valueType}">${movementTypeLabel}</span></span>
         <span class="treasury-summary-field treasury-summary-status"><small>Situação</small><span class="treasury-status-chip ${treasury.statusClass(item)}">${escapeHtml(treasury.statusLabel(item))}</span></span>
-        <span class="treasury-summary-actions">
-          <strong class="record-value ${valueType} sensitive-money">${amountMarkup}</strong>
-          <span class="record-chevron" aria-hidden="true"></span>
-        </span>
+        <span class="treasury-summary-actions"><strong class="record-value ${valueType} sensitive-money">${amountMarkup}</strong><span class="record-chevron" aria-hidden="true"></span></span>
       </button>
       <div class="expandable-record-details treasury-expanded-details" hidden>
         <div class="treasury-expanded-hero">
-          <div class="treasury-expanded-copy">
-            <span class="treasury-expanded-eyebrow">${movementLabel}</span>
-            <h4>${escapeHtml(item.description)}</h4>
-            <p>${escapeHtml(secondaryText)}</p>
-          </div>
-          <div class="treasury-expanded-amount ${valueType}">
-            <small>${isTransfer ? 'Valor transferido' : 'Valor do movimento'}</small>
-            <strong class="sensitive-money">${amountMarkup}</strong>
-            <span class="treasury-status-chip ${treasury.statusClass(item)}">${escapeHtml(treasury.statusLabel(item))}</span>
-          </div>
+          <div class="treasury-expanded-copy"><span class="treasury-expanded-eyebrow">${movementLabel}</span><h4>${escapeHtml(item.description)}</h4><p>${escapeHtml(secondaryText)}</p></div>
+          <div class="treasury-expanded-amount ${valueType}"><small>${isTransfer ? 'Valor transferido' : 'Valor do movimento'}</small><strong class="sensitive-money">${amountMarkup}</strong><span class="treasury-status-chip ${treasury.statusClass(item)}">${escapeHtml(treasury.statusLabel(item))}</span></div>
         </div>
         <div class="treasury-expanded-meta">
           <div class="treasury-expanded-meta-item is-date"><span aria-hidden="true">${uiIcon('calendar')}</span><div><small>Data</small><strong>${formatDate(item.date)}</strong></div></div>
           ${isTransfer ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('bank')}</span><div><small>Conta de origem</small><strong>${escapeHtml(sourceAccount?.name || 'Conta de origem')}</strong></div></div><div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('bank')}</span><div><small>Conta de destino</small><strong>${escapeHtml(destinationAccount?.name || 'Conta de destino')}</strong></div></div>` : `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${treasury.accountTypeIcon(account?.type)}</span><div><small>Conta</small><strong>${escapeHtml(account?.name || 'Conta principal')}</strong></div></div><div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('tag')}</span><div><small>Categoria</small><strong>${escapeHtml(item.category)}</strong></div></div>`}
-          <div class="treasury-expanded-meta-item"><span aria-hidden="true">${isTransfer ? uiIcon('transfer') : (item.entry ? '↗' : '↘')}</span><div><small>Tipo</small><strong>${movementTypeLabel}</strong></div></div>
+          <div class="treasury-expanded-meta-item"><span aria-hidden="true">${isTransfer ? uiIcon('transfer') : (kind === TREASURY_MOVEMENT_KIND.ENTRY ? '↗' : '↘')}</span><div><small>Tipo</small><strong>${movementTypeLabel}</strong></div></div>
           ${isTransfer ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">${uiIcon('transfer')}</span><div><small>Resumo da transferência</small><strong>${escapeHtml(sourceAccount?.name || 'Conta de origem')} → ${escapeHtml(destinationAccount?.name || 'Conta de destino')}</strong></div></div>` : ''}
           ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">${uiIcon('users')}</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('calendar')}</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('heart')}</span><div><small>${mutualEvent ? 'Grupo / ocorrência' : 'Grupo / referência histórica'}</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${mutualEvent ? `Falecimento de ${escapeHtml(mutualEvent.deceasedName)} em ${escapeHtml(formatDate(mutualDate))}` : escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
         </div>
         ${treasuryAttachmentGallery(item)}
-        <div class="treasury-expanded-footer">
-          <div class="treasury-expanded-footer-copy"><small>Ações do lançamento</small><span>${footerCopy}</span></div>
-          <div class="record-actions">${rowActions('treasury', item.id)}</div>
-        </div>
+        <div class="treasury-expanded-footer"><div class="treasury-expanded-footer-copy"><small>Ações do lançamento</small><span>${footerCopy}</span></div><div class="record-actions">${rowActions('treasury', item.id)}</div></div>
       </div>
     </article>`;
   }).join('');
@@ -170,7 +132,7 @@ export function treasuryTable(items, emptyText, treasury, helpers) {
 export function categorySummaries(items, treasury) {
   const categoryMap = new Map();
 
-  items
+  financialTreasuryItems(items)
     .filter(item => !treasury.isProgrammed(item))
     .forEach(item => {
       const category = (item.category || 'Sem categoria').trim() || 'Sem categoria';
@@ -189,29 +151,18 @@ export function categorySummaries(items, treasury) {
 }
 
 
-function uniqueMovementCount(items) {
-  const transferGroups = new Set();
-  let count = 0;
-  (Array.isArray(items) ? items : []).forEach(item => {
-    const groupId = String(item.transferGroupId || '').trim();
-    if (!groupId) {
-      count += 1;
-      return;
-    }
-    if (transferGroups.has(groupId)) return;
-    transferGroups.add(groupId);
-    count += 1;
-  });
-  return count;
-}
 
 export function summarizeMovementFilter(items, movementFilter, treasury) {
-  const visibleItems = Array.isArray(items) ? items : [];
+  const visibleItems = consolidateTreasuryMovements(items);
   const summaryItems = movementFilter === 'all'
     ? visibleItems.filter(item => !treasury.isProgrammed(item))
     : visibleItems;
-  const entries = summaryItems.reduce((sum, item) => sum + Number(item.entry || 0), 0);
-  const exits = summaryItems.reduce((sum, item) => sum + Number(item.exit || 0), 0);
+  const entries = summaryItems
+    .filter(isTreasuryEntry)
+    .reduce((sum, item) => sum + treasuryMovementAmount(item), 0);
+  const exits = summaryItems
+    .filter(isTreasuryExit)
+    .reduce((sum, item) => sum + treasuryMovementAmount(item), 0);
   const scheduled = movementFilter === 'scheduled';
   const overdue = movementFilter === 'overdue';
   const completed = movementFilter === 'completed' || movementFilter === 'all';
@@ -220,7 +171,7 @@ export function summarizeMovementFilter(items, movementFilter, treasury) {
     entries,
     exits,
     result: entries - exits,
-    count: uniqueMovementCount(summaryItems),
+    count: summaryItems.length,
     entryLabel: overdue ? 'Entradas vencidas' : scheduled ? 'Entradas programadas' : completed ? 'Entradas realizadas' : 'Entradas exibidas',
     exitLabel: overdue ? 'Saídas vencidas' : scheduled ? 'Saídas programadas' : completed ? 'Saídas realizadas' : 'Saídas exibidas',
     resultLabel: overdue ? 'Saldo vencido' : scheduled ? 'Saldo previsto' : completed ? 'Resultado realizado' : 'Resultado exibido'
@@ -247,19 +198,23 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
   const draw = (query = treasury.movementSearch) => {
     treasury.movementSearch = query;
     const movementFilter = treasury.movementFilter;
-    const searchMatched = periodItems.filter(item => {
-      const account = treasury.accountFor(item);
+    const logicalPeriodItems = consolidateTreasuryMovements(periodItems);
+    const searchMatched = logicalPeriodItems.filter(item => {
+      const account = isTreasuryTransfer(item) ? null : treasury.accountFor(item);
+      const sourceAccount = isTreasuryTransfer(item) ? treasury.accountFor({ accountId: item.sourceAccountId }) : null;
+      const destinationAccount = isTreasuryTransfer(item) ? treasury.accountFor({ accountId: item.destinationAccountId }) : null;
       const members = treasury.membersFor(item);
       return normalize(
-        `${item.description} ${item.category} ${account?.name || ''} ${members.map(member => `${member.name} ${member.memberNumber || ''}`).join(' ')}`
+        `${item.description} ${item.category} ${account?.name || ''} ${sourceAccount?.name || ''} ${destinationAccount?.name || ''} ${members.map(member => `${member.name} ${member.memberNumber || ''}`).join(' ')}`
       ).includes(normalize(treasury.movementSearch));
     });
     const matchesFilter = item => {
       if (movementFilter === 'scheduled') return treasury.isProgrammed(item);
       if (movementFilter === 'completed') return !treasury.isProgrammed(item);
       if (movementFilter === 'overdue') return treasury.isOverdue(item);
-      if (movementFilter === 'entries') return Number(item.entry || 0) > 0;
-      if (movementFilter === 'exits') return Number(item.exit || 0) > 0;
+      if (movementFilter === 'entries') return isTreasuryEntry(item);
+      if (movementFilter === 'exits') return isTreasuryExit(item);
+      if (movementFilter === 'transfers') return isTreasuryTransfer(item);
       return true;
     };
     const filtered = searchMatched.filter(matchesFilter);
@@ -280,26 +235,27 @@ export function bindTreasuryMovementLists({ root, periodItems, treasury, helpers
     if (!lists) return;
 
     const counts = {
-      all: uniqueMovementCount(searchMatched),
-      scheduled: uniqueMovementCount(searchMatched.filter(item => treasury.isProgrammed(item))),
-      completed: uniqueMovementCount(searchMatched.filter(item => !treasury.isProgrammed(item))),
-      overdue: uniqueMovementCount(searchMatched.filter(item => treasury.isOverdue(item))),
-      entries: uniqueMovementCount(searchMatched.filter(item => Number(item.entry || 0) > 0)),
-      exits: uniqueMovementCount(searchMatched.filter(item => Number(item.exit || 0) > 0))
+      all: searchMatched.length,
+      scheduled: searchMatched.filter(item => treasury.isProgrammed(item)).length,
+      completed: searchMatched.filter(item => !treasury.isProgrammed(item)).length,
+      overdue: searchMatched.filter(item => treasury.isOverdue(item)).length,
+      entries: searchMatched.filter(isTreasuryEntry).length,
+      exits: searchMatched.filter(isTreasuryExit).length,
+      transfers: searchMatched.filter(isTreasuryTransfer).length
     };
     const summary = summarizeMovementFilter(filtered, movementFilter, treasury);
     const filterButton = (key, label) => `<button type="button" class="treasury-movement-filter ${movementFilter === key ? 'is-active' : ''}" data-movement-filter="${key}" aria-pressed="${String(movementFilter === key)}"><span>${label}</span><strong>${counts[key]}</strong></button>`;
     const scheduledExpanded = treasury.scheduledExpanded;
     const scheduledSection = movementFilter === 'completed'
       ? ''
-      : `<section class="timeline-section treasury-scheduled-section ${scheduledExpanded ? 'is-expanded' : 'is-collapsed'}">${scheduledHeading(uniqueMovementCount(scheduled), scheduledExpanded)}<div id="treasuryScheduledBody" class="treasury-scheduled-body" ${scheduledExpanded ? '' : 'hidden'}>${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</div></section>`;
+      : `<section class="timeline-section treasury-scheduled-section ${scheduledExpanded ? 'is-expanded' : 'is-collapsed'}">${scheduledHeading(scheduled.length, scheduledExpanded)}<div id="treasuryScheduledBody" class="treasury-scheduled-body" ${scheduledExpanded ? '' : 'hidden'}>${treasuryTable(scheduledPage.visible, movementFilter === 'all' ? 'Nenhum lançamento programado.' : 'Nenhum lançamento programado corresponde ao filtro.', treasury, helpers)}${scheduledPage.html}</div></section>`;
     const completedSection = ['scheduled', 'overdue'].includes(movementFilter)
       ? ''
-      : `<section class="timeline-section is-history">${timelineHeading(uiIcon('receipt'), 'Realizados', 'Entradas recebidas, despesas pagas e transferências efetivadas.', uniqueMovementCount(completed))}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
+      : `<section class="timeline-section is-history">${timelineHeading(uiIcon('receipt'), 'Realizados', 'Entradas recebidas, despesas pagas e transferências efetivadas.', completed.length)}${treasuryTable(completedPage.visible, movementFilter === 'all' ? 'Nenhum lançamento realizado.' : 'Nenhum lançamento realizado corresponde ao filtro.', treasury, helpers)}${completedPage.html}</section>`;
 
     const changed = renderHtmlIfChanged(
       lists,
-      `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Movimentações</span><h3>Histórico financeiro</h3><p>Filtre os lançamentos para conferir os valores.</p></div><div class="treasury-movement-balance ${summary.result >= 0 ? 'is-positive' : 'is-negative'}"><small>${summary.resultLabel}</small><strong class="sensitive-money">${money.format(summary.result)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summary.entryLabel}</small><strong class="sensitive-money">${money.format(summary.entries)}</strong></span><span><small>${summary.exitLabel}</small><strong class="sensitive-money">${money.format(summary.exits)}</strong></span><span><small>Registros</small><strong>${summary.count}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('overdue', 'Vencidas')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}</div></section>${scheduledSection}${completedSection}`
+      `<section class="treasury-movement-console card"><div class="treasury-movement-console-heading"><div><span class="section-eyebrow">Movimentações</span><h3>Histórico financeiro</h3><p>Filtre as operações para conferir entradas, saídas e transferências separadamente.</p></div><div class="treasury-movement-balance ${summary.result >= 0 ? 'is-positive' : 'is-negative'}"><small>${summary.resultLabel}</small><strong class="sensitive-money">${money.format(summary.result)}</strong></div></div><div class="treasury-movement-stats"><span><small>${summary.entryLabel}</small><strong class="sensitive-money">${money.format(summary.entries)}</strong></span><span><small>${summary.exitLabel}</small><strong class="sensitive-money">${money.format(summary.exits)}</strong></span><span><small>Operações</small><strong>${summary.count}</strong></span></div><div class="treasury-movement-filters" role="group" aria-label="Filtrar movimentações">${filterButton('all', 'Todos')}${filterButton('completed', 'Realizados')}${filterButton('scheduled', 'Programados')}${filterButton('overdue', 'Vencidas')}${filterButton('entries', 'Entradas')}${filterButton('exits', 'Saídas')}${filterButton('transfers', 'Transferências')}</div></section>${scheduledSection}${completedSection}`
     );
 
     if (!changed) return;

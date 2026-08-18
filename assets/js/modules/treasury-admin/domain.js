@@ -1,3 +1,8 @@
+import {
+  TREASURY_MOVEMENT_KIND,
+  TREASURY_TRANSFER_CATEGORY,
+  normalizeTreasuryMovementKind
+} from '../treasury/movement-domain.js';
 import { money } from '../../utils.js';
 
 export function calculateMembershipBase({
@@ -99,7 +104,7 @@ Obrigado(a)!
 Tesouraria do ${clubName}`;
 }
 
-export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '', transferCategory = 'Transferência entre contas' } = {}) {
+export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '', transferCategory = TREASURY_TRANSFER_CATEGORY } = {}) {
   const data = { ...raw };
   const rawKind = String(data.movementKind || '').trim();
   const legacyEntry = Number(data.entry || 0);
@@ -109,15 +114,11 @@ export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '',
     if (!legacyEntry && !legacyExit) throw new Error('Informe um valor de entrada ou saída.');
     if (legacyEntry && legacyExit) throw new Error('Informe apenas entrada ou saída, não os dois valores.');
   }
-  const movementKind = ['entry', 'exit', 'transfer'].includes(rawKind)
-    ? rawKind
-    : (rawKind === 'movement' || !rawKind)
-      ? (legacyExit > 0 && legacyEntry <= 0 ? 'exit' : 'entry')
-      : 'entry';
+  const movementKind = normalizeTreasuryMovementKind(rawKind, data);
   const statusMode = String(data.statusMode || 'Programado').trim();
   delete data.statusMode;
 
-  if (movementKind === 'transfer') {
+  if (movementKind === TREASURY_MOVEMENT_KIND.TRANSFER) {
     const sourceAccountId = String(data.sourceAccountId || defaultAccountId || '').trim();
     const destinationAccountId = String(data.destinationAccountId || '').trim();
     const transferAmount = Number(data.transferAmount || data.amount || 0);
@@ -150,8 +151,8 @@ export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '',
   const category = String(data.category || '').trim();
   const accountId = String(data.accountId || defaultAccountId || '').trim();
 
-  if (!accountId) throw new Error(`Selecione a conta ${movementKind === 'entry' ? 'que receberá a entrada' : 'de onde sairá o valor'}.`);
-  if (!(amount > 0)) throw new Error(`Informe o valor da ${movementKind === 'entry' ? 'entrada' : 'saída'}.`);
+  if (!accountId) throw new Error(`Selecione a conta ${movementKind === TREASURY_MOVEMENT_KIND.ENTRY ? 'que receberá a entrada' : 'de onde sairá o valor'}.`);
+  if (!(amount > 0)) throw new Error(`Informe o valor da ${movementKind === TREASURY_MOVEMENT_KIND.ENTRY ? 'entrada' : 'saída'}.`);
   if (!category) throw new Error('Selecione uma categoria.');
 
   return {
@@ -163,8 +164,8 @@ export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '',
       accountId,
       category,
       amount,
-      entry: movementKind === 'entry' ? amount : 0,
-      exit: movementKind === 'exit' ? amount : 0
+      entry: movementKind === TREASURY_MOVEMENT_KIND.ENTRY ? amount : 0,
+      exit: movementKind === TREASURY_MOVEMENT_KIND.EXIT ? amount : 0
     }
   };
 }
@@ -176,4 +177,10 @@ export function resolveTreasuryEntryStatus({ date = '', entry = 0, statusMode = 
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   return scheduledDate < today ? 'Vencida' : 'Programado';
+}
+
+
+export function resolveTreasuryTransferStatus({ date = '', statusMode = 'Programado' } = {}, now = new Date()) {
+  if (statusMode === 'Efetivado') return 'Efetivado';
+  return resolveTreasuryEntryStatus({ date, entry: 0, statusMode }, now);
 }

@@ -13,7 +13,7 @@ test('auditoria de desempenho segue reexports estáticos e protege a nova margem
   const audit = await source('tools/performance-audit.mjs');
   assert.deepEqual(staticModuleSpecifiers("export { feature } from './feature.js';"), ['./feature.js']);
   assert.equal(performanceBudgets.staticJavaScriptBytes, 315_000);
-  assert.equal(performanceBudgets.criticalAssetsBytes, 785_000);
+  assert.equal(performanceBudgets.criticalAssetsBytes, 775_000);
   assert.match(audit, /collectStaticGraph/);
   for (const lazyModule of [
     'assets/js/github-admin.js',

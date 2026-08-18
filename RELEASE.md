@@ -60,3 +60,11 @@ A revisão manual deve seguir `docs/homologation.md`, priorizando Tesouraria, M�
 ## Política após a etapa 4
 
 O ciclo de refatoração v6.46.7 fica encerrado nesta base. Evoluções posteriores devem ser incrementais e mensuráveis, preservando os orçamentos de CSS/JavaScript e os contratos de lazy loading. Qualquer ampliação de orçamento deve ser justificada por uma necessidade funcional concreta e acompanhada de testes de regressão.
+
+### Refatoração pós-movimentações — etapa 2
+
+A Tesouraria passa a usar um domínio único para Entrada, Saída e Transferência. Transferências são exibidas e contabilizadas como uma operação lógica, preservando os dois lançamentos internos necessários ao saldo das contas sem inflar receitas/despesas do clube.
+
+### Refatoração pós-movimentações — etapa 3
+
+O ciclo de consolidação da Tesouraria é encerrado com regressões específicas de Entrada, Saída e Transferência. A construção e a remoção do par contábil da transferência passam a usar contratos únicos, a exclusão possui rollback em caso de falha de persistência e o módulo administrativo lazy é validado por import direto. A operação continua alterando apenas os saldos das contas envolvidas, sem compor receita, despesa ou resultado financeiro geral. O esquema permanece na versão 12 e os arquivos oficiais de dados não são migrados.
