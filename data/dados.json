@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-18T14:49:17.637Z",
-  "deploymentId": "1787064557637-8ef04191-b5f2-44c2-b6cc-56e1162fc982",
+  "updatedAt": "2026-08-18T14:56:21.519Z",
+  "deploymentId": "1787064981519-2d871273-b850-4f5c-a5c7-e8d5832816c7",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -1915,6 +1915,202 @@
         "exit": 0,
         "notes": "",
         "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msys4d6q_b6484j",
+        "date": "2026-03-02",
+        "paymentDate": "2026-03-02",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-03"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-03",
+        "coveredMonths": [
+          "2026-03"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: março de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msys4l0s_687djf",
+        "date": "2026-03-02",
+        "paymentDate": "2026-03-02",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-03"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-03",
+        "coveredMonths": [
+          "2026-03"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: março de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msys5kmw_o1ijs7",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Daniel Flavio Gozzi\nMutua 652",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msys64un_oqzehx",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mario Sergio Gozzi\nMutua 652",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msys6ued_7v9443",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 15,
+        "exit": 0,
+        "notes": "Mario Sergio Gozzi\nMutua 652 Brancalhão",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msys79vi_x5vifg",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Luiz H B Franciscatte",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msys80f6_bvw95p",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Marcos Antônio de Almeida Agencia de Via\nMutua 652 Sueli e Marcos",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msys8ptm_w7gjns",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 840,
+        "exit": 0,
+        "notes": "Rogerio Andreotti",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msys9yyi_w4mxwo",
+        "date": "2026-03-04",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 720,
+        "notes": "Pagamentos de mutuas ref 649, 650 e 651",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msysbji0_rxvffg",
+        "date": "2026-03-13",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 60,
+        "exit": 0,
+        "notes": "Regina Bolfarini Jabur Freire",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msyscawr_r62nap",
+        "date": "2026-03-25",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 210,
+        "notes": "Mutua referente a 652 com 14 membros 210 reais",
+        "status": "Pago",
         "attachments": []
       }
     ],
