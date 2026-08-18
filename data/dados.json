@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-18T15:04:53.489Z",
-  "deploymentId": "1787065493489-770fc8a6-8d0b-454e-91b6-1ec13900de2b",
+  "updatedAt": "2026-08-18T15:14:37.929Z",
+  "deploymentId": "1787066077928-e8af62b4-0faf-40e0-9322-c1fb4dab1052",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -2319,6 +2319,226 @@
         "exit": 0,
         "notes": "Roberto Martins Freire",
         "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msysoh1y_5a8frv",
+        "date": "2026-05-04",
+        "paymentDate": "2026-05-04",
+        "description": "Mensalidade - Marcos Antônio de Almeida",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xmsdr_8ui1ex",
+        "memberIds": [
+          "b_ms3xmsdr_8ui1ex"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "memberName": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-05"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xmsdr_8ui1ex",
+            "name": "Marcos Antônio de Almeida",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-05",
+        "coveredMonths": [
+          "2026-05"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Marcos Antônio de Almeida — R$ 40,00\nMeses quitados: maio de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msysootl_f0m3kd",
+        "date": "2026-05-04",
+        "paymentDate": "2026-05-04",
+        "description": "Mensalidade - Sueli Neves",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 40,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xrctq_knqsof",
+        "memberIds": [
+          "b_ms3xrctq_knqsof"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "memberName": "Sueli Neves",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-05"
+            ],
+            "amount": 40
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xrctq_knqsof",
+            "name": "Sueli Neves",
+            "role": "Individual",
+            "amount": 40
+          }
+        ],
+        "referenceMonth": "2026-05",
+        "coveredMonths": [
+          "2026-05"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nIndividual: Sueli Neves — R$ 40,00\nMeses quitados: maio de 2026",
+        "attachments": []
+      },
+      {
+        "id": "t_msysqtp1_rymppf",
+        "date": "2026-05-11",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 60,
+        "exit": 0,
+        "notes": "Luiz H B Franciscatte",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msysrcha_zku2wu",
+        "date": "2026-05-11",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 90,
+        "exit": 0,
+        "notes": "Larissa Iaia Baldesserra",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msyss4yu_sh8tun",
+        "date": "2026-05-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mario Sergio Gozzi\nMutua 655, 656",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msyssr56_y00nt2",
+        "date": "2026-05-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Mario Sergio Gozzi\nMutua 655 e 656 Brancalhão",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msysuvz4_a7599t",
+        "date": "2026-05-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Transferência Recebida",
+        "entry": 30,
+        "exit": 0,
+        "notes": "Daniel Flavio Gozzi\nMutuas 655 e 656",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msysvgme_7hj3cd",
+        "date": "2026-05-12",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 120,
+        "exit": 0,
+        "notes": "Roberto Martins Freire",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msyswe5d_zfy56h",
+        "date": "2026-05-13",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 177.95,
+        "notes": "28.036.311/0001-20\nPins Lions",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msysxfap_tztm1s",
+        "date": "2026-05-13",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 840,
+        "notes": "02.248.416 0001-59\nMutuas referentes as chamadas 653, 654, 655 e 656",
+        "status": "Pago",
+        "attachments": []
+      },
+      {
+        "id": "t_msysydwc_apf56o",
+        "date": "2026-05-19",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pix Recebido",
+        "entry": 60,
+        "exit": 0,
+        "notes": "Marcos Antônio de Almeida Eventos\nMutuas",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msysz5ge_ovq5qd",
+        "date": "2026-05-20",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Resgate RDC",
+        "entry": 1000,
+        "exit": 0,
+        "notes": "",
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
+        "id": "t_msyszts5_cqfyan",
+        "date": "2026-05-21",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Pagamento Pix",
+        "entry": 0,
+        "exit": 899,
+        "notes": "10.573.521/0001-91",
+        "status": "Pago",
         "attachments": []
       }
     ],
