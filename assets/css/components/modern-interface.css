@@ -456,3 +456,4 @@ body{font-family:var(--font-ui)}.topbar-title{flex:1;min-width:0}.topbar-actions
 .management-collapsible-section.is-collapsed{box-shadow:none}
 .management-collapsible-section.is-collapsed .management-list-toggle{min-height:66px}
 @media(max-width:620px){.management-list-toggle{min-height:64px;padding:13px}.management-list-toggle small{font-size:.75rem}.management-list-toggle-meta{gap:7px}.management-list-chevron{width:30px;height:30px}.management-list-content{padding:0 10px 10px}}
+.treasury-chart-card-header{cursor:pointer}.treasury-chart-toggle-hint{color:var(--muted);font-size:.73rem;font-weight:800}

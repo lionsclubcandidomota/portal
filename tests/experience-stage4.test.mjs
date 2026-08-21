@@ -56,9 +56,12 @@ test('mensagem familiar reúne integrantes, meses e total estimado', () => {
   });
 
   assert.match(text, /Olá, família Família Silva!/);
-  assert.match(text, /Ana Silva: julho de 2026 — R\$\s*50,00/);
-  assert.match(text, /Carlos Silva: julho de 2026, agosto de 2026 — R\$\s*70,00/);
-  assert.match(text, /Total estimado: R\$\s*120,00/);
+  assert.match(text, /Segue um resumo da cobrança do período selecionado/);
+  assert.match(text, /\*Ana Silva\*/);
+  assert.match(text, /Competências em aberto: julho de 2026/);
+  assert.match(text, /\*Carlos Silva\*/);
+  assert.match(text, /Competências em aberto: julho de 2026, agosto de 2026/);
+  assert.match(text, /Total da cobrança familiar:\* R\$\s*120,00/);
   assert.match(text, /Tesouraria do Lions Teste/);
 });
 

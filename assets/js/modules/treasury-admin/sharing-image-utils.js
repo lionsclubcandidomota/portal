@@ -1,5 +1,7 @@
 import { money } from '../../utils.js';
 
+const FONT_STACK = 'Inter, Segoe UI, Arial, sans-serif';
+
 function escapeXml(value = '') {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -19,6 +21,38 @@ function truncateText(value = '', max = 40) {
   const normalized = String(value || '').trim();
   if (normalized.length <= max) return normalized;
   return `${normalized.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
+}
+
+function splitLines(value = '', maxChars = 34, maxLines = 2) {
+  const text = String(value || '').trim();
+  if (!text) return [];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let current = '';
+
+  words.forEach(word => {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length <= maxChars || !current) {
+      current = next;
+      return;
+    }
+    lines.push(current);
+    current = word;
+  });
+
+  if (current) lines.push(current);
+  if (lines.length <= maxLines) return lines;
+
+  const kept = lines.slice(0, maxLines);
+  const rest = lines.slice(maxLines - 1).join(' ');
+  kept[maxLines - 1] = truncateText(rest, maxChars);
+  return kept;
+}
+
+function linesMarkup({ lines = [], x = 0, y = 0, lineHeight = 18, fontSize = 14, fontWeight = 600, fill = '#123', anchor = 'start' } = {}) {
+  if (!lines.length) return '';
+  const safeLines = lines.map(line => escapeXml(line));
+  return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${FONT_STACK}" font-size="${fontSize}" font-weight="${fontWeight}" fill="${fill}">${safeLines.map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : lineHeight}">${line}</tspan>`).join('')}</text>`;
 }
 
 export function blobToDataUrl(blob) {
@@ -83,20 +117,25 @@ function buildAvatarMarkup({ name = '', photoDataUrl = '', size = 88, fontSize =
     return `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 2}" fill="#ffffff" stroke="#d6e1ec" stroke-width="2"/><clipPath id="${clipId}"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 6}"/></clipPath><image href="${photoDataUrl}" x="6" y="6" width="${size - 12}" height="${size - 12}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})"/>`;
   }
 
-  return `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 2}" fill="#ffffff" stroke="#d6e1ec" stroke-width="2"/><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 6}" fill="#eef3f9"/><text x="50%" y="54%" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="800" fill="#1a568f">${escapeXml(initials(name))}</text>`;
+  return `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 2}" fill="#ffffff" stroke="#d6e1ec" stroke-width="2"/><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 6}" fill="#eef3f9"/><text x="50%" y="54%" text-anchor="middle" font-family="${FONT_STACK}" font-size="${fontSize}" font-weight="800" fill="#1a568f">${escapeXml(initials(name))}</text>`;
 }
 
-function buildLinkedCards(linked = [], startY = 0) {
+function buildLinkedCards(linked = [], startY = 0, contentX = 98, contentWidth = 1004) {
+  const gap = 20;
+  const columns = linked.length <= 1 ? 1 : 2;
+  const cardWidth = columns === 1 ? contentWidth : Math.floor((contentWidth - gap) / 2);
+  const cardHeight = 74;
   return linked.map((item, index) => {
-    const column = index % 2;
-    const row = Math.floor(index / 2);
-    const x = 92 + (column * 434);
-    const y = startY + (row * 76);
+    const column = columns === 1 ? 0 : index % 2;
+    const row = columns === 1 ? index : Math.floor(index / 2);
+    const x = contentX + column * (cardWidth + gap);
+    const y = startY + row * (cardHeight + 16);
+    const maxNameChars = columns === 1 ? 42 : 24;
     return `<g transform="translate(${x}, ${y})">
-      <rect x="0" y="0" width="402" height="58" rx="18" fill="#f7fafe" stroke="#dce5ef" stroke-width="1.5"/>
-      <g transform="translate(10,5)">${buildAvatarMarkup({ name: item.name, photoDataUrl: item.avatar, size: 48, fontSize: 18, key: `linked_${index}` })}</g>
-      <text x="70" y="24" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#153a67">${escapeXml(truncateText(item.name, 26))}</text>
-      <text x="70" y="43" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="600" fill="#74879d">${escapeXml(item.role || 'Vinculado')}</text>
+      <rect x="0" y="0" width="${cardWidth}" height="${cardHeight}" rx="18" fill="#f8fbff" stroke="#dbe5ef" stroke-width="1.4"/>
+      <g transform="translate(10,13)">${buildAvatarMarkup({ name: item.name, photoDataUrl: item.avatar, size: 48, fontSize: 18, key: `linked_${index}` })}</g>
+      ${linesMarkup({ lines: splitLines(item.name, maxNameChars, 2), x: 70, y: 25, lineHeight: 16, fontSize: 15, fontWeight: 800, fill: '#173960' })}
+      <text x="70" y="61" font-family="${FONT_STACK}" font-size="13" font-weight="600" fill="#74879d">${escapeXml(item.role || 'Vinculado')}</text>
     </g>`;
   }).join('');
 }
@@ -122,94 +161,123 @@ export function buildChargeSvg(payload) {
     footer = ''
   } = payload;
 
-  const linked = Array.isArray(linkedMembers) ? linkedMembers : [];
-  const dataRows = Array.isArray(rows) ? rows : [];
-  const canvasWidth = 1080;
-  const cardX = 40;
-  const cardY = 40;
-  const cardWidth = canvasWidth - 80;
-  const headerHeight = 132;
-  const profileHeight = 118;
-  const linkedSectionHeight = linked.length ? 38 + (Math.ceil(linked.length / 2) * 76) + 18 : 0;
-  const stats = Array.isArray(summaryStats) ? summaryStats.filter(item => Number(item?.amount || 0) >= 0) : [];
-  const statsSectionHeight = stats.length ? 98 : 0;
-  const tableHeaderHeight = 50;
-  const rowHeight = 48;
-  const tableHeight = tableHeaderHeight + (dataRows.length * rowHeight) + 16;
-  const totalHeight = 92;
-  const footerHeight = footer ? 84 : 40;
-  const bodyHeight = headerHeight + profileHeight + linkedSectionHeight + statsSectionHeight + tableHeight + totalHeight + footerHeight + 64;
-  const cardHeight = bodyHeight;
-  const canvasHeight = cardHeight + 80;
+    const linked = Array.isArray(linkedMembers) ? linkedMembers : [];
+    const dataRows = Array.isArray(rows) ? rows : [];
+    const stats = Array.isArray(summaryStats) ? summaryStats.filter(item => Number(item?.amount || 0) >= 0) : [];
 
-  const profileY = cardY + headerHeight + 18;
-  const linkedSectionY = profileY + profileHeight + 12;
-  const statsSectionY = linked.length ? linkedSectionY + linkedSectionHeight : profileY + profileHeight + 18;
-  const tableY = stats.length ? statsSectionY + statsSectionHeight : statsSectionY;
-  const totalY = tableY + tableHeight + 20;
-  const footerY = totalY + totalHeight + 18;
+    const canvasWidth = 1280;
+    const cardX = 36;
+    const cardY = 36;
+    const cardWidth = canvasWidth - 72;
+    const contentX = 98;
+    const contentWidth = cardWidth - 124;
+    const headerHeight = 196;
+    const profileHeight = 150;
+    const linkedColumns = linked.length <= 1 ? 1 : 2;
+    const linkedRows = linked.length ? Math.ceil(linked.length / linkedColumns) : 0;
+    const linkedSectionHeight = linked.length ? 38 + (linkedRows * 90) + 10 : 0;
+    const statsSectionHeight = stats.length ? 198 : 0;
+    const tableHeaderHeight = 56;
+    const rowHeight = 46;
+    const tableHeight = tableHeaderHeight + (dataRows.length * rowHeight) + 12;
+    const totalHeight = 116;
+    const footerHeight = footer ? 60 : 30;
+    const cardHeight = headerHeight + profileHeight + linkedSectionHeight + statsSectionHeight + tableHeight + totalHeight + footerHeight + 60;
+    const canvasHeight = cardHeight + 72;
 
-  const logoMarkup = clubLogoDataUrl
-    ? `<image href="${clubLogoDataUrl}" x="70" y="64" width="62" height="62" preserveAspectRatio="xMidYMid meet"/>`
-    : `<circle cx="101" cy="95" r="28" fill="#ffffff"/><text x="101" y="106" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" fill="#165794">L</text>`;
+    const profileY = cardY + headerHeight + 28;
+    const linkedSectionY = profileY + profileHeight + 8;
+    const statsSectionY = linked.length ? linkedSectionY + linkedSectionHeight : profileY + profileHeight + 18;
+    const tableY = stats.length ? statsSectionY + statsSectionHeight : statsSectionY;
+    const totalY = tableY + tableHeight + 22;
+    const footerY = totalY + totalHeight + 10;
 
-  const linkedMarkup = linked.length ? buildLinkedCards(linked, linkedSectionY + 30) : '';
-  const statsMarkup = stats.map((item, index) => {
-    const boxWidth = 438;
-    const gap = 20;
-    const x = 84 + (index * (boxWidth + gap));
-    return `<g transform="translate(${x}, ${statsSectionY + 10})">
-      <rect x="0" y="0" width="${boxWidth}" height="74" rx="18" fill="#f8fbff" stroke="#dbe5ef" stroke-width="1.5"/>
-      <text x="22" y="22" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="800" fill="#70839a">${escapeXml(item.label)}</text>
-      <text x="22" y="42" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#8798ab">${escapeXml(item.detail || '')}</text>
-      <text x="22" y="65" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="900" fill="#0c5ea6">${escapeXml(money.format(Number(item.amount || 0)))}</text>
-    </g>`;
-  }).join('');
+    const logoMarkup = clubLogoDataUrl
+      ? `<image href="${clubLogoDataUrl}" x="88" y="70" width="64" height="64" preserveAspectRatio="xMidYMid meet"/>`
+      : `<circle cx="120" cy="102" r="30" fill="#ffffff"/><text x="120" y="112" text-anchor="middle" font-family="${FONT_STACK}" font-size="28" font-weight="900" fill="#165794">L</text>`;
 
-  const tableRowsMarkup = dataRows.map((item, index) => {
-    const top = tableY + tableHeaderHeight + (index * rowHeight);
-    return `<rect x="84" y="${top}" width="912" height="${rowHeight}" fill="${index % 2 === 0 ? '#ffffff' : '#fbfcfe'}"/>
-      <line x1="96" y1="${top + rowHeight}" x2="984" y2="${top + rowHeight}" stroke="#e6edf5" stroke-width="1"/>
-      <text x="108" y="${top + 31}" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="${item.emphasis ? '800' : '600'}" fill="#193c68">${escapeXml(truncateText(item.label, variant === 'family' ? 50 : 30))}</text>
-      <text x="968" y="${top + 31}" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="800" fill="#12385f">${escapeXml(money.format(Number(item.amount || 0)))}</text>`;
-  }).join('');
+    const linkedMarkup = linked.length ? buildLinkedCards(linked, linkedSectionY + 16, contentX, contentWidth) : '';
+    const statsGap = 18;
+    const statsWidth = stats.length <= 1
+      ? contentWidth
+      : Math.floor((contentWidth - (statsGap * (stats.length - 1))) / stats.length);
+    const statCardHeight = 164;
+    const statsMarkup = stats.map((item, index) => {
+      const x = contentX + (index * (statsWidth + statsGap));
+      const detailLines = splitLines(item.detail || '', stats.length === 1 ? 60 : 28, 2);
+      const hintLines = splitLines(item.hint || '', stats.length === 1 ? 64 : 30, 2);
+      return `<g transform="translate(${x}, ${statsSectionY + 10})">
+        <rect x="0" y="0" width="${statsWidth}" height="${statCardHeight}" rx="18" fill="#f8fbff" stroke="#dbe5ef" stroke-width="1.4"/>
+        <text x="22" y="25" font-family="${FONT_STACK}" font-size="15" font-weight="800" fill="#6f829a">${escapeXml(item.label)}</text>
+        ${linesMarkup({ lines: detailLines, x: 22, y: 51, lineHeight: 17, fontSize: 15, fontWeight: 800, fill: '#244b75' })}
+        ${hintLines.length ? linesMarkup({ lines: hintLines, x: 22, y: 88, lineHeight: 15, fontSize: 12, fontWeight: 600, fill: '#7d8ea4' }) : ''}
+        <line x1="22" y1="119" x2="${statsWidth - 22}" y2="119" stroke="#dfe8f1" stroke-width="1"/>
+        <text x="22" y="144" font-family="${FONT_STACK}" font-size="12" font-weight="800" fill="#7a8ea5">EM ABERTO</text>
+        <text x="${statsWidth - 22}" y="145" text-anchor="end" font-family="${FONT_STACK}" font-size="27" font-weight="900" fill="#0b63ad">${escapeXml(money.format(Number(item.amount || 0)))}</text>
+      </g>`;
+    }).join('');
 
-  return {
-    width: canvasWidth,
-    height: canvasHeight,
-    markup: `<?xml version="1.0" encoding="UTF-8"?>
+    const tableRowsMarkup = dataRows.map((item, index) => {
+      const top = tableY + tableHeaderHeight + (index * rowHeight);
+      return `<rect x="${contentX}" y="${top}" width="${contentWidth}" height="${rowHeight}" fill="${index % 2 === 0 ? '#ffffff' : '#fbfcfe'}"/>
+        <line x1="${contentX + 18}" y1="${top + rowHeight}" x2="${contentX + contentWidth - 18}" y2="${top + rowHeight}" stroke="#e5edf5" stroke-width="1"/>
+        <text x="${contentX + 24}" y="${top + 29}" font-family="${FONT_STACK}" font-size="19" font-weight="${item.emphasis ? '800' : '600'}" fill="#193c68">${escapeXml(truncateText(item.label, variant === 'family' ? 66 : 40))}</text>
+        <text x="${contentX + contentWidth - 24}" y="${top + 29}" text-anchor="end" font-family="${FONT_STACK}" font-size="19" font-weight="800" fill="#12385f">${escapeXml(money.format(Number(item.amount || 0)))}</text>`;
+    }).join('');
+
+    const clubHeaderText = truncateText(clubName, 58);
+    const titleText = title || 'Mensalidades';
+    const subtitleText = subtitle || (variant === 'family' ? 'Grupo familiar' : 'Associado');
+    const noteLines = splitLines(note, 80, 2);
+
+    return {
+      width: canvasWidth,
+      height: canvasHeight,
+      markup: `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}">
+  <defs>
+    <linearGradient id="chargeHeader" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0a5ea6"/>
+      <stop offset="100%" stop-color="#0d7bc7"/>
+    </linearGradient>
+    <linearGradient id="totalPanel" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#eef5fc"/>
+    </linearGradient>
+  </defs>
   <rect width="100%" height="100%" fill="#f4f7fb"/>
-  <rect x="${cardX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="28" fill="#ffffff" stroke="#dbe5ef" stroke-width="2"/>
-  <rect x="${cardX}" y="${cardY}" width="${cardWidth}" height="${headerHeight}" rx="28" fill="#0c5ea6"/>
-  <rect x="64" y="56" width="74" height="74" rx="20" fill="rgba(255,255,255,.16)" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/>
+  <rect x="${cardX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="32" fill="#ffffff" stroke="#dbe5ef" stroke-width="2"/>
+  <rect x="${cardX}" y="${cardY}" width="${cardWidth}" height="${headerHeight}" rx="32" fill="url(#chargeHeader)"/>
+  <circle cx="1090" cy="74" r="140" fill="rgba(255,255,255,.08)"/>
+  <circle cx="1170" cy="128" r="88" fill="rgba(255,255,255,.06)"/>
+  <rect x="74" y="58" width="92" height="92" rx="26" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.16)" stroke-width="1.4"/>
   ${logoMarkup}
-  <rect x="154" y="58" width="404" height="24" rx="12" fill="rgba(255,255,255,.12)"/>
-  <text x="170" y="75" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="#eff7ff">${escapeXml(truncateText(clubName, 46))}</text>
-  <text x="154" y="106" font-family="Arial, Helvetica, sans-serif" font-size="37" font-weight="900" fill="#ffffff">${escapeXml(title)}</text>
-  <text x="154" y="131" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="800" fill="#f6d16f">${escapeXml(subtitle)}</text>
+  <rect x="186" y="64" width="440" height="30" rx="15" fill="rgba(255,255,255,.14)"/>
+  <text x="202" y="84" font-family="${FONT_STACK}" font-size="15" font-weight="700" fill="#eef7ff">${escapeXml(clubHeaderText)}</text>
+  <text x="186" y="127" font-family="${FONT_STACK}" font-size="48" font-weight="900" fill="#ffffff">${escapeXml(titleText)}</text>
+  <text x="186" y="158" font-family="${FONT_STACK}" font-size="20" font-weight="800" fill="#f4d678">${escapeXml(subtitleText)}</text>
 
-  <g transform="translate(84, ${profileY})">${buildAvatarMarkup({ name: responsibleName, photoDataUrl: responsibleAvatar, size: 88, fontSize: 30, key: 'responsible' })}</g>
-  <text x="194" y="${profileY + 20}" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#70839a">${escapeXml(responsibleLabel)}</text>
-  <text x="194" y="${profileY + 56}" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#163b67">${escapeXml(truncateText(responsibleName, 30))}</text>
-  ${badgeLabel ? `<rect x="194" y="${profileY + 72}" width="160" height="28" rx="14" fill="#edf4fb"/><text x="274" y="${profileY + 91}" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="800" fill="#0c5ea6">${escapeXml(badgeLabel)}</text>` : ''}
+  <g transform="translate(${contentX}, ${profileY})">${buildAvatarMarkup({ name: responsibleName, photoDataUrl: responsibleAvatar, size: 92, fontSize: 30, key: 'responsible' })}</g>
+  <text x="${contentX + 114}" y="${profileY + 22}" font-family="${FONT_STACK}" font-size="18" font-weight="700" fill="#70839a">${escapeXml(responsibleLabel)}</text>
+  ${linesMarkup({ lines: splitLines(responsibleName, 36, 2), x: contentX + 114, y: profileY + 52, lineHeight: 24, fontSize: 26, fontWeight: 900, fill: '#163b67' })}
+  ${badgeLabel ? `<rect x="${contentX + 114}" y="${profileY + 94}" width="156" height="28" rx="14" fill="#edf4fb"/><text x="${contentX + 192}" y="${profileY + 113}" text-anchor="middle" font-family="${FONT_STACK}" font-size="13" font-weight="800" fill="#0c5ea6">${escapeXml(badgeLabel)}</text>` : ''}
 
-  ${linked.length ? `<text x="84" y="${linkedSectionY + 10}" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" fill="#163b67">Pessoas vinculadas à cobrança</text>${linkedMarkup}` : ''}
+  ${linked.length ? `<text x="${contentX}" y="${linkedSectionY + 4}" font-family="${FONT_STACK}" font-size="21" font-weight="800" fill="#163b67">Pessoas vinculadas à cobrança</text>${linkedMarkup}` : ''}
   ${stats.length ? statsMarkup : ''}
 
-  <rect x="84" y="${tableY}" width="912" height="${tableHeight}" rx="22" fill="#ffffff" stroke="#dbe5ef" stroke-width="1.5"/>
-  <rect x="84" y="${tableY}" width="912" height="${tableHeaderHeight}" rx="22" fill="#f1f6fb"/>
-  <text x="108" y="${tableY + 33}" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" fill="#163b67">${escapeXml(tableTitle || (variant === 'family' ? 'Competências da cobrança' : 'Mensalidades selecionadas'))}</text>
-  <text x="968" y="${tableY + 33}" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" fill="#163b67">Valor</text>
+  <rect x="${contentX}" y="${tableY}" width="${contentWidth}" height="${tableHeight}" rx="18" fill="#ffffff" stroke="#dbe5ef" stroke-width="1.4"/>
+  <rect x="${contentX}" y="${tableY}" width="${contentWidth}" height="${tableHeaderHeight}" rx="18" fill="#f1f6fb"/>
+  <text x="${contentX + 24}" y="${tableY + 35}" font-family="${FONT_STACK}" font-size="20" font-weight="800" fill="#163b67">${escapeXml(tableTitle || (variant === 'family' ? 'Competências da cobrança' : 'Mensalidades selecionadas'))}</text>
+  <text x="${contentX + contentWidth - 24}" y="${tableY + 35}" text-anchor="end" font-family="${FONT_STACK}" font-size="20" font-weight="800" fill="#163b67">Valor</text>
   ${tableRowsMarkup}
 
-  <rect x="84" y="${totalY}" width="912" height="${totalHeight}" rx="22" fill="#f8fbff" stroke="#dbe5ef" stroke-width="1.5"/>
-  <text x="108" y="${totalY + 34}" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#7a8ea5">${escapeXml(truncateText(note, 54))}</text>
-  <text x="108" y="${totalY + 69}" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="900" fill="#0c5ea6">${escapeXml(totalLabel)}</text>
-  <text x="968" y="${totalY + 64}" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="900" fill="#163b67">${escapeXml(money.format(Number(total || 0)))}</text>
+  <rect x="${contentX}" y="${totalY}" width="${contentWidth}" height="${totalHeight}" rx="20" fill="url(#totalPanel)" stroke="#dbe5ef" stroke-width="1.4"/>
+  ${noteLines.length ? linesMarkup({ lines: noteLines, x: contentX + 24, y: totalY + 24, lineHeight: 15, fontSize: 13, fontWeight: 700, fill: '#7a8ea5' }) : ''}
+  <text x="${contentX + 24}" y="${totalY + 78}" font-family="${FONT_STACK}" font-size="28" font-weight="900" fill="#0c5ea6">${escapeXml(totalLabel)}</text>
+  <text x="${contentX + contentWidth - 24}" y="${totalY + 77}" text-anchor="end" font-family="${FONT_STACK}" font-size="42" font-weight="900" fill="#163b67">${escapeXml(money.format(Number(total || 0)))}</text>
 
-  <text x="84" y="${footerY + 24}" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#0c5ea6">Tesouraria do ${escapeXml(truncateText(clubName, 52))}</text>
-  ${footer ? `<text x="84" y="${footerY + 50}" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="600" fill="#778ba2">${escapeXml(footer)}</text>` : ''}
+  <text x="${contentX}" y="${footerY + 18}" font-family="${FONT_STACK}" font-size="15" font-weight="700" fill="#0c5ea6">Tesouraria do ${escapeXml(truncateText(clubName, 72))}</text>
+  ${footer ? `<text x="${contentX}" y="${footerY + 40}" font-family="${FONT_STACK}" font-size="14" font-weight="600" fill="#778ba2">${escapeXml(footer)}</text>` : ''}
 </svg>`
-  };
+    };
 }

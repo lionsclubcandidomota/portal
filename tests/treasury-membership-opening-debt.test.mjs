@@ -16,9 +16,9 @@ test('cobrança individual pode cobrar apenas saldo anterior sem criar competên
     clubName: 'Lions Clube de Teste'
   });
 
-  assert.match(message, /saldo anterior em aberto de R\$\s*120,00/);
-  assert.match(message, /total estimado em aberto é R\$\s*120,00/);
-  assert.doesNotMatch(message, /referente a/);
+  assert.match(message, /Saldo anterior em aberto: R\$\s*120,00/);
+  assert.match(message, /Total desta cobrança: R\$\s*120,00/);
+  assert.doesNotMatch(message, /Competências em aberto/);
 });
 
 test('cobrança familiar soma saldo anterior e competências sem duplicar o débito', () => {
@@ -31,9 +31,14 @@ test('cobrança familiar soma saldo anterior e competências sem duplicar o déb
     ]
   });
 
-  assert.match(message, /Ana: saldo anterior R\$\s*70,00 \+ agosto de 2026 — R\$\s*120,00/);
-  assert.match(message, /Bruno: saldo anterior R\$\s*30,00 — R\$\s*30,00/);
-  assert.match(message, /Total estimado: R\$\s*150,00/);
+  assert.match(message, /\*Ana\*/);
+  assert.match(message, /Competências em aberto: agosto de 2026/);
+  assert.match(message, /Saldo anterior em aberto: R\$\s*70,00/);
+  assert.match(message, /Total deste integrante: R\$\s*120,00/);
+  assert.match(message, /\*Bruno\*/);
+  assert.match(message, /Saldo anterior em aberto: R\$\s*30,00/);
+  assert.match(message, /Total deste integrante: R\$\s*30,00/);
+  assert.match(message, /Total da cobrança familiar:\* R\$\s*150,00/);
 });
 
 test('valores em aberto das mensalidades usam a mesma proteção do olho financeiro', async () => {

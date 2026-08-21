@@ -3,21 +3,38 @@
   isolation: isolate;
 }
 
+.membership-member {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.membership-member-actions,
+.membership-actions-menu {
+  position: relative;
+  z-index: auto;
+}
+
 .membership-member.is-actions-open,
 .membership-member:has(.membership-more-menu:not([hidden])) {
-  z-index: var(--z-card-active) !important;
+  z-index: var(--z-dropdown) !important;
   transform: none !important;
 }
 
 .membership-member.is-actions-open .membership-member-actions,
 .membership-member:has(.membership-more-menu:not([hidden])) .membership-member-actions,
-.membership-actions-menu {
+.membership-member.is-actions-open .membership-actions-menu,
+.membership-member:has(.membership-more-menu:not([hidden])) .membership-actions-menu {
+  z-index: 2;
+}
+
+.membership-more-toggle {
   position: relative;
-  z-index: var(--z-card-actions);
+  z-index: 1;
 }
 
 .membership-more-menu {
-  z-index: var(--z-dropdown) !important;
+  z-index: 3 !important;
 }
 
 @media (max-width: 700px) {

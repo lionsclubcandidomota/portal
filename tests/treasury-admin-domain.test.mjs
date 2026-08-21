@@ -82,8 +82,11 @@ test('monta mensagem de cobrança com pluralização e valor estimado', () => {
   });
 
   assert.match(message, /^Olá, João!/);
-  assert.match(message, /mensalidades pendentes referentes a julho de 2026, agosto de 2026/);
-  assert.match(message, /R\$\s*100,00/);
+  assert.match(message, /Segue um resumo da sua cobrança de mensalidades/);
+  assert.match(message, /Competências em aberto/);
+  assert.match(message, /julho de 2026/);
+  assert.match(message, /agosto de 2026/);
+  assert.match(message, /Total desta cobrança: R\$\s*100,00/);
   assert.match(message, /Tesouraria do Lions Clube de Teste$/);
 });
 

@@ -1,16 +1,7 @@
 import { escapeHtml, money } from '../../utils.js';
 import { uiIcon } from '../visual-helpers.js?v=6.46.7';
-import {
-  buildFamilyMembershipChargeMessage,
-  buildMembershipChargeMessage
-} from './domain.js';
-import {
-  blobToDataUrl,
-  buildChargeSvg,
-  downloadBlob,
-  svgMarkupToDataUrl,
-  svgToPngBlob
-} from './sharing-image-utils.js';
+import { buildFamilyMembershipChargeMessage, buildMembershipChargeMessage } from './domain.js';
+import { blobToDataUrl, buildChargeSvg, downloadBlob, svgMarkupToDataUrl, svgToPngBlob } from './sharing-image-utils.js';
 export function createMembershipChargeSharer(context) {
   const {
     state,
@@ -35,18 +26,10 @@ export function createMembershipChargeSharer(context) {
     assetCache.set(path, promise);
     return promise;
   };
-  const shareText = async (title, text) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text });
-        return true;
-      } catch (error) {
-        if (error?.name === 'AbortError') return false;
-      }
-    }
+  const copyTextToClipboard = async text => {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
-      toast('Mensagem copiada. Agora é só colar no WhatsApp.');
+      toast('Mensagem copiada para a área de transferência. Agora é só colar no WhatsApp.');
       return true;
     }
     const textArea = document.createElement('textarea');
@@ -58,7 +41,7 @@ export function createMembershipChargeSharer(context) {
     textArea.select();
     document.execCommand('copy');
     textArea.remove();
-    toast('Mensagem copiada. Agora é só colar no WhatsApp.');
+    toast('Mensagem copiada para a área de transferência. Agora é só colar no WhatsApp.');
     return true;
   };
   const shareImagePayload = async (payload, svgMarkup, width, height) => {
@@ -99,7 +82,9 @@ export function createMembershipChargeSharer(context) {
     const monthDebts = months.map(month => ({ month, amount: treasury.membershipOutstandingForMonth(member.id, month) }))
       .filter(item => item.amount > 0.005);
     const openingDebt = treasury.membershipOpeningDebtOutstanding(member.id);
-    const expectedTotal = openingDebt + monthDebts.reduce((sum, item) => sum + item.amount, 0);
+    const monthlyFee = treasury.membershipExpectedAmountForMember(member.id);
+    const periodOutstanding = monthDebts.reduce((sum, item) => sum + item.amount, 0);
+    const expectedTotal = openingDebt + periodOutstanding;
     const [avatarDataUrl, clubLogoDataUrl] = await Promise.all([
       fetchAssetAsDataUrl(member.photo),
       fetchAssetAsDataUrl('./public/logo.png')
@@ -111,6 +96,8 @@ export function createMembershipChargeSharer(context) {
         monthLabels: monthDebts.map(item => treasury.monthLabel(item.month)),
         expectedTotal,
         openingDebt,
+        monthlyFee,
+        periodOutstanding,
         clubName
       }),
       image: {
@@ -124,13 +111,23 @@ export function createMembershipChargeSharer(context) {
         responsibleAvatar: avatarDataUrl,
         badgeLabel: 'Associado',
         linkedMembers: [],
+        summaryStats: [
+          {
+            label: 'Mensalidade',
+            detail: monthlyFee > 0
+              ? `${money.format(monthlyFee)} x ${monthDebts.length} ${monthDebts.length === 1 ? 'mês' : 'meses'}`
+              : 'Sem competências no período',
+            hint: `Saldo do período: ${money.format(periodOutstanding)}${openingDebt > 0.005 ? ` · saldo anterior: ${money.format(openingDebt)}` : ''}`,
+            amount: expectedTotal
+          }
+        ],
         rows: [
           ...(openingDebt > 0.005 ? [{ label: 'Saldo anterior', amount: openingDebt }] : []),
           ...monthDebts.map(item => ({ label: treasury.monthLabel(item.month), amount: item.amount }))
         ],
         totalLabel: 'Total',
         total: expectedTotal,
-        note: 'Mensalidades selecionadas.',
+        note: 'Resumo das competências selecionadas.',
         footer: ''
       },
       filename: `cobranca-individual-${String(member.name || 'associado').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'associado'}.png`
@@ -173,12 +170,16 @@ export function createMembershipChargeSharer(context) {
     const memberCharges = members.map(member => {
       const pendingMonths = requestedMonths.filter(month => !treasury.monthIsPaid(member.id, month));
       const openingDebt = treasury.membershipOpeningDebtOutstanding(member.id);
+      const periodOutstanding = pendingMonths.reduce((sum, month) => sum + treasury.membershipOutstandingForMonth(member.id, month), 0);
       return {
         memberId: member.id,
         memberName: member.name,
+        role: member.id === group.primaryMemberId ? 'Titular' : 'Familiar',
         monthLabels: pendingMonths.map(treasury.monthLabel),
         openingDebt,
-        expectedTotal: openingDebt + pendingMonths.reduce((sum, month) => sum + treasury.membershipOutstandingForMonth(member.id, month), 0)
+        monthlyFee: treasury.membershipExpectedAmountForMember(member.id),
+        periodOutstanding,
+        expectedTotal: openingDebt + periodOutstanding
       };
     }).filter(item => item.monthLabels.length || item.openingDebt > 0.005);
     const clubLogoDataUrl = await fetchAssetAsDataUrl('./public/logo.png');
@@ -194,16 +195,16 @@ export function createMembershipChargeSharer(context) {
     const titularOpeningDebt = group.primaryMemberId ? treasury.membershipOpeningDebtOutstanding(group.primaryMemberId) : 0;
     const titularMonthlyTotal = titularCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const titularTotal = titularOpeningDebt + titularMonthlyTotal;
-    const titularMonthsCount = new Set(titularCharges.map(item => item.month)).size;
-    const titularMonthlyAmount = titularMonthsCount ? titularMonthlyTotal / titularMonthsCount : 0;
+    const titularInstallments = titularCharges.length;
+    const titularMonthlyFee = group.primaryMemberId ? treasury.membershipExpectedAmountForMember(group.primaryMemberId) : 0;
     const familyCharges = pendingCharges.filter(item => item.member.id !== group.primaryMemberId);
-    const familyOpeningDebt = members
-      .filter(member => member.id !== group.primaryMemberId)
-      .reduce((sum, member) => sum + treasury.membershipOpeningDebtOutstanding(member.id), 0);
+    const familyMembers = members.filter(member => member.id !== group.primaryMemberId);
+    const familyOpeningDebt = familyMembers.reduce((sum, member) => sum + treasury.membershipOpeningDebtOutstanding(member.id), 0);
     const familyMonthlyTotal = familyCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const familyMembersTotal = familyOpeningDebt + familyMonthlyTotal;
-    const familyMonthsCount = new Set(familyCharges.map(item => item.month)).size;
-    const familyMonthlyAmount = familyMonthsCount ? familyMonthlyTotal / familyMonthsCount : 0;
+    const familyInstallments = familyCharges.length;
+    const familyMembersCount = familyMembers.length;
+    const familyMonthlyFee = familyMembers[0] ? treasury.membershipExpectedAmountForMember(familyMembers[0].id) : 0;
     const monthTotals = requestedMonths.map(month => ({
       month,
       label: treasury.monthLabel(month),
@@ -216,7 +217,7 @@ export function createMembershipChargeSharer(context) {
       title: `Mensalidades da ${group.name} — ${clubName}`,
       text: buildFamilyMembershipChargeMessage({
         familyName: group.name,
-        memberCharges: memberCharges.map(({ memberName, monthLabels, openingDebt, expectedTotal }) => ({ memberName, monthLabels, openingDebt, expectedTotal })),
+        memberCharges: memberCharges.map(({ memberName, role, monthLabels, openingDebt, expectedTotal, monthlyFee, periodOutstanding }) => ({ memberName, role, monthLabels, openingDebt, expectedTotal, monthlyFee, periodOutstanding })),
         clubName
       }),
       image: {
@@ -233,16 +234,22 @@ export function createMembershipChargeSharer(context) {
         summaryStats: [
           {
             label: 'Titular',
-            detail: titularMonthsCount
-              ? `${money.format(titularMonthlyAmount)} x ${titularMonthsCount} ${titularMonthsCount === 1 ? 'mês' : 'meses'}${titularOpeningDebt > 0.005 ? ' + saldo ant.' : ''}`
-              : titularOpeningDebt > 0.005 ? 'Saldo anterior' : 'Sem pendências',
+            detail: titularInstallments
+              ? `${money.format(titularMonthlyFee)} x ${titularInstallments} ${titularInstallments === 1 ? 'mensalidade' : 'mensalidades'}`
+              : titularOpeningDebt > 0.005 ? 'Sem competências no período' : 'Sem pendências',
+            hint: titularTotal > 0.005
+              ? `Saldo do período: ${money.format(titularMonthlyTotal)}${titularOpeningDebt > 0.005 ? ` · saldo anterior: ${money.format(titularOpeningDebt)}` : ''}`
+              : 'Nenhum saldo em aberto',
             amount: titularTotal
           },
           {
             label: 'Família',
-            detail: familyMonthsCount
-              ? `${money.format(familyMonthlyAmount)} x ${familyMonthsCount} ${familyMonthsCount === 1 ? 'mês' : 'meses'}${familyOpeningDebt > 0.005 ? ' + saldo ant.' : ''}`
-              : familyOpeningDebt > 0.005 ? 'Saldo anterior' : 'Sem pendências',
+            detail: familyInstallments
+              ? `${money.format(familyMonthlyFee)} x ${familyInstallments} ${familyInstallments === 1 ? 'mensalidade' : 'mensalidades'}`
+              : familyOpeningDebt > 0.005 ? 'Sem competências no período' : 'Sem pendências',
+            hint: familyMembersCount
+              ? `${familyMembersCount} ${familyMembersCount === 1 ? 'integrante' : 'integrantes'} · saldo do período: ${money.format(familyMonthlyTotal)}${familyOpeningDebt > 0.005 ? ` · saldo anterior: ${money.format(familyOpeningDebt)}` : ''}`
+              : 'Nenhum integrante adicional selecionado',
             amount: familyMembersTotal
           }
         ],
@@ -255,7 +262,7 @@ export function createMembershipChargeSharer(context) {
         ],
         totalLabel: 'Total familiar',
         total,
-        note: 'Resumo do grupo selecionado.',
+        note: 'Resumo das competências selecionadas.',
         footer: ''
       },
       filename: `cobranca-familiar-${String(group.name || 'familia').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'familia'}.png`
@@ -326,7 +333,7 @@ export function createMembershipChargeSharer(context) {
         <b>${escapeHtml(value)}</b>
       </div>
       <div class="membership-charge-option-actions">
-        <button class="btn btn-ghost" type="button" data-membership-charge-action="text" data-membership-charge-target="${type}">${uiIcon('message')} Copiar texto</button>
+        <button class="btn btn-ghost" type="button" data-membership-charge-action="text" data-membership-charge-target="${type}">${uiIcon('message')} Copiar mensagem</button>
         <button class="btn btn-primary" type="button" data-membership-charge-action="image" data-membership-charge-target="${type}">${uiIcon('image')} Gerar imagem</button>
       </div>
     </article>`;
@@ -376,7 +383,7 @@ export function createMembershipChargeSharer(context) {
         if (action === 'text') {
           closeModal();
           const payload = await familyPayloadPromise;
-          await shareText(payload.title, payload.text);
+          await copyTextToClipboard(payload.text);
           return;
         }
         openImagePreview({
@@ -409,7 +416,7 @@ export function createMembershipChargeSharer(context) {
       }));
     }
     modalBody.innerHTML = `<section class="membership-charge-choice" aria-labelledby="membershipChargeChoiceTitle">
-      <div class="membership-charge-choice-intro"><span aria-hidden="true">${uiIcon('message')}</span><div><h3 id="membershipChargeChoiceTitle">Como deseja compartilhar a cobrança?</h3><p>Escolha o destinatário e o formato: mensagem de texto ou imagem personalizada.</p></div></div>
+      <div class="membership-charge-choice-intro"><span aria-hidden="true">${uiIcon('message')}</span><div><h3 id="membershipChargeChoiceTitle">Como deseja compartilhar a cobrança?</h3><p>Escolha para quem enviar a cobrança e como deseja compartilhar: mensagem pronta para WhatsApp ou imagem personalizada.</p></div></div>
       <div class="membership-charge-choice-grid">${cards.join('')}</div>
       <div class="form-actions"><button class="btn btn-ghost" type="button" data-close-modal>Cancelar</button></div>
     </section>`;
@@ -435,7 +442,7 @@ export function createMembershipChargeSharer(context) {
         if (action === 'text') {
           closeModal();
           const payload = await payloadPromise;
-          await shareText(payload.title, payload.text);
+          await copyTextToClipboard(payload.text);
           return;
         }
         openImagePreview({
@@ -446,13 +453,15 @@ export function createMembershipChargeSharer(context) {
       });
     });
   };
-  return async (memberId, months = []) => {
+  return async (memberId, months = [], periodMonths = months) => {
     const member = state().birthdays.find(item => item.id === memberId);
     if (!member) {
       toast('Associado não encontrado.');
       return;
     }
     const pendingMonths = [...new Set(months)].filter(Boolean);
+    const filteredPeriodMonths = [...new Set(periodMonths)].filter(Boolean);
+    const familyRequestedMonths = filteredPeriodMonths.length ? filteredPeriodMonths : pendingMonths;
     const memberOpeningDebt = treasury.membershipOpeningDebtOutstanding(memberId);
     if (!pendingMonths.length && memberOpeningDebt <= 0.005) {
       toast('Não há mensalidades ou saldo anterior pendente para cobrança.');
@@ -472,7 +481,7 @@ export function createMembershipChargeSharer(context) {
       });
       return;
     }
-    const familyPayload = await buildFamilyPayload(group, pendingMonths, clubName);
+    const familyPayload = await buildFamilyPayload(group, familyRequestedMonths, clubName);
     openChoiceModal({
       memberPayloadPromise,
       familyPayloadPromise: familyPayload.memberCharges.length ? Promise.resolve(familyPayload) : null,
@@ -486,7 +495,7 @@ export function createMembershipChargeSharer(context) {
         detail: group.name,
         helper: `${familyPayload.memberCharges.length} integrante(s) · ${familyPayload.image.rows.length} item(ns) em aberto`,
         group,
-        requestedMonths: pendingMonths,
+        requestedMonths: familyRequestedMonths,
         clubName
       } : null
     });

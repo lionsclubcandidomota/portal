@@ -136,26 +136,35 @@ export function buildMembershipChargeMessage({
   monthLabels = [],
   expectedTotal = 0,
   openingDebt = 0,
+  monthlyFee = 0,
+  periodOutstanding = 0,
   clubName = 'Lions Clube'
 } = {}) {
   const months = [...new Set(monthLabels)].filter(Boolean);
   const firstName = String(memberName || '').trim().split(/\s+/)[0] || memberName;
   const debt = Math.max(0, Number(openingDebt || 0));
+  const monthlyAmount = Math.max(0, Number(monthlyFee || 0));
+  const outstandingPeriod = Math.max(0, Number(periodOutstanding || 0));
   const total = Math.max(0, Number(expectedTotal || 0));
-  const parts = [];
-  if (debt > 0) parts.push(`saldo anterior em aberto de ${money.format(debt)}`);
-  if (months.length) parts.push(`mensalidade${months.length > 1 ? 's' : ''} pendente${months.length > 1 ? 's' : ''} referente${months.length > 1 ? 's' : ''} a ${months.join(', ')}`);
-  const pendingText = parts.length ? parts.join(' e ') : 'valores pendentes';
-  const valueText = total > 0 ? ` O total estimado em aberto é ${money.format(total)}.` : '';
+  const monthBlock = months.length
+    ? `📌 *Competências em aberto*
+${months.map(label => `• ${label}`).join('\n')}`
+    : '';
+  const summaryLines = [
+    monthlyAmount > 0 ? `• Valor da mensalidade: ${money.format(monthlyAmount)}` : '',
+    outstandingPeriod > 0 ? `• Mensalidades em aberto no período: ${money.format(outstandingPeriod)}` : '',
+    debt > 0 ? `• Saldo anterior em aberto: ${money.format(debt)}` : '',
+    `• Total desta cobrança: ${money.format(total)}`
+  ].filter(Boolean);
 
-  return `Olá, ${firstName}! Tudo bem?
-
-Identificamos ${pendingText}.${valueText}
-
-Pedimos, por gentileza, que verifique a situação. Caso o pagamento já tenha sido realizado, desconsidere esta mensagem e, se possível, encaminhe o comprovante.
-
-Obrigado(a)!
-Tesouraria do ${clubName}`;
+  return [
+    `Olá, ${firstName}! Tudo bem?`,
+    'Segue um resumo da sua cobrança de mensalidades.',
+    monthBlock,
+    `💰 *Resumo da cobrança*\n${summaryLines.join('\n')}`,
+    'Se o pagamento já foi realizado, desconsidere esta mensagem. Se possível, encaminhe o comprovante para conferência.',
+    `Obrigado(a)!\nTesouraria do ${clubName}`
+  ].filter(Boolean).join('\n\n');
 }
 
 export function buildFamilyMembershipChargeMessage({
@@ -166,31 +175,36 @@ export function buildFamilyMembershipChargeMessage({
   const charges = (Array.isArray(memberCharges) ? memberCharges : [])
     .map(item => ({
       memberName: String(item?.memberName || '').trim(),
+      role: String(item?.role || '').trim(),
       monthLabels: [...new Set(item?.monthLabels || [])].filter(Boolean),
       openingDebt: Math.max(0, Number(item?.openingDebt || 0)),
-      expectedTotal: Math.max(0, Number(item?.expectedTotal || 0))
+      expectedTotal: Math.max(0, Number(item?.expectedTotal || 0)),
+      monthlyFee: Math.max(0, Number(item?.monthlyFee || 0)),
+      periodOutstanding: Math.max(0, Number(item?.periodOutstanding || 0))
     }))
     .filter(item => item.memberName && (item.monthLabels.length || item.openingDebt > 0));
   const familyLabel = String(familyName || '').trim() || 'família';
   const total = charges.reduce((sum, item) => sum + item.expectedTotal, 0);
-  const lines = charges.map(item => {
-    const parts = [];
-    if (item.openingDebt > 0) parts.push(`saldo anterior ${money.format(item.openingDebt)}`);
-    if (item.monthLabels.length) parts.push(item.monthLabels.join(', '));
-    return `• ${item.memberName}: ${parts.join(' + ')} — ${money.format(item.expectedTotal)}`;
+  const memberBlocks = charges.map(item => {
+    const header = `👤 *${item.memberName}*${item.role ? ` (${item.role})` : ''}`;
+    const details = [
+      item.monthlyFee > 0 ? `• Mensalidade: ${money.format(item.monthlyFee)}` : '',
+      item.monthLabels.length ? `• Competências em aberto: ${item.monthLabels.join(', ')}` : '',
+      item.periodOutstanding > 0 ? `• Mensalidades em aberto no período: ${money.format(item.periodOutstanding)}` : '',
+      item.openingDebt > 0 ? `• Saldo anterior em aberto: ${money.format(item.openingDebt)}` : '',
+      `• Total deste integrante: ${money.format(item.expectedTotal)}`
+    ].filter(Boolean);
+    return `${header}\n${details.join('\n')}`;
   });
 
-  return `Olá, família ${familyLabel}! Tudo bem?
-
-Identificamos valores pendentes para os integrantes abaixo:
-${lines.join('\n')}
-
-Total estimado: ${money.format(total)}.
-
-Pedimos, por gentileza, que verifiquem a situação. Caso os pagamentos já tenham sido realizados, desconsiderem esta mensagem e, se possível, encaminhem os comprovantes.
-
-Obrigado(a)!
-Tesouraria do ${clubName}`;
+  return [
+    `Olá, família ${familyLabel}! Tudo bem?`,
+    'Segue um resumo da cobrança do período selecionado.',
+    memberBlocks.join('\n\n'),
+    `💰 *Total da cobrança familiar:* ${money.format(total)}`,
+    'Se os pagamentos já foram realizados, desconsiderem esta mensagem. Se possível, encaminhem os comprovantes para conferência.',
+    `Obrigado(a)!\nTesouraria do ${clubName}`
+  ].filter(Boolean).join('\n\n');
 }
 
 export function normalizeTreasuryEntryPayload(raw = {}, { defaultAccountId = '', transferCategory = TREASURY_TRANSFER_CATEGORY } = {}) {

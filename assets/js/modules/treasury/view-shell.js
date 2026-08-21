@@ -18,9 +18,9 @@ function chartCard(treasury, {
   const collapsed = treasury.isChartCollapsed(id);
   const bodyId = `${hostId}Body`;
   return `<article class="card col-6 treasury-chart-card ${collapsed ? 'is-collapsed' : ''}" data-treasury-chart-card="${id}" aria-labelledby="${hostId}Title" aria-expanded="${String(!collapsed)}" tabindex="0">
-    <div class="card-header">
+    <div class="card-header treasury-chart-card-header" data-treasury-chart-toggle="${id}" role="button" aria-expanded="${String(!collapsed)}" aria-controls="${bodyId}" tabindex="-1">
       <div class="treasury-chart-heading"><span aria-hidden="true">${uiIcon(icon)}</span><div><h3 id="${hostId}Title">${escapeHtml(title)}</h3><div class="card-subtitle">${escapeHtml(subtitle)}</div></div></div>
-      <button class="btn btn-ghost btn-sm treasury-chart-toggle" type="button" data-treasury-chart-toggle="${id}" aria-expanded="${String(!collapsed)}" aria-controls="${bodyId}"><span aria-hidden="true">${collapsed ? '＋' : '−'}</span><strong>${collapsed ? 'Expandir' : 'Minimizar'}</strong></button>
+      <span class="treasury-chart-toggle-hint" aria-hidden="true">${collapsed ? 'Clique para expandir' : 'Clique para recolher'}</span>
     </div>
     <div class="treasury-chart-body" id="${bodyId}" ${collapsed ? 'hidden' : ''}><div class="chart-wrap ${wrapClass}"><div id="${hostId}" class="native-chart-host"></div></div></div>
   </article>`;

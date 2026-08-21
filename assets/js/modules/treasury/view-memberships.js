@@ -148,8 +148,11 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
       const months = String(button.dataset.membershipMonths || '')
         .split(',')
         .filter(Boolean);
+      const periodMonths = String(button.dataset.membershipPeriod || '')
+        .split(',')
+        .filter(Boolean);
       closeMembershipActionMenus(root);
-      shareMembershipCharge(button.dataset.membershipCharge, months);
+      shareMembershipCharge(button.dataset.membershipCharge, months, periodMonths);
     });
   });
 

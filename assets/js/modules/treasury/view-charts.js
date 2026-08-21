@@ -2,17 +2,15 @@ import { renderTreasuryCharts } from './charts.js';
 
 function updateChartCardState(root, treasury, chartId, collapsed) {
   const card = root.querySelector(`[data-treasury-chart-card="${chartId}"]`);
-  const button = root.querySelector(`[data-treasury-chart-toggle="${chartId}"]`);
+  const toggle = root.querySelector(`[data-treasury-chart-toggle="${chartId}"]`);
   const body = card?.querySelector('.treasury-chart-body');
   card?.classList.toggle('is-collapsed', collapsed);
   card?.setAttribute('aria-expanded', String(!collapsed));
   if (body) body.hidden = collapsed;
-  if (button) {
-    button.setAttribute('aria-expanded', String(!collapsed));
-    const icon = button.querySelector('span');
-    const label = button.querySelector('strong');
-    if (icon) icon.textContent = collapsed ? '＋' : '−';
-    if (label) label.textContent = collapsed ? 'Expandir' : 'Minimizar';
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    const hint = toggle.querySelector('.treasury-chart-toggle-hint');
+    if (hint) hint.textContent = collapsed ? 'Clique para expandir' : 'Clique para recolher';
   }
 
   const chartTotal = root.querySelectorAll('[data-treasury-chart-card]').length;
@@ -33,23 +31,31 @@ export function bindTreasuryCharts({
   periodItems,
   isTreasuryView
 }) {
-  root.querySelectorAll('[data-treasury-chart-toggle]').forEach(button => {
-    button.addEventListener('click', () => {
-      const chartId = button.dataset.treasuryChartToggle;
+  root.querySelectorAll('[data-treasury-chart-toggle]').forEach(toggle => {
+    const handleToggle = event => {
+      if (event.type === 'keydown' && !['Enter', ' '].includes(event.key)) return;
+      if (event.type === 'keydown') event.preventDefault();
+      const chartId = toggle.dataset.treasuryChartToggle;
       const collapsed = treasury.toggleChart(chartId);
       updateChartCardState(root, treasury, chartId, collapsed);
-    });
+    };
+    toggle.addEventListener('click', handleToggle);
+    toggle.addEventListener('keydown', handleToggle);
   });
 
   root.querySelectorAll('[data-treasury-chart-card]').forEach(card => {
     const expandCard = event => {
-      if (!treasury.isChartCollapsed(card.dataset.treasuryChartCard)) return;
-      if (event.type === 'click' && event.target.closest('button, a, input, select, textarea, [role="button"]')) return;
+      const chartId = card.dataset.treasuryChartCard;
+      const header = event.target.closest('[data-treasury-chart-toggle]');
+      if (event.type === 'click') {
+        if (header) return;
+        if (!treasury.isChartCollapsed(chartId)) return;
+        if (event.target.closest('button, a, input, select, textarea, [role="button"]')) return;
+      }
       if (event.type === 'keydown') {
         if (event.target !== card || !['Enter', ' '].includes(event.key)) return;
         event.preventDefault();
       }
-      const chartId = card.dataset.treasuryChartCard;
       const collapsed = treasury.toggleChart(chartId);
       updateChartCardState(root, treasury, chartId, collapsed);
     };
