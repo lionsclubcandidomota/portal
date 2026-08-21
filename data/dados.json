@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-18T16:23:25.079Z",
-  "deploymentId": "1787070205079-1133afc0-f460-46d7-a1df-9b580930f614",
+  "updatedAt": "2026-08-21T20:05:51.603Z",
+  "deploymentId": "1787342751603-19e93271-13f7-4e13-a987-99734b197402",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -360,7 +360,8 @@
       "Aplicação",
       "Associação Internacional de Lions Clubes",
       "Camisetas",
-      "Saldo Inicial"
+      "Saldo Inicial",
+      "Transferência entre contas"
     ],
     "familyGroups": [
       {
@@ -856,18 +857,6 @@
         "membershipPlan": "family",
         "familyGroupId": "f_ms7u6fcz_4zy7h4",
         "notes": "Pagamento conjunto: Vitória e João\nTitular: João Augusto Batista de Paula — R$ 40,00\nFamiliar: Vitoria Caroline Zibordi — R$ 15,00\nMeses quitados: agosto de 2026",
-        "attachments": []
-      },
-      {
-        "id": "t_mskga6d2_rv2xu7",
-        "date": "2026-08-27",
-        "accountId": "acc-current",
-        "category": "Associação Internacional de Lions Clubes",
-        "description": "Boleto Taxa Internacional ",
-        "entry": 0,
-        "exit": 3185.31,
-        "notes": "",
-        "status": "Programado",
         "attachments": []
       },
       {
@@ -3533,6 +3522,30 @@
         "notes": "",
         "status": "Recebido",
         "attachments": []
+      },
+      {
+        "id": "t_mskga6d2_rv2xu7",
+        "movementKind": "exit",
+        "date": "2026-08-27",
+        "accountId": "acc-current",
+        "category": "Associação Internacional de Lions Clubes",
+        "description": "Boleto Taxa Internacional ",
+        "amount": 3185.31,
+        "notes": "Pagamento dia 21/08",
+        "entry": 0,
+        "exit": 3185.31,
+        "status": "Pago",
+        "attachments": [
+          {
+            "id": "att_mt3dposh_swtlik",
+            "name": "Taxa Internacional.jpg",
+            "type": "image/jpeg",
+            "size": 79941,
+            "originalSize": 62710,
+            "optimized": true,
+            "url": "./public/treasury/t_mskga6d2_rv2xu7/att_mt3dposh_swtlik-1khb7co.jpg"
+          }
+        ]
       }
     ],
     "events": [
