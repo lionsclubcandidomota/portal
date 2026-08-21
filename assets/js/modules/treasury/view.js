@@ -25,7 +25,7 @@ export function renderTreasury(state, treasury, helpers) {
   const totals = sumTreasury(financialPeriodItems);
   totals.realizedCount = logicalPeriodItems.filter(item => !treasury.isProgrammed(item)).length;
   totals.programmedCount = logicalPeriodItems.filter(item => treasury.isProgrammed(item)).length;
-  const accountSummaries = treasury.accountSummaries(periodItems);
+  const accountSummaries = treasury.accountSummaries();
   const membershipModel = buildMembershipViewModel(state, treasury);
   const mutualModel = buildMutualViewModel(state, treasury);
   const categories = categorySummaries(periodItems, treasury);

@@ -93,6 +93,32 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
       ? value
       : `${kind === TREASURY_MOVEMENT_KIND.ENTRY ? '+' : '−'} ${value}`;
 
+    const isProgrammed = treasury.isProgrammed(item);
+    const balanceLabel = isProgrammed ? 'Saldo previsto ao fim do dia' : 'Saldo ao fim do dia';
+    const accountDayBalance = !isTransfer && account
+      ? treasury.accountBalanceAtDate(account.id, item.date, { includeProgrammed: isProgrammed })
+      : null;
+    const sourceDayBalance = isTransfer && sourceAccount
+      ? treasury.accountBalanceAtDate(sourceAccount.id, item.date, { includeProgrammed: isProgrammed })
+      : null;
+    const destinationDayBalance = isTransfer && destinationAccount
+      ? treasury.accountBalanceAtDate(destinationAccount.id, item.date, { includeProgrammed: isProgrammed })
+      : null;
+    const balanceSummary = isTransfer
+      ? `${isProgrammed ? 'Prev.' : 'Fim do dia'} · origem ${money.format(sourceDayBalance || 0)} · destino ${money.format(destinationDayBalance || 0)}`
+      : `${isProgrammed ? 'Previsto no dia' : 'Saldo no dia'}: ${money.format(accountDayBalance || 0)}`;
+    const mobileBalanceLabel = isProgrammed ? 'Prev. no dia' : 'Saldo no dia';
+    const mobileBalanceSummary = isTransfer
+      ? `Origem ${money.format(sourceDayBalance || 0)} · Destino ${money.format(destinationDayBalance || 0)}`
+      : money.format(accountDayBalance || 0);
+    const mobileBalanceNegative = isTransfer
+      ? Number(sourceDayBalance || 0) < 0 || Number(destinationDayBalance || 0) < 0
+      : Number(accountDayBalance || 0) < 0;
+    const mobileAccountContext = isTransfer
+      ? `${sourceAccount?.name || 'Conta de origem'} → ${destinationAccount?.name || 'Conta de destino'}`
+      : (account?.name || 'Conta principal');
+    const mobileCategoryContext = isTransfer ? 'Transferência entre contas' : (item.category || 'Sem categoria');
+
     return `<article class="expandable-record-card treasury-record-card ${treasury.statusClass(item)} ${kind === TREASURY_MOVEMENT_KIND.ENTRY ? 'is-entry' : ''} ${kind === TREASURY_MOVEMENT_KIND.EXIT ? 'is-exit' : ''} ${membership || mutual ? 'is-membership' : ''} ${mutual ? 'is-mutual' : ''} ${isTransfer ? 'is-transfer' : ''}" data-expandable-card>
       <button class="expandable-record-summary treasury-record-summary" type="button" data-card-toggle aria-expanded="false" aria-label="Ver detalhes de ${escapeHtml(item.description)}">
         <span class="record-icon treasury-record-icon" aria-hidden="true">${recordIcon}</span>
@@ -102,7 +128,15 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
         <span class="treasury-summary-field treasury-summary-date"><small>Data</small><strong>${formatDate(item.date)}</strong></span>
         <span class="treasury-summary-field treasury-summary-type"><small>Movimento</small><span class="treasury-type-chip ${valueType}">${movementTypeLabel}</span></span>
         <span class="treasury-summary-field treasury-summary-status"><small>Situação</small><span class="treasury-status-chip ${treasury.statusClass(item)}">${escapeHtml(treasury.statusLabel(item))}</span></span>
-        <span class="treasury-summary-actions"><strong class="record-value ${valueType} sensitive-money">${amountMarkup}</strong><span class="record-chevron" aria-hidden="true"></span></span>
+        <span class="treasury-summary-mobile-context">
+          <span class="treasury-mobile-context-account">${uiIcon(isTransfer ? 'transfer' : 'wallet')}<strong>${escapeHtml(mobileAccountContext)}</strong></span>
+          <span class="treasury-mobile-context-category">${escapeHtml(mobileCategoryContext)}</span>
+          <span class="treasury-status-chip ${treasury.statusClass(item)}">${escapeHtml(treasury.statusLabel(item))}</span>
+        </span>
+        <span class="treasury-summary-mobile-metrics">
+          <span class="treasury-mobile-metric is-movement"><small>Valor da movimentação</small><strong class="record-value ${valueType} sensitive-money">${amountMarkup}</strong><span class="treasury-mobile-balance-note ${mobileBalanceNegative ? 'is-negative' : ''}"><small>${escapeHtml(mobileBalanceLabel)}</small><b class="sensitive-money">${escapeHtml(mobileBalanceSummary)}</b></span></span>
+        </span>
+        <span class="treasury-summary-actions"><span class="treasury-record-value-stack"><strong class="record-value ${valueType} sensitive-money">${amountMarkup}</strong><small class="treasury-record-closing-balance">${escapeHtml(balanceSummary)}</small></span><span class="record-chevron" aria-hidden="true"></span></span>
       </button>
       <div class="expandable-record-details treasury-expanded-details" hidden>
         <div class="treasury-expanded-hero">
@@ -113,7 +147,9 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
           <div class="treasury-expanded-meta-item is-date"><span aria-hidden="true">${uiIcon('calendar')}</span><div><small>Data</small><strong>${formatDate(item.date)}</strong></div></div>
           ${isTransfer ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('bank')}</span><div><small>Conta de origem</small><strong>${escapeHtml(sourceAccount?.name || 'Conta de origem')}</strong></div></div><div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('bank')}</span><div><small>Conta de destino</small><strong>${escapeHtml(destinationAccount?.name || 'Conta de destino')}</strong></div></div>` : `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${treasury.accountTypeIcon(account?.type)}</span><div><small>Conta</small><strong>${escapeHtml(account?.name || 'Conta principal')}</strong></div></div><div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('tag')}</span><div><small>Categoria</small><strong>${escapeHtml(item.category)}</strong></div></div>`}
           <div class="treasury-expanded-meta-item"><span aria-hidden="true">${isTransfer ? uiIcon('transfer') : (kind === TREASURY_MOVEMENT_KIND.ENTRY ? '↗' : '↘')}</span><div><small>Tipo</small><strong>${movementTypeLabel}</strong></div></div>
-          ${isTransfer ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">${uiIcon('transfer')}</span><div><small>Resumo da transferência</small><strong>${escapeHtml(sourceAccount?.name || 'Conta de origem')} → ${escapeHtml(destinationAccount?.name || 'Conta de destino')}</strong></div></div>` : ''}
+          ${isTransfer
+            ? `<div class="treasury-expanded-meta-item treasury-balance-at-date ${Number(sourceDayBalance || 0) < 0 ? 'is-negative' : ''}"><span aria-hidden="true">${uiIcon('wallet')}</span><div><small>${balanceLabel} · origem</small><strong class="sensitive-money">${money.format(sourceDayBalance || 0)}</strong></div></div><div class="treasury-expanded-meta-item treasury-balance-at-date ${Number(destinationDayBalance || 0) < 0 ? 'is-negative' : ''}"><span aria-hidden="true">${uiIcon('wallet')}</span><div><small>${balanceLabel} · destino</small><strong class="sensitive-money">${money.format(destinationDayBalance || 0)}</strong></div></div><div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">${uiIcon('transfer')}</span><div><small>Resumo da transferência</small><strong>${escapeHtml(sourceAccount?.name || 'Conta de origem')} → ${escapeHtml(destinationAccount?.name || 'Conta de destino')}</strong></div></div>`
+            : `<div class="treasury-expanded-meta-item treasury-balance-at-date ${Number(accountDayBalance || 0) < 0 ? 'is-negative' : ''}"><span aria-hidden="true">${uiIcon('wallet')}</span><div><small>${balanceLabel}</small><strong class="sensitive-money">${money.format(accountDayBalance || 0)}</strong></div></div>`}
           ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">${uiIcon('users')}</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('calendar')}</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('heart')}</span><div><small>${mutualEvent ? 'Grupo / ocorrência' : 'Grupo / referência histórica'}</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${mutualEvent ? `Falecimento de ${escapeHtml(mutualEvent.deceasedName)} em ${escapeHtml(formatDate(mutualDate))}` : escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
         </div>
         ${treasuryAttachmentGallery(item)}

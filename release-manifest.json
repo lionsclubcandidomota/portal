@@ -2,15 +2,15 @@
   "application": "portal-lions-candido-mota",
   "version": "6.46.7",
   "schemaVersion": 12,
-  "generatedAt": "2026-08-18T19:56:33.479Z",
+  "generatedAt": "2026-08-21T21:46:08.571Z",
   "summary": {
-    "files": 383,
-    "javascript": 216,
+    "files": 391,
+    "javascript": 223,
     "css": 34,
-    "tests": 72,
+    "tests": 76,
     "memberImages": 28,
     "memberThumbnails": 56,
-    "totalBytes": 9718977
+    "totalBytes": 9864872
   },
   "files": [
     {
@@ -30,8 +30,8 @@
     },
     {
       "path": "assets/css/app.css",
-      "bytes": 425011,
-      "sha256": "82191fc34f7da2903c61100b69536ff18e50127ed377b8a274a27c3813669063"
+      "bytes": 429505,
+      "sha256": "bbd4ca0e32a4eef3c1340d307fc2bb3ce15e4e4d52403326ccb1b202d382b1a1"
     },
     {
       "path": "assets/css/base.css",
@@ -80,8 +80,8 @@
     },
     {
       "path": "assets/css/components/native-charts.css",
-      "bytes": 26592,
-      "sha256": "b671e3ed476cda8041c43cb8af00044ad85d77e01544704c46422eebeff50185"
+      "bytes": 31692,
+      "sha256": "77583d786441e78e4cf4bb2a74c6df14def44574445dee64229fa223f91b5ca0"
     },
     {
       "path": "assets/css/components/publication-center.css",
@@ -160,8 +160,8 @@
     },
     {
       "path": "assets/css/pages/responsive-workflows.css",
-      "bytes": 33007,
-      "sha256": "79fa9640208d9b148bd3f5591d5fc5156b956e556fe75c1f2bf5ead703fe96c2"
+      "bytes": 27643,
+      "sha256": "66b434479aa732f08bea501bc46c4c949cdb466ed28287f34a70ddb5173eb39e"
     },
     {
       "path": "assets/css/pages/settings.css",
@@ -170,8 +170,8 @@
     },
     {
       "path": "assets/css/pages/treasury-mobile.css",
-      "bytes": 9961,
-      "sha256": "a097cd2ba7b645b05137ede9f338c82567ac71c630f81850e8cd7f209b9605c3"
+      "bytes": 16273,
+      "sha256": "1d1e83bd7a1b886c6689d611ece36358d62211c41cf4fa5d2dc23b47ee5f3b99"
     },
     {
       "path": "assets/css/pages/treasury-navigation.css",
@@ -180,13 +180,13 @@
     },
     {
       "path": "assets/css/pages/treasury-records.css",
-      "bytes": 7282,
-      "sha256": "a0eaa67bd496e2c3cf4007ecb1a82493f930b3b17990734abad7220f0a56076d"
+      "bytes": 5911,
+      "sha256": "4171cd4f27988afbdbcca949b3974123d28c40c021a413b45cfa37729d63306e"
     },
     {
       "path": "assets/css/pages/treasury-workflows.css",
-      "bytes": 12259,
-      "sha256": "8c4cc47f4099124ea24d76ccdbbe2ba7a2ea785fa639b51aa32932c72e2fb819"
+      "bytes": 12076,
+      "sha256": "e2024ad6bdf80d6a8b85dc7ea5f935ffa4018b8e9029b44a6574ac87e1ec57dc"
     },
     {
       "path": "assets/css/responsive.css",
@@ -415,8 +415,8 @@
     },
     {
       "path": "assets/js/modules/lazy-entity-actions.js",
-      "bytes": 5801,
-      "sha256": "bd7631eaf19a67a9c360df1fc92a0eaada294b593906a2768bc8c1d40eed22c3"
+      "bytes": 5891,
+      "sha256": "48fd62df7ef836427d827d3caebf042ebca1ea97304038afd3d2d5ca6c8d0aeb"
     },
     {
       "path": "assets/js/modules/lazy-publish-center.js",
@@ -465,8 +465,8 @@
     },
     {
       "path": "assets/js/modules/portal-app.js",
-      "bytes": 15925,
-      "sha256": "3a3c5c3c0f3944a0081dfe7b1f85e287903563b5f2c7e193cee96f52bb18350e"
+      "bytes": 15989,
+      "sha256": "87b3e72e86498aa69c25345fb18b777ab32720319bba3c7497aa038d28cc5778"
     },
     {
       "path": "assets/js/modules/portal-elements.js",
@@ -640,8 +640,8 @@
     },
     {
       "path": "assets/js/modules/treasury-admin.js",
-      "bytes": 1900,
-      "sha256": "05622759d02ca93c8c6a807b67a24c5316c78fe4ef853c91c665290078fe0872"
+      "bytes": 2110,
+      "sha256": "d69a204b6ceaf8b67e9a34335ba267ec14617caa5eb9dcc0048896542acf3f8c"
     },
     {
       "path": "assets/js/modules/treasury-admin/accounts.js",
@@ -660,8 +660,8 @@
     },
     {
       "path": "assets/js/modules/treasury-admin/domain.js",
-      "bytes": 7146,
-      "sha256": "cfd8e3f9f6935f0edcedc2b4d58b60b3512edb4bc0def97a736a8877943b4de1"
+      "bytes": 10478,
+      "sha256": "4e3ba4183236c0b8de5e7d0f3a7e96ca9c951e7d2dafd9c45c8d96d481ce87d3"
     },
     {
       "path": "assets/js/modules/treasury-admin/entries.js",
@@ -684,9 +684,14 @@
       "sha256": "f729d4a78154208439df41bcf462cfb14d76635f4490673043e01977f3b257a3"
     },
     {
+      "path": "assets/js/modules/treasury-admin/membership-opening-debt.js",
+      "bytes": 4126,
+      "sha256": "78e1371fe1d28ecf4485e78c9279c265a72181fe0481497b4dbf83f88b8bef7a"
+    },
+    {
       "path": "assets/js/modules/treasury-admin/membership-payments.js",
-      "bytes": 16004,
-      "sha256": "e4b5bb5d4bb7d88495361f8122eb1aa33e6155bdb39d504c38edad1ed18f7b0d"
+      "bytes": 28494,
+      "sha256": "046f0e6b8b457c559c682d945df36e6be04a4d791d90983400e6b6c02895ee5f"
     },
     {
       "path": "assets/js/modules/treasury-admin/mutual-events.js",
@@ -710,33 +715,43 @@
     },
     {
       "path": "assets/js/modules/treasury-admin/sharing.js",
-      "bytes": 22598,
-      "sha256": "ef1a539eac8f4e9990d35987f4d78d71fb7e1f7735c895066525b246dc58ff8a"
+      "bytes": 24463,
+      "sha256": "fae3bd767e79ec2f692b3f9bf12bf7e0e66f444c158c331b792729f59491c7f8"
+    },
+    {
+      "path": "assets/js/modules/treasury/account-balance-chart.js",
+      "bytes": 5207,
+      "sha256": "81696c86dd9ccab8efb785d910a90f99b13ea05756256e373fd196a8b12ae7bd"
+    },
+    {
+      "path": "assets/js/modules/treasury/account-balance-domain.js",
+      "bytes": 1405,
+      "sha256": "3b3cc4d44c8bee2c5443468d885e36a0ece5a58716ba3d879524d52f76863e4f"
     },
     {
       "path": "assets/js/modules/treasury/charts.js",
-      "bytes": 20572,
-      "sha256": "f102e0ce837749cd5aa9599d9fcfbc5e16a8d1affb5ec3541513d3f39a8aefab"
+      "bytes": 19256,
+      "sha256": "a5c9bd4fdac655f3b549cf36de22f37cda16651cd7e69b61e620b7d0b5110bc9"
     },
     {
       "path": "assets/js/modules/treasury/controller.js",
-      "bytes": 19315,
-      "sha256": "ccce3d543d4e9e9b51bc16e3f7d57160e999a015b989f027d9c72b93378e505b"
+      "bytes": 21736,
+      "sha256": "4538c012fe743b67d8c76cc4788f356f428d96e5004cc1b58292998b402fafb3"
     },
     {
       "path": "assets/js/modules/treasury/dashboard-summary.js",
-      "bytes": 4766,
-      "sha256": "118c8c0dcc410360e7af083cfed89babf77ef526aa4a0307a8a99e6e3c4d4bd1"
+      "bytes": 5627,
+      "sha256": "b23a8af0ec95478e4677884f087f4526c414860912b43120bf866bcaef0cc923"
     },
     {
       "path": "assets/js/modules/treasury/domain.js",
-      "bytes": 14470,
-      "sha256": "098051c812ea2bbf224b0ef21c7dfcf578e12ead036f058df1b1a0e6913f8fb4"
+      "bytes": 15893,
+      "sha256": "a6925ce44bb4d4a62f57c7bb703c83c354d6625deb2960a908402b191192f859"
     },
     {
       "path": "assets/js/modules/treasury/memberships.js",
-      "bytes": 11769,
-      "sha256": "203a8c32d22515b4f111e1c737cea48564215c80a5528fa33c61c4b8df21259f"
+      "bytes": 15500,
+      "sha256": "fe0d1f0dc04969d42cc0695427e3b1d12b0a9243102d6f31888a56de90cc7bb2"
     },
     {
       "path": "assets/js/modules/treasury/movement-domain.js",
@@ -750,8 +765,8 @@
     },
     {
       "path": "assets/js/modules/treasury/movements.js",
-      "bytes": 21902,
-      "sha256": "7782ea4df788bbbc2a3e4d72efbfb40b1ff8425181deac55cf0b0c5a74bb8fc3"
+      "bytes": 25665,
+      "sha256": "8f7ac46eea4fcc2b863bd63313dd4c327b437b845b5243bddcd81c7d06c4d5cb"
     },
     {
       "path": "assets/js/modules/treasury/mutuals.js",
@@ -765,8 +780,8 @@
     },
     {
       "path": "assets/js/modules/treasury/view-memberships.js",
-      "bytes": 5883,
-      "sha256": "824676534c0aedfb03ef952827c82c56d5ccd5b06d268c6dd61647cc77e110e2"
+      "bytes": 6197,
+      "sha256": "d984338a9a80415a9c6e9cb70c473c5866bdf5e75d758ebeeffbb2d3aa57b999"
     },
     {
       "path": "assets/js/modules/treasury/view-mutuals.js",
@@ -780,13 +795,13 @@
     },
     {
       "path": "assets/js/modules/treasury/view-shell.js",
-      "bytes": 13515,
-      "sha256": "b7a7165e05a72c0f25aae309b5cc5c669fe7cb57f9f577f6f016c1bae6cf03bf"
+      "bytes": 14058,
+      "sha256": "5b9b5f11ab2eb933344584f81d2c90a7010941e9a0a55b9cc0d78e81579bc321"
     },
     {
       "path": "assets/js/modules/treasury/view.js",
-      "bytes": 2400,
-      "sha256": "7f25586b28bbf55d2010c3ba3ac3ac4ee4392fd40e7fd5b3f201fa217ee3ba34"
+      "bytes": 2389,
+      "sha256": "324917f49c1580c49df3669b7879fd6354196a957387b9df963946df5a92f0eb"
     },
     {
       "path": "assets/js/modules/ui-shell.js",
@@ -815,13 +830,13 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 23532,
-      "sha256": "1a8070d76cf40437ff4077ebe290345e122869235c9182ded6de81855dcc68f0"
+      "bytes": 25220,
+      "sha256": "1e217f786bc188f18f8f583e70c892c5133b35770ce8b05af3825fbb44113858"
     },
     {
       "path": "data/dados.json",
-      "bytes": 130169,
-      "sha256": "aef619c8b151016b495134c4a421324b9fa9585a4f1063d2cb742578315e46dc"
+      "bytes": 130636,
+      "sha256": "8d4164680d5ae5da677200e1127ca6b52f62fe155f05abe53ac581b0d40c148c"
     },
     {
       "path": "data/modelo.json",
@@ -1439,6 +1454,11 @@
       "sha256": "54af2c983f0e5a2ecf5df13eae6325603428c342a58bf634afc1961b028932bd"
     },
     {
+      "path": "public/treasury/t_mskga6d2_rv2xu7/att_mt3dposh_swtlik-1khb7co.jpg",
+      "bytes": 79939,
+      "sha256": "413798cb77c240d82bdf3b6792c8539a5a0e554e857f3d437d9342a5f354cdca"
+    },
+    {
       "path": "public/treasury/t_msrsra4f_wnw3xd/att_msrsrtgz_lhj6vf-12jnsef.jpg",
       "bytes": 43313,
       "sha256": "d488edad5c891a269b3205071e6d701e468ef39cf70caef4c737760b8ea2f8e5"
@@ -1450,8 +1470,8 @@
     },
     {
       "path": "RELEASE.md",
-      "bytes": 4399,
-      "sha256": "d082823007d2c90df768f6b8e4a60758b268ad3b12ba3bcd7ca4c55d2e7163b6"
+      "bytes": 5685,
+      "sha256": "849ce33fec15bf6cf31cbd31f348a0d2ed272e1f15fc947ccd484c41bf8c0311"
     },
     {
       "path": "tests/access-authorization.test.mjs",
@@ -1724,9 +1744,19 @@
       "sha256": "c6cae4d318fd2b4c44af0a9db5e1059f39e04812d171e8aa0a06895f6ecabf1f"
     },
     {
+      "path": "tests/treasury-account-balance.test.mjs",
+      "bytes": 2200,
+      "sha256": "80340f01d55ce17b37a1da7b0138222335b8053241806a02682585b70e025c19"
+    },
+    {
+      "path": "tests/treasury-account-chart-layout.test.mjs",
+      "bytes": 1324,
+      "sha256": "b421ef841fed657338879b8ab52fab11e1680fdfb4848ac8b957245526b5aa27"
+    },
+    {
       "path": "tests/treasury-admin-controller.test.mjs",
-      "bytes": 1717,
-      "sha256": "df4086cafb96eb84966c0d36b3cb7d03c5b94f02caab1b2d17288bc9272ecc2e"
+      "bytes": 1750,
+      "sha256": "a7c20546fc2a227143c992c20055ae4fb60ccd9ef476fb6082ce2629f57bd360"
     },
     {
       "path": "tests/treasury-admin-domain.test.mjs",
@@ -1760,13 +1790,23 @@
     },
     {
       "path": "tests/treasury-lazy-loading.test.mjs",
-      "bytes": 4233,
-      "sha256": "7c2e9423170223ad200b77cb64a702fc5995b1077862a02cf0ad42e7351005c7"
+      "bytes": 4574,
+      "sha256": "e9d15ccb96898ea8287956e3e74e1ceb2483709e037edcadd489ce1c8e8704a4"
+    },
+    {
+      "path": "tests/treasury-membership-opening-debt.test.mjs",
+      "bytes": 2469,
+      "sha256": "6f6b1a374d42205835e50247083495e5935f6ab66fea7f8237f4d44fce8a0746"
     },
     {
       "path": "tests/treasury-memberships.test.mjs",
-      "bytes": 2204,
-      "sha256": "1a5351bb69aa05b57c43871e4c77718692ef133150e3be1fdb181cf28182c4a1"
+      "bytes": 5808,
+      "sha256": "552082ac23b488ed6a7a0d81a5d796f335c7c7528e74f08657af16ceac6d9381"
+    },
+    {
+      "path": "tests/treasury-mobile-daily-balance.test.mjs",
+      "bytes": 2054,
+      "sha256": "4239e93fa7499702375a0e7b73f959456132669935b4827383e4bd0c7e191087"
     },
     {
       "path": "tests/treasury-mobile-mutual-regressions.test.mjs",
@@ -1795,13 +1835,13 @@
     },
     {
       "path": "tests/treasury-native-charts.test.mjs",
-      "bytes": 5844,
-      "sha256": "50b52a5a5ec2e10bc86f8fce9acb133903b78168e4b8c5bd315021435e4586aa"
+      "bytes": 6185,
+      "sha256": "011fc2a11080fb95b0b050999e94afd34ee16a6e647b9fbe618d09f6cdd27b9f"
     },
     {
       "path": "tests/treasury-safety-ux.test.mjs",
-      "bytes": 2244,
-      "sha256": "2240d3092bc6069dc3e935be5150734bd3c7fe39844fa30283904d14cf427656"
+      "bytes": 2887,
+      "sha256": "1b86e7242facbbf1a4161d0496f0e8ebd482e42f66a22f33b6b1a22d44e09ac9"
     },
     {
       "path": "tests/users-roles-permissions.test.mjs",

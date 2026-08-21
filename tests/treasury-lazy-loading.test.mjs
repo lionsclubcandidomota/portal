@@ -128,3 +128,12 @@ test('controlador da Tesouraria é criado somente no primeiro acesso e preserva 
   assert.ok(sections.includes('memberships'));
   assert.ok(sections.includes('mutuals'));
 });
+
+test('Dashboard não considera mensalidade parcialmente paga como quitada', () => {
+  const state = fixtureState();
+  state.treasury.find(item => item.id === 't-membership').entry = 40;
+  const summary = buildTreasuryDashboardSummary(state);
+
+  assert.equal(summary.membershipPaidCount, 0);
+  assert.equal(summary.membershipTotal, 40);
+});

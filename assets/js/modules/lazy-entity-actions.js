@@ -144,6 +144,7 @@ export function createLazyEntityActions({
     rowActions,
     openFamilyGroupsManager: (...args) => invoke('openFamilyGroupsManager', ...args),
     openMembershipPayment: (...args) => invoke('openMembershipPayment', ...args),
+    openMembershipOpeningDebt: (...args) => invoke('openMembershipOpeningDebt', ...args),
     openMutualGroupsManager: (...args) => invoke('openMutualGroupsManager', ...args),
     openMutualEventManager: (...args) => invoke('openMutualEventManager', ...args),
     openMutualPayment: (...args) => invoke('openMutualPayment', ...args),

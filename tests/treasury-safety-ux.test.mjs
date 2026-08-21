@@ -69,3 +69,19 @@ test('baixa de mensalidade inicia sem data e sem mês previamente marcado', asyn
   assert.doesNotMatch(source, /defaultMonth/);
   assert.doesNotMatch(source, /paymentDate'\) \|\| today/);
 });
+
+test('baixa de mensalidade oferece rateio por valor e cobrança usa somente saldo em aberto', async () => {
+  const paymentSource = await readFile(
+    path.join(projectRoot, 'assets/js/modules/treasury-admin/membership-payments.js'),
+    'utf8'
+  );
+  const sharingSource = await readFile(
+    path.join(projectRoot, 'assets/js/modules/treasury-admin/sharing.js'),
+    'utf8'
+  );
+
+  assert.match(paymentSource, /value="allocate">Ratear um valor recebido/);
+  assert.match(paymentSource, /allocateMembershipPayment/);
+  assert.match(paymentSource, /Selecionar pendentes/);
+  assert.match(sharingSource, /membershipOutstandingForMonth/);
+});

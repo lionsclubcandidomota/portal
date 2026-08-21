@@ -243,6 +243,34 @@ export function coveredMonths(item, parseDate) {
   return reference ? [reference] : [];
 }
 
+
+export function membershipAllocationForMonth(item, memberId, month, parseDate) {
+  const normalizedMemberId = String(memberId || '');
+  const normalizedMonth = String(month || '');
+  if (!normalizedMemberId || !/^\d{4}-\d{2}$/.test(normalizedMonth)) return 0;
+
+  const allocations = Array.isArray(item?.memberAllocations) ? item.memberAllocations : [];
+  const stored = allocations.find(allocation => String(allocation?.memberId || '') === normalizedMemberId);
+  if (stored) {
+    const monthAllocations = Array.isArray(stored.monthAllocations) ? stored.monthAllocations : [];
+    const exact = monthAllocations.find(allocation => String(allocation?.month || '') === normalizedMonth);
+    if (exact && Number.isFinite(Number(exact.amount))) return Math.max(0, Number(exact.amount));
+
+    const allocationMonths = Array.isArray(stored.months) && stored.months.length
+      ? stored.months.map(String)
+      : coveredMonths(item, parseDate);
+    if (allocationMonths.includes(normalizedMonth) && Number.isFinite(Number(stored.amount))) {
+      return Math.max(0, Number(stored.amount)) / Math.max(1, allocationMonths.length);
+    }
+    return 0;
+  }
+
+  const ids = memberIds(item).map(String);
+  const months = coveredMonths(item, parseDate);
+  if (!ids.includes(normalizedMemberId) || !months.includes(normalizedMonth)) return 0;
+  return Math.max(0, Number(item?.entry || 0)) / Math.max(1, ids.length * months.length);
+}
+
 export function addMonthsToReference(reference, count) {
   const [year, month] = String(reference).split('-').map(Number);
   return Array.from({ length: count }, (_, index) => {

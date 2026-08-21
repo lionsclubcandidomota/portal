@@ -105,13 +105,14 @@ test('gráficos nativos renderizam entradas, categorias e contas sem biblioteca 
   assert.match(targets.get('#categoryChart').innerHTML, /Mensalidades/);
   assert.match(targets.get('#categoryChart').innerHTML, /Eventos/);
   assert.match(targets.get('#accountChart').innerHTML, /Banco/);
-  assert.match(targets.get('#accountChart').innerHTML, /Maior saldo/);
+  assert.match(targets.get('#accountChart').innerHTML, /native-account-balance-shell/);
+  assert.match(targets.get('#accountChart').innerHTML, /Saldo líquido/);
   assert.match([...targets.values()].map(target => target.innerHTML).join(''), /tabindex="0"/);
   assert.doesNotMatch([...targets.values()].map(target => target.innerHTML).join(''), /cdn\.jsdelivr|<canvas/i);
 });
 
 
-test('cor personalizada inválida não é injetada no SVG das contas', () => {
+test('gráfico de contas mantém saldo negativo visível e não injeta configuração inválida', () => {
   const targets = new Map([
     ['#financeChart', { innerHTML: '' }],
     ['#cashFlowChart', { innerHTML: '' }],
@@ -126,13 +127,15 @@ test('cor personalizada inválida não é injetada no SVG das contas', () => {
     treasury: { chartToken: token, isProgrammed: () => false },
     treasuryChartToken: token,
     totals: { entries: 100, exits: 20 },
-    accountSummaries: [{ name: 'Conta principal', balance: 80 }],
+    accountSummaries: [{ name: 'Conta principal', balance: 80, projectedBalance: 80 }, { name: 'Caixa', balance: -25, projectedBalance: -10 }],
     categories: [['Geral', { entries: 100, exits: 20 }]],
     periodItems: [{ date: '2026-07-01', entry: 100, exit: 20 }],
     isTreasuryView: () => true
   });
 
-  assert.match(targets.get('#accountChart').innerHTML, /stroke="#2563eb"/);
+  assert.match(targets.get('#accountChart').innerHTML, /Caixa/);
+  assert.match(targets.get('#accountChart').innerHTML, /Atenção: conta negativa/);
+  assert.match(targets.get('#accountChart').innerHTML, /-R\$.*25,00/);
   assert.doesNotMatch(targets.get('#accountChart').innerHTML, /onload=/i);
 });
 

@@ -1,3 +1,22 @@
+## Ajuste financeiro — rateio de mensalidades e refinamento mobile — 21/08/2026
+
+- Reduz o destaque visual do saldo ao fim do dia nos cards de Movimentações no celular, preservando a informação como indicador secundário.
+- Mensalidades passam a aceitar pagamentos parciais sem marcar a competência como quitada antes do valor esperado ser alcançado.
+- A baixa oferece os modos “Quitar saldo das mensalidades selecionadas” e “Ratear um valor recebido”.
+- No rateio, o valor recebido é distribuído das competências mais antigas selecionadas para as mais recentes e o saldo remanescente continua em aberto.
+- Competências podem assumir os estados Pendente, Parcial e Pago; o filtro de mensalidades também permite localizar pagamentos parciais.
+- Cobranças por texto e imagem usam somente o saldo restante de mensalidades parcialmente pagas.
+- Registros antigos com valor inferior à mensalidade passam a ser interpretados como pagamento parcial de forma compatível, sem migração dos dados oficiais.
+
+## Ajuste financeiro — saldo diário e contas negativas — 21/08/2026
+
+- Movimentações realizadas passam a exibir o saldo da conta ao fim da data do lançamento.
+- Movimentações programadas exibem o saldo previsto ao fim da data, sem confundir previsão com saldo realizado.
+- Transferências mostram os saldos de origem e destino na mesma data.
+- O saldo atual das contas deixa de depender do filtro de período do histórico.
+- O gráfico Saldo por conta passa a representar saldos positivos, zero e negativos em torno de um eixo central.
+- Contas negativas recebem sinalização visual e alerta no gráfico, sem alterar o esquema ou os dados oficiais.
+
 ## v6.46.7 — Refatoração técnica, etapa 4 — estabilização final
 
 ## Refatoração pós-movimentações — Etapa 1

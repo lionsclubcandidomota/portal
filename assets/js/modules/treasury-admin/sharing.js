@@ -96,8 +96,10 @@ export function createMembershipChargeSharer(context) {
     return true;
   };
   const buildIndividualPayload = async (member, months, clubName) => {
-    const expectedMonthlyAmount = treasury.membershipExpectedAmountForMember(member.id);
-    const expectedTotal = expectedMonthlyAmount * months.length;
+    const monthDebts = months.map(month => ({ month, amount: treasury.membershipOutstandingForMonth(member.id, month) }))
+      .filter(item => item.amount > 0.005);
+    const openingDebt = treasury.membershipOpeningDebtOutstanding(member.id);
+    const expectedTotal = openingDebt + monthDebts.reduce((sum, item) => sum + item.amount, 0);
     const [avatarDataUrl, clubLogoDataUrl] = await Promise.all([
       fetchAssetAsDataUrl(member.photo),
       fetchAssetAsDataUrl('./public/logo.png')
@@ -106,8 +108,9 @@ export function createMembershipChargeSharer(context) {
       title: `Mensalidade — ${clubName}`,
       text: buildMembershipChargeMessage({
         memberName: member.name,
-        monthLabels: months.map(treasury.monthLabel),
+        monthLabels: monthDebts.map(item => treasury.monthLabel(item.month)),
         expectedTotal,
+        openingDebt,
         clubName
       }),
       image: {
@@ -121,7 +124,10 @@ export function createMembershipChargeSharer(context) {
         responsibleAvatar: avatarDataUrl,
         badgeLabel: 'Associado',
         linkedMembers: [],
-        rows: months.map(month => ({ label: treasury.monthLabel(month), amount: expectedMonthlyAmount })),
+        rows: [
+          ...(openingDebt > 0.005 ? [{ label: 'Saldo anterior', amount: openingDebt }] : []),
+          ...monthDebts.map(item => ({ label: treasury.monthLabel(item.month), amount: item.amount }))
+        ],
         totalLabel: 'Total',
         total: expectedTotal,
         note: 'Mensalidades selecionadas.',
@@ -136,19 +142,20 @@ export function createMembershipChargeSharer(context) {
       .filter(item => item && treasury.memberIsActive(item))
       .map(member => {
         const pendingMonths = requestedMonths.filter(month => !treasury.monthIsPaid(member.id, month));
-        const monthlyAmount = treasury.membershipExpectedAmountForMember(member.id);
+        const openingDebt = treasury.membershipOpeningDebtOutstanding(member.id);
+        const total = openingDebt + pendingMonths.reduce((sum, month) => sum + treasury.membershipOutstandingForMonth(member.id, month), 0);
         return {
           id: member.id,
           name: member.name,
           isPrimary: member.id === group.primaryMemberId,
           pendingMonths,
           pendingCount: pendingMonths.length,
-          monthlyAmount,
-          total: monthlyAmount * pendingMonths.length,
-          selected: pendingMonths.length > 0
+          openingDebt,
+          total,
+          selected: total > 0.005
         };
       });
-    return entries.filter(item => item.pendingCount > 0);
+    return entries.filter(item => item.total > 0.005);
   };
   const buildFamilyPayload = async (group, requestedMonths, clubName, selectedMemberIds = null) => {
     const selectedSet = Array.isArray(selectedMemberIds) && selectedMemberIds.length ? new Set(selectedMemberIds) : null;
@@ -160,18 +167,20 @@ export function createMembershipChargeSharer(context) {
       return pendingMonths.map(month => ({
         member,
         month,
-        amount: treasury.membershipExpectedAmountForMember(member.id)
+        amount: treasury.membershipOutstandingForMonth(member.id, month)
       }));
     });
     const memberCharges = members.map(member => {
       const pendingMonths = requestedMonths.filter(month => !treasury.monthIsPaid(member.id, month));
+      const openingDebt = treasury.membershipOpeningDebtOutstanding(member.id);
       return {
         memberId: member.id,
         memberName: member.name,
         monthLabels: pendingMonths.map(treasury.monthLabel),
-        expectedTotal: treasury.membershipExpectedAmountForMember(member.id) * pendingMonths.length
+        openingDebt,
+        expectedTotal: openingDebt + pendingMonths.reduce((sum, month) => sum + treasury.membershipOutstandingForMonth(member.id, month), 0)
       };
-    }).filter(item => item.monthLabels.length);
+    }).filter(item => item.monthLabels.length || item.openingDebt > 0.005);
     const clubLogoDataUrl = await fetchAssetAsDataUrl('./public/logo.png');
     const chargeMembers = await Promise.all(members.map(async member => ({
       name: member.name,
@@ -182,13 +191,19 @@ export function createMembershipChargeSharer(context) {
     const responsibleAvatar = responsibleMember ? await fetchAssetAsDataUrl(responsibleMember.photo) : '';
     const total = memberCharges.reduce((sum, item) => sum + Number(item.expectedTotal || 0), 0);
     const titularCharges = pendingCharges.filter(item => item.member.id === group.primaryMemberId);
-    const titularTotal = titularCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const titularOpeningDebt = group.primaryMemberId ? treasury.membershipOpeningDebtOutstanding(group.primaryMemberId) : 0;
+    const titularMonthlyTotal = titularCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const titularTotal = titularOpeningDebt + titularMonthlyTotal;
     const titularMonthsCount = new Set(titularCharges.map(item => item.month)).size;
-    const titularMonthlyAmount = titularMonthsCount ? titularTotal / titularMonthsCount : 0;
+    const titularMonthlyAmount = titularMonthsCount ? titularMonthlyTotal / titularMonthsCount : 0;
     const familyCharges = pendingCharges.filter(item => item.member.id !== group.primaryMemberId);
-    const familyMembersTotal = familyCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const familyOpeningDebt = members
+      .filter(member => member.id !== group.primaryMemberId)
+      .reduce((sum, member) => sum + treasury.membershipOpeningDebtOutstanding(member.id), 0);
+    const familyMonthlyTotal = familyCharges.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const familyMembersTotal = familyOpeningDebt + familyMonthlyTotal;
     const familyMonthsCount = new Set(familyCharges.map(item => item.month)).size;
-    const familyMonthlyAmount = familyMonthsCount ? familyMembersTotal / familyMonthsCount : 0;
+    const familyMonthlyAmount = familyMonthsCount ? familyMonthlyTotal / familyMonthsCount : 0;
     const monthTotals = requestedMonths.map(month => ({
       month,
       label: treasury.monthLabel(month),
@@ -201,7 +216,7 @@ export function createMembershipChargeSharer(context) {
       title: `Mensalidades da ${group.name} — ${clubName}`,
       text: buildFamilyMembershipChargeMessage({
         familyName: group.name,
-        memberCharges: memberCharges.map(({ memberName, monthLabels, expectedTotal }) => ({ memberName, monthLabels, expectedTotal })),
+        memberCharges: memberCharges.map(({ memberName, monthLabels, openingDebt, expectedTotal }) => ({ memberName, monthLabels, openingDebt, expectedTotal })),
         clubName
       }),
       image: {
@@ -219,23 +234,25 @@ export function createMembershipChargeSharer(context) {
           {
             label: 'Titular',
             detail: titularMonthsCount
-              ? `${money.format(titularMonthlyAmount)} x ${titularMonthsCount} ${titularMonthsCount === 1 ? 'mês' : 'meses'}`
-              : 'Sem pendências',
+              ? `${money.format(titularMonthlyAmount)} x ${titularMonthsCount} ${titularMonthsCount === 1 ? 'mês' : 'meses'}${titularOpeningDebt > 0.005 ? ' + saldo ant.' : ''}`
+              : titularOpeningDebt > 0.005 ? 'Saldo anterior' : 'Sem pendências',
             amount: titularTotal
           },
           {
             label: 'Família',
             detail: familyMonthsCount
-              ? `${money.format(familyMonthlyAmount)} x ${familyMonthsCount} ${familyMonthsCount === 1 ? 'mês' : 'meses'}`
-              : 'Sem pendências',
+              ? `${money.format(familyMonthlyAmount)} x ${familyMonthsCount} ${familyMonthsCount === 1 ? 'mês' : 'meses'}${familyOpeningDebt > 0.005 ? ' + saldo ant.' : ''}`
+              : familyOpeningDebt > 0.005 ? 'Saldo anterior' : 'Sem pendências',
             amount: familyMembersTotal
           }
         ],
         tableTitle: 'Valores mensais consolidados',
-        rows: monthTotals.map(item => ({
-          label: item.label,
-          amount: item.amount
-        })),
+        rows: [
+          ...(memberCharges.reduce((sum, item) => sum + item.openingDebt, 0) > 0.005
+            ? [{ label: 'Saldo anterior', amount: memberCharges.reduce((sum, item) => sum + item.openingDebt, 0) }]
+            : []),
+          ...monthTotals.map(item => ({ label: item.label, amount: item.amount }))
+        ],
         totalLabel: 'Total familiar',
         total,
         note: 'Resumo do grupo selecionado.',
@@ -328,7 +345,7 @@ export function createMembershipChargeSharer(context) {
             <input type="checkbox" data-membership-family-member value="${escapeHtml(item.id)}" ${item.selected ? 'checked' : ''}>
             <span class="membership-charge-selector-copy">
               <strong>${escapeHtml(item.name)}</strong>
-              <small>${item.isPrimary ? 'Titular' : 'Familiar'} · ${escapeHtml(money.format(item.monthlyAmount))} x ${item.pendingCount} ${item.pendingCount === 1 ? 'mês' : 'meses'} · total ${escapeHtml(money.format(item.total))}</small>
+              <small>${item.isPrimary ? 'Titular' : 'Familiar'} · ${item.pendingCount} ${item.pendingCount === 1 ? 'competência' : 'competências'}${item.openingDebt > 0.005 ? ' + saldo anterior' : ''} · saldo ${escapeHtml(money.format(item.total))}</small>
             </span>
           </label>`).join('')}</div>
         <div class="membership-charge-selector-footer">
@@ -436,8 +453,9 @@ export function createMembershipChargeSharer(context) {
       return;
     }
     const pendingMonths = [...new Set(months)].filter(Boolean);
-    if (!pendingMonths.length) {
-      toast('Não há mensalidades pendentes no período selecionado.');
+    const memberOpeningDebt = treasury.membershipOpeningDebtOutstanding(memberId);
+    if (!pendingMonths.length && memberOpeningDebt <= 0.005) {
+      toast('Não há mensalidades ou saldo anterior pendente para cobrança.');
       return;
     }
     const clubName = state().settings?.clubName || 'Lions Clube';
@@ -447,9 +465,9 @@ export function createMembershipChargeSharer(context) {
       openChoiceModal({
         memberPayloadPromise,
         memberSummary: {
-          total: treasury.membershipExpectedAmountForMember(memberId) * pendingMonths.length,
+          total: memberOpeningDebt + pendingMonths.reduce((sum, month) => sum + treasury.membershipOutstandingForMonth(memberId, month), 0),
           detail: member.name,
-          helper: `${pendingMonths.length} mês(es) pendente(s)`
+          helper: `${pendingMonths.length} mês(es) pendente(s)${memberOpeningDebt > 0.005 ? ' + saldo anterior' : ''}`
         }
       });
       return;
@@ -459,14 +477,14 @@ export function createMembershipChargeSharer(context) {
       memberPayloadPromise,
       familyPayloadPromise: familyPayload.memberCharges.length ? Promise.resolve(familyPayload) : null,
       memberSummary: {
-        total: treasury.membershipExpectedAmountForMember(memberId) * pendingMonths.length,
+        total: memberOpeningDebt + pendingMonths.reduce((sum, month) => sum + treasury.membershipOutstandingForMonth(memberId, month), 0),
         detail: member.name,
-        helper: `${pendingMonths.length} mês(es) pendente(s)`
+        helper: `${pendingMonths.length} mês(es) pendente(s)${memberOpeningDebt > 0.005 ? ' + saldo anterior' : ''}`
       },
       familySummary: familyPayload.memberCharges.length ? {
         total: familyPayload.memberCharges.reduce((sum, item) => sum + Number(item.expectedTotal || 0), 0),
         detail: group.name,
-        helper: `${familyPayload.memberCharges.length} integrante(s) · ${familyPayload.image.rows.length} competência(s)`,
+        helper: `${familyPayload.memberCharges.length} integrante(s) · ${familyPayload.image.rows.length} item(ns) em aberto`,
         group,
         requestedMonths: pendingMonths,
         clubName

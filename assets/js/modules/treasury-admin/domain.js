@@ -52,22 +52,105 @@ export function buildMemberAllocations({
   });
 }
 
+
+function roundMoney(value) {
+  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+}
+
+export function allocateMembershipPayment({
+  memberIds = [],
+  members = [],
+  coveredMonths = [],
+  amount = 0,
+  hasFamilyGroup = false,
+  groupPrimaryId = '',
+  expectedAmountForMember = () => 0,
+  paidAmountForMemberMonth = () => 0
+} = {}) {
+  const ids = [...new Set(memberIds)].filter(Boolean);
+  const months = [...new Set(coveredMonths)].filter(Boolean).sort();
+  const memberById = new Map(members.map(member => [String(member.id), member]));
+  const requestedAmount = roundMoney(Math.max(0, Number(amount || 0)));
+  const debts = [];
+
+  months.forEach(month => {
+    ids.forEach(memberId => {
+      const expectedAmount = roundMoney(Math.max(0, Number(expectedAmountForMember(memberId) || 0)));
+      const previouslyPaid = roundMoney(Math.max(0, Number(paidAmountForMemberMonth(memberId, month) || 0)));
+      const outstandingBefore = roundMoney(Math.max(0, expectedAmount - previouslyPaid));
+      if (outstandingBefore <= 0) return;
+      debts.push({
+        memberId,
+        month,
+        expectedAmount,
+        previouslyPaid,
+        outstandingBefore
+      });
+    });
+  });
+
+  const outstandingTotal = roundMoney(debts.reduce((sum, debt) => sum + debt.outstandingBefore, 0));
+  let remaining = requestedAmount;
+  const applied = [];
+
+  debts.forEach(debt => {
+    if (remaining <= 0) return;
+    const appliedAmount = roundMoney(Math.min(debt.outstandingBefore, remaining));
+    if (appliedAmount <= 0) return;
+    remaining = roundMoney(remaining - appliedAmount);
+    applied.push({
+      ...debt,
+      amount: appliedAmount,
+      remainingAfter: roundMoney(debt.outstandingBefore - appliedAmount)
+    });
+  });
+
+  const memberAllocations = ids.map(memberId => {
+    const monthAllocations = applied.filter(allocation => allocation.memberId === memberId);
+    if (!monthAllocations.length) return null;
+    const member = memberById.get(String(memberId));
+    const isPrimary = hasFamilyGroup && memberId === groupPrimaryId;
+    return {
+      memberId,
+      memberName: member?.name || '',
+      role: hasFamilyGroup ? (isPrimary ? 'Titular' : 'Familiar') : 'Individual',
+      monthlyAmount: roundMoney(Math.max(0, Number(expectedAmountForMember(memberId) || 0))),
+      months: monthAllocations.map(allocation => allocation.month),
+      amount: roundMoney(monthAllocations.reduce((sum, allocation) => sum + allocation.amount, 0)),
+      monthAllocations
+    };
+  }).filter(Boolean);
+
+  return {
+    requestedAmount,
+    outstandingTotal,
+    allocatedTotal: roundMoney(requestedAmount - remaining),
+    unallocatedAmount: roundMoney(remaining),
+    allocations: applied,
+    memberAllocations
+  };
+}
+
 export function buildMembershipChargeMessage({
   memberName = '',
   monthLabels = [],
   expectedTotal = 0,
+  openingDebt = 0,
   clubName = 'Lions Clube'
 } = {}) {
   const months = [...new Set(monthLabels)].filter(Boolean);
   const firstName = String(memberName || '').trim().split(/\s+/)[0] || memberName;
-  const plural = months.length > 1;
-  const valueText = Number(expectedTotal || 0) > 0
-    ? ` O valor estimado do período é ${money.format(Number(expectedTotal))}.`
-    : '';
+  const debt = Math.max(0, Number(openingDebt || 0));
+  const total = Math.max(0, Number(expectedTotal || 0));
+  const parts = [];
+  if (debt > 0) parts.push(`saldo anterior em aberto de ${money.format(debt)}`);
+  if (months.length) parts.push(`mensalidade${months.length > 1 ? 's' : ''} pendente${months.length > 1 ? 's' : ''} referente${months.length > 1 ? 's' : ''} a ${months.join(', ')}`);
+  const pendingText = parts.length ? parts.join(' e ') : 'valores pendentes';
+  const valueText = total > 0 ? ` O total estimado em aberto é ${money.format(total)}.` : '';
 
   return `Olá, ${firstName}! Tudo bem?
 
-Identificamos mensalidade${plural ? 's' : ''} pendente${plural ? 's' : ''} referente${plural ? 's' : ''} a ${months.join(', ')}.${valueText}
+Identificamos ${pendingText}.${valueText}
 
 Pedimos, por gentileza, que verifique a situação. Caso o pagamento já tenha sido realizado, desconsidere esta mensagem e, se possível, encaminhe o comprovante.
 
@@ -84,16 +167,22 @@ export function buildFamilyMembershipChargeMessage({
     .map(item => ({
       memberName: String(item?.memberName || '').trim(),
       monthLabels: [...new Set(item?.monthLabels || [])].filter(Boolean),
+      openingDebt: Math.max(0, Number(item?.openingDebt || 0)),
       expectedTotal: Math.max(0, Number(item?.expectedTotal || 0))
     }))
-    .filter(item => item.memberName && item.monthLabels.length);
+    .filter(item => item.memberName && (item.monthLabels.length || item.openingDebt > 0));
   const familyLabel = String(familyName || '').trim() || 'família';
   const total = charges.reduce((sum, item) => sum + item.expectedTotal, 0);
-  const lines = charges.map(item => `• ${item.memberName}: ${item.monthLabels.join(', ')} — ${money.format(item.expectedTotal)}`);
+  const lines = charges.map(item => {
+    const parts = [];
+    if (item.openingDebt > 0) parts.push(`saldo anterior ${money.format(item.openingDebt)}`);
+    if (item.monthLabels.length) parts.push(item.monthLabels.join(', '));
+    return `• ${item.memberName}: ${parts.join(' + ')} — ${money.format(item.expectedTotal)}`;
+  });
 
   return `Olá, família ${familyLabel}! Tudo bem?
 
-Identificamos mensalidades pendentes para os integrantes abaixo:
+Identificamos valores pendentes para os integrantes abaixo:
 ${lines.join('\n')}
 
 Total estimado: ${money.format(total)}.

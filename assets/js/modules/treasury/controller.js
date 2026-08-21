@@ -1,3 +1,4 @@
+import { treasuryAccountBalanceAtDate } from './account-balance-domain.js';
 import {
   DEFAULT_ACCOUNTS,
   DEFAULT_CATEGORIES,
@@ -11,6 +12,7 @@ import {
   isMembershipEntry as checkMembershipEntry,
   isMutualEntry as checkMutualEntry,
   memberIds,
+  membershipAllocationForMonth as getMembershipAllocationForMonth,
   memberCanJoinMutual,
   memberIsActive,
   memberIsInactive,
@@ -48,27 +50,11 @@ export function createTreasuryController({
     throw new TypeError('createTreasuryController requer getState().');
   }
   let section = normalizeTreasurySection(initialSection);
-  let period = 'all';
-  let customStart = '';
-  let customEnd = '';
-  let scheduledPage = 1;
-  let completedPage = 1;
-  let movementFilter = 'all';
-  let movementSearch = '';
-  let scheduledExpanded = true;
-  let membershipMonth = '';
-  let membershipStart = '';
-  let membershipEnd = '';
-  let membershipExpanded = true;
-  let membershipSearch = '';
-  let membershipFamily = 'all';
-  let membershipStatus = 'all';
-  let mutualExpanded = true;
-  let mutualSearch = '';
-  let mutualGroup = 'all';
-  let mutualStart = '';
-  let mutualEnd = '';
-  let mutualStatus = 'pending';
+  let period = 'all', customStart = '', customEnd = '';
+  let scheduledPage = 1, completedPage = 1, movementFilter = 'all', movementSearch = '', scheduledExpanded = true;
+  let membershipMonth = '', membershipStart = '', membershipEnd = '', membershipExpanded = true;
+  let membershipSearch = '', membershipFamily = 'all', membershipStatus = 'all';
+  let mutualExpanded = true, mutualSearch = '', mutualGroup = 'all', mutualStart = '', mutualEnd = '', mutualStatus = 'pending';
   const mutualSelectedCharges = new Set();
   const expandedMutualGroups = new Set();
   let chartToken = null;
@@ -124,13 +110,15 @@ export function createTreasuryController({
   const memberFor = item => membersFor(item)[0] || null;
   const membershipAllocationFor = (item, memberId) => {
     const allocations = Array.isArray(item?.memberAllocations) ? item.memberAllocations : [];
-    const stored = allocations.find(allocation => allocation?.memberId === memberId);
+    const stored = allocations.find(allocation => String(allocation?.memberId || '') === String(memberId || ''));
     if (stored && Number.isFinite(Number(stored.amount))) return Number(stored.amount);
     const ids = memberIds(item);
     return ids.includes(memberId)
       ? Number(item?.entry || 0) / Math.max(1, ids.length)
       : 0;
   };
+  const membershipAllocationForMonth = (item, memberId, month) =>
+    getMembershipAllocationForMonth(item, memberId, month, parseLocalDate);
   const membershipFee = () => Math.max(0, Number(state().settings.membershipMonthlyFee || 0));
   const membershipFamilyPrimaryFee = () => Math.max(0, Number(state().settings.membershipFamilyPrimaryFee || 0));
   const membershipFamilyAdditionalFee = () => Math.max(0, Number(state().settings.membershipFamilyAdditionalFee || 0));
@@ -249,9 +237,18 @@ export function createTreasuryController({
     && memberIds(item).includes(memberId)
     && coveredMonths(item).includes(month)
   );
-  const monthIsPaid = (memberId, month) => paymentsFor(memberId, month).length > 0;
+  const membershipPaidAmountForMonth = (memberId, month) => paymentsFor(memberId, month)
+    .reduce((sum, item) => sum + membershipAllocationForMonth(item, memberId, month), 0);
+  const membershipOutstandingForMonth = (memberId, month) => Math.max(0, membershipExpectedAmountForMember(memberId) - membershipPaidAmountForMonth(memberId, month));
+  const monthIsPaid = (memberId, month) => membershipOutstandingForMonth(memberId, month) <= 0.005;
+  const monthIsPartial = (memberId, month) => membershipPaidAmountForMonth(memberId, month) > 0.005 && membershipOutstandingForMonth(memberId, month) > 0.005;
   const paidMonthsFor = (memberId, months) => (months || []).filter(month => monthIsPaid(memberId, month));
+  const partialMonthsFor = (memberId, months) => (months || []).filter(month => monthIsPartial(memberId, month));
   const pendingMonthsFor = (memberId, months) => (months || []).filter(month => !monthIsPaid(memberId, month));
+  const membershipOpeningDebtForMember = id => Math.max(0, Number(state().birthdays.find(item => item.id === id)?.membershipOpeningDebt || 0));
+  const membershipOpeningDebtPaidAmount = id => state().treasury.filter(item => isMembershipEntry(item) && !status.isProgrammed(item)).reduce((sum, item) => sum + Math.max(0, Number((item.membershipOpeningDebtAllocations || []).find(entry => entry.memberId === id)?.amount || 0)), 0);
+  const membershipOpeningDebtOutstanding = id => Math.max(0, membershipOpeningDebtForMember(id) - membershipOpeningDebtPaidAmount(id));
+  const membershipOpeningDebtIsPartial = id => membershipOpeningDebtPaidAmount(id) > 0.005 && membershipOpeningDebtOutstanding(id) > 0.005;
   const membershipExpectedAmountForMember = memberId => {
     const group = familyGroupForMember(memberId);
     if (!group) return membershipFee();
@@ -267,6 +264,20 @@ export function createTreasuryController({
       }
     }
     return conflicts;
+  };
+  const accountBalanceAtDate = (accountId, date, { includeProgrammed = false } = {}) => {
+    const accountList = accounts();
+    const account = accountList.find(item => String(item.id) === String(accountId || ''));
+    if (!account) return 0;
+    return treasuryAccountBalanceAtDate({
+      items: state().treasury,
+      accountId: account.id,
+      primaryAccountId: accountList[0]?.id || '',
+      initialBalance: Number(account.initialBalance || 0),
+      date,
+      includeProgrammed,
+      isProgrammed: status.isProgrammed
+    });
   };
   const accountSummaries = (items = state().treasury) => accounts().map(account => {
     const primaryAccountId = accounts()[0]?.id;
@@ -425,6 +436,7 @@ export function createTreasuryController({
     membersFor,
     memberFor,
     membershipAllocationFor,
+    membershipAllocationForMonth,
     referenceMonth,
     monthLabel,
     isMembershipEntry,
@@ -469,12 +481,21 @@ export function createTreasuryController({
     memberStatusKey,
     memberStatusLabel,
     paymentsFor,
+    membershipPaidAmountForMonth,
+    membershipOutstandingForMonth,
     monthIsPaid,
+    monthIsPartial,
     paidMonthsFor,
+    partialMonthsFor,
     pendingMonthsFor,
+    membershipOpeningDebtForMember,
+    membershipOpeningDebtPaidAmount,
+    membershipOpeningDebtOutstanding,
+    membershipOpeningDebtIsPartial,
     membershipExpectedAmountForMember,
     paymentConflicts,
     accountSummaries,
+    accountBalanceAtDate,
     accountTypeIcon,
     statusKey: status.statusKey,
     isOverdue: status.isOverdue,

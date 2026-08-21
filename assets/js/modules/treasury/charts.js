@@ -1,3 +1,4 @@
+import { accountBalanceChart } from './account-balance-chart.js';
 import { escapeHtml, money, parseLocalDate } from '../../utils.js';
 import { renderHtmlIfChanged } from '../visual-helpers.js?v=6.46.7';
 
@@ -41,11 +42,6 @@ function percentLabel(value, total) {
 
 function tooltipText(parts) {
   return escapeHtml(parts.filter(Boolean).join(' · '));
-}
-
-function safeChartColor(value, fallback) {
-  const color = String(value || '').trim();
-  return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : fallback;
 }
 
 function toneClass(value) {
@@ -454,7 +450,6 @@ export function renderTreasuryCharts({
   const accountContext = root.querySelector('#accountChart');
   if (!financeContext || !cashFlowContext || !categoryContext || !accountContext) return;
 
-  const primaryColor = safeChartColor(state.settings.primaryColor, ACCOUNT_PALETTE[0]);
   const financialResult = safeNumber(totals.entries) - safeNumber(totals.exits);
   const resultRate = totals.entries
     ? Math.abs(financialResult) / totals.entries * 100
@@ -483,32 +478,7 @@ export function renderTreasuryCharts({
 
   const categoryChanged = renderHtmlIfChanged(categoryContext, categoryChart(categories));
 
-  const positiveAccounts = accountSummaries
-    .filter(account => finitePositive(account.balance) > 0)
-    .map((account, index) => ({
-      label: account.name,
-      value: account.balance,
-      color: index === 0 ? primaryColor : ACCOUNT_PALETTE[index % ACCOUNT_PALETTE.length]
-    }));
-  const accountTotal = positiveAccounts.reduce((sum, item) => sum + item.value, 0);
-  const leadingAccount = positiveAccounts.reduce((leader, item) => (
-    !leader || item.value > leader.value ? item : leader
-  ), null);
-
-  const accountChanged = renderHtmlIfChanged(accountContext, donutChart({
-    items: positiveAccounts,
-    centerLabel: 'Saldo total',
-    centerValue: money.format(accountTotal),
-    ariaLabel: positiveAccounts.length
-      ? `Distribuição do saldo entre ${positiveAccounts.length} conta(s)`
-      : 'Nenhuma conta com saldo positivo',
-    insightLabel: 'Maior saldo',
-    insightValue: leadingAccount ? money.format(leadingAccount.value) : money.format(0),
-    insightNote: leadingAccount
-      ? `${leadingAccount.label} · ${percentLabel(leadingAccount.value, accountTotal)} do saldo positivo.`
-      : 'Nenhuma conta com saldo positivo.',
-    insightTone: leadingAccount ? 'is-primary' : 'is-neutral'
-  }));
+  const accountChanged = renderHtmlIfChanged(accountContext, accountBalanceChart(accountSummaries));
 
   if (financeChanged || cashFlowChanged || categoryChanged || accountChanged) {
     bindChartInteractions(root);

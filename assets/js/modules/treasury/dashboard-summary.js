@@ -7,7 +7,7 @@ import {
   createStatusHelpers,
   isMembershipEntry,
   isMutualEntry,
-  memberIds,
+  membershipAllocationForMonth,
   monthLabel,
   mutualActiveMemberIds,
   mutualEventMemberIds,
@@ -50,11 +50,21 @@ export function buildTreasuryDashboardSummary(state) {
     && !status.isProgrammed(item)
     && coveredMonths(item, parseLocalDate).includes(currentMembershipMonth)
   ));
-  const membershipPaidIds = new Set(
-    membershipEntries
-      .flatMap(memberIds)
-      .filter(id => activeMembers.some(member => String(member.id) === String(id)))
-  );
+  const familyGroups = Array.isArray(state?.familyGroups) ? state.familyGroups : [];
+  const expectedMembershipFor = memberId => {
+    const group = familyGroups.find(item => Array.isArray(item?.memberIds) && item.memberIds.includes(memberId));
+    if (!group) return Math.max(0, Number(state?.settings?.membershipMonthlyFee || 0));
+    return String(group.primaryMemberId || '') === String(memberId || '')
+      ? Math.max(0, Number(state?.settings?.membershipFamilyPrimaryFee || 0))
+      : Math.max(0, Number(state?.settings?.membershipFamilyAdditionalFee || 0));
+  };
+  const membershipPaidByMember = new Map(activeMembers.map(member => [
+    member.id,
+    membershipEntries.reduce((sum, item) => sum + membershipAllocationForMonth(item, member.id, currentMembershipMonth, parseLocalDate), 0)
+  ]));
+  const membershipPaidIds = new Set(activeMembers
+    .filter(member => (membershipPaidByMember.get(member.id) || 0) + 0.005 >= expectedMembershipFor(member.id))
+    .map(member => member.id));
 
   const normalizedGroups = (Array.isArray(state?.mutualGroups) ? state.mutualGroups : [])
     .map(group => normalizeMutualGroup(group, currentMembershipMonth));
@@ -94,7 +104,7 @@ export function buildTreasuryDashboardSummary(state) {
     currentMembershipLabel: monthLabel(currentMembershipMonth),
     activeMembersCount: activeMembers.length,
     membershipPaidCount: membershipPaidIds.size,
-    membershipTotal: membershipEntries.reduce((total, item) => total + Number(item.entry || 0), 0),
+    membershipTotal: [...membershipPaidByMember.values()].reduce((total, amount) => total + Number(amount || 0), 0),
     mutualEventCount: mutualEvents.length,
     mutualPaidCount: mutualPaidCharges.length,
     mutualChargeCount: mutualCharges.length,

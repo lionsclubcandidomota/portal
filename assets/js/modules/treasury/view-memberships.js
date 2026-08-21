@@ -45,6 +45,7 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
     adminUnlocked,
     openFamilyGroupsManager,
     openMembershipPayment,
+    openMembershipOpeningDebt,
     shareMembershipCharge
   } = helpers;
   const membershipStartInput = root.querySelector('#membershipStart');
@@ -149,6 +150,14 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
         .filter(Boolean);
       closeMembershipActionMenus(root);
       shareMembershipCharge(button.dataset.membershipCharge, months);
+    });
+  });
+
+  root.querySelectorAll('[data-membership-opening-debt]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      closeMembershipActionMenus(root);
+      openMembershipOpeningDebt(button.dataset.membershipOpeningDebt);
     });
   });
 }

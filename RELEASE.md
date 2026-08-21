@@ -68,3 +68,11 @@ A Tesouraria passa a usar um domínio único para Entrada, Saída e Transferênc
 ### Refatoração pós-movimentações — etapa 3
 
 O ciclo de consolidação da Tesouraria é encerrado com regressões específicas de Entrada, Saída e Transferência. A construção e a remoção do par contábil da transferência passam a usar contratos únicos, a exclusão possui rollback em caso de falha de persistência e o módulo administrativo lazy é validado por import direto. A operação continua alterando apenas os saldos das contas envolvidas, sem compor receita, despesa ou resultado financeiro geral. O esquema permanece na versão 12 e os arquivos oficiais de dados não são migrados.
+### Saldo diário e contas negativas — 21/08/2026
+
+A Tesouraria passa a apresentar o saldo realizado da conta ao fim da data de cada movimentação e, para operações programadas, o saldo previsto na mesma referência. Transferências exibem a posição das duas contas envolvidas. O gráfico de saldo por conta deixa de usar uma representação circular exclusiva para valores positivos e passa a mostrar também saldos zerados e negativos em torno de um eixo de zero. Os cards de contas sinalizam saldo negativo e o saldo atual permanece independente do filtro temporal aplicado ao histórico. Não há migração de dados e o esquema permanece em v12.
+
+
+### Rateio de mensalidades e pagamentos parciais — 21/08/2026
+
+O controle de mensalidades passa a acompanhar o valor efetivamente recebido por associado e competência. Uma competência somente é considerada quitada quando os recebimentos acumulados atingem o valor esperado. O novo modo de rateio permite informar um valor recebido e distribuí-lo das competências mais antigas selecionadas para as mais recentes, mantendo eventual saldo restante como parcial. A cobrança compartilhada considera somente o débito remanescente. A evolução é compatível com registros anteriores e não exige migração do esquema 12.
