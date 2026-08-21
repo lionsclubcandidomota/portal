@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-21T20:05:51.603Z",
-  "deploymentId": "1787342751603-19e93271-13f7-4e13-a987-99734b197402",
+  "updatedAt": "2026-08-21T20:11:58.292Z",
+  "deploymentId": "1787343118292-86744762-8408-4e38-95f4-09083076a31d",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -3526,12 +3526,12 @@
       {
         "id": "t_mskga6d2_rv2xu7",
         "movementKind": "exit",
-        "date": "2026-08-27",
+        "date": "2026-08-21",
         "accountId": "acc-current",
         "category": "Associação Internacional de Lions Clubes",
         "description": "Boleto Taxa Internacional ",
         "amount": 3185.31,
-        "notes": "Pagamento dia 21/08",
+        "notes": "Vencimento dia 27/08\nPagamento dia 21/08",
         "entry": 0,
         "exit": 3185.31,
         "status": "Pago",
