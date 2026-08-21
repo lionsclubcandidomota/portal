@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-21T23:16:55.591Z",
-  "deploymentId": "1787354215590-9e23e8c9-dfa2-4726-895c-e2c7c9f892e3",
+  "updatedAt": "2026-08-21T23:32:26.862Z",
+  "deploymentId": "1787355146861-eade1cc3-4738-4b71-acf3-ebdb8d92e016",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -10,7 +10,7 @@
       "logo": "./public/logo.png",
       "primaryColor": "#00529B",
       "accentColor": "#F2C100",
-      "fontFamily": "modern",
+      "fontFamily": "humanist",
       "membershipMonthlyFee": 40,
       "membershipFamilyPrimaryFee": 40,
       "membershipFamilyAdditionalFee": 15,
