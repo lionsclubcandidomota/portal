@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-21T20:11:58.292Z",
-  "deploymentId": "1787343118292-86744762-8408-4e38-95f4-09083076a31d",
+  "updatedAt": "2026-08-21T22:20:02.249Z",
+  "deploymentId": "1787350802249-8348c58b-2dd5-4eb2-b4c8-ed2a2d7a8a9e",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -218,7 +218,9 @@
         "birthDate": "1964-10-26",
         "photo": "./public/members/b_ms3xq92x_jjequd-0r3hzuz.jpg",
         "status": "Ativo",
-        "active": true
+        "active": true,
+        "membershipOpeningDebt": 6,
+        "membershipOpeningDebtNotes": "Saldo Ano Leonistico Anterior"
       },
       {
         "id": "b_ms3xqh6q_on357v",
@@ -227,7 +229,10 @@
         "birthDate": "1972-12-20",
         "photo": "./public/members/b_ms3xqh6q_on357v-12fn3o6.jpg",
         "status": "Ativo",
-        "active": true
+        "active": true,
+        "membershipOpeningDebt": 845,
+        "membershipOpeningDebtNotes": "Saldo ano Leonistico Anterior",
+        "membershipNotes": ""
       },
       {
         "id": "b_ms3xr0sd_wd81n3",
@@ -255,7 +260,9 @@
         "birthDate": "1987-11-23",
         "photo": "./public/members/b_ms3xrlee_op8bsq-1adm34z.jpg",
         "status": "Ativo",
-        "active": true
+        "active": true,
+        "membershipOpeningDebt": 630,
+        "membershipOpeningDebtNotes": "Saldo Ano Leonistico Anterior"
       },
       {
         "id": "b_ms3xrshl_znpzq8",
@@ -372,7 +379,7 @@
           "b_ms3xlpvb_50kztj"
         ],
         "primaryMemberId": "b_ms3xlpvb_50kztj",
-        "notes": ""
+        "notes": "Saldo positivo referente ao Ano Leonistico Anterior"
       },
       {
         "id": "f_ms7u6fcz_4zy7h4",
@@ -2044,18 +2051,6 @@
         "attachments": []
       },
       {
-        "id": "t_msys8ptm_w7gjns",
-        "date": "2026-03-04",
-        "accountId": "acc-current",
-        "category": "AL - 2025/2026",
-        "description": "Pix Recebido",
-        "entry": 840,
-        "exit": 0,
-        "notes": "Rogerio Andreotti",
-        "status": "Recebido",
-        "attachments": []
-      },
-      {
         "id": "t_msys9yyi_w4mxwo",
         "date": "2026-03-04",
         "accountId": "acc-current",
@@ -3546,6 +3541,182 @@
             "url": "./public/treasury/t_mskga6d2_rv2xu7/att_mt3dposh_swtlik-1khb7co.jpg"
           }
         ]
+      },
+      {
+        "id": "t_mt3i1o0z_p235pt",
+        "date": "2026-03-04",
+        "paymentDate": "2026-03-04",
+        "description": "Mensalidade / saldo anterior - Rogério Andreotti",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 840,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xqh6q_on357v",
+        "memberIds": [
+          "b_ms3xqh6q_on357v"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xqh6q_on357v",
+            "memberName": "Rogério Andreotti",
+            "role": "Individual",
+            "monthlyAmount": 40,
+            "months": [],
+            "amount": 0,
+            "monthAllocations": []
+          }
+        ],
+        "membershipOpeningDebtAllocations": [
+          {
+            "memberId": "b_ms3xqh6q_on357v",
+            "outstandingBefore": 845,
+            "amount": 840,
+            "remainingAfter": 5
+          }
+        ],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xqh6q_on357v",
+            "name": "Rogério Andreotti",
+            "role": "Individual",
+            "amount": 840
+          }
+        ],
+        "referenceMonth": "",
+        "coveredMonths": [],
+        "membershipFrequency": "custom",
+        "membershipPaymentMode": "allocate",
+        "membershipPlan": "individual",
+        "familyGroupId": "",
+        "notes": "Pagamento registrado pelo controle de mensalidades.\nValor recebido aplicado primeiro ao saldo anterior selecionado e depois pelas mensalidades em aberto, da competência mais antiga para a mais recente.\nRogério Andreotti · saldo anterior: R$ 840,00 · saldo restante R$ 5,00",
+        "attachments": []
+      },
+      {
+        "id": "t_mt3ibz7b_0yoxtw",
+        "date": "2026-01-01",
+        "paymentDate": "2026-01-01",
+        "description": "Mensalidade - Luiz Henrique Franciscatte",
+        "category": "Mensalidades",
+        "accountId": "acc-current",
+        "entry": 228,
+        "exit": 0,
+        "status": "Recebido",
+        "memberId": "b_ms3xlpvb_50kztj",
+        "memberIds": [
+          "b_ms3xlpvb_50kztj"
+        ],
+        "memberAllocations": [
+          {
+            "memberId": "b_ms3xlpvb_50kztj",
+            "memberName": "Luiz Henrique Franciscatte",
+            "role": "Titular",
+            "monthlyAmount": 40,
+            "months": [
+              "2026-01",
+              "2026-02",
+              "2026-03",
+              "2026-04",
+              "2026-05",
+              "2026-06"
+            ],
+            "amount": 228,
+            "monthAllocations": [
+              {
+                "memberId": "b_ms3xlpvb_50kztj",
+                "month": "2026-01",
+                "expectedAmount": 40,
+                "previouslyPaid": 0,
+                "outstandingBefore": 40,
+                "amount": 40,
+                "remainingAfter": 0
+              },
+              {
+                "memberId": "b_ms3xlpvb_50kztj",
+                "month": "2026-02",
+                "expectedAmount": 40,
+                "previouslyPaid": 0,
+                "outstandingBefore": 40,
+                "amount": 40,
+                "remainingAfter": 0
+              },
+              {
+                "memberId": "b_ms3xlpvb_50kztj",
+                "month": "2026-03",
+                "expectedAmount": 40,
+                "previouslyPaid": 0,
+                "outstandingBefore": 40,
+                "amount": 40,
+                "remainingAfter": 0
+              },
+              {
+                "memberId": "b_ms3xlpvb_50kztj",
+                "month": "2026-04",
+                "expectedAmount": 40,
+                "previouslyPaid": 0,
+                "outstandingBefore": 40,
+                "amount": 40,
+                "remainingAfter": 0
+              },
+              {
+                "memberId": "b_ms3xlpvb_50kztj",
+                "month": "2026-05",
+                "expectedAmount": 40,
+                "previouslyPaid": 0,
+                "outstandingBefore": 40,
+                "amount": 40,
+                "remainingAfter": 0
+              },
+              {
+                "memberId": "b_ms3xlpvb_50kztj",
+                "month": "2026-06",
+                "expectedAmount": 40,
+                "previouslyPaid": 0,
+                "outstandingBefore": 40,
+                "amount": 28,
+                "remainingAfter": 12
+              }
+            ]
+          }
+        ],
+        "membershipOpeningDebtAllocations": [],
+        "linkedMembers": [
+          {
+            "memberId": "b_ms3xlpvb_50kztj",
+            "name": "Luiz Henrique Franciscatte",
+            "role": "Titular",
+            "amount": 228
+          }
+        ],
+        "referenceMonth": "2026-01",
+        "coveredMonths": [
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "membershipFrequency": "custom",
+        "membershipPaymentMode": "allocate",
+        "membershipPlan": "family",
+        "familyGroupId": "f_ms7u4ij3_4qo1rk",
+        "notes": "Pagamento conjunto: Fernanda e Luiz\nValor recebido aplicado primeiro ao saldo anterior selecionado e depois pelas mensalidades em aberto, da competência mais antiga para a mais recente.\nLuiz Henrique Franciscatte · janeiro de 2026: R$ 40,00 · quitada\nLuiz Henrique Franciscatte · fevereiro de 2026: R$ 40,00 · quitada\nLuiz Henrique Franciscatte · março de 2026: R$ 40,00 · quitada\nLuiz Henrique Franciscatte · abril de 2026: R$ 40,00 · quitada\nLuiz Henrique Franciscatte · maio de 2026: R$ 40,00 · quitada\nLuiz Henrique Franciscatte · junho de 2026: R$ 28,00 · saldo restante R$ 12,00",
+        "attachments": []
+      },
+      {
+        "id": "t_mt3ieqa4_ufimdy",
+        "movementKind": "exit",
+        "date": "2026-01-01",
+        "accountId": "acc-current",
+        "category": "Mensalidades",
+        "description": "Saldo Ano Leonistico Anterior",
+        "amount": 228,
+        "notes": "Saída referente a baixa das mensalidades utilizando o Saldo Positivo do Ano Leonistico Anterior do Associado Luiz Henrique Baratelli Franciscatte",
+        "entry": 0,
+        "exit": 228,
+        "status": "Pago",
+        "attachments": []
       }
     ],
     "events": [
