@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-22T02:04:16.278Z",
-  "deploymentId": "1787364256277-b287fb36-d6d2-42b1-a8e2-24d31ece13a5",
+  "updatedAt": "2026-08-22T13:49:16.122Z",
+  "deploymentId": "1787406556121-055623de-d11f-4d18-a6ba-159adfd62825",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -335,21 +335,24 @@
         "name": "SicoobCrediceripa - CC",
         "type": "Conta corrente",
         "initialBalance": 0,
-        "active": true
+        "active": true,
+        "membershipDefault": true
       },
       {
         "id": "acc-investment",
         "name": "SicoobCrediceripa - AP",
         "type": "Aplicação",
         "initialBalance": 0,
-        "active": true
+        "active": true,
+        "membershipDefault": false
       },
       {
         "id": "acc-cash",
         "name": "Dinheiro em caixa",
         "type": "Dinheiro em caixa",
         "initialBalance": 0,
-        "active": false
+        "active": false,
+        "membershipDefault": false
       }
     ],
     "treasuryCategories": [
