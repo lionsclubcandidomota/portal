@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-22T01:47:50.381Z",
-  "deploymentId": "1787363270381-a887a6b4-a6e8-4ce5-a528-93122e0dfdb7",
+  "updatedAt": "2026-08-22T01:49:51.079Z",
+  "deploymentId": "1787363391079-581cd10f-0806-49c8-b747-93873cde361b",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -3750,6 +3750,23 @@
         "entry": 3185.31,
         "exit": 0,
         "transferRole": "destination",
+        "attachments": []
+      },
+      {
+        "id": "t_mt3pzv6x_9iecv3",
+        "movementKind": "entry",
+        "date": "2026-08-21",
+        "accountId": "acc-investment",
+        "description": "Rendimento bancário",
+        "entryMode": "bank-yield",
+        "amount": 6.37,
+        "bankReportedBalance": "5198.61",
+        "bankBalanceBefore": "5192.24",
+        "notes": "",
+        "category": "Rendimentos bancários",
+        "entry": 6.37,
+        "exit": 0,
+        "status": "Recebido",
         "attachments": []
       }
     ],
