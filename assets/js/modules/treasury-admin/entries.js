@@ -1,14 +1,18 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
 import { normalizeTreasuryEntryPayload, resolveTreasuryEntryStatus, resolveTreasuryTransferStatus } from './domain.js';
 import { bindTreasuryAttachmentPicker, renderTreasuryAttachmentPicker } from './attachments.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.13';
+import { uiIcon } from '../visual-helpers.js?v=6.49.1';
+import { treasuryAccountBalanceAtDate } from '../treasury/account-balance-domain.js';
 import {
   TRANSFER_CATEGORY,
   bindTreasuryMovementKindController,
   buildTreasuryEntryFormHtml
 } from './entry-form-ui.js';
 import {
+  TREASURY_BANK_YIELD_CATEGORY,
+  TREASURY_ENTRY_MODE,
   TREASURY_MOVEMENT_KIND,
+  calculateBankYieldAdjustment,
   treasuryMovementKind,
   treasuryMovementLabel
 } from '../treasury/movement-domain.js';
@@ -34,6 +38,16 @@ export function createTreasuryEntryManager(context) {
     if (!Array.isArray(state().treasuryCategories)) state().treasuryCategories = [];
     if (!state().treasuryCategories.some(category => normalize(category) === normalize(TRANSFER_CATEGORY))) {
       state().treasuryCategories.push(TRANSFER_CATEGORY);
+      state().treasuryCategories = [...new Set(state().treasuryCategories)]
+        .filter(Boolean)
+        .sort((first, second) => first.localeCompare(second, 'pt-BR'));
+    }
+  };
+
+  const ensureBankYieldCategory = () => {
+    if (!Array.isArray(state().treasuryCategories)) state().treasuryCategories = [];
+    if (!state().treasuryCategories.some(category => normalize(category) === normalize(TREASURY_BANK_YIELD_CATEGORY))) {
+      state().treasuryCategories.push(TREASURY_BANK_YIELD_CATEGORY);
       state().treasuryCategories = [...new Set(state().treasuryCategories)]
         .filter(Boolean)
         .sort((first, second) => first.localeCompare(second, 'pt-BR'));
@@ -67,6 +81,7 @@ export function createTreasuryEntryManager(context) {
 
   const treasuryEntryFormHtml = item => {
     ensureTransferCategory();
+    ensureBankYieldCategory();
     return buildTreasuryEntryFormHtml({
       item,
       accounts: treasury.accounts(),
@@ -75,7 +90,23 @@ export function createTreasuryEntryManager(context) {
     });
   };
 
-  const bindMovementKindController = form => bindTreasuryMovementKindController(form);
+  const balanceBeforeBankYield = (accountId, date, excludeIds = []) => {
+    const accountList = treasury.accounts();
+    const account = accountList.find(item => String(item.id) === String(accountId || ''));
+    if (!account || !date) return null;
+    const excluded = new Set((excludeIds || []).map(String));
+    return treasuryAccountBalanceAtDate({
+      items: state().treasury.filter(item => !excluded.has(String(item.id || ''))),
+      accountId: account.id,
+      primaryAccountId: accountList[0]?.id || '',
+      initialBalance: Number(account.initialBalance || 0),
+      date,
+      includeProgrammed: false,
+      isProgrammed: treasury.isProgrammed
+    });
+  };
+
+  const bindMovementKindController = (form, options = {}) => bindTreasuryMovementKindController(form, options);
 
   const bindInlineCategoryManager = form => {
     const select = form.elements.category;
@@ -100,7 +131,7 @@ export function createTreasuryEntryManager(context) {
 
     const selectedCategory = () => String(select.value || '').trim();
     const requestedName = () => String(nameInput.value || '').trim();
-    const isSystemCategory = category => ['mensalidades', 'mutuas', normalize(TRANSFER_CATEGORY)].includes(normalize(category));
+    const isSystemCategory = category => ['mensalidades', 'mutuas', normalize(TRANSFER_CATEGORY), normalize(TREASURY_BANK_YIELD_CATEGORY)].includes(normalize(category));
     const duplicateFor = (name, original = '') => treasury.categories().find(category => (
       normalize(category) === normalize(name)
       && normalize(category) !== normalize(original)
@@ -161,7 +192,7 @@ export function createTreasuryEntryManager(context) {
         return;
       }
       if (isSystemCategory(original)) {
-        setStatus('Mensalidades, Mútuas e Transferências são categorias do sistema e não podem ser renomeadas.', 'is-error');
+        setStatus('Mensalidades, Mútuas, Transferências e Rendimentos bancários são categorias do sistema e não podem ser renomeadas.', 'is-error');
         return;
       }
       if (!name) {
@@ -202,7 +233,7 @@ export function createTreasuryEntryManager(context) {
         return;
       }
       if (isSystemCategory(category)) {
-        setStatus('Mensalidades, Mútuas e Transferências são categorias do sistema e não podem ser excluídas.', 'is-error');
+        setStatus('Mensalidades, Mútuas, Transferências e Rendimentos bancários são categorias do sistema e não podem ser excluídas.', 'is-error');
         return;
       }
       const usageCount = state().treasury.filter(entry => (
@@ -253,7 +284,10 @@ export function createTreasuryEntryManager(context) {
     const operationTitle = treasuryMovementLabel(initialKind).toLocaleLowerCase('pt-BR');
     showModal(`${id ? 'Editar' : 'Nova'} ${operationTitle}`);
     const form = document.getElementById('treasuryEntryForm');
-    bindMovementKindController(form);
+    const bankYieldExcludedIds = id ? treasuryOperationEntryIds(collection, rawItem) : [];
+    bindMovementKindController(form, {
+      resolveAccountBalance: (accountId, date) => balanceBeforeBankYield(accountId, date, bankYieldExcludedIds)
+    });
     bindInlineCategoryManager(form);
     const attachmentPicker = bindTreasuryAttachmentPicker(form, formItem.attachments || [], { toast });
 
@@ -269,8 +303,33 @@ export function createTreasuryEntryManager(context) {
 
       try {
         ensureTransferCategory();
+        const rawData = Object.fromEntries(new FormData(form).entries());
+        if (String(rawData.movementKind || '') === TREASURY_MOVEMENT_KIND.ENTRY
+          && String(rawData.entryMode || '') === TREASURY_ENTRY_MODE.BANK_YIELD) {
+          const accountId = String(rawData.accountId || '').trim();
+          const date = String(rawData.date || '').trim();
+          const portalBalance = balanceBeforeBankYield(accountId, date, bankYieldExcludedIds);
+          if (!Number.isFinite(Number(portalBalance))) throw new Error('Selecione a conta e informe a data do rendimento bancário.');
+          const adjustment = calculateBankYieldAdjustment({
+            portalBalance,
+            reportedBalance: Number(rawData.bankReportedBalance || 0)
+          });
+          if (!adjustment.isPositive) {
+            throw new Error(adjustment.amount < 0
+              ? 'O saldo informado pelo banco é menor que o saldo da conta no Portal. Registre tarifas ou outros débitos separadamente.'
+              : 'O saldo informado é igual ao saldo da conta no Portal; não há rendimento para registrar.');
+          }
+          rawData.amount = adjustment.amount.toFixed(2);
+          rawData.bankBalanceBefore = adjustment.portalBalance.toFixed(2);
+          rawData.bankReportedBalance = adjustment.reportedBalance.toFixed(2);
+          rawData.category = TREASURY_BANK_YIELD_CATEGORY;
+          rawData.statusMode = 'Efetivado';
+        } else {
+          delete rawData.bankBalanceBefore;
+          delete rawData.bankReportedBalance;
+        }
         const normalized = normalizeTreasuryEntryPayload(
-          Object.fromEntries(new FormData(form).entries()),
+          rawData,
           { defaultAccountId: treasury.accounts()[0]?.id || '', transferCategory: TRANSFER_CATEGORY }
         );
         const attachments = attachmentPicker.getAttachments();

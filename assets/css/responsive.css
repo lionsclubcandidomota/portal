@@ -47,9 +47,6 @@
   .kpi-card { min-height: 104px; }
   .mobile-bottom-nav { left: 8px; right: 8px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
-}
 
 /* v4.0.1 — destaque institucional do Dashboard */
 @media (max-width: 700px) {

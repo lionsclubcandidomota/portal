@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildMembershipViewModel } from '../assets/js/modules/treasury/memberships.js';
+import { buildMembershipViewModel, renderMembershipSection } from '../assets/js/modules/treasury/memberships.js';
 import { allocateMembershipPayment } from '../assets/js/modules/treasury-admin/domain.js';
 import { createTreasuryController } from '../assets/js/modules/treasury/controller.js';
 import { normalize, parseLocalDate, sumTreasury } from '../assets/js/utils.js';
@@ -50,9 +50,87 @@ test('modelo de mensalidades calcula unidades quitadas e pendentes', () => {
   assert.deepEqual(model.membershipMonths, ['2026-07', '2026-08']);
   assert.equal(model.membershipExpectedUnits, 4);
   assert.equal(model.membershipPaidUnits, 1);
+  assert.equal(model.membershipPartialUnits, 0);
+  assert.equal(model.membershipOpenUnits, 3);
+  assert.equal(model.membershipExpectedAmountTotal, 200);
   assert.equal(model.membershipTotal, 50);
+  assert.equal(model.membershipIndividualCount, 2);
+  assert.equal(model.membershipFamilyMemberCount, 0);
+  assert.equal(model.membershipFamilyGroupCount, 0);
   assert.deepEqual(model.membershipProgress.get('m1').pendingMonths, ['2026-08']);
   assert.deepEqual(model.membershipProgress.get('m2').pendingMonths, ['2026-07', '2026-08']);
+});
+
+test('previsão pendente respeita exatamente o período selecionado e não inclui saldo anterior', () => {
+  const { state, treasury } = setup();
+  state.birthdays[1].membershipOpeningDebt = 630;
+
+  const twoMonths = buildMembershipViewModel(state, treasury, new Date(2026, 6, 30));
+  assert.equal(twoMonths.membershipPendingAmountTotal, 150);
+  assert.equal(twoMonths.membershipOpeningDebtOutstandingTotal, 630);
+
+  treasury.membershipEnd = '2026-07';
+  const julyOnly = buildMembershipViewModel(state, treasury, new Date(2026, 6, 30));
+  assert.deepEqual(julyOnly.membershipMonths, ['2026-07']);
+  assert.equal(julyOnly.membershipPendingAmountTotal, 50);
+  assert.equal(julyOnly.membershipOpeningDebtOutstandingTotal, 630);
+});
+
+test('resumo de mensalidades separa associados individuais, familiares, titulares e adicionais', () => {
+  const { state, treasury } = setup();
+  state.familyGroups = [{
+    id: 'family-1',
+    name: 'Família Ana e Bruno',
+    primaryMemberId: 'm1',
+    memberIds: ['m1', 'm2']
+  }];
+
+  const model = buildMembershipViewModel(state, treasury, new Date(2026, 6, 30));
+
+  assert.equal(model.membershipIndividualCount, 0);
+  assert.equal(model.membershipFamilyMemberCount, 2);
+  assert.equal(model.membershipFamilyPrimaryCount, 1);
+  assert.equal(model.membershipFamilyAdditionalCount, 1);
+  assert.equal(model.membershipFamilyGroupCount, 1);
+  assert.equal(model.membershipExpectedAmountTotal, 155);
+});
+
+test('resumo de competências distingue parcial de totalmente em aberto', () => {
+  const { state, treasury } = setup();
+  state.treasury[0].entry = 30;
+  state.treasury[0].memberAllocations = [{
+    memberId: 'm1',
+    amount: 30,
+    months: ['2026-07'],
+    monthAllocations: [{ month: '2026-07', amount: 30, expectedAmount: 50, previouslyPaid: 0, outstandingBefore: 50, remainingAfter: 20 }]
+  }];
+
+  const model = buildMembershipViewModel(state, treasury, new Date(2026, 6, 30));
+
+  assert.equal(model.membershipPaidUnits, 0);
+  assert.equal(model.membershipPartialUnits, 1);
+  assert.equal(model.membershipOpenUnits, 3);
+  assert.equal(model.membershipPendingAmountTotal, 170);
+});
+
+test('painel de mensalidades apresenta base, situação e financeiro em grupos separados', () => {
+  const { state, treasury } = setup();
+  const model = buildMembershipViewModel(state, treasury, new Date(2026, 6, 30));
+  const html = renderMembershipSection({
+    model,
+    treasury,
+    adminUnlocked: false,
+    avatar: member => `<span>${member.name}</span>`,
+    empty: () => ''
+  });
+
+  assert.match(html, /Base ativa/);
+  assert.match(html, /Individuais/);
+  assert.match(html, /Familiares/);
+  assert.match(html, /Situação das competências/);
+  assert.match(html, /Previsão pendente/);
+  assert.match(html, /somente competências/);
+  assert.match(html, /fora da previsão pendente/);
 });
 
 test('modelo respeita busca e filtro de situação armazenados no controlador', () => {

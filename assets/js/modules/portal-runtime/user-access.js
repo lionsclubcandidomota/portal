@@ -2,8 +2,8 @@ import {
   memberForPortalUser,
   normalizePortalUsername,
   userByUsername
-} from '../../core/portal-access.js?v=6.46.13';
-import { effectivePortalUserRole } from '../../core/portal-leadership.js?v=6.46.13';
+} from '../../core/portal-access.js?v=6.49.1';
+import { effectivePortalUserRole } from '../../core/portal-leadership.js?v=6.49.1';
 
 const USER_PASSWORD_VERSION = 1;
 const USER_PASSWORD_CONTEXT = 'lions-portal-user-password-v1';

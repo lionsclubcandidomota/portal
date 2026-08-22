@@ -1,7 +1,7 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../../core/portal-members.js?v=6.46.13';
+import { MEMBER_STATUS, memberStatusLabel } from '../../core/portal-members.js?v=6.49.1';
 import { escapeHtml, toInputDate } from '../../utils.js';
 import { markdownEditor } from '../markdown.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.13';
+import { uiIcon } from '../visual-helpers.js?v=6.49.1';
 
 export function normalizeExternalUrl(value) {
   const raw = String(value || '').trim();

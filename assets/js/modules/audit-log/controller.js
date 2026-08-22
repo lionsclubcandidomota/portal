@@ -1,4 +1,4 @@
-import { buildPublicationReview } from '../publication-review-domain.js?v=6.46.13';
+import { buildPublicationReview } from '../publication-review-domain.js?v=6.49.1';
 import {
   auditLogSummary,
   closeAuditBatch,
@@ -10,14 +10,14 @@ import {
   linkAuditPublication,
   normalizeAuditActor,
   pendingAuditBatchId
-} from './domain.js?v=6.46.13';
-import { createAuditLogStore } from './storage.js?v=6.46.13';
+} from './domain.js?v=6.49.1';
+import { createAuditLogStore } from './storage.js?v=6.49.1';
 
 let auditLogViewPromise = null;
 
 function loadAuditLogView() {
   if (!auditLogViewPromise) {
-    auditLogViewPromise = import('./view.js?v=6.46.13')
+    auditLogViewPromise = import('./view.js?v=6.49.1')
       .then(module => module.auditLogHtml)
       .catch(error => {
         auditLogViewPromise = null;

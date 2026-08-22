@@ -6,14 +6,14 @@ import { CSS_SOURCES } from './build-css.mjs';
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const cssRoot = path.join(projectRoot, 'assets', 'css');
 const budget = Object.freeze({
-  maxSources: 33,
+  maxSources: 35,
   maxExactDuplicateRules: 0,
   maxRepeatedContextSelectors: 350,
   maxOverrideRules: 450,
   maxLegacySources: 0,
   maxLegacyBytes: 0,
   maxSourceBytes: 38_000,
-  maxBundleBytes: 422_000
+  maxBundleBytes: 442_000
 });
 
 function stripComments(source) {

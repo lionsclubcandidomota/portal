@@ -1,6 +1,6 @@
 import { escapeHtml, formatDate, money, toInputDate, uid } from '../../utils.js';
 import { allocateMembershipPayment } from './domain.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.13';
+import { uiIcon } from '../visual-helpers.js?v=6.49.1';
 
 export function createMembershipPaymentManager(context, memberSelectorCard) {
   const {
@@ -37,6 +37,8 @@ export function createMembershipPaymentManager(context, memberSelectorCard) {
     const initialIds = groupMembers.map(item => item.id);
     const storedNotes = group ? String(group.notes || '') : String(member.membershipNotes || '');
     const openingDebtOutstanding = treasury.membershipOpeningDebtOutstanding(member.id);
+    const activeAccounts = treasury.accounts().filter(account => account.active !== false);
+    const defaultMembershipAccount = treasury.membershipDefaultAccount?.() || activeAccounts[0] || null;
 
     const expectedFor = (id, month = '') => month
       ? treasury.membershipExpectedAmountForMemberMonth(id, month)
@@ -86,7 +88,7 @@ export function createMembershipPaymentManager(context, memberSelectorCard) {
         <div class="form-grid admin-form-section-grid">
           <div class="form-field"><label>Forma da baixa</label><select name="paymentMode" id="membershipPaymentMode"><option value="settle">Quitar saldo das mensalidades selecionadas</option><option value="allocate">Ratear um valor recebido</option></select><small>No rateio, o valor é aplicado primeiro às competências mais antigas selecionadas.</small></div>
           <div class="form-field"><label>Data da baixa</label><input name="paymentDate" type="date" value="" autocomplete="off" required><small>Informe manualmente a data efetiva do recebimento.</small></div>
-          <div class="form-field"><label>Conta de recebimento</label><select name="accountId" required>${treasury.accounts().filter(account => account.active !== false).map(account => `<option value="${escapeHtml(account.id)}">${escapeHtml(account.name)}</option>`).join('')}</select></div>
+          <div class="form-field"><label>Conta de recebimento</label><select name="accountId" required>${activeAccounts.map(account => `<option value="${escapeHtml(account.id)}" ${defaultMembershipAccount?.id === account.id ? 'selected' : ''}>${escapeHtml(account.name)}${account.membershipDefault === true ? ' · Padrão' : ''}</option>`).join('')}</select><small>${defaultMembershipAccount ? `Pré-selecionada conforme a conta padrão de mensalidades: ${escapeHtml(defaultMembershipAccount.name)}.` : 'Selecione a conta que receberá o valor.'}</small></div>
           <div class="form-field"><label>Valor do recebimento</label><div class="currency-input"><span>R$</span><input name="amount" type="text" inputmode="decimal" value="${treasury.currencyInputValue(0)}" readonly required></div><small id="membershipAmountHelp">Calculado pelo saldo em aberto das competências selecionadas.</small></div>
           <div class="form-field full-row"><label>Observações do ${group ? 'grupo familiar' : 'associado'}</label><textarea name="membershipNotes" rows="3" placeholder="Informações sobre cobrança, responsável, acordo ou forma de pagamento">${escapeHtml(storedNotes)}</textarea><small>Estas informações serão mantidas para as próximas baixas.</small></div>
           <div class="form-field full-row"><label>Observação desta baixa</label><textarea name="paymentNotes" rows="3" placeholder="Ex.: pagamento parcial via PIX, complemento ou detalhe específico deste recebimento"></textarea></div>

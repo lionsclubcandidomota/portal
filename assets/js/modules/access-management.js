@@ -4,7 +4,7 @@ import {
   normalizePortalUsername,
   permissionDefinition,
   roleById
-} from '../core/portal-access.js?v=6.46.13';
+} from '../core/portal-access.js?v=6.49.1';
 import {
   assignmentDateRangeIsValid,
   createLeadershipAssignment,
@@ -17,12 +17,12 @@ import {
   normalizeLionYear,
   overlappingLeadershipAssignments,
   transitionLeadershipRole
-} from '../core/portal-leadership.js?v=6.46.13';
-import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.46.13';
-import { memberIsActive } from '../core/portal-members.js?v=6.46.13';
+} from '../core/portal-leadership.js?v=6.49.1';
+import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.49.1';
+import { memberIsActive } from '../core/portal-members.js?v=6.49.1';
 import { escapeHtml, uid } from '../utils.js';
-import { buildPortalUserPassword } from './portal-runtime/user-access.js?v=6.46.13';
-import { uiIcon } from './visual-helpers.js?v=6.46.13';
+import { buildPortalUserPassword } from './portal-runtime/user-access.js?v=6.49.1';
+import { uiIcon } from './visual-helpers.js?v=6.49.1';
 
 function memberById(state, memberId) {
   return (Array.isArray(state?.birthdays) ? state.birthdays : []).find(member => member.id === memberId) || null;

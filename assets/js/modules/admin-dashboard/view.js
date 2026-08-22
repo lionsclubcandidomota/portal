@@ -1,5 +1,5 @@
 import { escapeHtml } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.13';
+import { uiIcon } from '../visual-helpers.js?v=6.49.1';
 
 const currency = new Intl.NumberFormat('pt-BR', {
   style: 'currency',

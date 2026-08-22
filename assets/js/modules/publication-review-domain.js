@@ -26,6 +26,7 @@ const FIELD_LABELS = {
   type: 'Tipo',
   initialBalance: 'Saldo inicial',
   active: 'Conta ativa',
+  membershipDefault: 'Padrão para mensalidades',
   memberIds: 'Integrantes',
   primaryMemberId: 'Titular',
   notes: 'Observações',
@@ -85,7 +86,7 @@ const COLLECTIONS = [
     title: 'Contas da Tesouraria',
     icon: 'bank',
     singular: 'conta',
-    fields: ['name', 'type', 'initialBalance', 'active'],
+    fields: ['name', 'type', 'initialBalance', 'active', 'membershipDefault'],
     itemTitle: item => item?.name || 'Conta sem nome'
   },
   {

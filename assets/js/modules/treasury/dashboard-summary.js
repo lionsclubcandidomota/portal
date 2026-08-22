@@ -1,6 +1,6 @@
-import { memberIsActive } from '../../core/portal-members.js?v=6.46.13';
+import { memberIsActive } from '../../core/portal-members.js?v=6.49.1';
 import { normalize, parseLocalDate, sumTreasury } from '../../utils.js';
-import { todayStart } from '../timeline.js?v=6.46.13';
+import { todayStart } from '../timeline.js?v=6.49.1';
 import {
   DEFAULT_ACCOUNTS,
   coveredMonths,
@@ -13,11 +13,11 @@ import {
   mutualActiveMemberIds,
   mutualEventMemberIds,
   normalizeMutualGroup
-} from './shared-domain.js?v=6.46.13';
+} from './shared-domain.js?v=6.49.1';
 import {
   financialTreasuryItems,
   uniqueTreasuryMovementCount
-} from './movement-domain.js?v=6.46.13';
+} from './movement-domain.js?v=6.49.1';
 
 function accountSummaries(state) {
   const storedAccounts = Array.isArray(state?.treasuryAccounts) ? state.treasuryAccounts : [];

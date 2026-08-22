@@ -5,8 +5,36 @@ export const TREASURY_MOVEMENT_KIND = Object.freeze({
 });
 
 export const TREASURY_TRANSFER_CATEGORY = 'Transferência entre contas';
+export const TREASURY_BANK_YIELD_CATEGORY = 'Rendimentos bancários';
+
+export const TREASURY_ENTRY_MODE = Object.freeze({
+  MANUAL: 'manual',
+  BANK_YIELD: 'bank-yield'
+});
 
 const MOVEMENT_KINDS = new Set(Object.values(TREASURY_MOVEMENT_KIND));
+
+
+function roundCurrency(value) {
+  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+}
+
+export function calculateBankYieldAdjustment({ portalBalance = 0, reportedBalance = 0 } = {}) {
+  const balanceBefore = roundCurrency(portalBalance);
+  const bankBalance = roundCurrency(reportedBalance);
+  const amount = roundCurrency(bankBalance - balanceBefore);
+  return Object.freeze({
+    portalBalance: balanceBefore,
+    reportedBalance: bankBalance,
+    amount,
+    isPositive: amount > 0
+  });
+}
+
+export function isBankYieldEntry(item = {}) {
+  return treasuryMovementKind(item) === TREASURY_MOVEMENT_KIND.ENTRY
+    && String(item?.entryMode || '').trim().toLowerCase() === TREASURY_ENTRY_MODE.BANK_YIELD;
+}
 
 export function treasuryMovementKind(item = {}) {
   const rawKind = String(item?.movementKind || '').trim().toLowerCase();

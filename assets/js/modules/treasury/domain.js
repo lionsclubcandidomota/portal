@@ -1,5 +1,5 @@
-import { uiIcon } from '../visual-helpers.js?v=6.46.13';
-import { memberCanJoinMutual, memberIsActive, memberIsInactive, memberIsMutual, memberStatusKey, memberStatusLabel } from '../../core/portal-members.js?v=6.46.13';
+import { uiIcon } from '../visual-helpers.js?v=6.49.1';
+import { memberCanJoinMutual, memberIsActive, memberIsInactive, memberIsMutual, memberStatusKey, memberStatusLabel } from '../../core/portal-members.js?v=6.49.1';
 import { TREASURY_TRANSFER_CATEGORY } from './movement-domain.js';
 import {
   DEFAULT_ACCOUNTS,
@@ -20,7 +20,7 @@ import {
   normalizeMutualEvent,
   normalizeMutualGroup,
   referenceMonth
-} from './shared-domain.js?v=6.46.13';
+} from './shared-domain.js?v=6.49.1';
 export {
   DEFAULT_ACCOUNTS,
   coveredMonths,
@@ -41,8 +41,8 @@ export {
   normalizeMutualGroup,
   referenceMonth
 };
-export { parseCurrencyInput, currencyInputValue } from '../currency-input.js?v=6.46.13';
-export { ALLOWED_SECTIONS, normalizeTreasurySection } from './section-domain.js?v=6.46.13';
+export { parseCurrencyInput, currencyInputValue } from '../currency-input.js?v=6.49.1';
+export { ALLOWED_SECTIONS, normalizeTreasurySection } from './section-domain.js?v=6.49.1';
 
 export const DEFAULT_CATEGORIES = Object.freeze([
   'Mensalidades',

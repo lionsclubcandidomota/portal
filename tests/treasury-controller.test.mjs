@@ -109,3 +109,33 @@ test('movimentações é a seção padrão e estados antigos de lançamentos sã
   migrated.section = 'launches';
   assert.equal(migrated.section, 'movements');
 });
+
+test('conta padrão de mensalidades prioriza a conta ativa marcada', () => {
+  const state = {
+    settings: {},
+    birthdays: [],
+    treasury: [],
+    treasuryAccounts: [
+      { id: 'a1', name: 'Conta corrente', active: true },
+      { id: 'a2', name: 'Aplicação', active: true, membershipDefault: true },
+      { id: 'a3', name: 'Inativa', active: false, membershipDefault: true }
+    ]
+  };
+
+  assert.equal(createController(state).membershipDefaultAccount()?.id, 'a2');
+});
+
+test('conta padrão de mensalidades mantém compatibilidade usando a primeira ativa quando não configurada', () => {
+  const state = {
+    settings: {},
+    birthdays: [],
+    treasury: [],
+    treasuryAccounts: [
+      { id: 'a0', name: 'Inativa', active: false },
+      { id: 'a1', name: 'Primeira ativa', active: true },
+      { id: 'a2', name: 'Segunda ativa', active: true }
+    ]
+  };
+
+  assert.equal(createController(state).membershipDefaultAccount()?.id, 'a1');
+});

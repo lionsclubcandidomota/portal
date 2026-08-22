@@ -1,5 +1,32 @@
 # Registro técnico — Portal v6.46.7
 
+## v6.49.1 — conta padrão para mensalidades
+
+A configuração da conta de recebimento padrão foi incorporada ao próprio cadastro de `treasuryAccounts`, usando a propriedade opcional `membershipDefault`. Não foi criado estado paralelo: o controller resolve a conta padrão entre as contas ativas e mantém fallback para a primeira conta ativa em bases legadas. A propriedade também participa da revisão de publicação.
+
+## v6.47.0 — consolidação do design system e refinamento global
+
+Esta etapa é uma refatoração visual controlada, sem reescrita dos fluxos funcionais. A revisão identificou três camadas que voltavam a declarar os mesmos tokens e um volume relevante de regras antigas ainda presentes apenas para serem sobrescritas por estilos mais novos.
+
+- `tokens.css` passa a ser a fonte única dos tokens globais de cor, superfície, tipografia, espaçamento estrutural, raios, sombras, foco, dimensões e z-index;
+- `interaction-foundation.css` e `interface-polish.css` deixam de redeclarar tokens que já pertencem ao design system;
+- `modern-interface.css` assume a linguagem visual consolidada para shell, navegação, topbar, heros, cards, KPIs, formulários, botões, tabelas, badges e estados vazios;
+- declarações antigas totalmente sombreadas foram removidas de `application-shell.css`, `layout.css`, `core.css`, `responsive-workflows.css`, `interface-polish.css`, `responsive.css`, `responsive-guardrails.css`, `native-charts.css` e `memberships.css`;
+- o Dashboard mantém duas colunas de KPIs nas larguras móveis intermediárias e volta para uma coluna somente em telas menores;
+- nenhuma classe funcional, regra financeira, contrato JavaScript ou estrutura de dados foi reescrita.
+
+### Métricas da consolidação
+
+- regras CSS auditadas: 4.559 → 4.539;
+- seletores redefinidos no mesmo contexto: 340 → 334;
+- sobrescritas: 437 → 417;
+- duplicatas exatas: 0 → 0;
+- fontes legadas: 0 → 0;
+- bundle CSS: 421.984 → aproximadamente 420.971 bytes;
+- orçamento CSS: mantido em 422.000 bytes.
+
+O objetivo desta etapa é reduzir a dívida de cascata e tornar as próximas evoluções visuais menores e previsíveis. O esquema permanece em 12 e os arquivos oficiais de dados devem permanecer byte a byte inalterados.
+
 ## Consolidação pós-movimentações — Etapa 1 (CSS)
 
 - Removidas 700 declarações CSS totalmente sobrescritas pelo mesmo seletor/contexto/propriedade.

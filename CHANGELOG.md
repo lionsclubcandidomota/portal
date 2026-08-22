@@ -1,3 +1,77 @@
+## v6.49.1 — Conta padrão para recebimento de mensalidades — 22/08/2026
+
+- adiciona a configuração **Conta padrão para receber mensalidades** no gerenciamento de contas da Tesouraria;
+- limita a configuração a uma única conta ativa por vez e remove o status ao desativá-la;
+- pré-seleciona a conta configurada no modal **Dar baixa de mensalidade**, sem bloquear a escolha manual de outra conta;
+- mantém fallback compatível para a primeira conta ativa quando nenhuma conta padrão foi definida;
+- registra a nova propriedade na revisão de publicação das contas;
+- adiciona regressões específicas e preserva `data/dados.json` e `data/modelo.json` inalterados.
+
+## v6.49.0 — Resumo gerencial de Mensalidades — 22/08/2026
+
+- confirma que **Previsão pendente** exclui integralmente o saldo anterior e considera somente competências do período selecionado;
+- reestrutura o painel de Mensalidades em Base ativa, Situação das competências e Valores do período;
+- inclui contagem de associados Individuais, Familiares, titulares, adicionais e grupos familiares ativos;
+- separa competências Quitadas, Parciais e Em aberto;
+- inclui o total Previsto no período, calculado com a mesma regra histórica de valor por competência;
+- mantém Recebido, Previsão pendente e Saldo anterior como indicadores distintos e explicados;
+- refina a responsividade do resumo para desktop, tablet e celular e preserva os temas Claro/Escuro;
+- recalibra os orçamentos técnicos para 442 KB de CSS e 790 KB de ativos críticos;
+- preserva `data/dados.json` e `data/modelo.json` inalterados.
+
+## v6.48.3 — Previsão pendente e acabamento do Extrato no modo escuro — 22/08/2026
+
+- corrige a superfície de **Pagamentos vinculados** do Extrato para respeitar os temas claro e escuro;
+- adiciona ao Controle de Mensalidades o KPI **Previsão pendente**, calculado somente com as competências em aberto do período selecionado;
+- preserva o **Saldo anterior em aberto** em indicador separado, sem misturá-lo à previsão mensal do período;
+- usa a mesma regra histórica de valor por competência, preservando reajustes, quitações e pagamentos parciais;
+- adiciona regressões específicas para o filtro de período e para a superfície temática dos pagamentos vinculados;
+- preserva `data/dados.json` e `data/modelo.json` inalterados.
+
+## v6.48.2 — Tema claro padrão e acabamento do modo escuro — 22/08/2026
+
+- O Portal passa a iniciar em **Modo claro** quando ainda não existe preferência salva no navegador.
+- A escolha manual do usuário entre Claro e Escuro continua persistida localmente.
+- Notificações/toasts passam a usar superfícies do design system em ambos os temas.
+- Campos de data/data-hora/mês/hora deixam de exibir fundo branco no modo escuro, inclusive durante validação obrigatória.
+- Regressões específicas protegem o tema padrão, as notificações e os controles nativos de data.
+- `data/dados.json` e `data/modelo.json` permanecem inalterados.
+
+## v6.48.1 — Refinamento do modo escuro — 21/08/2026
+
+- corrige superfícies claras residuais e textos de baixo contraste encontrados no modo escuro em Dashboard, Dirigentes, Tesouraria, Mensalidades, Mútuas, Agenda, Avisos e Ajustes;
+- troca cores fixas dos componentes afetados por tokens semânticos de superfície, texto e estado, fazendo o mesmo CSS responder corretamente aos temas claro e escuro;
+- corrige rodapés de modais, seletor de competências, cards de mensalidades, pagamentos vinculados do Extrato e cards expansíveis de Movimentações;
+- cria tokens de Mútuas com variantes claras/escuras para preservar a identidade roxa com contraste adequado;
+- adapta editor Markdown, pré-visualização e componentes compartilhados de publicação/auditoria ao tema;
+- adiciona regressão específica contra o retorno de fundos brancos fixos nos componentes críticos;
+- preserva as regras funcionais da v6.48.0, o esquema 12 e `data/dados.json`/`data/modelo.json` byte a byte.
+
+## v6.48.0 — Rendimento bancário e modo escuro — 21/08/2026
+
+- adiciona **Rendimento bancário** como modalidade de Entrada na Tesouraria;
+- calcula automaticamente o rendimento a partir da diferença entre o saldo realizado do Portal e o saldo informado pelo banco;
+- exige diferença positiva, evitando transformar divergências negativas em saídas automáticas;
+- registra saldo anterior do Portal e saldo informado pelo banco junto ao lançamento para conferência;
+- mantém o fluxo atual de usuário responsável/auditoria, sem adicionar novo campo ao formulário;
+- protege a categoria de sistema **Rendimentos bancários** contra renomeação ou exclusão;
+- exibe os saldos utilizados no cálculo nos detalhes da movimentação;
+- adiciona alternância global entre **tema claro e tema escuro** no cabeçalho;
+- salva a preferência do tema somente no navegador/dispositivo e usa a preferência do sistema operacional quando ainda não existe escolha explícita;
+- integra o modo escuro ao design system consolidado, cobrindo navegação, cards, KPIs, formulários, tabelas, modais, Tesouraria, Mensalidades e demais superfícies principais;
+- mantém `data/dados.json` e `data/modelo.json` inalterados e o esquema na versão 12;
+- recalibra os orçamentos técnicos de CSS/JavaScript somente para acomodar as duas funcionalidades, mantendo auditorias e regressões obrigatórias.
+
+## v6.47.0 — Refatoração visual global — 21/08/2026
+
+- consolida os tokens do design system em uma única fonte de verdade para cores, superfícies, tipografia, raios, sombras, foco e dimensões;
+- moderniza de forma global sidebar, topbar, conteúdo, heros, cards, KPIs, formulários, botões, tabelas, badges e estados vazios;
+- elimina regras antigas totalmente sobrescritas e reduz a dívida de cascata sem criar uma nova camada global de exceções;
+- reduz o bundle CSS de 421.984 para aproximadamente 420.971 bytes, mantendo o orçamento máximo de 422.000 bytes;
+- reduz as sobrescritas auditadas de 437 para 417 e os seletores redefinidos de 340 para 334, com zero duplicatas exatas e zero fontes legadas;
+- melhora a responsividade dos KPIs do Dashboard e mantém as especializações já estabilizadas de Tesouraria, Mensalidades, Extrato, Mútuas, usuários, Dirigentes e publicação;
+- não altera regras de negócio, esquema, `data/dados.json` ou `data/modelo.json`.
+
 ## v6.46.13 — Saldo devedor líquido do Extrato — 21/08/2026
 
 - corrige o Saldo devedor para incluir o saldo anterior ainda em aberto, além das competências em aberto do período;

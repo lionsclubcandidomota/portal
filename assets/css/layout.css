@@ -1,12 +1,8 @@
 .app-shell { grid-template-columns: var(--sidebar-width) minmax(0,1fr); }
-.sidebar {
-  border-right: 1px solid rgba(255,255,255,.08);
-}
 .brand {
   border-bottom: 1px solid rgba(255,255,255,.13);
 }
 .brand-logo-wrap { flex: 0 0 58px;
-  border-radius: 18px;
   padding: 5px;
   background: rgba(255,255,255,.98);
 }
@@ -21,15 +17,11 @@
   position: relative;
   transition: background var(--transition), color var(--transition), transform var(--transition);
 }
-.nav-item > span:first-child { height: 30px;
-  border-radius: 10px;
-  background: rgba(255,255,255,.08);
+.nav-item > span:first-child { background: rgba(255,255,255,.08);
 }
-.nav-item:hover { color: #fff; }
 .nav-item.active {
   transform: none;
 }
-.nav-item.active > span:first-child { background: rgba(245,197,66,.18); }
 .nav-divider { margin: 11px 9px; background: rgba(255,255,255,.12); }
 .main-content { min-height: 100vh; background: transparent; }
 
@@ -37,7 +29,6 @@
 .topbar-date { display: inline-block; }
 .mode-chip, .clock {
   border: 1px solid var(--border);
-  background: rgba(246,248,251,.9);
   box-shadow: var(--shadow-xs);
 }
 

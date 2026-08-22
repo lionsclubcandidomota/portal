@@ -37,7 +37,7 @@ import {
   periodBounds as getPeriodBounds,
   referenceMonth as getReferenceMonth
 } from './domain.js';
-import { inferLegacyMembershipFeeForMonth, membershipFeeForMonth as resolveMembershipFeeForMonth } from '../membership-fees.js?v=6.46.13';
+import { inferLegacyMembershipFeeForMonth, membershipFeeForMonth as resolveMembershipFeeForMonth } from '../membership-fees.js?v=6.49.1';
 export function createTreasuryController({
   getState,
   parseLocalDate,
@@ -102,6 +102,8 @@ export function createTreasuryController({
     return [...new Set(current.treasuryCategories)]
       .sort((first, second) => first.localeCompare(second, 'pt-BR'));
   };
+  const membershipDefaultAccount = () => accounts().filter(account => account.active !== false).find(account => account.membershipDefault === true)
+    || accounts().find(account => account.active !== false) || null;
   const accountFor = item => {
     const availableAccounts = accounts();
     return availableAccounts.find(account => account.id === item?.accountId) || availableAccounts[0];
@@ -439,9 +441,7 @@ export function createTreasuryController({
     expandAllCharts,
     collapseAllCharts,
     reset,
-    accounts,
-    categories,
-    accountFor,
+    accounts, categories, membershipDefaultAccount, accountFor,
     membersFor,
     memberFor,
     membershipAllocationFor,

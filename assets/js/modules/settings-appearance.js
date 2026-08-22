@@ -50,8 +50,8 @@ export function applyPortalAppearance({ state, updateAccessUI, defaultLogo = DEF
   const accentColor = settings.accentColor || DEFAULT_ACCENT_COLOR;
   const fontFamily = normalizePortalFont(settings.fontFamily);
 
-  document.documentElement.style.setProperty('--primary', primaryColor);
-  document.documentElement.style.setProperty('--accent', accentColor);
+  document.documentElement.style.setProperty('--primary-brand', primaryColor);
+  document.documentElement.style.setProperty('--accent-brand', accentColor);
   document.documentElement.style.setProperty('--font-ui', portalFontStack(fontFamily));
   document.documentElement.dataset.portalFont = fontFamily;
 

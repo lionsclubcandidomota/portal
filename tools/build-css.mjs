@@ -34,6 +34,7 @@ export const CSS_SOURCES = Object.freeze([
   'components/publication-center.css',
   'pages/treasury-navigation.css',
   'pages/memberships.css',
+  'pages/membership-summary.css',
   'components/publication-review.css',
   'components/audit-log.css',
   'components/recovery-center.css',
@@ -42,7 +43,8 @@ export const CSS_SOURCES = Object.freeze([
   'components/modern-interface.css',
   'pages/portal-experience.css',
   'pages/treasury-mobile.css',
-  'pages/mutual-registration.css'
+  'pages/mutual-registration.css',
+  'components/dark-theme.css'
 ]);
 
 

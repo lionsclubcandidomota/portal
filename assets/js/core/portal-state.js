@@ -108,7 +108,7 @@ export function createSeedState(state, today = new Date()) {
   ];
 
   state.treasuryAccounts = [
-    { id: 'acc-current', name: 'Conta corrente', type: 'Conta corrente', initialBalance: 0, active: true },
+    { id: 'acc-current', name: 'Conta corrente', type: 'Conta corrente', initialBalance: 0, active: true, membershipDefault: true },
     { id: 'acc-investment', name: 'Aplicação', type: 'Aplicação', initialBalance: 0, active: true },
     { id: 'acc-cash', name: 'Dinheiro em caixa', type: 'Dinheiro em caixa', initialBalance: 0, active: true }
   ];

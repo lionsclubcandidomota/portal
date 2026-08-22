@@ -16,10 +16,10 @@ test('pipeline oficial executa auditoria dedicada de lazy loading', async () => 
 
 test('contratos finais centralizam orçamento e fronteiras lazy', async () => {
   assert.deepEqual(performanceBudgets, {
-    staticJavaScriptBytes: 305_000,
-    cssBytes: 422_000,
+    staticJavaScriptBytes: 310_000,
+    cssBytes: 442_000,
     optimizedLogoBytes: 60_000,
-    criticalAssetsBytes: 765_000
+    criticalAssetsBytes: 790_000
   });
   assert.ok(lazyEntryModules.length >= 19);
   assert.ok(lazyOnlyModules.length >= lazyEntryModules.length);

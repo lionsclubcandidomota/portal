@@ -4,7 +4,7 @@ import {
   normalize,
   toInputDate
 } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.13';
+import { uiIcon } from '../visual-helpers.js?v=6.49.1';
 
 export function buildMembershipViewModel(state, treasury, now = new Date()) {
   const currentMembershipMonth = toInputDate(now).slice(0, 7);
@@ -46,6 +46,7 @@ export function buildMembershipViewModel(state, treasury, now = new Date()) {
       openingDebtPaid,
       openingDebtOutstanding,
       openingDebtPartial,
+      monthlyExpectedTotal,
       expectedTotal: monthlyExpectedTotal + openingDebt,
       paidTotal: monthlyPaidTotal + Math.min(openingDebt, openingDebtPaid),
       receivedTotal: monthlyReceivedTotal + openingDebtPaid,
@@ -61,16 +62,34 @@ export function buildMembershipViewModel(state, treasury, now = new Date()) {
       })
       .map(member => member.id)
   );
-  const membershipPaidUnits = [...membershipProgress.values()]
+  const membershipProgressValues = [...membershipProgress.values()];
+  const membershipPaidUnits = membershipProgressValues
     .reduce((sum, progress) => sum + progress.paidMonths.length, 0);
+  const membershipPartialUnits = membershipProgressValues
+    .reduce((sum, progress) => sum + progress.partialMonths.length, 0);
   const membershipExpectedUnits = membershipMembers.length * membershipMonths.length;
+  const membershipOpenUnits = Math.max(0, membershipExpectedUnits - membershipPaidUnits - membershipPartialUnits);
   const membershipTotal = membershipMembers.reduce((sum, member) => (
     sum + membershipMonths.reduce((monthSum, month) => monthSum + treasury.membershipPaidAmountForMonth(member.id, month), 0)
   ), 0);
+  const membershipExpectedAmountTotal = membershipProgressValues
+    .reduce((sum, progress) => sum + Number(progress.monthlyExpectedTotal || 0), 0);
+  const membershipPendingAmountTotal = membershipProgressValues
+    .reduce((sum, progress) => sum + Number(progress.monthlyOutstandingTotal || 0), 0);
   const membershipOpeningDebtOutstandingTotal = membershipMembers.reduce(
     (sum, member) => sum + treasury.membershipOpeningDebtOutstanding(member.id),
     0
   );
+  const membershipFamilyMembers = membershipMembers.filter(member => treasury.familyGroupForMember(member.id));
+  const membershipFamilyMemberCount = membershipFamilyMembers.length;
+  const membershipIndividualCount = Math.max(0, membershipMembers.length - membershipFamilyMemberCount);
+  const membershipFamilyPrimaryCount = membershipFamilyMembers.filter(member => (
+    treasury.familyGroupForMember(member.id)?.primaryMemberId === member.id
+  )).length;
+  const membershipFamilyAdditionalCount = Math.max(0, membershipFamilyMemberCount - membershipFamilyPrimaryCount);
+  const membershipFamilyGroupCount = new Set(
+    membershipFamilyMembers.map(member => treasury.familyGroupForMember(member.id)?.id).filter(Boolean)
+  ).size;
   const membershipExpanded = treasury.membershipExpanded !== false;
   const membershipSearch = String(treasury.membershipSearch || '').trim();
   const membershipFamily = String(treasury.membershipFamily || 'all');
@@ -100,9 +119,18 @@ export function buildMembershipViewModel(state, treasury, now = new Date()) {
     membershipProgress,
     membershipPaidIds,
     membershipPaidUnits,
+    membershipPartialUnits,
+    membershipOpenUnits,
     membershipExpectedUnits,
     membershipTotal,
+    membershipExpectedAmountTotal,
+    membershipPendingAmountTotal,
     membershipOpeningDebtOutstandingTotal,
+    membershipIndividualCount,
+    membershipFamilyMemberCount,
+    membershipFamilyPrimaryCount,
+    membershipFamilyAdditionalCount,
+    membershipFamilyGroupCount,
     membershipExpanded,
     membershipSearch,
     membershipFamily,
@@ -126,9 +154,18 @@ export function renderMembershipSection({
     membershipMembers,
     membershipProgress,
     membershipPaidUnits,
+    membershipPartialUnits,
+    membershipOpenUnits,
     membershipExpectedUnits,
     membershipTotal,
+    membershipExpectedAmountTotal,
+    membershipPendingAmountTotal,
     membershipOpeningDebtOutstandingTotal,
+    membershipIndividualCount,
+    membershipFamilyMemberCount,
+    membershipFamilyPrimaryCount,
+    membershipFamilyAdditionalCount,
+    membershipFamilyGroupCount,
     membershipExpanded,
     membershipSearch,
     membershipFamily,
@@ -151,8 +188,12 @@ export function renderMembershipSection({
         <label><span>Situação</span><select id="membershipStatusFilter"><option value="all" ${membershipStatus === 'all' ? 'selected' : ''}>Todos</option><option value="pending" ${membershipStatus === 'pending' ? 'selected' : ''}>Pendentes</option><option value="partial" ${membershipStatus === 'partial' ? 'selected' : ''}>Parciais</option><option value="paid" ${membershipStatus === 'paid' ? 'selected' : ''}>Pagos</option></select></label>
         ${adminUnlocked ? '<div class="membership-toolbar-actions"><button class="btn btn-ghost btn-sm" id="manageFamilyGroups" type="button">Gerenciar famílias</button></div>' : ''}
       </div>
-      <div class="membership-period-summary"><span>${uiIcon('calendar')}</span><div><small>Período selecionado</small><strong>${membershipMonths.length === 1 ? treasury.monthLabel(membershipMonths[0]) : `${treasury.monthLabel(membershipMonths[0])} até ${treasury.monthLabel(membershipMonths.at(-1))}`}</strong></div></div>
-      <div class="membership-kpis"><div><small>Meses</small><strong>${membershipMonths.length}</strong></div><div><small>Associados</small><strong>${membershipMembers.length}</strong></div><div><small>Mensalidades quitadas</small><strong>${membershipPaidUnits}</strong></div><div><small>Pendentes</small><strong>${Math.max(0, membershipExpectedUnits - membershipPaidUnits)}</strong></div><div><small>Total recebido</small><strong class="sensitive-money">${money.format(membershipTotal)}</strong></div><div><small>Saldo anterior em aberto</small><strong class="sensitive-money">${money.format(membershipOpeningDebtOutstandingTotal)}</strong></div></div>
+      <div class="membership-period-summary"><span>${uiIcon('calendar')}</span><div><small>Período selecionado</small><strong>${membershipMonths.length === 1 ? treasury.monthLabel(membershipMonths[0]) : `${treasury.monthLabel(membershipMonths[0])} até ${treasury.monthLabel(membershipMonths.at(-1))}`}</strong></div><span class="membership-period-badge">${membershipMonths.length} ${membershipMonths.length === 1 ? 'mês' : 'meses'}</span></div>
+      <div class="membership-summary-board">
+        <section class="membership-summary-group is-members"><header><span>${uiIcon('users')}</span><div><small>Base ativa</small><strong>Associados</strong></div></header><div class="membership-summary-metrics"><span><small>Total</small><b>${membershipMembers.length}</b><em>ativos no controle</em></span><span><small>Individuais</small><b>${membershipIndividualCount}</b><em>sem grupo familiar</em></span><span><small>Familiares</small><b>${membershipFamilyMemberCount}</b><em>${membershipFamilyPrimaryCount} titular(es) · ${membershipFamilyAdditionalCount} adicional(is)</em></span><span><small>Famílias</small><b>${membershipFamilyGroupCount}</b><em>grupos ativos</em></span></div></section>
+        <section class="membership-summary-group is-status"><header><span>${uiIcon('receipt')}</span><div><small>Período selecionado</small><strong>Situação das competências</strong></div></header><div class="membership-summary-metrics"><span><small>Competências</small><b>${membershipExpectedUnits}</b><em>${membershipMembers.length} associados × ${membershipMonths.length} ${membershipMonths.length === 1 ? 'mês' : 'meses'}</em></span><span class="is-paid"><small>Quitadas</small><b>${membershipPaidUnits}</b><em>sem saldo restante</em></span><span class="is-partial"><small>Parciais</small><b>${membershipPartialUnits}</b><em>com pagamento parcial</em></span><span class="is-pending"><small>Em aberto</small><b>${membershipOpenUnits}</b><em>sem pagamento registrado</em></span></div></section>
+        <section class="membership-summary-group is-financial"><header><span>${uiIcon('wallet')}</span><div><small>Financeiro</small><strong>Valores do período</strong></div></header><div class="membership-summary-metrics"><span><small>Previsto</small><b class="sensitive-money">${money.format(membershipExpectedAmountTotal)}</b><em>valor das competências</em></span><span class="is-paid"><small>Recebido</small><b class="sensitive-money">${money.format(membershipTotal)}</b><em>baixas no período</em></span><span class="is-pending"><small>Previsão pendente</small><b class="sensitive-money">${money.format(membershipPendingAmountTotal)}</b><em>somente competências</em></span><span class="is-opening"><small>Saldo anterior</small><b class="sensitive-money">${money.format(membershipOpeningDebtOutstandingTotal)}</b><em>fora da previsão pendente</em></span></div></section>
+      </div>
       <div class="membership-results-summary"><strong id="membershipVisibleCount">${membershipVisibleMembers.length}</strong> associado(s) exibido(s)</div>
       <div class="membership-list" id="membershipMemberList">${membershipMembers.length ? membershipMembers.map(member => {
         const progress = membershipProgress.get(member.id) || { paidMonths: [], partialMonths: [], pendingMonths: membershipMonths, expectedTotal: 0, paidTotal: 0, receivedTotal: 0, monthlyOutstandingTotal: 0, outstandingTotal: 0, openingDebt: 0, openingDebtPaid: 0, openingDebtOutstanding: 0, openingDebtPartial: false };

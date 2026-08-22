@@ -1,5 +1,5 @@
 import { escapeHtml, money } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.13';
+import { uiIcon } from '../visual-helpers.js?v=6.49.1';
 import { buildFamilyMembershipChargeMessage, buildMembershipChargeMessage } from './domain.js';
 import { blobToDataUrl, buildChargeSvg, downloadBlob, svgMarkupToDataUrl, svgToPngBlob } from './sharing-image-utils.js';
 export function createMembershipChargeSharer(context) {

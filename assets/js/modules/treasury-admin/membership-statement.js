@@ -1,5 +1,5 @@
 import { escapeHtml, formatDate, money } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.13';
+import { uiIcon } from '../visual-helpers.js?v=6.49.1';
 
 const EPSILON = 0.005;
 
@@ -8,7 +8,7 @@ function ensureStatementStyles() {
   if (document.querySelector('link[data-membership-statement-css]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = new URL('../../../css/pages/membership-statement.css?v=6.46.13', import.meta.url).href;
+  link.href = new URL('../../../css/pages/membership-statement.css?v=6.49.1', import.meta.url).href;
   link.dataset.membershipStatementCss = 'true';
   document.head.appendChild(link);
 }

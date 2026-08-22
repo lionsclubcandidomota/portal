@@ -2,7 +2,7 @@ export function createLazyAccessManagementController(options) {
   let featurePromise = null;
   const load = () => {
     if (!featurePromise) {
-      featurePromise = import('./access-management.js?v=6.46.13')
+      featurePromise = import('./access-management.js?v=6.49.1')
         .then(module => module.createAccessManagementController(options))
         .catch(error => {
           featurePromise = null;

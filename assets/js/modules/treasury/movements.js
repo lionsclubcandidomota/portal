@@ -6,11 +6,12 @@ import {
   parseLocalDate
 } from '../../utils.js';
 import { timelineHeading } from '../timeline.js';
-import { renderHtmlIfChanged, uiIcon } from '../visual-helpers.js?v=6.46.13';
+import { renderHtmlIfChanged, uiIcon } from '../visual-helpers.js?v=6.49.1';
 import { attachmentReference, formatAttachmentSize } from '../treasury-admin/attachments.js';
 import {
   TREASURY_MOVEMENT_KIND,
   financialTreasuryItems,
+  isBankYieldEntry,
   isTreasuryEntry,
   isTreasuryExit,
   isTreasuryTransfer,
@@ -68,6 +69,9 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
       : null;
     const mutualMonth = mutual ? treasury.mutualReferenceMonth(item) : '';
     const mutualDate = mutual ? treasury.mutualReferenceDate(item) : '';
+    const bankYield = isBankYieldEntry(item);
+    const bankYieldBefore = Number(item.bankBalanceBefore || 0);
+    const bankYieldReported = Number(item.bankReportedBalance || 0);
     const coveredMonthText = treasury.coveredMonths(item)
       .map(treasury.monthLabel)
       .join(', ');
@@ -150,6 +154,7 @@ export function treasuryCards(items, emptyText, treasury, helpers) {
           ${isTransfer
             ? `<div class="treasury-expanded-meta-item treasury-balance-at-date ${Number(sourceDayBalance || 0) < 0 ? 'is-negative' : ''}"><span aria-hidden="true">${uiIcon('wallet')}</span><div><small>${balanceLabel} · origem</small><strong class="sensitive-money">${money.format(sourceDayBalance || 0)}</strong></div></div><div class="treasury-expanded-meta-item treasury-balance-at-date ${Number(destinationDayBalance || 0) < 0 ? 'is-negative' : ''}"><span aria-hidden="true">${uiIcon('wallet')}</span><div><small>${balanceLabel} · destino</small><strong class="sensitive-money">${money.format(destinationDayBalance || 0)}</strong></div></div><div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">${uiIcon('transfer')}</span><div><small>Resumo da transferência</small><strong>${escapeHtml(sourceAccount?.name || 'Conta de origem')} → ${escapeHtml(destinationAccount?.name || 'Conta de destino')}</strong></div></div>`
             : `<div class="treasury-expanded-meta-item treasury-balance-at-date ${Number(accountDayBalance || 0) < 0 ? 'is-negative' : ''}"><span aria-hidden="true">${uiIcon('wallet')}</span><div><small>${balanceLabel}</small><strong class="sensitive-money">${money.format(accountDayBalance || 0)}</strong></div></div>`}
+          ${bankYield ? `<div class="treasury-expanded-meta-item is-bank-yield"><span aria-hidden="true">${uiIcon('trend-up')}</span><div><small>Saldo antes do rendimento</small><strong class="sensitive-money">${money.format(bankYieldBefore)}</strong></div></div><div class="treasury-expanded-meta-item is-bank-yield"><span aria-hidden="true">${uiIcon('bank')}</span><div><small>Saldo informado pelo banco</small><strong class="sensitive-money">${money.format(bankYieldReported)}</strong></div></div>` : ''}
           ${members.length ? `<div class="treasury-expanded-meta-item is-wide"><span aria-hidden="true">${uiIcon('users')}</span><div><small>${members.length > 1 ? 'Associados vinculados' : 'Associado vinculado'}</small><strong>${escapeHtml(members.map(member => member.name).join(', '))}</strong></div></div>${membership ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('calendar')}</span><div><small>Referência</small><strong>${escapeHtml(coveredMonthText || 'Não informada')}</strong></div></div>` : ''}${mutual ? `<div class="treasury-expanded-meta-item"><span aria-hidden="true">${uiIcon('heart')}</span><div><small>${mutualEvent ? 'Grupo / ocorrência' : 'Grupo / referência histórica'}</small><strong>${escapeHtml(mutualGroup?.name || 'Grupo não informado')} · ${mutualEvent ? `Falecimento de ${escapeHtml(mutualEvent.deceasedName)} em ${escapeHtml(formatDate(mutualDate))}` : escapeHtml(treasury.monthLabel(mutualMonth))}</strong></div></div>` : ''}` : ''}
         </div>
         ${treasuryAttachmentGallery(item)}

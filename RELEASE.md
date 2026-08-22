@@ -1,11 +1,104 @@
-# Portal Lions v6.46.13
+# Portal Lions v6.49.1
 
-> Correção do saldo devedor líquido no Extrato de mensalidades sobre a estabilização do pacote, sem migração dos arquivos oficiais.
+> Conta padrão configurável para recebimento de mensalidades, preservando a estabilização do pacote e sem migração dos arquivos oficiais.
+
+
+## Conta padrão para mensalidades — v6.49.1
+
+- adiciona em **Tesouraria → Contas → Editar conta** a opção **Conta padrão para receber mensalidades**;
+- garante que somente uma conta ativa seja marcada como padrão por vez; ao escolher uma nova, a anterior perde automaticamente o status;
+- impede que uma conta inativa seja definida como padrão e remove o status caso a conta padrão seja desativada;
+- identifica a conta configurada com o selo **Padrão mensalidades** no gerenciador;
+- em **Dar baixa de mensalidade**, pré-seleciona a conta padrão, mantendo a possibilidade de escolher outra conta manualmente para aquela baixa;
+- preserva compatibilidade com bases antigas: se nenhuma conta estiver configurada, a primeira conta ativa continua sendo usada como seleção inicial;
+- inclui `membershipDefault` na revisão de publicação das contas, garantindo que a alteração faça parte do fluxo normal de persistência/publicação;
+- preserva `data/dados.json`, `data/modelo.json` e o esquema 12 sem migração.
+
+## Controle de Mensalidades — v6.49.0
+
+- confirma e protege por regressão que **Previsão pendente** soma somente o saldo das competências do período filtrado; o **Saldo anterior em aberto** permanece totalmente separado;
+- reorganiza o resumo do Controle de Mensalidades em três blocos: **Base ativa**, **Situação das competências** e **Valores do período**;
+- adiciona contagem de associados **Individuais** e **Familiares**, com detalhamento de titulares, adicionais e quantidade de grupos familiares ativos;
+- separa competências **Quitadas**, **Parciais** e **Em aberto**, evitando que pagamentos parciais sejam misturados com competências sem pagamento;
+- adiciona **Previsto no período**, preservando o valor histórico correto de cada competência e a vigência dos reajustes;
+- mantém **Recebido**, **Previsão pendente** e **Saldo anterior** visualmente separados, com indicação explícita de que o saldo anterior não integra a previsão mensal;
+- refina o painel em desktop, tablet e celular com cards agrupados e tokens compatíveis com Claro/Escuro;
+- recalibra de forma controlada os orçamentos para **442.000 bytes de CSS** e **790.000 bytes de ativos críticos**, sem alterar o limite de JavaScript estático;
+- preserva `data/dados.json`, `data/modelo.json` e o esquema 12 sem migração.
+
+## Mensalidades e Extrato — v6.48.3
+
+- adiciona o KPI **Previsão pendente** ao Controle de Mensalidades;
+- calcula a previsão exclusivamente pelas competências ainda em aberto dentro do período selecionado em `membershipStart`/`membershipEnd`;
+- mantém o **Saldo anterior em aberto** fora desse cálculo e apresentado separadamente;
+- reaproveita `membershipOutstandingForMonth`, portanto respeita valores históricos por competência, reajustes com vigência, quitações e pagamentos parciais;
+- substitui a superfície clara fixa de **Pagamentos vinculados** no Extrato por tokens do design system, corrigindo a leitura no modo escuro;
+- preserva a **estabilização do pacote**, o esquema 12 e os arquivos oficiais de dados.
+
+
+## Ajuste de tema — v6.48.2
+
+- define **Modo claro** como padrão em navegadores sem preferência previamente salva;
+- mantém a escolha manual Claro/Escuro persistida somente no navegador;
+- remove a adoção automática do tema escuro do sistema operacional para tornar a inicialização previsível;
+- corrige as notificações/toasts para usar a superfície semântica do tema, eliminando fundo claro com texto de baixo contraste no modo escuro;
+- corrige campos nativos de data, data/hora, mês e hora no modo escuro, inclusive o estado obrigatório ainda não preenchido;
+- preserva a **estabilização do pacote**, o esquema de dados 12 e os arquivos oficiais `data/dados.json` e `data/modelo.json`.
 
 ## Objetivo
 
-A versão 6.46.13 é uma evolução incremental sobre a **estabilização do pacote** e sobre a v6.46.12. Corrige o cálculo do Saldo devedor do Extrato de mensalidades para considerar também o saldo anterior ainda em aberto e descontar créditos positivos do período selecionado, preservando a apresentação separada dos componentes.
+A versão 6.48.2 dá continuidade ao refinamento iniciado na v6.48.1 e preserva as correções que refinam o **Modo escuro** introduzido na v6.48.0, corrigindo componentes que ainda carregavam superfícies claras fixas ou contraste insuficiente. A correção é estrutural: componentes compartilhados passam a consumir os tokens do tema na origem, evitando uma nova camada extensa de exceções e mantendo a **estabilização do pacote** e o esquema de dados 12.
 
+### Refinamento do modo escuro — v6.48.1
+
+- substitui fundos brancos/cinzas fixos por superfícies semânticas (`--surface`, `--surface-2`, `--surface-3` e `--surface-glass`) nos componentes afetados;
+- corrige cards do Dashboard/Agenda, cards de Dirigentes, contas negativas, cards de associados em Mensalidades e cards expansíveis de Movimentações;
+- corrige modais administrativos e financeiros, inclusive rodapés fixos, seleção de competências e blocos do modal **Dar baixa de mensalidade**;
+- corrige o **Extrato de mensalidades**, principalmente pagamentos vinculados e superfícies internas;
+- torna Mútuas realmente adaptável ao tema, com tokens próprios para a paleta roxa e contraste adequado de associados/mutuários;
+- corrige Agenda e Avisos, incluindo cards atuais/históricos, barras de comando e áreas expandidas;
+- adapta editor Markdown, barra de ferramentas, pré-visualização, blocos de destaque e mensagens ao tema ativo;
+- corrige Ajustes, prévias, atalhos, barra de salvamento e componentes compartilhados de publicação/auditoria;
+- preserva intencionalmente superfícies que precisam continuar claras por conteúdo, como o fundo do próprio arquivo de logotipo, sem propagar branco para o card ao redor;
+- adiciona regressão específica para impedir o retorno de superfícies brancas fixas nos componentes críticos e valida os tokens de Mútuas em claro/escuro;
+- preserva integralmente `data/dados.json` e `data/modelo.json`.
+
+### Funcionalidades preservadas da v6.48.0
+
+A versão 6.48.0 evoluiu a base visual consolidada na v6.47.0 com duas funcionalidades integradas ao design system:
+
+- adiciona **Rendimento bancário** como modo especializado de Entrada na Tesouraria;
+- ao selecionar conta, data e informar o saldo apresentado pelo banco, calcula automaticamente a diferença positiva em relação ao saldo realizado do Portal naquela referência;
+- mantém a movimentação como uma Entrada financeira normal, categorizada em **Rendimentos bancários**, sem criar um novo campo de usuário responsável;
+- recalcula o saldo de referência no momento da confirmação, sem confiar apenas no valor mostrado no formulário;
+- impede rendimento nulo ou negativo e orienta a conferir tarifas, débitos ou movimentações pendentes em vez de criar uma saída implícita;
+- grava no próprio lançamento o saldo do Portal antes do rendimento e o saldo informado pelo banco para facilitar conferência posterior;
+- preserva edição, exclusão, permissões, histórico e auditoria já existentes nas movimentações;
+- adiciona **Modo escuro** global com alternância no cabeçalho, preferência individual por navegador e fallback para a preferência do sistema operacional;
+- o tema escuro reutiliza os tokens do design system da v6.47.0 e cobre navegação, cards, tabelas, formulários, modais, Tesouraria e demais superfícies principais sem duplicar um segundo layout;
+- mantém a cor institucional configurável como referência da marca, derivando automaticamente tons adequados para o tema escuro;
+- amplia de forma justificada os orçamentos para **310.000 bytes de JavaScript estático**, **438.000 bytes de CSS** e **785.000 bytes de ativos críticos**, necessários para a nova lógica e a camada completa de tema;
+- preserva integralmente `data/dados.json` e `data/modelo.json`.
+
+### Base visual preservada
+
+A refatoração visual global da v6.47.0 permanece como base. A nova camada escura é aplicada por tokens e exceções de superfície, enquanto o tema claro mantém o acabamento já homologado. As correções financeiras de Mensalidades e Extrato também permanecem inalteradas.
+
+Na v6.47.0 foi consolidada uma **refatoração controlada de UI/CSS** sobre a **estabilização do pacote** da v6.46.13. O foco é reduzir sobreposições acumuladas, centralizar o design system e modernizar a experiência em desktop e mobile sem reescrever os fluxos funcionais nem alterar contratos financeiros.
+
+- centraliza paleta, superfícies, tipografia, espaçamentos, raios, sombras, foco, dimensões e z-index em uma única camada de tokens;
+- remove definições duplicadas de tokens e declarações antigas que já eram totalmente sobrescritas pelas camadas modernas;
+- moderniza sidebar, topbar, área de conteúdo, heros, cards, KPIs, formulários, botões, tabelas, estados vazios e badges com uma linguagem visual única;
+- melhora contraste, hierarquia tipográfica, áreas de toque, foco visível e consistência de bordas e superfícies;
+- refina o comportamento responsivo dos KPIs do Dashboard, preservando duas colunas em larguras intermediárias e uma coluna em celulares menores;
+- preserva as especializações já estabilizadas de Tesouraria, Mensalidades, Extrato, Mútuas, Usuários e cargos, Dirigentes e Painel de Publicação;
+- reduz o bundle CSS de 421.984 para aproximadamente 420.971 bytes, sem aumentar o orçamento de 422.000 bytes;
+- reduz as sobrescritas auditadas de 437 para 417 e os seletores redefinidos de 340 para 334, mantendo zero duplicatas exatas e zero fontes legadas;
+- preserva integralmente `data/dados.json` e `data/modelo.json` e mantém o esquema de dados na versão **12**.
+
+### Base funcional preservada
+
+A refatoração visual não altera as correções financeiras consolidadas na v6.46.13, incluindo histórico de vigência das mensalidades, pagamentos parciais, saldo anterior, crédito, filtro de período e composição do saldo devedor líquido.
 
 - corrige o **Saldo devedor** para somar o valor em aberto das competências com o **saldo anterior ainda em aberto**;
 - desconta do saldo devedor líquido qualquer **Saldo positivo/Crédito** apurado nas competências do período selecionado;
@@ -54,7 +147,7 @@ Ficam fora do bootstrap e são carregados somente quando necessários: Central d
 
 A etapa 4 encerra o ciclo com uma auditoria dedicada de lazy loading. O pipeline valida **19 imports dinâmicos/pontos de entrada** e protege **24 módulos** contra retorno acidental ao carregamento inicial, além de exigir o `?v=` sincronizado com a versão do pacote.
 
-Os orçamentos oficiais finais são **315.000 bytes** para JavaScript estático, **435.000 bytes** para CSS e **785.000 bytes** para ativos críticos. A estabilização não altera o esquema 12 nem o conteúdo operacional dos arquivos oficiais de dados.
+Os orçamentos oficiais atuais são **310.000 bytes** para JavaScript estático, **438.000 bytes** para CSS e **785.000 bytes** para ativos críticos. A ampliação em relação à etapa 4 é justificada pelas funcionalidades de rendimento bancário e modo escuro e continua protegida pelas auditorias de desempenho e CSS. A estabilização não altera o esquema 12 nem o conteúdo operacional dos arquivos oficiais de dados.
 
 ## Compatibilidade de dados
 

@@ -1,21 +1,91 @@
-# Homologação — v6.46.13
+# Homologação — v6.49.1
 
-> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.46.13.
+> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.49.1.
 
 
-## Consolidação do pacote — versão 6.46.13
+## Conta padrão para mensalidades — versão 6.49.1
+
+1. Em **Tesouraria → Contas → Editar contas**, edite uma conta ativa e marque **Conta padrão para receber mensalidades**.
+2. Salve e confirme o selo **Padrão mensalidades** na conta escolhida.
+3. Marque outra conta ativa como padrão e confirme que somente a nova permanece identificada.
+4. Tente marcar uma conta como padrão enquanto ela está inativa e confirme que o Portal bloqueia a operação.
+5. Desative a conta atualmente marcada como padrão e confirme que o status é removido.
+6. Em **Tesouraria → Mensalidades**, abra **Dar baixa de mensalidade** e confirme que a conta padrão é pré-selecionada em **Conta de recebimento**.
+7. Troque manualmente a conta no próprio modal e confirme que a baixa usa a conta escolhida sem alterar a configuração padrão.
+8. Em uma base sem `membershipDefault`, confirme que a primeira conta ativa continua pré-selecionada, preservando compatibilidade.
+9. Confirme que a alteração da conta padrão aparece na revisão de publicação antes da atualização do Portal.
+10. Execute `npm run release:check` e confirme que `data/dados.json` e `data/modelo.json` permanecem byte a byte inalterados.
+
+## Resumo gerencial de Mensalidades — versão 6.49.0
+
+1. Em **Tesouraria → Mensalidades**, selecione um período com competências quitadas, parciais e em aberto.
+2. Confirme que o bloco **Base ativa** apresenta Total, Individuais, Familiares e Famílias; valide também o detalhamento de titulares e adicionais.
+3. Confirme que o bloco **Situação das competências** separa Competências, Quitadas, Parciais e Em aberto sem dupla contagem.
+4. Confirme que **Previsto** usa os valores históricos corretos de cada competência, inclusive após reajustes de Individual, Titular Familiar e Familiar Adicional.
+5. Confirme que **Previsão pendente** corresponde somente à soma dos saldos restantes das competências no período selecionado.
+6. Cadastre/valide um associado com **Saldo anterior em aberto** e confirme que esse valor aparece somente no indicador próprio e não altera a Previsão pendente.
+7. Reduza ou amplie o período e confirme que Competências, Quitadas, Parciais, Em aberto, Previsto, Recebido e Previsão pendente são recalculados imediatamente.
+8. Aplique filtros de pesquisa, família e situação e confirme que a lista é filtrada sem alterar indevidamente a base financeira do período.
+9. Repita a conferência nos temas Claro/Escuro em **360, 390, 768, 1024 e 1366 px**, verificando que os três blocos se reorganizam sem corte ou rolagem horizontal.
+10. Execute `npm run release:check` e confirme a preservação byte a byte de `data/dados.json` e `data/modelo.json`.
+
+
+## Tema padrão e controles nativos — versão 6.48.2
+
+- Limpar a chave local `lions.portal.theme` e confirmar que o Portal inicia em **Claro**, mesmo com o sistema operacional em tema escuro.
+- Alternar para Escuro, recarregar e confirmar que a escolha manual permanece salva.
+- Em Tesouraria > Nova entrada, deixar a Data obrigatória vazia e confirmar fundo escuro/âmbar sutil, texto legível e ícone de calendário visível.
+- Disparar notificações de sucesso, informação, atenção e erro e confirmar superfície escura, texto legível, botão de fechar e barra de progresso.
+- Repetir em 360, 390, 768, 1024 e 1366 px.
+
+
+
+## Refinamento do modo escuro — versão 6.48.1
+
+1. Ative **Escuro** no cabeçalho e valide o Dashboard, principalmente Agenda, Finanças, Mensalidades e cards de resumo, sem cartões brancos residuais.
+2. Em **Aniversariantes**, abra edição e confirme campos, seções, foto e rodapé fixo do modal com contraste correto.
+3. Em **Dirigentes**, confira o card do Presidente e os demais dirigentes, incluindo badges e textos secundários.
+4. Em **Tesouraria → Contas**, valide conta positiva, negativa e inativa; em **Movimentações**, expanda registros e confira detalhes sem superfícies claras fixas.
+5. Em **Mensalidades**, confira cards Pendentes/Parciais/Em dia, abra **Dar baixa** e valide associados, competências, campos e rodapé do modal.
+6. Abra o **Extrato de mensalidades** e confira KPIs, competências e **Pagamentos vinculados** em Quitada, Parcial e Em aberto.
+7. Em **Mútuas**, confira filtro, resumos, grupo, participantes associados/mutuários, seleção e formulários, preservando a diferenciação roxa com leitura confortável.
+8. Em **Agenda**, confira resumo, busca, modos Lista/Calendário, agenda atual, histórico e modal de edição; valide também editor Markdown e pré-visualização.
+9. Em **Avisos**, confira estados vazios, cards encerrados/ativos e áreas expandidas sem fundos claros ou texto apagado.
+10. Em **Ajustes**, confira atalhos, identidade, cores, prévia, valores de mensalidade, barra de salvamento e acesso da Diretoria.
+11. Repita os fluxos em **360, 390, 768, 1024 e 1366 px**, verificando hover, foco, selecionado, desabilitado, scroll e rodapés fixos.
+12. Retorne ao tema **Claro** e confirme que os mesmos componentes mantêm o acabamento da v6.47.0/v6.48.0.
+13. Execute `npm run audit:lazy`, `npm run audit:css` e `npm run release:check`; confirme também que `data/dados.json` e `data/modelo.json` permanecem inalterados.
+
+## Rendimento bancário e modo escuro — versão 6.48.0
+
+1. Em **Tesouraria → Movimentações → Entrada**, selecione **Rendimento bancário** e uma conta com saldo conhecido.
+2. Informe uma data e confirme que o formulário apresenta o saldo realizado do Portal para aquela referência.
+3. Informe um saldo bancário maior e confira se o rendimento calculado corresponde exatamente à diferença, inclusive centavos.
+4. Confirme o lançamento e valide valor, conta, categoria **Rendimentos bancários**, status Efetivado e os dois saldos nos detalhes da movimentação.
+5. Repita com saldo igual e menor ao saldo do Portal e confirme que o envio é bloqueado sem criar uma saída automática.
+6. Edite uma movimentação de rendimento e confirme que o cálculo desconsidera o próprio lançamento ao recompor o saldo anterior.
+7. Confirme que Entrada comum, Saída e Transferência continuam com seus fluxos originais.
+8. Use o controle de tema no cabeçalho para alternar **Claro/Escuro** e confirme a persistência após atualizar a página.
+9. Em um navegador sem preferência gravada, altere a preferência de aparência do sistema operacional e confirme que o Portal acompanha o sistema.
+10. No tema escuro, valide **Início, Tesouraria, Mensalidades, Extrato, Mútuas, Usuários e cargos, Dirigentes, Agenda e Painel de Publicação** em 360, 390, 768, 1024 e 1366 px.
+11. Confira contraste, foco, hover, tabelas, modais, inputs, selects, badges e estados sem fundos claros residuais que prejudiquem a leitura.
+12. Retorne ao tema claro e confirme que a identidade visual consolidada na v6.47.0 permanece intacta.
+13. Confirme que `data/dados.json` e `data/modelo.json` permanecem byte a byte inalterados.
+
+## Refatoração visual global — versão 6.47.0
 
 1. Execute `FINALIZAR-ATUALIZACAO.bat` e confirme a aprovação do pipeline completo.
-2. Confirme que `data/dados.json` continua no esquema 12 e que seu conteúdo operacional não foi alterado.
-3. Confirme que `data/modelo.json` está no esquema 12 e contém `accessRoles`, `portalUsers` e `leadershipAssignments`.
-4. Execute `npm run release:verify` e confirme que o manifesto reconhece todos os arquivos atuais.
-5. Execute `npm run audit:lazy` e confirme que todos os imports dinâmicos estão versionados e os módulos protegidos permanecem fora do bootstrap.
-6. Em 360 e 390 px, revise **Tesouraria → Movimentações, Contas, Mensalidades e Mútuas**, sem cortes ou rolagem horizontal inesperada.
-7. Abra **Mútuas → Gerenciar grupos** e **Registrar falecimento**, verificando cartões, listas, rolagem interna e botões.
-8. Abra **Usuários e cargos** e valide as seções recolhíveis, retratos e histórico por Ano Leonístico.
-9. Como visitante, abra **Dirigentes**, alterne entre o AL atual e os anteriores e confirme as fotografias e o estado vazio quando aplicável.
-10. Abra o **Painel de Publicação** e confirme hierarquia, progresso, botões e responsividade.
-11. Atualize a página e confirme ausência de erros no console.
+2. Confirme que `data/dados.json` e `data/modelo.json` continuam no esquema 12 e permanecem sem alteração operacional.
+3. Execute `npm run release:verify` e confirme que o manifesto reconhece todos os arquivos atuais.
+5. Execute `npm run audit:lazy` e confirme que os imports dinâmicos permanecem versionados e fora do bootstrap quando previsto.
+5. Em 1366 px, revise **Início, Tesouraria, Mensalidades, Mútuas, Usuários e cargos, Dirigentes e Painel de Publicação**, conferindo sidebar, topbar, largura do conteúdo, cards e tabelas.
+6. Em 1024 e 768 px, confirme que grids, KPIs, formulários e toolbars reorganizam sem sobreposição nem rolagem horizontal inesperada.
+7. Em 390 e 360 px, valide sidebar/navegação móvel, áreas de toque, botões, campos, cards, modais e tabelas responsivas.
+8. No Dashboard, confira a hierarquia dos cards e a distribuição dos KPIs em telas intermediárias e pequenas.
+9. Em **Tesouraria → Mensalidades**, abra **Dar baixa** e o **Extrato de mensalidades**, confirmando que as especializações visuais continuam sobre o design system global sem cortes.
+10. Em **Mútuas → Gerenciar grupos** e **Registrar falecimento**, confira listas, cartões, rolagem interna e rodapés de ação.
+11. Navegue por formulários administrativos e confirme foco visível, contraste, estados hover/active e mensagens de ajuda.
+12. Atualize a página e confirme ausência de erros no console e preservação dos filtros/estado já suportados.
 
 > A arquitetura está congelada após esta estabilização. Correções posteriores devem ser locais e acompanhadas de testes de regressão.
 

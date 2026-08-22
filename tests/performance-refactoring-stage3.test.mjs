@@ -12,8 +12,8 @@ const source = relativePath => readFile(path.join(projectRoot, relativePath), 'u
 test('auditoria de desempenho segue reexports estáticos e protege a nova margem', async () => {
   const audit = await source('tools/performance-audit.mjs');
   assert.deepEqual(staticModuleSpecifiers("export { feature } from './feature.js';"), ['./feature.js']);
-  assert.equal(performanceBudgets.staticJavaScriptBytes, 305_000);
-  assert.equal(performanceBudgets.criticalAssetsBytes, 765_000);
+  assert.equal(performanceBudgets.staticJavaScriptBytes, 310_000);
+  assert.equal(performanceBudgets.criticalAssetsBytes, 790_000);
   assert.match(audit, /collectStaticGraph/);
   for (const lazyModule of [
     'assets/js/github-admin.js',

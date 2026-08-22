@@ -44,7 +44,8 @@ test('cobrança familiar soma saldo anterior e competências sem duplicar o déb
 test('valores em aberto das mensalidades usam a mesma proteção do olho financeiro', async () => {
   const memberships = await readFile(path.join(projectRoot, 'assets/js/modules/treasury/memberships.js'), 'utf8');
   assert.match(memberships, /sensitive-money membership-outstanding-value/);
-  assert.match(memberships, /Saldo anterior em aberto<\/small><strong class="sensitive-money"/);
+  assert.match(memberships, /Saldo anterior<\/small><b class="sensitive-money"/);
+  assert.match(memberships, /fora da previsão pendente/);
   assert.doesNotMatch(memberships, /Configurado:\s*\$\{escapeHtml\(money\.format\(progress\.openingDebt\)\)\}/);
 });
 

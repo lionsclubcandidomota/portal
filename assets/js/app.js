@@ -1,6 +1,43 @@
-import { bootstrapPortal } from './modules/portal-app.js?v=6.46.13';
-import { enableHomologationReload } from './core/homologation-reload.js?v=6.46.13';
-import { uiIcon } from './modules/visual-helpers.js?v=6.46.13';
+import { bootstrapPortal } from './modules/portal-app.js?v=6.49.1';
+import { enableHomologationReload } from './core/homologation-reload.js?v=6.49.1';
+import { uiIcon } from './modules/visual-helpers.js?v=6.49.1';
+
+
+const PORTAL_THEME_KEY = 'lions.portal.theme';
+
+function storedTheme() {
+  const value = localStorage.getItem(PORTAL_THEME_KEY);
+  return value === 'dark' || value === 'light' ? value : '';
+}
+
+function applyPortalTheme(theme = storedTheme() || 'light') {
+  const resolved = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = resolved;
+  const toggle = document.getElementById('themeToggle');
+  const dark = resolved === 'dark';
+  if (toggle) {
+    toggle.setAttribute('aria-pressed', String(dark));
+    toggle.setAttribute('aria-label', dark ? 'Ativar modo claro' : 'Ativar modo escuro');
+    toggle.title = dark ? 'Ativar modo claro' : 'Ativar modo escuro';
+    const icon = toggle.querySelector('[data-theme-icon]');
+    const label = toggle.querySelector('[data-theme-label]');
+    if (icon) icon.textContent = dark ? '☀' : '☾';
+    if (label) label.textContent = dark ? 'Claro' : 'Escuro';
+  }
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.content = dark ? '#0d1724' : '#00529B';
+  return resolved;
+}
+
+function bindPortalTheme() {
+  const toggle = document.getElementById('themeToggle');
+  applyPortalTheme();
+  toggle?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(PORTAL_THEME_KEY, next);
+    applyPortalTheme(next);
+  });
+}
 
 function bindStaticImageFallbacks() {
   const sidebarLogo = document.getElementById('sidebarLogo');
@@ -26,6 +63,7 @@ function bindStaticImageFallbacks() {
 }
 
 async function startPortal() {
+  bindPortalTheme();
   bindStaticImageFallbacks();
 
   try {

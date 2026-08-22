@@ -11,9 +11,9 @@ import {
   resolveDisplayLogo,
   normalizePortalFont,
   settingsFrom
-} from './settings-appearance.js?v=6.46.13';
-import { directorProfileFromState, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.46.13';
-import { registerMembershipFeeChange } from './membership-fees.js?v=6.46.13';
+} from './settings-appearance.js?v=6.49.1';
+import { directorProfileFromState, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.49.1';
+import { registerMembershipFeeChange } from './membership-fees.js?v=6.49.1';
 
 function currencyField(name, label, value, help, currencyInputValue, disabled = false) {
   return `<div class="form-field settings-money-field"><label for="${escapeHtml(name)}">${escapeHtml(label)}</label><div class="currency-input"><span>R$</span><input id="${escapeHtml(name)}" name="${escapeHtml(name)}" type="text" inputmode="decimal" value="${escapeHtml(currencyInputValue(value))}" autocomplete="off" ${disabled ? 'disabled' : ''}></div><small>${escapeHtml(help)}</small></div>`;

@@ -1,7 +1,7 @@
-import { createPortalEnvelope } from './core/portal-schema.js?v=6.46.13';
-import { normalizeGitHubToken } from './core/portal-security.js?v=6.46.13';
-import { GITHUB_API_VERSION, GITHUB_CONFIG } from './github-config.js?v=6.46.13';
-import { normalizeGitHubPayload } from './github-public.js?v=6.46.13';
+import { createPortalEnvelope } from './core/portal-schema.js?v=6.49.1';
+import { normalizeGitHubToken } from './core/portal-security.js?v=6.49.1';
+import { GITHUB_API_VERSION, GITHUB_CONFIG } from './github-config.js?v=6.49.1';
+import { normalizeGitHubPayload } from './github-public.js?v=6.49.1';
 
 function repositoryApiUrl(suffix = '') {
   const { owner, repo } = GITHUB_CONFIG;
