@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-22T01:55:34.103Z",
-  "deploymentId": "1787363734103-056e0229-ae0c-4d74-a1e8-82f7fdecba86",
+  "updatedAt": "2026-08-22T02:04:16.278Z",
+  "deploymentId": "1787364256277-b287fb36-d6d2-42b1-a8e2-24d31ece13a5",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -1518,18 +1518,6 @@
         "exit": 800,
         "notes": "",
         "status": "Pago",
-        "attachments": []
-      },
-      {
-        "id": "t_msyr6js0_rt5vnd",
-        "date": "2026-01-01",
-        "accountId": "acc-current",
-        "category": "AL - 2025/2026",
-        "description": "Saldo Inicial",
-        "entry": 5530.46,
-        "exit": 0,
-        "notes": "Valor referente ao saldo inicial da conta para o ano de 2026",
-        "status": "Recebido",
         "attachments": []
       },
       {
@@ -3770,13 +3758,26 @@
         "attachments": []
       },
       {
+        "id": "t_msyr6js0_rt5vnd",
+        "movementKind": "entry",
+        "date": "2026-01-01",
+        "accountId": "acc-current",
+        "category": "AL - 2025/2026",
+        "description": "Saldo Inicial da Conta",
+        "amount": 5530.46,
+        "notes": "Valor referente ao saldo inicial da conta para o ano de 2026",
+        "entry": 5530.46,
+        "exit": 0,
+        "status": "Recebido",
+        "attachments": []
+      },
+      {
         "id": "t_mt3q7azc_xpoe8c",
         "movementKind": "entry",
         "date": "2026-01-01",
         "accountId": "acc-investment",
-        "category": "Saldo Inicial",
-        "description": "Saldo da Aplicação",
-        "entryMode": "manual",
+        "category": "AL - 2025/2026",
+        "description": "Saldo Inicial da Aplicação",
         "amount": 5192.21,
         "notes": "",
         "entry": 5192.21,
