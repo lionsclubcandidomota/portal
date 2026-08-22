@@ -2,3 +2,60 @@
 
 /* Rendimento bancário por diferença de saldo */
 .treasury-bank-yield-calculator{display:grid;gap:12px;padding:14px;border:1px solid color-mix(in srgb,var(--success) 24%,var(--border));border-radius:16px;background:color-mix(in srgb,var(--success-soft) 58%,var(--surface))}.treasury-bank-yield-heading{display:grid;grid-template-columns:38px minmax(0,1fr);align-items:center;gap:10px}.treasury-bank-yield-heading>span{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--success);color:#fff}.treasury-bank-yield-heading .ui-icon{width:18px;height:18px}.treasury-bank-yield-heading strong,.treasury-bank-yield-heading small{display:block}.treasury-bank-yield-heading small{margin-top:2px;color:var(--muted);font-size:.7rem}.treasury-bank-yield-grid{display:grid;grid-template-columns:minmax(210px,.7fr) minmax(0,1.3fr);align-items:end;gap:12px}.treasury-bank-yield-grid>label{display:grid;gap:6px;color:var(--text-soft);font-size:.8rem;font-weight:720}.treasury-bank-yield-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.treasury-bank-yield-summary>span{display:grid;gap:3px;min-height:56px;padding:9px 10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.treasury-bank-yield-summary small{color:var(--muted);font-size:.62rem;font-weight:800;text-transform:uppercase}.treasury-bank-yield-summary strong{font-size:.86rem;font-variant-numeric:tabular-nums}.treasury-bank-yield-summary .is-result{border-color:color-mix(in srgb,var(--success) 35%,var(--border));background:color-mix(in srgb,var(--success-soft) 64%,var(--surface))}.treasury-bank-yield-summary .is-result strong{color:var(--success)}.treasury-bank-yield-feedback{margin:0;padding:8px 10px;border-radius:10px;background:var(--surface-2);color:var(--muted);font-size:.7rem;line-height:1.4}.treasury-bank-yield-feedback.is-success{background:var(--success-soft);color:var(--success)}.treasury-bank-yield-feedback.is-warning{background:var(--warning-soft);color:var(--warning)}#treasuryEntryCategory.is-locked{opacity:.78;cursor:not-allowed}.treasury-expanded-meta-item.is-bank-yield{border-color:color-mix(in srgb,var(--success) 22%,var(--border));background:color-mix(in srgb,var(--success-soft) 50%,var(--surface))}.treasury-expanded-meta-item.is-bank-yield>span{color:var(--success)}@media(max-width:760px){.treasury-bank-yield-grid{grid-template-columns:1fr}.treasury-bank-yield-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.treasury-bank-yield-summary .is-result{grid-column:1/-1}}@media(max-width:420px){.treasury-bank-yield-summary{grid-template-columns:1fr}.treasury-bank-yield-summary .is-result{grid-column:auto}}
+
+/* v6.52.1 – visual consistency for transfer movements */
+.treasury-record-card.is-transfer{
+  --movement:#b7791f;
+  --movement-soft:#fff7e8;
+  --movement-border:#efd8a3;
+}
+
+.treasury-record-card.is-transfer .treasury-type-chip.transfer{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:4px 10px;
+  border:1px solid #e9c983;
+  border-radius:999px;
+  background:#fff7e8;
+  color:#9a6500;
+  font-weight:850;
+}
+
+.treasury-record-card.is-transfer .record-value.transfer,
+.treasury-record-card.is-transfer .treasury-expanded-amount.transfer > strong,
+.treasury-record-card.is-transfer .treasury-expanded-eyebrow,
+.treasury-record-card.is-transfer .treasury-record-icon,
+.treasury-record-card.is-transfer .treasury-mobile-context-account .ui-icon{
+  color:#9a6500 !important;
+}
+
+.treasury-record-card.is-transfer .treasury-record-icon{
+  background:#fff5df;
+  border-color:#efd8a3;
+}
+
+.treasury-record-card.is-transfer .treasury-expanded-amount.transfer{
+  border-color:#efd8a3;
+  background:#fff7e8;
+}
+
+.treasury-operation-option[data-operation-option="transfer"].is-selected{
+  border-color:#e9c983;
+  background:#fff7e8;
+}
+
+.treasury-operation-option[data-operation-option="transfer"].is-selected .treasury-operation-option-icon,
+.treasury-operation-option[data-operation-option="transfer"].is-selected .treasury-operation-option-check{
+  border-color:#b7791f;
+  background:#b7791f;
+}
+
+.treasury-operation-context[data-kind="transfer"]{
+  border-color:#efd8a3;
+  background:#fff8eb;
+}
+
+.treasury-operation-context[data-kind="transfer"] > span{
+  color:#9a6500;
+}

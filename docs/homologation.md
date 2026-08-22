@@ -1,6 +1,15 @@
-# Homologação — v6.52.0
+# Homologação — v6.52.3
 
-> Procedimento de validação funcional e visual do refinamento global do Portal 6.52.0.
+> Procedimento de validação funcional e visual do Portal 6.52.3, incluindo os refinamentos incrementais dos relatórios financeiros.
+
+
+## Relatórios financeiros — versão 6.52.3
+
+1. Abra **Área administrativa → Relatórios → Movimentações financeiras** e confirme que **Pago** aparece com badge positivo, assim como **Recebido**.
+2. Na seção **Leitura rápida**, confirme que **Resultado do período** mostra o valor líquido com sinal e uma frase direta, sem depender de “Superávit” ou “Déficit”.
+3. Com resultado positivo, deve aparecer **Entradas superaram as saídas**; com resultado negativo, **Saídas superaram as entradas**; com zero, **Entradas e saídas ficaram equilibradas**.
+4. Confira impressão/PDF e CSV para assegurar que a mesma leitura do resultado é preservada.
+5. Verifique uma Transferência na Tesouraria e confirme a identidade visual própria, consistente com Entrada e Saída.
 
 ## Refinamento visual global — versão 6.52.0
 

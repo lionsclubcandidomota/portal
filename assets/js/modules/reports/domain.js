@@ -1,14 +1,14 @@
-import { memberIsActive, memberStatusLabel } from '../../core/portal-members.js?v=6.52.0';
+import { memberIsActive, memberStatusLabel } from '../../core/portal-members.js?v=6.52.3';
 import { dateFromInput, periodLabel } from '../admin-dashboard/domain.js';
 import {
   isMutualEntry,
   mutualEventMemberIds,
   normalizeMutualGroup
 } from '../treasury/shared-domain.js';
-import { REPORT_TYPES } from './catalog.js?v=6.52.0';
-import { buildMembershipReport } from './membership-report.js?v=6.52.0';
+import { REPORT_TYPES } from './catalog.js?v=6.52.3';
+import { buildMembershipReport } from './membership-report.js?v=6.52.3';
 
-export { REPORT_TYPES } from './catalog.js?v=6.52.0';
+export { REPORT_TYPES } from './catalog.js?v=6.52.3';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const shortDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -197,7 +197,12 @@ function buildMovementReport(state, bounds) {
       summary('Resultado', money.format(balance), balance < 0 ? 'negative' : balance > 0 ? 'positive' : 'neutral')
     ],
     insights: [
-      insight('Resultado do período', balance < -EPSILON ? 'Déficit' : balance > EPSILON ? 'Superávit' : 'Equilibrado', money.format(Math.abs(balance)), balance < 0 ? 'negative' : balance > 0 ? 'positive' : 'neutral'),
+      insight(
+        'Resultado do período',
+        balance > EPSILON ? `+ ${money.format(balance)}` : balance < -EPSILON ? `− ${money.format(Math.abs(balance))}` : money.format(0),
+        balance > EPSILON ? 'Entradas superaram as saídas.' : balance < -EPSILON ? 'Saídas superaram as entradas.' : 'Entradas e saídas ficaram equilibradas.',
+        balance < 0 ? 'negative' : balance > 0 ? 'positive' : 'neutral'
+      ),
       insight('Maior entrada', biggestEntry ? money.format(Number(biggestEntry.entry || 0)) : '—', biggestEntry?.description || 'Nenhuma entrada no período', 'positive'),
       insight('Maior saída', biggestExit ? money.format(Number(biggestExit.exit || 0)) : '—', biggestExit?.description || 'Nenhuma saída no período', biggestExit ? 'negative' : 'neutral'),
       insight('Principal categoria de saída', topExitCategory?.[0] || '—', topExitCategory ? money.format(topExitCategory[1]) : 'Nenhuma saída categorizada', 'warning')

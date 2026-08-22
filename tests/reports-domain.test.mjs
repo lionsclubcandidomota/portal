@@ -46,6 +46,15 @@ test('gera relatório financeiro limitado ao período', () => {
   assert.equal(report.summary.find(item => item.label === 'Entradas').value, 'R$ 140,00');
 });
 
+test('leitura rápida financeira explica o resultado sem depender de superávit ou déficit', () => {
+  const report = buildReport('movements', state, options);
+  const result = report.insights.find(item => item.label === 'Resultado do período');
+  assert.equal(result.value, '+ R$ 140,00');
+  assert.equal(result.detail, 'Entradas superaram as saídas.');
+  assert.doesNotMatch(`${result.value} ${result.detail}`, /superávit|déficit/i);
+});
+
+
 test('gera relatório de mensalidades com pagos e pendentes', () => {
   const report = buildReport('memberships', state, options);
   assert.equal(report.rows.length, 2);
@@ -183,6 +192,23 @@ test('relatório de mensalidades distingue parcial, pendente financeiro e saldo 
   assert.equal(report.summary.find(item => item.label === 'Valor pendente').value, 'R$ 25,00');
   assert.equal(report.insights.find(item => item.label === 'Saldo anterior em aberto').value, 'R$ 80,00');
   assert.match(report.note, /não compõe o valor pendente/i);
+});
+
+
+test('status Pago usa badge positivo no relatório', () => {
+  const report = {
+    title: 'Teste',
+    clubName: 'Clube Teste',
+    description: 'Teste visual',
+    periodText: 'Julho de 2026',
+    generatedAt: '01/08/2026 10:00',
+    columns: ['Situação'],
+    rows: [['Pago']],
+    summary: [],
+    insights: []
+  };
+  const html = reportHtml(report);
+  assert.match(html, /<span class="data-badge is-positive">Pago<\/span>/);
 });
 
 test('visual do relatório expõe resumo executivo, leitura rápida e detalhamento responsivo', () => {

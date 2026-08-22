@@ -1,5 +1,5 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.52.0';
+import { uiIcon } from '../visual-helpers.js?v=6.52.3';
 
 function activeMemberships(group) {
   return (Array.isArray(group?.memberships) ? group.memberships : [])

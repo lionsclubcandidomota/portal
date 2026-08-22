@@ -1,10 +1,10 @@
-import { memberIsActive, memberIsMutual } from './portal-members.js?v=6.52.0';
-import { roleById } from './portal-access.js?v=6.52.0';
+import { memberIsActive, memberIsMutual } from './portal-members.js?v=6.52.3';
+import { roleById } from './portal-access.js?v=6.52.3';
 import {
   currentLionYear,
   leadershipAssignmentStatus,
   normalizeLionYear
-} from './portal-leadership.js?v=6.52.0';
+} from './portal-leadership.js?v=6.52.3';
 import { normalize } from '../utils.js';
 
 const ROLE_PRIORITY = Object.freeze([

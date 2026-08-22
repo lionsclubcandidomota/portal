@@ -1,6 +1,6 @@
 import { escapeHtml } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.52.0';
-import { REPORT_ORDER, REPORT_TYPES } from '../reports/catalog.js?v=6.52.0';
+import { uiIcon } from '../visual-helpers.js?v=6.52.3';
+import { REPORT_ORDER, REPORT_TYPES } from '../reports/catalog.js?v=6.52.3';
 
 const currency = new Intl.NumberFormat('pt-BR', {
   style: 'currency',

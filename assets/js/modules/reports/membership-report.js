@@ -1,8 +1,8 @@
-import { memberIsActive } from '../../core/portal-members.js?v=6.52.0';
+import { memberIsActive } from '../../core/portal-members.js?v=6.52.3';
 import { dateFromInput } from '../admin-dashboard/domain.js';
-import { inferLegacyMembershipFeeForMonth, membershipFeeForMonth } from '../membership-fees.js?v=6.52.0';
-import { membershipAllocationForMonth, membershipExpectedSnapshotForMonth } from '../treasury/shared-domain.js?v=6.52.0';
-import { REPORT_TYPES } from './catalog.js?v=6.52.0';
+import { inferLegacyMembershipFeeForMonth, membershipFeeForMonth } from '../membership-fees.js?v=6.52.3';
+import { membershipAllocationForMonth, membershipExpectedSnapshotForMonth } from '../treasury/shared-domain.js?v=6.52.3';
+import { REPORT_TYPES } from './catalog.js?v=6.52.3';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const percent = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 1 });

@@ -1,5 +1,5 @@
-import { migratePortalPayload } from './core/portal-schema.js?v=6.52.0';
-import { GITHUB_API_VERSION, GITHUB_CONFIG } from './github-config.js?v=6.52.0';
+import { migratePortalPayload } from './core/portal-schema.js?v=6.52.3';
+import { GITHUB_API_VERSION, GITHUB_CONFIG } from './github-config.js?v=6.52.3';
 
 export function normalizeGitHubPayload(parsed) {
   const migrated = migratePortalPayload(parsed);

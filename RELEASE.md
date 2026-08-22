@@ -1,10 +1,13 @@
-# Portal Lions v6.52.0
+# Portal Lions v6.52.3
 
 > Refinamento visual global e consolidação do design system, preservando a estabilização do pacote, os contratos funcionais e os arquivos oficiais sem migração.
 
-## Refinamento visual global — v6.52.0
+## Refinamento visual global — v6.52.3
 
 - estende a linguagem visual introduzida na Área Administrativa para os componentes compartilhados do Portal, com superfícies elevadas, bordas, sombras, cabeçalhos, tabelas e estados de interação mais consistentes;
+- ajusta a identidade visual do movimento **Transferência** na Tesouraria para seguir o mesmo padrão semântico de Entrada e Saída, com chip, valor, ícone e estados destacados em paleta própria;
+- corrige os relatórios modernos para que o status **Pago** use o mesmo badge positivo já aplicado a **Recebido**, mantendo leitura visual consistente entre entradas e saídas;
+- simplifica a leitura do **Resultado do período** nos relatórios financeiros: o valor líquido passa a ser o destaque e a explicação informa diretamente se as entradas superaram as saídas, se as saídas superaram as entradas ou se houve equilíbrio, sem depender dos termos “Superávit” e “Déficit”;
 - adiciona tokens semânticos de elevação (`--surface-raised`, `--panel-border`, `--panel-shadow` e `--panel-shadow-hover`) para reduzir estilos fixos e melhorar a adaptação entre Claro e Escuro;
 - refina topbar, cards, cabeçalhos de seção, tabelas, botões secundários e avatares sem alterar os fluxos funcionais;
 - corrige a **Agenda da página inicial no modo visitante** para deixar de depender de gradiente branco fixo e adapta chips, ícones e compromissos anteriores aos tokens do tema;

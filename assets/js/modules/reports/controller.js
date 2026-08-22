@@ -1,5 +1,5 @@
-import { buildReport } from './domain.js?v=6.52.0';
-import { REPORT_TYPES } from './catalog.js?v=6.52.0';
+import { buildReport } from './domain.js?v=6.52.3';
+import { REPORT_TYPES } from './catalog.js?v=6.52.3';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -25,7 +25,7 @@ function toneClass(value = '') {
 
 function cellBadge(value = '') {
   const key = plainText(value).toLocaleLowerCase('pt-BR');
-  if (['em dia', 'quitada', 'paga', 'recebido', 'realizado', 'concluído', 'concluido'].includes(key)) return ' is-positive';
+  if (['em dia', 'quitada', 'paga', 'pago', 'recebido', 'realizado', 'concluído', 'concluido'].includes(key)) return ' is-positive';
   if (['parcial', 'em andamento', 'confirmado'].includes(key)) return ' is-primary';
   if (['pendente', 'em aberto', 'programado', 'agendado', 'média', 'media'].includes(key)) return ' is-warning';
   if (['cancelado', 'cancelada', 'alta', 'vencida', 'vencido'].includes(key)) return ' is-negative';

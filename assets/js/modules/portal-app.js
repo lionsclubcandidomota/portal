@@ -1,19 +1,19 @@
 import { loadState, exportState, parseImportFile } from '../storage.js';
 import { fullDateFormat, parseLocalDate, formatDate, nextBirthdayDate, daysUntil, escapeHtml, normalize, fileToDataUrl, sumTreasury, toInputDate } from '../utils.js';
 import { createFinancePrivacyController } from './finance-privacy.js';
-import { createLazyTreasuryController } from './lazy-treasury-controller.js?v=6.52.0';
-import { currencyInputValue, parseCurrencyInput } from './currency-input.js?v=6.52.0';
-import { memberIsActive } from '../core/portal-members.js?v=6.52.0';
-import { createLazySettingsController } from './lazy-settings.js?v=6.52.0';
-import { createNavigationController } from './navigation.js?v=6.52.0';
+import { createLazyTreasuryController } from './lazy-treasury-controller.js?v=6.52.3';
+import { currencyInputValue, parseCurrencyInput } from './currency-input.js?v=6.52.3';
+import { memberIsActive } from '../core/portal-members.js?v=6.52.3';
+import { createLazySettingsController } from './lazy-settings.js?v=6.52.3';
+import { createNavigationController } from './navigation.js?v=6.52.3';
 import { createUiShellController } from './ui-shell.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createLazyPublishCenterController } from './lazy-publish-center.js?v=6.52.0';
-import { createPortalRefreshController } from './portal-refresh.js?v=6.52.0';
-import { createAuditLogController } from './audit-log.js?v=6.52.0';
-import { createLazyRecoveryCenterController } from './lazy-recovery-center.js?v=6.52.0';
-import { createPublicationReviewController } from './publication-review-controller.js?v=6.52.0';
+import { createLazyPublishCenterController } from './lazy-publish-center.js?v=6.52.3';
+import { createPortalRefreshController } from './portal-refresh.js?v=6.52.3';
+import { createAuditLogController } from './audit-log.js?v=6.52.3';
+import { createLazyRecoveryCenterController } from './lazy-recovery-center.js?v=6.52.3';
+import { createPublicationReviewController } from './publication-review-controller.js?v=6.52.3';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
@@ -27,7 +27,7 @@ import {
   birthdayCards
 } from './birthdays.js';
 import { avatar, empty, kpi, priorityBadge, statusBadge } from './visual-helpers.js';
-import { createLazyBirthdayArtworkShare } from './lazy-birthday-artwork.js?v=6.52.0';
+import { createLazyBirthdayArtworkShare } from './lazy-birthday-artwork.js?v=6.52.3';
 import {
   appointmentLocationText,
   appointmentTypeBadge,
@@ -36,17 +36,17 @@ import {
   getAppointments as buildAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.52.0';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.52.0';
-import { getPortalElements } from './portal-elements.js?v=6.52.0';
-import { createReadOnlyGuard } from './read-only-guard.js?v=6.52.0';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.52.0';
-import { createAgendaController } from './agenda-state.js?v=6.52.0';
-import { createLazyEntityActions } from './lazy-entity-actions.js?v=6.52.0';
-import { createLazyAdminPanelController } from './lazy-admin-panel.js?v=6.52.0';
-import { createInterfaceContextController } from './interface-context.js?v=6.52.0';
-import { createLazyAccessManagementController } from './lazy-access-management.js?v=6.52.0';
-import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.52.0';
+} from './appointments.js?v=6.52.3';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.52.3';
+import { getPortalElements } from './portal-elements.js?v=6.52.3';
+import { createReadOnlyGuard } from './read-only-guard.js?v=6.52.3';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.52.3';
+import { createAgendaController } from './agenda-state.js?v=6.52.3';
+import { createLazyEntityActions } from './lazy-entity-actions.js?v=6.52.3';
+import { createLazyAdminPanelController } from './lazy-admin-panel.js?v=6.52.3';
+import { createInterfaceContextController } from './interface-context.js?v=6.52.3';
+import { createLazyAccessManagementController } from './lazy-access-management.js?v=6.52.3';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.52.3';
 
 export function bootstrapPortal() {
   let state = loadState();

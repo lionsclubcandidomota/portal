@@ -15,10 +15,10 @@ import {
 import { markdownToHtml } from './markdown.js';
 import { noticeIsActive, noticePeriodText } from './notices.js';
 import { todayStart } from './timeline.js';
-import { memberIsActive } from '../core/portal-members.js?v=6.52.0';
-import { buildTreasuryDashboardSummary } from './treasury/dashboard-summary.js?v=6.52.0';
+import { memberIsActive } from '../core/portal-members.js?v=6.52.3';
+import { buildTreasuryDashboardSummary } from './treasury/dashboard-summary.js?v=6.52.3';
 import { uiIcon } from './visual-helpers.js';
-import { resolveDisplayLogo } from './settings-appearance.js?v=6.52.0';
+import { resolveDisplayLogo } from './settings-appearance.js?v=6.52.3';
 
 export function renderDashboard(state, helpers) {
   const {

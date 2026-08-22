@@ -1,4 +1,4 @@
-import { uiIcon } from './visual-helpers.js?v=6.52.0';
+import { uiIcon } from './visual-helpers.js?v=6.52.3';
 
 const STATUS_LABELS = {
   offline: 'Trabalho local',

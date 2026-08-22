@@ -2,9 +2,9 @@ import {
   ACCESS_CAPABILITIES,
   ACCESS_ROLES,
   normalizeAccessPermissions
-} from '../../core/portal-access.js?v=6.52.0';
+} from '../../core/portal-access.js?v=6.52.3';
 
-export { ACCESS_CAPABILITIES, ACCESS_ROLES } from '../../core/portal-access.js?v=6.52.0';
+export { ACCESS_CAPABILITIES, ACCESS_ROLES } from '../../core/portal-access.js?v=6.52.3';
 
 const ROLE_POLICIES = Object.freeze({
   [ACCESS_ROLES.VISITOR]: Object.freeze({

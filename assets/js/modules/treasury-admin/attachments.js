@@ -1,5 +1,5 @@
 import { escapeHtml, optimizeDataUrl, uid } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.52.0';
+import { uiIcon } from '../visual-helpers.js?v=6.52.3';
 
 export const TREASURY_ATTACHMENT_LIMITS = Object.freeze({
   maxFiles: 5,

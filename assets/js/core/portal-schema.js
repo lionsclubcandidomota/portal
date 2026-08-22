@@ -1,16 +1,16 @@
-import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.52.0';
-import { memberIsActive, normalizeMemberRecord } from './portal-members.js?v=6.52.0';
+import { findSensitivePortalFields, stripSensitivePortalFields } from './portal-security.js?v=6.52.3';
+import { memberIsActive, normalizeMemberRecord } from './portal-members.js?v=6.52.3';
 import {
   defaultAccessRoles,
   normalizeAccessRoleRecord,
   normalizePortalUserRecord
-} from './portal-access.js?v=6.52.0';
+} from './portal-access.js?v=6.52.3';
 import {
   assignmentDateRangeIsValid,
   lionYearBounds,
   lionYearForDate,
   normalizeLeadershipAssignmentRecord
-} from './portal-leadership.js?v=6.52.0';
+} from './portal-leadership.js?v=6.52.3';
 
 export const PORTAL_APP_ID = 'Lions Clube de Cândido Mota Dashboard';
 export const CURRENT_SCHEMA_VERSION = 12;

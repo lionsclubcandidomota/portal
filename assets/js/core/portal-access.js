@@ -1,4 +1,4 @@
-import { memberIsActive } from './portal-members.js?v=6.52.0';
+import { memberIsActive } from './portal-members.js?v=6.52.3';
 export const ACCESS_ROLES = Object.freeze({
   VISITOR: 'visitor',
   ADMIN: 'admin',

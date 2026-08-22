@@ -1,3 +1,11 @@
+## v6.52.3 — Leitura financeira mais direta nos relatórios — 22/08/2026
+
+- mantém a identidade visual semântica de Transferência e o badge positivo de **Pago** adicionados nas revisões incrementais anteriores;
+- substitui os termos principais **Superávit/Déficit** no card de leitura rápida pelo valor líquido do período;
+- informa diretamente **Entradas superaram as saídas**, **Saídas superaram as entradas** ou **Entradas e saídas ficaram equilibradas**;
+- adiciona regressão específica para a interpretação do resultado financeiro;
+- preserva regras financeiras, esquema 12 e arquivos oficiais de dados.
+
 ## v6.52.0 — Refinamento visual global e consolidação do tema — 22/08/2026
 
 - estende a linguagem visual da Área Administrativa aos componentes compartilhados do Portal com superfícies, bordas, sombras e cabeçalhos semânticos;

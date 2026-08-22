@@ -1,4 +1,4 @@
-import { roleById } from './portal-access.js?v=6.52.0';
+import { roleById } from './portal-access.js?v=6.52.3';
 
 const LION_YEAR_PATTERN = /^(\d{4})\/(\d{4})$/;
 

@@ -4,7 +4,7 @@ import {
   money,
   normalize
 } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.52.0';
+import { uiIcon } from '../visual-helpers.js?v=6.52.3';
 
 function latestPayment(payments = []) {
   return [...payments]
