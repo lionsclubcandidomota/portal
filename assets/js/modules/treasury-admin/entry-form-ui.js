@@ -1,5 +1,5 @@
 import { escapeHtml } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.49.1';
+import { uiIcon } from '../visual-helpers.js?v=6.52.0';
 import { renderTreasuryAttachmentPicker } from './attachments.js';
 import {
   TREASURY_BANK_YIELD_CATEGORY,

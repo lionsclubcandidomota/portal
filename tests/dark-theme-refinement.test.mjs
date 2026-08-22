@@ -69,3 +69,24 @@ test('pagamentos vinculados do Extrato usam superfície temática no modo escuro
   assert.doesNotMatch(statement, /\.membership-statement-row-details\{[^}]*rgba\(248,251,253/);
   assert.match(statement, /\.membership-statement-payments>span\{[^}]*border:1px solid var\(--border\)/);
 });
+
+test('Agenda da home visitante e Central de sincronização não dependem de superfícies brancas no dark mode', async () => {
+  const [tokens, modern, responsive, shell, publication] = await Promise.all([
+    source('assets/css/tokens.css'),
+    source('assets/css/components/modern-interface.css'),
+    source('assets/css/components/responsive-guardrails.css'),
+    source('assets/css/foundations/application-shell.css'),
+    source('assets/css/components/publication-center.css')
+  ]);
+
+  assert.match(tokens, /--surface-raised:/);
+  assert.match(tokens, /--panel-border:/);
+  assert.match(modern, /\.dashboard-appointments-grid > \.appointment-home-item\s*\{[^}]*background:linear-gradient\([^}]*var\(--surface-raised\)/s);
+  assert.match(responsive, /\.grid-main>\.card\.col-12:has\(\[data-go="agenda"\]\)\{[^}]*var\(--surface-raised\)/);
+  assert.doesNotMatch(responsive, /\.grid-main>\.card\.col-12:has\(\[data-go="agenda"\]\)\{[^}]*#fff/);
+  assert.match(shell, /\.appointment-type-icon\{[^}]*var\(--surface\)/);
+  assert.match(publication, /\.publication-workspace-heading\{[^}]*var\(--surface-raised\)/);
+  assert.match(publication, /\.publication-status-card\{[^}]*var\(--surface-raised\)/);
+  assert.doesNotMatch(publication, /\.publication-workspace-heading\{[^}]*#fff/);
+  assert.doesNotMatch(publication, /\.publication-status-card\{[^}]*#fff/);
+});

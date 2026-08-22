@@ -1,4 +1,12 @@
-# Registro técnico — Portal v6.46.7
+# Registro técnico — Portal v6.50.0
+
+## v6.50.0 — domínio e apresentação de relatórios
+
+A modernização da Central de relatórios foi tratada como evolução de arquitetura, não apenas como troca visual. O catálogo dos seis relatórios foi isolado em `assets/js/modules/reports/catalog.js`, enquanto a apuração de Mensalidades — que depende de valor histórico, pagamentos parciais, créditos e saldo anterior — foi extraída para `assets/js/modules/reports/membership-report.js`. Isso mantém `reports/domain.js` abaixo do limite arquitetural e evita duplicar as regras já consolidadas na Tesouraria.
+
+O `reports/controller.js` passou a gerar documentos com três níveis de leitura — **Resumo executivo**, **Leitura rápida** e **Detalhamento** — e o CSV preserva o detalhe completo adicionando contexto gerencial antes da tabela. A Área Administrativa consome o mesmo catálogo para a seleção visual, de modo que nome, finalidade e descrição não sejam mantidos em múltiplas fontes.
+
+A camada visual adicionada à Administração permanece responsiva e baseada nos tokens do design system. O orçamento de CSS foi reajustado de 442.000 para **444.000 bytes** para acomodar a nova central sem elevar o limite de JavaScript estático; o orçamento de ativos críticos continua em 790.000 bytes. Testes específicos protegem catálogo, responsividade, HTML, CSV e a coerência financeira do relatório de Mensalidades.
 
 ## v6.49.1 — conta padrão para mensalidades
 
@@ -270,3 +278,28 @@ O módulo `integrated-homologation.mjs` valida o esquema, referências, período
 
 - Ajustado o layout do extrato de mensalidades, compactando os blocos de saldo anterior e pagamentos vinculados.
 - Reforçada a diferenciação visual entre os status Quitado, Pendente e Parcial na listagem de mensalidades e no extrato.
+
+
+## v6.52.0 — consolidação visual global
+
+### Motivo da refatoração
+
+- A evolução recente do modo escuro e das telas administrativas havia criado compensações específicas para componentes que ainda utilizavam branco, cinza ou sombras fixas.
+- Agenda, cards compartilhados e Central de Sincronização tinham estilos equivalentes definidos em mais de uma camada da cascata.
+- A estratégia desta etapa foi corrigir os componentes na origem e consolidar tokens de superfície/elevação, em vez de adicionar uma nova folha de exceções para o modo escuro.
+
+### Resultado
+
+- `--surface-raised`, `--panel-border`, `--panel-shadow` e `--panel-shadow-hover` passam a formar a base semântica para superfícies elevadas.
+- Cards, tabelas, cabeçalhos e elementos compartilhados passam a reutilizar esses tokens.
+- A Agenda visitante deixa de usar gradiente branco fixo; chips, ícones e estados passados passam a responder ao tema.
+- A Central de Sincronização/Publicação é consolidada em uma camada visual temática, removendo regras redundantes e fundos claros fixos.
+- Sobrescritas escuras redundantes são removidas depois da correção na origem dos componentes.
+- Métricas da cascata melhoram de 4.694 para 4.635 regras, 338 para 330 seletores redefinidos e 422 para 410 sobrescritas.
+- O bundle CSS cai de 443.868 para 439.556 bytes sem alteração do orçamento de 444.000 bytes.
+- Não há mudança de esquema, contratos financeiros, permissões ou arquivos oficiais de dados.
+
+### Diretriz para próximas evoluções
+
+- Novos componentes devem consumir tokens semânticos na origem; evitar cores claras/escuras fixas quando a superfície precisar responder ao tema.
+- Exceções em `dark-theme.css` devem ser reservadas a diferenças de comportamento realmente específicas do modo escuro, não para compensar componentes que podem ser tematizados diretamente.

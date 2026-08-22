@@ -13,7 +13,7 @@ export function createLazyRecoveryCenterController(options) {
 
   async function load() {
     if (!controllerPromise) {
-      controllerPromise = import('./recovery-center.js?v=6.49.1')
+      controllerPromise = import('./recovery-center.js?v=6.52.0')
         .then(module => module.createRecoveryCenterController(options))
         .then(instance => {
           controller = instance;

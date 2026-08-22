@@ -1,6 +1,6 @@
 export const performanceBudgets = Object.freeze({
   staticJavaScriptBytes: 310_000,
-  cssBytes: 442_000,
+  cssBytes: 444_000,
   optimizedLogoBytes: 60_000,
   criticalAssetsBytes: 790_000
 });

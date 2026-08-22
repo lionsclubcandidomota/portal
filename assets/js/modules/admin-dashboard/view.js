@@ -1,10 +1,19 @@
 import { escapeHtml } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.49.1';
+import { uiIcon } from '../visual-helpers.js?v=6.52.0';
+import { REPORT_ORDER, REPORT_TYPES } from '../reports/catalog.js?v=6.52.0';
 
 const currency = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL'
 });
+
+
+function reportCardsHtml() {
+  return REPORT_ORDER.map((key, index) => {
+    const item = REPORT_TYPES[key];
+    return `<button class="btn btn-ghost admin-report-option${index === 0 ? ' is-selected' : ''}" type="button" data-report-type="${escapeHtml(key)}" aria-pressed="${index === 0 ? 'true' : 'false'}"><span class="admin-report-option-icon" aria-hidden="true">${uiIcon(item.icon)}</span><span class="admin-report-option-copy"><small>${escapeHtml(item.group)}</small><strong>${escapeHtml(item.shortLabel)}</strong><em>${escapeHtml(item.description)}</em></span><span class="admin-report-option-check" aria-hidden="true">${uiIcon('check')}</span></button>`;
+  }).join('');
+}
 
 export function statusDistribution(groups, total, label) {
   if (!total) {
@@ -122,7 +131,9 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
       </div>
     </section>
 
-    <section class="admin-insight-grid">
+    <section class="admin-dashboard-section" aria-labelledby="adminOverviewTitle">
+      <div class="admin-section-heading"><div><span class="admin-section-kicker">Visão geral</span><h3 id="adminOverviewTitle">Resumo do período</h3><p>Financeiro, eventos e reuniões reunidos em uma leitura rápida.</p></div></div>
+      <div class="admin-insight-grid">
       <article class="admin-insight-card admin-treasury-insight">
         <div class="admin-insight-heading"><div class="admin-insight-title"><span class="admin-module-icon">${uiIcon('wallet')}</span><div><span class="admin-insight-eyebrow">Finanças</span><h3>Resumo do período</h3></div></div><div class="admin-insight-heading-actions">${financePrivacyButton}<div class="admin-insight-total"><strong>${treasury.total}</strong><small>total</small></div></div></div>
         <div class="admin-balance-highlight ${treasury.balance < 0 ? 'is-negative' : ''}"><small>Saldo do período</small><strong class="sensitive-money">${currency.format(treasury.balance)}</strong><span>Entradas − saídas</span></div>
@@ -146,30 +157,38 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
         ${statusRows(model.meetings.groups)}
         <div class="admin-insight-actions">${addMeetingButton}<button class="btn btn-ghost btn-sm" data-manage="agenda" type="button">Ver agenda</button></div>
       </article>
+      </div>
     </section>
 
-    <section class="admin-support-grid">
+    <section class="admin-dashboard-section admin-quick-section" aria-labelledby="adminQuickTitle">
+      <div class="admin-section-heading"><div><span class="admin-section-kicker">Gestão rápida</span><h3 id="adminQuickTitle">Pessoas e comunicação</h3><p>Atalhos para as rotinas mais frequentes da administração.</p></div></div>
+      <div class="admin-support-grid">
       <article class="admin-support-card admin-people-support-card"><div class="admin-support-main"><span class="admin-module-icon">${uiIcon('cake')}</span><div><span class="admin-insight-eyebrow">Pessoas</span><div class="admin-people-counts" aria-label="${model.birthdayAssociateCount} associado(s) e ${model.birthdayMutualCount} mutuário(s)"><span class="admin-people-count"><strong>${model.birthdayAssociateCount}</strong><small>Associado(s)</small></span><span class="admin-people-count is-mutual"><strong>${model.birthdayMutualCount}</strong><small>Mutuário(s)</small></span></div><p>Consulte pessoas e datas de aniversário.</p></div></div><div class="admin-support-actions">${addBirthdayButton}<button class="btn btn-ghost btn-sm" data-manage="birthdays" type="button">Ver pessoas</button></div></article>
       <article class="admin-support-card"><div class="admin-support-main"><span class="admin-module-icon">${uiIcon('megaphone')}</span><div><span class="admin-insight-eyebrow">Avisos</span><h3>${model.noticeCount} aviso(s)</h3><p>Crie e consulte comunicados.</p></div></div><div class="admin-support-actions">${addNoticeButton}<button class="btn btn-ghost btn-sm" data-manage="notices" type="button">Ver avisos</button></div></article>
+      </div>
     </section>
 
     ${canExportReports ? `    <section class="card admin-report-center" aria-labelledby="adminReportTitle">
-      <div class="admin-report-heading"><span class="admin-card-icon" aria-hidden="true">${uiIcon('file-text')}</span><div><span class="admin-insight-eyebrow">Relatórios</span><h3 id="adminReportTitle">Gerar relatório</h3><p>Escolha o conteúdo e exporte em PDF ou CSV.</p></div></div>
-      <div class="admin-report-controls">
-        <label class="admin-report-type"><span>Conteúdo</span><select id="adminReportType">
-          <option value="movements">Movimentações financeiras</option>
-          <option value="memberships">Mensalidades</option>
-          <option value="mutuals">Mútuas</option>
-          <option value="birthdays">Aniversariantes</option>
-          <option value="agenda">Agenda</option>
-          <option value="notices">Avisos</option>
-        </select></label>
+      <div class="admin-report-heading"><span class="admin-card-icon" aria-hidden="true">${uiIcon('file-text')}</span><div><span class="admin-insight-eyebrow">Central de relatórios</span><h3 id="adminReportTitle">Gerar relatório</h3><p>Escolha uma visão. O relatório abre com resumo executivo, leitura rápida e detalhamento pronto para impressão ou CSV.</p></div></div>
+      <select id="adminReportType" hidden aria-hidden="true" tabindex="-1">
+        <option value="movements">Movimentações financeiras</option>
+        <option value="memberships">Mensalidades</option>
+        <option value="mutuals">Mútuas</option>
+        <option value="birthdays">Aniversariantes</option>
+        <option value="agenda">Agenda</option>
+        <option value="notices">Avisos</option>
+      </select>
+      <div class="admin-report-options" role="group" aria-label="Tipo de relatório">${reportCardsHtml()}</div>
+      <div class="admin-report-selection">
+        <div class="admin-report-selection-copy"><span class="admin-report-selection-group" id="adminReportSelectionGroup">Financeiro</span><div><strong id="adminReportSelectionTitle">Movimentações financeiras</strong><p id="adminReportSelectionDescription">Entradas, saídas, contas, categorias e resultado do período.</p><small id="adminReportSelectionHint">Ideal para prestação de contas e conferência financeira.</small></div></div>
         <div class="admin-report-period"><small>Período aplicado</small><strong>${escapeHtml(model.selectedPeriodLabel)}</strong></div>
-        <div class="admin-report-actions"><button class="btn btn-primary" id="generateReportPrint" type="button">${uiIcon('printer')} Abrir PDF</button><button class="btn btn-ghost" id="generateReportCsv" type="button">${uiIcon('download')} Baixar CSV</button></div>
+        <div class="admin-report-actions"><button class="btn btn-primary" id="generateReportPrint" type="button">${uiIcon('printer')} Abrir relatório</button><button class="btn btn-ghost" id="generateReportCsv" type="button">${uiIcon('download')} Baixar CSV</button></div>
       </div>
     </section>` : ''}
 
-    <section class="admin-operation-grid">
+    <section class="admin-dashboard-section admin-operations-section" aria-labelledby="adminOperationsTitle">
+      <div class="admin-section-heading"><div><span class="admin-section-kicker">Administração</span><h3 id="adminOperationsTitle">Segurança, histórico e acessos</h3><p>Backup, auditoria e permissões em uma área separada das rotinas do dia a dia.</p></div></div>
+      <div class="admin-operation-grid">
       ${canManageBackups ? `<article class="card admin-backup-card admin-backup-card-wide">
         <div class="admin-card-heading"><span class="admin-card-icon">${uiIcon('lifebuoy')}</span><div><h3>Backup e recuperação</h3><p>Baixe uma cópia ou restaure dados quando necessário.</p></div></div>
         <div class="admin-recovery-summary"><span class="is-${escapeHtml(recoverySummary?.diagnosticStatus || 'ok')}">${recoverySummary?.diagnosticStatus === 'error' ? '!' : recoverySummary?.diagnosticStatus === 'warning' ? '!' : '✓'}</span><div><strong>${Number(recoverySummary?.snapshots || 0)} ponto(s) de recuperação</strong><small>${recoverySummary?.latestAt ? `Último criado em ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(recoverySummary.latestAt))}` : 'O portal criará cópias antes de operações críticas'}</small></div>${recoveryButton}</div>
@@ -181,5 +200,6 @@ export function adminDashboardHtml(model, { financePrivacyButton = '', auditSumm
         <div class="admin-audit-actions"><button class="btn btn-primary btn-sm" id="openAuditLogBtn" type="button">Ver histórico</button></div>
       </article>
       ${canManageUsers ? `<article class="admin-audit-card admin-access-card"><div class="admin-audit-main"><span class="admin-module-icon" aria-hidden="true">${uiIcon('users')}</span><div><span class="admin-insight-eyebrow">Acessos</span><h3>Usuários e cargos</h3><p>Crie acessos individuais e defina permissões por responsabilidade.</p></div></div><div class="admin-audit-stats"><div class="admin-audit-stat"><strong>${Number(model.userCount || 0)}</strong><small>usuários</small></div><div class="admin-audit-stat"><strong>${Number(model.roleCount || 0)}</strong><small>cargos</small></div></div><div class="admin-audit-actions"><button class="btn btn-primary btn-sm" id="openAccessManagementBtn" type="button">Gerenciar acessos</button></div></article>` : ''}
+      </div>
     </section>`;
 }

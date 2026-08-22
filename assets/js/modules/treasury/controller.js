@@ -37,7 +37,7 @@ import {
   periodBounds as getPeriodBounds,
   referenceMonth as getReferenceMonth
 } from './domain.js';
-import { inferLegacyMembershipFeeForMonth, membershipFeeForMonth as resolveMembershipFeeForMonth } from '../membership-fees.js?v=6.49.1';
+import { inferLegacyMembershipFeeForMonth, membershipFeeForMonth as resolveMembershipFeeForMonth } from '../membership-fees.js?v=6.52.0';
 export function createTreasuryController({
   getState,
   parseLocalDate,

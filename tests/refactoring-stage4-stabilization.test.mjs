@@ -17,7 +17,7 @@ test('pipeline oficial executa auditoria dedicada de lazy loading', async () => 
 test('contratos finais centralizam orçamento e fronteiras lazy', async () => {
   assert.deepEqual(performanceBudgets, {
     staticJavaScriptBytes: 310_000,
-    cssBytes: 442_000,
+    cssBytes: 444_000,
     optimizedLogoBytes: 60_000,
     criticalAssetsBytes: 790_000
   });

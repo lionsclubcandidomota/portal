@@ -15,6 +15,10 @@
   --surface-2: #f8fafc;
   --surface-3: #edf2f7;
   --surface-glass: color-mix(in srgb, var(--surface) 92%, transparent);
+  --surface-raised: color-mix(in srgb, var(--surface) 97%, var(--surface-2));
+  --panel-border: color-mix(in srgb, var(--border) 88%, var(--primary) 12%);
+  --panel-shadow: 0 10px 30px rgba(20,32,51,.055);
+  --panel-shadow-hover: 0 16px 38px rgba(20,32,51,.085);
   --text: #142033;
   --text-soft: #3f5066;
   --muted: #68778b;
@@ -85,6 +89,10 @@ html[data-theme="dark"] {
   --surface-2: #192838;
   --surface-3: #213347;
   --surface-glass: color-mix(in srgb, var(--surface) 92%, transparent);
+  --surface-raised: color-mix(in srgb, var(--surface) 96%, var(--surface-2));
+  --panel-border: color-mix(in srgb, var(--border) 90%, var(--primary) 10%);
+  --panel-shadow: 0 12px 34px rgba(0,0,0,.22);
+  --panel-shadow-hover: 0 18px 46px rgba(0,0,0,.3);
   --text: #edf4fb;
   --text-soft: #c6d3df;
   --muted: #94a8bb;

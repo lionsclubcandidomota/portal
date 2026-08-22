@@ -4,7 +4,7 @@ import {
   normalize,
   toInputDate
 } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.49.1';
+import { uiIcon } from '../visual-helpers.js?v=6.52.0';
 
 export function buildMembershipViewModel(state, treasury, now = new Date()) {
   const currentMembershipMonth = toInputDate(now).slice(0, 7);

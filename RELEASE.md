@@ -1,7 +1,54 @@
-# Portal Lions v6.49.1
+# Portal Lions v6.52.0
 
-> Conta padrão configurável para recebimento de mensalidades, preservando a estabilização do pacote e sem migração dos arquivos oficiais.
+> Refinamento visual global e consolidação do design system, preservando a estabilização do pacote, os contratos funcionais e os arquivos oficiais sem migração.
 
+## Refinamento visual global — v6.52.0
+
+- estende a linguagem visual introduzida na Área Administrativa para os componentes compartilhados do Portal, com superfícies elevadas, bordas, sombras, cabeçalhos, tabelas e estados de interação mais consistentes;
+- adiciona tokens semânticos de elevação (`--surface-raised`, `--panel-border`, `--panel-shadow` e `--panel-shadow-hover`) para reduzir estilos fixos e melhorar a adaptação entre Claro e Escuro;
+- refina topbar, cards, cabeçalhos de seção, tabelas, botões secundários e avatares sem alterar os fluxos funcionais;
+- corrige a **Agenda da página inicial no modo visitante** para deixar de depender de gradiente branco fixo e adapta chips, ícones e compromissos anteriores aos tokens do tema;
+- reorganiza o acabamento dos compromissos da Home com acentos semânticos para Evento/Reunião e melhor leitura em Claro/Escuro;
+- refatora o **Painel de Sincronização/Publicação**, removendo camadas visuais sobrepostas e superfícies brancas fixas do cabeçalho, status, progresso, etapas, revisão e ações;
+- preserva os estados Pendente, Publicando, Concluído e Erro com contraste apropriado nos dois temas e nos breakpoints responsivos;
+- remove sobrescritas de dark mode que deixaram de ser necessárias depois que Agenda e Sincronização passaram a consumir tokens na origem;
+- reduz a dívida da cascata: **4.694 → 4.638 regras**, **338 → 330 seletores redefinidos**, **422 → 410 sobrescritas** e **443.868 → 439.909 bytes** no bundle CSS, sem ampliar o orçamento de 444.000 bytes;
+- adiciona regressão específica para impedir o retorno de superfícies brancas fixas na Agenda visitante e na Central de Sincronização;
+- preserva `data/dados.json`, `data/modelo.json` e o esquema 12 sem migração.
+
+# Portal Lions v6.51.0
+
+> Área Administrativa refinada visualmente, preservando a estabilização do pacote, os contratos funcionais e os arquivos oficiais sem migração.
+
+## Área Administrativa — v6.51.0
+
+- reorganiza o painel em **Visão geral**, **Gestão rápida**, **Central de relatórios** e **Administração**, deixando rotinas, análise e segurança visualmente separadas;
+- refina o cabeçalho e a sessão administrativa com acabamento mais leve e alinhado ao design system global;
+- transforma o filtro de período em uma barra de controle mais compacta, mantendo o mesmo estado e os mesmos presets já existentes;
+- moderniza os cards de Finanças, Eventos e Reuniões com hierarquia mais clara, acento lateral semântico, indicadores compactos e melhor aproveitamento vertical;
+- reorganiza Pessoas e Avisos como atalhos de gestão rápida, com contadores e ações mais fáceis de localizar;
+- integra visualmente a Central de relatórios ao restante do painel, reduzindo altura e mantendo as seis opções, resumo do relatório selecionado e exportações;
+- reorganiza Backup, Histórico e Usuários/Cargos em uma área administrativa própria, com melhor distribuição em desktop, tablet e celular;
+- adiciona regressão específica para a nova hierarquia e responsividade do dashboard administrativo;
+- mantém o orçamento de CSS em **444.000 bytes**, sem ampliar o limite para acomodar a refatoração;
+- preserva `data/dados.json`, `data/modelo.json` e o esquema 12 sem migração.
+
+> Central de relatórios gerenciais modernizada, preservando a estabilização do pacote, os contratos existentes e os arquivos oficiais sem migração.
+
+## Relatórios gerenciais — v6.50.0
+
+- substitui a escolha genérica por uma **Central de relatórios** com seis opções visuais, descrição de finalidade e resumo do conteúdo antes da exportação;
+- mantém **Movimentações financeiras, Mensalidades, Mútuas, Aniversariantes, Agenda e Avisos**, usando o mesmo período já selecionado na Área Administrativa como fonte de verdade;
+- reorganiza os documentos em **Resumo executivo → Leitura rápida → Detalhamento**, com indicadores semânticos, destaques gerenciais e tabela final;
+- moderniza o relatório de **Movimentações**, destacando resultado do período, maiores entrada/saída e categoria de maior peso;
+- alinha o relatório de **Mensalidades** às regras atuais do Portal: valores históricos por competência, Quitada/Parcial/Em aberto, previsto, recebido, valor pendente, créditos e saldo anterior separado;
+- melhora o relatório de **Mútuas** com cobertura de recebimento, valor em aberto e leitura por grupo;
+- acrescenta leituras rápidas específicas para **Aniversariantes, Agenda e Avisos**, como concentração por mês, situação/formato dos compromissos e prioridade/vigência dos comunicados;
+- moderniza o documento aberto para impressão/PDF com layout responsivo, cards de indicadores, tabela adaptável e impressão otimizada;
+- mantém o **CSV completo**, agora precedido por metadados, resumo executivo e leitura rápida antes do detalhamento;
+- separa o domínio específico de mensalidades em `reports/membership-report.js` e o catálogo em `reports/catalog.js`, evitando transformar `reports/domain.js` em novo arquivo monolítico;
+- recalibra de forma controlada o orçamento de CSS para **444.000 bytes**, mantendo JavaScript estático em **310.000 bytes** e ativos críticos em **790.000 bytes**;
+- preserva `data/dados.json`, `data/modelo.json` e o esquema 12 sem migração.
 
 ## Conta padrão para mensalidades — v6.49.1
 

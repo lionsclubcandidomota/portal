@@ -1,4 +1,4 @@
-import { memberIsMutual } from '../../core/portal-members.js?v=6.49.1';
+import { memberIsMutual } from '../../core/portal-members.js?v=6.52.0';
 
 export const ADMIN_PERIOD_STORAGE = Object.freeze({
   preset: 'lions.admin.dashboard.period',

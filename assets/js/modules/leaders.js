@@ -1,13 +1,13 @@
-import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.49.1';
+import { memberPhotoSourceSet } from '../core/member-photo-sources.js?v=6.52.0';
 import {
   currentPublicLeaders,
   publicLeadershipSummary,
   publicLeadersForYear,
   availablePublicLionYears
-} from '../core/public-leadership.js?v=6.49.1';
+} from '../core/public-leadership.js?v=6.52.0';
 import { escapeHtml } from '../utils.js';
-import { uiIcon } from './visual-helpers.js?v=6.49.1';
-import { resolveDisplayLogo } from './settings-appearance.js?v=6.49.1';
+import { uiIcon } from './visual-helpers.js?v=6.52.0';
+import { resolveDisplayLogo } from './settings-appearance.js?v=6.52.0';
 
 export {
   currentPublicLeaders,

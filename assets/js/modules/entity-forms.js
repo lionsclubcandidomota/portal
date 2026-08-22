@@ -1,5 +1,5 @@
-import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.49.1';
-import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.49.1';
+import { MEMBER_STATUS, memberStatusLabel } from '../core/portal-members.js?v=6.52.0';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.52.0';
 import {
   escapeHtml,
   normalize,
@@ -7,9 +7,9 @@ import {
   uid
 } from '../utils.js';
 import { setupMarkdownEditors } from './markdown.js';
-import { uiIcon } from './visual-helpers.js?v=6.49.1';
-import { isTreasuryTransfer } from './treasury/movement-domain.js?v=6.49.1';
-import { treasuryOperationEntryIds } from './treasury/movement-transfer-domain.js?v=6.49.1';
+import { uiIcon } from './visual-helpers.js?v=6.52.0';
+import { isTreasuryTransfer } from './treasury/movement-domain.js?v=6.52.0';
+import { treasuryOperationEntryIds } from './treasury/movement-transfer-domain.js?v=6.52.0';
 import {
   entityFormHtml,
   normalizeLocationData,

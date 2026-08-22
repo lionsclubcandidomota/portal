@@ -171,3 +171,20 @@ test('view do dashboard não duplica opções e tipa todos os botões', () => {
     assert.match(match[0], /\btype=/);
   }
 });
+
+test('área administrativa possui hierarquia visual por seções e grade responsiva', async () => {
+  const model = createAdminDashboardModel({ treasury: [], events: [], meetings: [], birthdays: [], notices: [] }, {
+    periodPreset: 'current-month',
+    now: new Date(2026, 7, 22)
+  });
+  const html = adminDashboardHtml(model, { auditSummary: {}, recoverySummary: {}, accessRole: 'admin' });
+  const css = await import('node:fs/promises')
+    .then(({ readFile }) => readFile(new URL('../assets/css/pages/admin-dashboard.css', import.meta.url), 'utf8'));
+
+  assert.match(html, /id="adminOverviewTitle">Resumo do período/);
+  assert.match(html, /id="adminQuickTitle">Pessoas e comunicação/);
+  assert.match(html, /id="adminOperationsTitle">Segurança, histórico e acessos/);
+  assert.match(css, /\.admin-dashboard-section\{margin-bottom:18px\}/);
+  assert.match(css, /\.admin-operation-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css, /@media\(max-width:820px\).*\.admin-insight-grid,.admin-support-grid,.admin-operation-grid\{grid-template-columns:1fr\}/s);
+});

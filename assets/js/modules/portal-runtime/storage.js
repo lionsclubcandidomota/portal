@@ -1,6 +1,6 @@
-import { createPortalEnvelope, migratePortalPayload } from '../../core/portal-schema.js?v=6.49.1';
-import { RUNTIME_STORAGE_KEYS } from './constants.js?v=6.49.1';
-import { normalizePendingChanges } from './domain.js?v=6.49.1';
+import { createPortalEnvelope, migratePortalPayload } from '../../core/portal-schema.js?v=6.52.0';
+import { RUNTIME_STORAGE_KEYS } from './constants.js?v=6.52.0';
+import { normalizePendingChanges } from './domain.js?v=6.52.0';
 
 function readJson(storage, key) {
   try {

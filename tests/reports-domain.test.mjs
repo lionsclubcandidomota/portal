@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildReport, dateRangeOverlaps, monthRange } from '../assets/js/modules/reports/domain.js';
-import { reportCsv } from '../assets/js/modules/reports/controller.js';
+import { reportCsv, reportHtml } from '../assets/js/modules/reports/controller.js';
 
 const state = {
   settings: { clubName: 'Clube Teste' },
@@ -148,4 +148,58 @@ test('relatório de mútuas permanece vazio quando não há falecimento', () => 
   }, options);
   assert.equal(report.rows.length, 0);
   assert.equal(report.summary.find(item => item.label === 'Cobranças').value, '0');
+});
+
+
+test('relatório de mensalidades distingue parcial, pendente financeiro e saldo anterior', () => {
+  const partialState = {
+    ...state,
+    settings: { clubName: 'Clube Teste', membershipMonthlyFee: 40 },
+    birthdays: [{ id: 'm1', name: 'Ana', memberNumber: '10', birthDate: '1990-07-15', active: true, membershipOpeningDebt: 100 }],
+    treasury: [{
+      id: 't-partial',
+      date: '2026-07-13',
+      paymentDate: '2026-07-13',
+      category: 'Mensalidades',
+      entry: 35,
+      memberId: 'm1',
+      memberIds: ['m1'],
+      coveredMonths: ['2026-07'],
+      memberAllocations: [{
+        memberId: 'm1',
+        amount: 15,
+        months: ['2026-07'],
+        monthAllocations: [{ month: '2026-07', amount: 15, expectedAmount: 40 }]
+      }],
+      membershipOpeningDebtAllocations: [{ memberId: 'm1', amount: 20 }],
+      status: 'Recebido'
+    }]
+  };
+  const report = buildReport('memberships', partialState, options);
+  assert.equal(report.rows[0].at(-1), 'Parcial');
+  assert.equal(report.rows[0][7], 'R$ 25,00');
+  assert.equal(report.rows[0][8], 'R$ 80,00');
+  assert.equal(report.summary.find(item => item.label === 'Parciais').value, '1');
+  assert.equal(report.summary.find(item => item.label === 'Valor pendente').value, 'R$ 25,00');
+  assert.equal(report.insights.find(item => item.label === 'Saldo anterior em aberto').value, 'R$ 80,00');
+  assert.match(report.note, /não compõe o valor pendente/i);
+});
+
+test('visual do relatório expõe resumo executivo, leitura rápida e detalhamento responsivo', () => {
+  const report = buildReport('movements', state, options);
+  const html = reportHtml(report);
+  assert.match(html, /Resumo executivo/);
+  assert.match(html, /Leitura rápida/);
+  assert.match(html, /Detalhamento das movimentações/);
+  assert.match(html, /data-label=/);
+  assert.match(html, /@media\(max-width:720px\)/);
+  assert.match(html, /Imprimir \/ salvar em PDF/);
+});
+
+test('CSV moderno inclui resumo e leitura rápida antes do detalhamento', () => {
+  const csv = reportCsv(buildReport('movements', state, options));
+  assert.match(csv, /"Resumo executivo"/);
+  assert.match(csv, /"Leitura rápida"/);
+  assert.match(csv, /"Resultado do período"/);
+  assert.match(csv, /"Data";"Descrição";"Categoria"/);
 });

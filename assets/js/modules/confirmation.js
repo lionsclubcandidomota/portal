@@ -1,5 +1,5 @@
-import { createDialogFocusManager } from './dialog-focus.js?v=6.49.1';
-import { uiIcon } from './visual-helpers.js?v=6.49.1';
+import { createDialogFocusManager } from './dialog-focus.js?v=6.52.0';
+import { uiIcon } from './visual-helpers.js?v=6.52.0';
 
 function buttonClass(tone, fallback = 'btn-danger') {
   if (tone === 'primary') return 'btn-primary';

@@ -1,4 +1,4 @@
-import { isTreasuryTransfer } from './movement-domain.js?v=6.49.1';
+import { isTreasuryTransfer } from './movement-domain.js?v=6.52.0';
 
 export const DEFAULT_ACCOUNTS = Object.freeze([
   { id: 'acc-current', name: 'Conta corrente', type: 'Conta corrente', initialBalance: 0, active: true, membershipDefault: true },

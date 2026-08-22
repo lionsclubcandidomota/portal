@@ -1,3 +1,34 @@
+## v6.52.0 — Refinamento visual global e consolidação do tema — 22/08/2026
+
+- estende a linguagem visual da Área Administrativa aos componentes compartilhados do Portal com superfícies, bordas, sombras e cabeçalhos semânticos;
+- adiciona tokens de elevação para reduzir cores/sombras fixas e melhorar a consistência entre Claro e Escuro;
+- corrige a Agenda da Home no modo visitante, incluindo superfície, chips, ícones e estados de compromissos;
+- refatora a Central de Sincronização/Publicação para remover superfícies brancas fixas e camadas redundantes, preservando pendências, publicação, conclusão, erro e minimização;
+- reduz a cascata de 4.694 para 4.638 regras, 338 para 330 seletores redefinidos e 422 para 410 sobrescritas;
+- reduz o bundle CSS de 443.868 para 439.909 bytes sem ampliar o orçamento de 444 KB;
+- adiciona regressões específicas para Agenda visitante e sincronização no modo escuro;
+- preserva regras funcionais, esquema 12, `data/dados.json` e `data/modelo.json` inalterados.
+
+## v6.51.0 — Refinamento visual da Área Administrativa — 22/08/2026
+
+- reorganiza o painel administrativo por finalidade: Visão geral, Gestão rápida, Relatórios e Administração;
+- melhora cabeçalho, filtro de período, cards gerenciais, atalhos e operações de segurança sem alterar regras de negócio;
+- compacta os resumos de Finanças/Agenda e melhora a distribuição de Backup, Histórico e Acessos;
+- preserva Claro/Escuro, permissões, relatórios, filtros e fluxos de publicação existentes;
+- adiciona regressão visual estrutural e mantém o orçamento CSS de 444 KB;
+- preserva `data/dados.json` e `data/modelo.json` inalterados.
+
+## v6.50.0 — Relatórios gerenciais modernizados — 22/08/2026
+
+- transforma a área de exportação da Administração em uma **Central de relatórios** com seis opções visuais e explicação do conteúdo;
+- padroniza os relatórios em Resumo executivo, Leitura rápida e Detalhamento;
+- moderniza os relatórios de Movimentações, Mensalidades, Mútuas, Aniversariantes, Agenda e Avisos com indicadores específicos para cada domínio;
+- atualiza Mensalidades para respeitar valores históricos, pagamentos parciais, saldo pendente e saldo anterior separado;
+- melhora a saída para impressão/PDF e o CSV, mantendo o período administrativo como única fonte de verdade;
+- separa catálogo e cálculo de mensalidades em módulos próprios para conter crescimento do domínio de relatórios;
+- adiciona regressões de conteúdo, HTML responsivo, CSV e catálogo visual;
+- recalibra de forma controlada o orçamento CSS para 444 KB e preserva `data/dados.json` e `data/modelo.json` inalterados.
+
 ## v6.49.1 — Conta padrão para recebimento de mensalidades — 22/08/2026
 
 - adiciona a configuração **Conta padrão para receber mensalidades** no gerenciamento de contas da Tesouraria;

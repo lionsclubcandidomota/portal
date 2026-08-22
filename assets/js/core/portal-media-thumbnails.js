@@ -1,7 +1,7 @@
 import {
   MEMBER_PHOTO_THUMBNAIL_WIDTHS,
   memberPhotoThumbnailAssetPath
-} from './member-photo-sources.js?v=6.49.1';
+} from './member-photo-sources.js?v=6.52.0';
 
 function assetDataUrl(asset) {
   return `data:${asset.contentType || 'image/jpeg'};base64,${String(asset.content || '').replace(/\s+/g, '')}`;

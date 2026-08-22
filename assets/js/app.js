@@ -1,6 +1,6 @@
-import { bootstrapPortal } from './modules/portal-app.js?v=6.49.1';
-import { enableHomologationReload } from './core/homologation-reload.js?v=6.49.1';
-import { uiIcon } from './modules/visual-helpers.js?v=6.49.1';
+import { bootstrapPortal } from './modules/portal-app.js?v=6.52.0';
+import { enableHomologationReload } from './core/homologation-reload.js?v=6.52.0';
+import { uiIcon } from './modules/visual-helpers.js?v=6.52.0';
 
 
 const PORTAL_THEME_KEY = 'lions.portal.theme';

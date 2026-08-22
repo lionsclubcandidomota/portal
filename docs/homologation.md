@@ -1,7 +1,52 @@
-# Homologação — v6.49.1
+# Homologação — v6.52.0
 
-> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.49.1.
+> Procedimento de validação funcional e visual do refinamento global do Portal 6.52.0.
 
+## Refinamento visual global — versão 6.52.0
+
+1. Acesse **Início** como visitante em Claro e Escuro e confirme que o bloco **Agenda** usa a superfície do tema, sem fundo/gradiente branco residual.
+2. Confira compromissos de Evento e Reunião na Home: ícones, chips, borda lateral, textos secundários e estados passados devem permanecer legíveis nos dois temas.
+3. Acesse como Administrador e abra o **Painel de Sincronização/Publicação** no cabeçalho; valide cabeçalho, status, progresso, etapas, revisão e ações em Claro e Escuro.
+4. No Painel de Sincronização, confira separadamente os estados **sem pendências**, **pendente**, **publicando**, **concluído** e **erro**, sem superfícies claras fixas ou textos de baixo contraste.
+5. Percorra Início, Aniversariantes, Dirigentes, Tesouraria, Agenda, Avisos, Área Administrativa e Ajustes, conferindo consistência de cards, cabeçalhos, tabelas, botões secundários, foco e hover.
+6. Valide os mesmos fluxos em **1366, 1024, 768, 390 e 360 px**, confirmando ausência de corte, sobreposição e rolagem horizontal indevida.
+7. Repita a verificação no tema **Claro** para assegurar que a consolidação por tokens não escureceu componentes que devem permanecer claros.
+8. Execute `npm run audit:lazy`, `npm run audit:css` e `npm run release:check`, confirmando também a preservação byte a byte de `data/dados.json` e `data/modelo.json`.
+
+## Histórico — v6.51.0
+
+> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.51.0.
+
+
+
+## Área Administrativa — versão 6.51.0
+
+1. Acesse **Área administrativa** em 1366 px e confirme a sequência visual **Visão geral → Gestão rápida → Central de relatórios → Administração**.
+2. Valide o filtro de período em Este mês, Mês anterior, Trimestre, Ano, Todo o período e Personalizado; os dados devem continuar usando uma única referência.
+3. Confira Finanças, Eventos e Reuniões: cards alinhados, sem alturas excessivas, acentos semânticos visíveis e botões sem sobreposição.
+4. Confira Pessoas e Avisos como atalhos compactos e confirme que Adicionar/Ver continuam acionando os fluxos existentes.
+5. Valide a Central de relatórios com as seis opções e confirme que a seleção, Abrir relatório e Baixar CSV permanecem funcionais.
+6. Confira **Backup e recuperação**, **Histórico de alterações** e **Usuários e cargos**; em desktop, Backup ocupa a faixa superior e os demais cards ficam lado a lado.
+7. Repita a homologação em **1024, 768, 390 e 360 px**, garantindo empilhamento sem rolagem horizontal ou cortes.
+8. Repita em **Claro e Escuro**, verificando contraste, bordas, estados de foco e superfícies.
+9. Teste também acesso de Diretoria/Usuário para confirmar que avisos de somente leitura e permissões continuam íntegros.
+10. Execute `npm run release:check` e confirme os hashes de `data/dados.json` e `data/modelo.json`.
+
+## Central de relatórios — versão 6.50.0
+
+1. Em **Área administrativa → Relatórios**, confirme as seis opções visuais: Movimentações financeiras, Mensalidades, Mútuas, Aniversariantes, Agenda e Avisos.
+2. Alterne entre as opções e confirme que título, grupo, descrição e dica do relatório selecionado são atualizados sem alterar o período administrativo.
+3. Confirme a experiência nos temas **Claro e Escuro** em **360, 390, 768, 1024 e 1366 px**, sem corte, sobreposição ou rolagem horizontal indevida.
+4. Em **Movimentações financeiras**, valide saldo/resultado, entradas, saídas, maiores movimentos e categoria de destaque; compare os totais com o resumo administrativo do mesmo período.
+5. Em **Mensalidades**, use um intervalo com competências Quitadas, Parciais e Em aberto e confirme Previsto, Total recebido, Valor pendente e Saldo anterior separado; reajustes posteriores não podem alterar valores históricos.
+6. Em **Mútuas**, valide Falecimentos, Cobranças, Pagas, Em aberto, Previsto, Recebido, Pendente, taxa de cobertura e grupo de maior movimento.
+7. Em **Aniversariantes**, valide total, ativos, concentração por mês e primeira data do intervalo.
+8. Em **Agenda**, valide Eventos/Reuniões, situações, formato e próximo compromisso dentro do período.
+9. Em **Avisos**, valide total, prioridades, registros sem data final e detalhamento de vigência.
+10. Clique **Abrir relatório** em cada tipo e confirme a sequência **Resumo executivo → Leitura rápida → Detalhamento**, além do botão **Imprimir / salvar em PDF** e do comportamento responsivo da tabela.
+11. Baixe o **CSV** de cada relatório e confirme metadados, Resumo executivo, Leitura rápida e depois cabeçalhos/linhas de detalhamento.
+12. Repita uma exportação em acesso de Diretoria e confirme que as permissões atuais de leitura/exportação permanecem intactas.
+13. Execute `npm run release:check` e confirme que `data/dados.json` e `data/modelo.json` permanecem byte a byte inalterados.
 
 ## Conta padrão para mensalidades — versão 6.49.1
 

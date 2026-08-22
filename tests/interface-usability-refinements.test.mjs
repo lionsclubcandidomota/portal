@@ -139,13 +139,14 @@ test('Dashboard administrativo resume Mútuas em cards compactos e responsivos',
 });
 
 test('relatórios administrativos oferecem Mútuas para visualização e exportação', async () => {
-  const [view, domain] = await Promise.all([
+  const [view, domain, catalog] = await Promise.all([
     source('assets/js/modules/admin-dashboard/view.js'),
-    source('assets/js/modules/reports/domain.js')
+    source('assets/js/modules/reports/domain.js'),
+    source('assets/js/modules/reports/catalog.js')
   ]);
 
   assert.match(view, /<option value="mutuals">Mútuas<\/option>/);
-  assert.match(domain, /mutuals:\s*Object\.freeze/);
+  assert.match(catalog, /mutuals:\s*Object\.freeze/);
   assert.match(domain, /buildMutualReport/);
   assert.match(domain, /mutuals:\s*\(\) => buildMutualReport/);
 });

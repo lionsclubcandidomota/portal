@@ -1,6 +1,6 @@
 import { accountBalanceChart } from './account-balance-chart.js';
 import { escapeHtml, money, parseLocalDate } from '../../utils.js';
-import { renderHtmlIfChanged } from '../visual-helpers.js?v=6.49.1';
+import { renderHtmlIfChanged } from '../visual-helpers.js?v=6.52.0';
 
 const CHART_COLORS = Object.freeze({
   entry: '#0f766e',
