@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-22T01:11:58.456Z",
-  "deploymentId": "1787361118455-e6e417a7-7ff0-449f-8fe0-bf7f8430606b",
+  "updatedAt": "2026-08-22T01:47:50.381Z",
+  "deploymentId": "1787363270381-a887a6b4-a6e8-4ce5-a528-93122e0dfdb7",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -341,7 +341,7 @@
         "id": "acc-investment",
         "name": "SicoobCrediceripa - AP",
         "type": "Aplicação",
-        "initialBalance": 0,
+        "initialBalance": 5192.24,
         "active": true
       },
       {
@@ -368,6 +368,7 @@
       "Aplicação",
       "Associação Internacional de Lions Clubes",
       "Camisetas",
+      "Rendimentos bancários",
       "Saldo Inicial",
       "Transferência entre contas"
     ],
@@ -3749,20 +3750,6 @@
         "entry": 3185.31,
         "exit": 0,
         "transferRole": "destination",
-        "attachments": []
-      },
-      {
-        "id": "t_msyverd5_1gadzm",
-        "movementKind": "entry",
-        "date": "2026-08-17",
-        "accountId": "acc-investment",
-        "category": "Aplicação",
-        "description": "Saldo da Aplicação",
-        "amount": 5198.61,
-        "notes": "",
-        "entry": 5198.61,
-        "exit": 0,
-        "status": "Recebido",
         "attachments": []
       }
     ],
