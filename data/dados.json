@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-21T23:32:26.862Z",
-  "deploymentId": "1787355146861-eade1cc3-4738-4b71-acf3-ebdb8d92e016",
+  "updatedAt": "2026-08-22T01:11:58.456Z",
+  "deploymentId": "1787361118455-e6e417a7-7ff0-449f-8fe0-bf7f8430606b",
   "app": "Lions Clube de Cândido Mota Dashboard",
   "schemaVersion": 12,
   "version": 12,
@@ -14,6 +14,7 @@
       "membershipMonthlyFee": 40,
       "membershipFamilyPrimaryFee": 40,
       "membershipFamilyAdditionalFee": 15,
+      "membershipFeeHistory": [],
       "accessProfiles": {
         "director": {
           "version": 2,
@@ -3507,18 +3508,6 @@
         "attachments": []
       },
       {
-        "id": "t_msyverd5_1gadzm",
-        "date": "2026-08-17",
-        "accountId": "acc-investment",
-        "category": "Aplicação",
-        "description": "Saldo da Aplicação",
-        "entry": 5192.24,
-        "exit": 0,
-        "notes": "",
-        "status": "Recebido",
-        "attachments": []
-      },
-      {
         "id": "t_mskga6d2_rv2xu7",
         "movementKind": "exit",
         "date": "2026-08-21",
@@ -3760,6 +3749,20 @@
         "entry": 3185.31,
         "exit": 0,
         "transferRole": "destination",
+        "attachments": []
+      },
+      {
+        "id": "t_msyverd5_1gadzm",
+        "movementKind": "entry",
+        "date": "2026-08-17",
+        "accountId": "acc-investment",
+        "category": "Aplicação",
+        "description": "Saldo da Aplicação",
+        "amount": 5198.61,
+        "notes": "",
+        "entry": 5198.61,
+        "exit": 0,
+        "status": "Recebido",
         "attachments": []
       }
     ],
