@@ -8,7 +8,7 @@ export function createLazyPublishCenterController(options) {
 
   async function load() {
     if (!controllerPromise) {
-      controllerPromise = import('./publish-center.js?v=6.46.7')
+      controllerPromise = import('./publish-center.js?v=6.46.13')
         .then(module => module.createPublishCenterController(options))
         .then(instance => {
           controller = instance;

@@ -6,7 +6,7 @@ import {
 } from '../utils.js';
 import { markdownToHtml } from './markdown.js';
 import { timelineHeading, todayStart } from './timeline.js';
-import { renderHtmlIfChanged } from './visual-helpers.js?v=6.46.7';
+import { renderHtmlIfChanged } from './visual-helpers.js?v=6.46.13';
 
 export function noticeIsExpired(notice, reference = new Date()) {
   if (!notice?.endDate) return false;

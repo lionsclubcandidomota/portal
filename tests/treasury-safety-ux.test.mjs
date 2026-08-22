@@ -82,6 +82,7 @@ test('baixa de mensalidade oferece rateio por valor e cobrança usa somente sald
 
   assert.match(paymentSource, /value="allocate">Ratear um valor recebido/);
   assert.match(paymentSource, /allocateMembershipPayment/);
-  assert.match(paymentSource, /Selecionar pendentes/);
+  assert.doesNotMatch(paymentSource, /Selecionar pendentes|membershipSelectPending/);
+  assert.match(paymentSource, /membership-payment-months-section/);
   assert.match(sharingSource, /membershipOutstandingForMonth/);
 });

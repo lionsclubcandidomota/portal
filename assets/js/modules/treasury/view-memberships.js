@@ -39,6 +39,7 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
   const {
     currentMembershipMonth,
     membershipStart,
+    membershipEnd,
     membershipExpanded
   } = membershipModel;
   const {
@@ -46,6 +47,7 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
     openFamilyGroupsManager,
     openMembershipPayment,
     openMembershipOpeningDebt,
+    openMembershipStatement,
     shareMembershipCharge
   } = helpers;
   const membershipStartInput = root.querySelector('#membershipStart');
@@ -153,6 +155,17 @@ export function bindMembershipSection({ root, treasury, helpers, membershipModel
         .filter(Boolean);
       closeMembershipActionMenus(root);
       shareMembershipCharge(button.dataset.membershipCharge, months, periodMonths);
+    });
+  });
+
+  root.querySelectorAll('[data-membership-statement]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      closeMembershipActionMenus(root);
+      openMembershipStatement(button.dataset.membershipStatement, {
+        start: membershipStart,
+        end: membershipEnd
+      });
     });
   });
 

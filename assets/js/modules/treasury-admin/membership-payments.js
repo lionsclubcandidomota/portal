@@ -1,6 +1,6 @@
 import { escapeHtml, formatDate, money, toInputDate, uid } from '../../utils.js';
 import { allocateMembershipPayment } from './domain.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.7';
+import { uiIcon } from '../visual-helpers.js?v=6.46.13';
 
 export function createMembershipPaymentManager(context, memberSelectorCard) {
   const {
@@ -27,18 +27,20 @@ export function createMembershipPaymentManager(context, memberSelectorCard) {
         .map(id => currentState.birthdays.find(item => item.id === id))
         .filter(item => item && treasury.memberIsActive(item))
       : [member].filter(treasury.memberIsActive);
-    const individualFee = treasury.membershipFee();
-    const familyPrimary = treasury.membershipFamilyPrimaryFee();
-    const familyAdditional = treasury.membershipFamilyAdditionalFee();
     const groupPrimaryId = group?.primaryMemberId || groupMembers[0]?.id || member.id;
     const today = toInputDate(new Date());
     const defaultReference = /^\d{4}-\d{2}$/.test(referenceMonth || '') ? referenceMonth : today.slice(0, 7);
+    const individualFee = treasury.membershipFeeForMonth(defaultReference);
+    const familyPrimary = treasury.membershipFamilyPrimaryFeeForMonth(defaultReference);
+    const familyAdditional = treasury.membershipFamilyAdditionalFeeForMonth(defaultReference);
     const referenceYear = Number(defaultReference.slice(0, 4));
     const initialIds = groupMembers.map(item => item.id);
     const storedNotes = group ? String(group.notes || '') : String(member.membershipNotes || '');
     const openingDebtOutstanding = treasury.membershipOpeningDebtOutstanding(member.id);
 
-    const expectedFor = id => treasury.membershipExpectedAmountForMember(id);
+    const expectedFor = (id, month = '') => month
+      ? treasury.membershipExpectedAmountForMemberMonth(id, month)
+      : treasury.membershipExpectedAmountForMember(id);
     const monthState = (ids, month) => {
       const activeIds = ids.length ? ids : initialIds;
       const paidCount = activeIds.filter(id => treasury.monthIsPaid(id, month)).length;
@@ -72,15 +74,15 @@ export function createMembershipPaymentManager(context, memberSelectorCard) {
 
     modalBody.innerHTML = `<form id="membershipPaymentForm" class="admin-entity-form membership-payment-form-v2">
       <section class="membership-payment-hero"><div class="membership-payment-person">${avatar(member)}<div><strong>${escapeHtml(member.name)}</strong><small>${member.memberNumber ? `Nº ${escapeHtml(member.memberNumber)}` : 'Sem número informado'}</small>${group ? `<span class="membership-family-chip">${uiIcon('family')} ${escapeHtml(group.name)}</span>` : ''}</div></div><div class="membership-fee-highlight"><small>${group ? 'Plano familiar' : 'Mensalidade individual'}</small><strong>${group ? `${money.format(familyPrimary)} + ${money.format(familyAdditional)}` : money.format(individualFee)}</strong>${group ? '<small>Titular + adicional por integrante</small>' : ''}</div></section>
-      <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('family')}</span><div><h3>Associados incluídos</h3><p>${group ? `O grupo ${escapeHtml(group.name)} foi selecionado automaticamente. Ajuste se necessário.` : 'Confirme o associado que receberá a baixa.'}</p></div></div>
-        <div class="family-member-options family-member-options-v2 membership-payment-members">${groupMembers.map(item => memberSelectorCard(item, { checked: true })).join('')}</div>
+      <section class="admin-form-section membership-payment-section membership-payment-members-section"><div class="admin-form-section-heading"><span>${uiIcon('family')}</span><div><h3>Associados incluídos</h3><p>${group ? `O grupo ${escapeHtml(group.name)} foi selecionado automaticamente. Ajuste se necessário.` : 'Confirme o associado que receberá a baixa.'}</p></div></div>
+        <div class="membership-payment-section-body"><div class="family-member-options family-member-options-v2 membership-payment-members">${groupMembers.map(item => memberSelectorCard(item, { checked: true })).join('')}</div></div>
       </section>
-      ${openingDebtOutstanding > 0.005 ? `<section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('history')}</span><div><h3>Saldo anterior</h3><p>Este associado possui débito anterior ao início do controle. Se marcado, o recebimento abate este saldo antes das competências mensais.</p></div></div><label class="member-selector-card"><input type="checkbox" name="includeOpeningDebt" value="${escapeHtml(member.id)}" checked><span class="member-selector-copy"><strong>Abater saldo anterior</strong><small>Saldo em aberto</small><span class="membership-family-chip sensitive-money">${escapeHtml(money.format(openingDebtOutstanding))}</span></span><span class="member-selector-check" aria-hidden="true">${uiIcon('check')}</span></label></section>` : ''}
-      <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('calendar')}</span><div><h3>Mensalidades em aberto</h3><p>Selecione as competências que poderão receber o pagamento. Meses parcialmente pagos continuam disponíveis até a quitação.</p></div></div>
-        <div class="month-selection-toolbar"><label><span>Ano de referência</span><select id="membershipReferenceYear">${Array.from({ length: 7 }, (_, index) => referenceYear - 5 + index).map(year => `<option value="${year}" ${year === referenceYear ? 'selected' : ''}>${year}</option>`).join('')}</select></label><button class="btn btn-ghost btn-sm" id="membershipSelectPending" type="button">Selecionar pendentes</button><span id="selectedMonthsCount" class="selected-count" aria-live="polite">0 meses selecionados</span></div>
-        <div class="month-selection-grid" id="membershipMonthsGrid">${monthChecks}</div>
+      ${openingDebtOutstanding > 0.005 ? `<section class="admin-form-section membership-payment-section membership-payment-opening-section"><div class="admin-form-section-heading"><span>${uiIcon('history')}</span><div><h3>Saldo anterior</h3><p>Este associado possui débito anterior ao início do controle. Se marcado, o recebimento abate este saldo antes das competências mensais.</p></div></div><div class="membership-payment-section-body"><label class="member-selector-card membership-opening-debt-card"><input type="checkbox" name="includeOpeningDebt" value="${escapeHtml(member.id)}" checked><span class="member-selector-copy"><strong>Abater saldo anterior</strong><small>Saldo em aberto</small><span class="membership-family-chip sensitive-money">${escapeHtml(money.format(openingDebtOutstanding))}</span></span><span class="member-selector-check" aria-hidden="true">${uiIcon('check')}</span></label></div></section>` : ''}
+      <section class="admin-form-section membership-payment-section membership-payment-months-section"><div class="admin-form-section-heading"><span>${uiIcon('calendar')}</span><div><h3>Mensalidades em aberto</h3><p>Selecione as competências que poderão receber o pagamento. Meses parcialmente pagos continuam disponíveis até a quitação.</p></div></div>
+        <div class="membership-payment-section-body membership-months-body"><div class="month-selection-toolbar"><label><span>Ano de referência</span><select id="membershipReferenceYear">${Array.from({ length: 7 }, (_, index) => referenceYear - 5 + index).map(year => `<option value="${year}" ${year === referenceYear ? 'selected' : ''}>${year}</option>`).join('')}</select></label><span id="selectedMonthsCount" class="selected-count" aria-live="polite">0 meses selecionados</span></div>
+        <div class="month-selection-grid" id="membershipMonthsGrid">${monthChecks}</div></div>
       </section>
-      <section class="admin-form-section"><div class="admin-form-section-heading"><span>${uiIcon('receipt')}</span><div><h3>Detalhes do recebimento</h3><p>Você pode quitar integralmente as competências selecionadas ou informar um valor recebido para rateio.</p></div></div>
+      <section class="admin-form-section membership-payment-section membership-payment-details-section"><div class="admin-form-section-heading"><span>${uiIcon('receipt')}</span><div><h3>Detalhes do recebimento</h3><p>Você pode quitar integralmente as competências selecionadas ou informar um valor recebido para rateio.</p></div></div>
         <div class="form-grid admin-form-section-grid">
           <div class="form-field"><label>Forma da baixa</label><select name="paymentMode" id="membershipPaymentMode"><option value="settle">Quitar saldo das mensalidades selecionadas</option><option value="allocate">Ratear um valor recebido</option></select><small>No rateio, o valor é aplicado primeiro às competências mais antigas selecionadas.</small></div>
           <div class="form-field"><label>Data da baixa</label><input name="paymentDate" type="date" value="" autocomplete="off" required><small>Informe manualmente a data efetiva do recebimento.</small></div>
@@ -270,10 +272,6 @@ export function createMembershipPaymentManager(context, memberSelectorCard) {
 
     document.getElementById('membershipReferenceYear')
       .addEventListener('change', event => renderMonths(Number(event.target.value), false));
-    document.getElementById('membershipSelectPending')?.addEventListener('click', () => {
-      form.querySelectorAll('[name="coveredMonths"]:not(:disabled)').forEach(input => { input.checked = true; });
-      recalculate();
-    });
     form.querySelectorAll('[name="memberIds"]').forEach(input => { input.onchange = recalculate; });
     form.elements.includeOpeningDebt?.addEventListener('change', recalculate);
     form.querySelectorAll('[name="coveredMonths"]').forEach(input => { input.onchange = recalculate; });

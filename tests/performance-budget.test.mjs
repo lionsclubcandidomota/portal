@@ -53,8 +53,8 @@ test('orçamento de desempenho faz parte da validação oficial', async () => {
   assert.equal(packageJson.scripts['audit:media'], 'node tools/media-audit.mjs');
   assert.match(packageJson.scripts.quality, /audit:media/);
   assert.match(audit, /performanceBudgets as budgets/);
-  assert.equal(performanceBudgets.staticJavaScriptBytes, 315_000);
-  assert.equal(performanceBudgets.criticalAssetsBytes, 775_000);
+  assert.equal(performanceBudgets.staticJavaScriptBytes, 305_000);
+  assert.equal(performanceBudgets.criticalAssetsBytes, 765_000);
 });
 
 

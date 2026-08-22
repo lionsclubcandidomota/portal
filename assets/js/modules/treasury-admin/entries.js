@@ -1,7 +1,7 @@
 import { escapeHtml, normalize, uid } from '../../utils.js';
 import { normalizeTreasuryEntryPayload, resolveTreasuryEntryStatus, resolveTreasuryTransferStatus } from './domain.js';
 import { bindTreasuryAttachmentPicker, renderTreasuryAttachmentPicker } from './attachments.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.7';
+import { uiIcon } from '../visual-helpers.js?v=6.46.13';
 import {
   TRANSFER_CATEGORY,
   bindTreasuryMovementKindController,

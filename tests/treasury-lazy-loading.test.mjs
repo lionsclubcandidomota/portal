@@ -131,9 +131,27 @@ test('controlador da Tesouraria é criado somente no primeiro acesso e preserva 
 
 test('Dashboard não considera mensalidade parcialmente paga como quitada', () => {
   const state = fixtureState();
-  state.treasury.find(item => item.id === 't-membership').entry = 40;
+  const payment = state.treasury.find(item => item.id === 't-membership');
+  const month = currentMonth();
+  payment.entry = 40;
+  payment.memberAllocations = [{
+    memberId: 'm1',
+    monthlyAmount: 100,
+    months: [month],
+    amount: 40,
+    monthAllocations: [{ month, amount: 40, expectedAmount: 100, previouslyPaid: 0, outstandingBefore: 100, remainingAfter: 60 }]
+  }];
   const summary = buildTreasuryDashboardSummary(state);
 
   assert.equal(summary.membershipPaidCount, 0);
   assert.equal(summary.membershipTotal, 40);
+});
+
+test('Dashboard mantém competência quitada após reajuste da mensalidade', () => {
+  const state = fixtureState();
+  state.settings.membershipMonthlyFee = 150;
+  const summary = buildTreasuryDashboardSummary(state);
+
+  assert.equal(summary.membershipPaidCount, 1);
+  assert.equal(summary.membershipTotal, 100);
 });

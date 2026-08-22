@@ -1,3 +1,48 @@
+## v6.46.13 — Saldo devedor líquido do Extrato — 21/08/2026
+
+- corrige o Saldo devedor para incluir o saldo anterior ainda em aberto, além das competências em aberto do período;
+- desconta créditos/saldos positivos das competências antes de apresentar o saldo devedor líquido;
+- preserva o KPI Em aberto somente para as competências filtradas e mantém o Saldo anterior em bloco próprio;
+- adiciona regressão específica para a composição entre mensalidades em aberto, saldo anterior e crédito positivo.
+
+## v6.46.12 — Correção estrutural do Extrato de mensalidades — 21/08/2026
+
+- corrige os cards de competências que eram comprimidos/cortados dentro da área rolável do Extrato em desktop e mobile;
+- substitui a lista em CSS Grid por coluna flexível com itens não encolhíveis, preservando a altura real de cada competência;
+- estabiliza o modal do Extrato com rolagem exclusiva da lista, melhor aproveitamento de altura e layout mobile em tela cheia;
+- reorganiza os indicadores das competências no celular e mantém o saldo em largura total nas telas menores;
+- oculta o bloco “Nenhum pagamento registrado” nos meses sem pagamentos vinculados, reduzindo ruído visual;
+- preserva sem alteração as regras de vigência de mensalidades, saldo anterior, pagamentos parciais e filtro de período da v6.46.11.
+
+## v6.46.10 — Histórico de valores das mensalidades — 21/08/2026
+
+- impede que a alteração posterior dos valores de mensalidade reabra competências já quitadas como parciais;
+- usa o valor esperado registrado na própria baixa como referência histórica por associado e competência;
+- aplica a regra a mensalidade individual, Titular Familiar e Familiar Adicional;
+- preserva pagamentos parciais pelo valor esperado histórico, sem transformá-los em quitação indevida;
+- mantém o valor vigente para competências ainda sem histórico de pagamento;
+- trata registros legados de competências já baixadas como valores consolidados, sem migração dos arquivos oficiais;
+- mantém Mensalidades, Extrato individual, baixa e Dashboard coerentes com a mesma regra;
+- adiciona regressões para reajuste após quitação, mensalidade familiar, registro legado e pagamento parcial.
+
+## v6.46.9 — Baixa de mensalidade — 21/08/2026
+
+- remove o botão “Selecionar pendentes” do modal de baixa de mensalidade e elimina o listener correspondente;
+- reorganiza internamente os blocos do formulário para dar respiro consistente a associados, saldo anterior e competências;
+- amplia o modal no desktop para reduzir altura e melhorar a leitura dos campos;
+- refina a seleção mensal com contador alinhado, estados Parcial/Pago mais claros e melhor distribuição responsiva;
+- preserva rateio, saldo anterior, pagamentos parciais, baixa familiar/individual e dados oficiais sem migração.
+
+## v6.46.8 — Extrato de mensalidades por período — 21/08/2026
+
+- corrige o Extrato de mensalidades para usar exatamente o intervalo selecionado na tela de Mensalidades, sem ampliar automaticamente até o mês atual ou por competências encontradas em pagamentos;
+- mantém pagamentos e saldo anterior em bloco próprio, fora dos KPIs mensais do período filtrado;
+- preserva pagamentos parciais, créditos e competências quitadas somente dentro do intervalo selecionado;
+- adiciona regressão específica para impedir que competências fora do período retornem ao extrato;
+- reforça a diferenciação visual de Parcial em azul na tela de Mensalidades e regenera o bundle CSS distribuído;
+- reorganiza visualmente o extrato com período explícito, KPIs mais legíveis, saldo anterior mais compacto e pagamentos vinculados responsivos;
+- preserva `data/dados.json`, `data/modelo.json` e o esquema 12 sem migração.
+
 ## Ajuste financeiro — rateio de mensalidades e refinamento mobile — 21/08/2026
 
 - Reduz o destaque visual do saldo ao fim do dia nos cards de Movimentações no celular, preservando a informação como indicador secundário.
@@ -67,6 +112,17 @@
 - publica apenas os arquivos estáticos necessários (`index.html`, `assets`, `data` e `public`) no artefato do Pages.
 
 # Changelog
+
+## v6.46.11 — Vigência histórica de mensalidades — 21/08/2026
+
+- reajustes dos valores Individual, Titular Familiar e Familiar Adicional passam a valer somente no mês seguinte ao salvamento;
+- competências anteriores ao início da nova vigência preservam o valor antigo mesmo quando continuam em aberto;
+- competências já quitadas e parcialmente pagas continuam usando o valor esperado histórico já registrado;
+- bases vindas da v6.46.10 podem recuperar retroativos sem histórico explícito usando os snapshots de pagamentos detalhados já existentes;
+- Dashboard, Mensalidades, baixa e Extrato passam a consultar a mesma regra de valor por competência;
+- o modal de baixa exibe os valores correspondentes ao mês de referência escolhido, evitando usar indevidamente o reajuste futuro;
+- o Extrato recebe cards de competências mais estáveis, com melhor espaçamento, bordas e fundos por status e comportamento responsivo revisado;
+- não há alteração do esquema 12 nem modificação dos arquivos oficiais `data/dados.json` e `data/modelo.json`.
 
 ## Ajustes de layout — 11/08/2026
 
@@ -381,3 +437,8 @@
 - Formaliza os status de transferência: Efetivado para operações concluídas, Programado para futuras e Vencida quando uma programação passa da data.
 - Mantém transferências neutras no resultado geral do clube e ativas apenas nos saldos atual/projetado das contas envolvidas.
 - Amplia a suíte para 374 regressões sem alterar o esquema 12 nem os arquivos oficiais de dados.
+
+## Complemento visual — 2026-08-21
+
+- Ajustado o layout do extrato de mensalidades, compactando os blocos de saldo anterior e pagamentos vinculados.
+- Reforçada a diferenciação visual entre os status Quitado, Pendente e Parcial na listagem de mensalidades e no extrato.

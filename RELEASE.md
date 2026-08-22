@@ -1,18 +1,50 @@
-# Portal Lions v6.46.7
+# Portal Lions v6.46.13
 
-> Versão de consolidação do ciclo 6.46.x e ponto de partida para a refatoração técnica incremental do Portal.
+> Correção do saldo devedor líquido no Extrato de mensalidades sobre a estabilização do pacote, sem migração dos arquivos oficiais.
 
 ## Objetivo
 
-A versão 6.46.7 sincroniza a identificação do pacote com o código efetivamente distribuído e restabelece uma base de release verificável antes das próximas refatorações. Ela preserva a **estabilização do pacote** iniciada na v6.46.5, sem reabrir regras funcionais já consolidadas.
+A versão 6.46.13 é uma evolução incremental sobre a **estabilização do pacote** e sobre a v6.46.12. Corrige o cálculo do Saldo devedor do Extrato de mensalidades para considerar também o saldo anterior ainda em aberto e descontar créditos positivos do período selecionado, preservando a apresentação separada dos componentes.
 
-- sincroniza `package.json`, cache-busters `?v=`, CSS gerado e documentação para **6.46.7**;
-- regenera `release-manifest.json` a partir do conteúdo real do pacote;
+
+- corrige o **Saldo devedor** para somar o valor em aberto das competências com o **saldo anterior ainda em aberto**;
+- desconta do saldo devedor líquido qualquer **Saldo positivo/Crédito** apurado nas competências do período selecionado;
+- mantém o KPI **Em aberto** restrito às competências filtradas e o bloco **Saldo anterior** apresentado separadamente, evitando duplicidade visual;
+- adiciona regressão específica para a fórmula `mensalidades em aberto + saldo anterior em aberto - crédito`;
+
+- corrige a causa do corte vertical dos cards do Extrato: a lista deixa de usar Grid com linhas redimensionáveis dentro de `max-height` e passa a usar coluna flexível com cada competência impedida de encolher;
+- transforma o modal do Extrato em uma composição flexível com cabeçalho e rodapé estáveis e rolagem exclusiva da lista de competências;
+- mantém altura mínima real dos cards e dos indicadores internos em desktop e tablet;
+- no mobile, usa modal em tela cheia nas larguras menores, KPIs responsivos e valores da competência em duas colunas, com o saldo ocupando a largura inteira;
+- remove o bloco visual “Nenhum pagamento registrado” das competências sem pagamento, mantendo “Pagamentos vinculados” apenas quando existe lançamento para mostrar;
+- preserva integralmente as regras financeiras, o histórico de vigência e os filtros de período da v6.46.11;
+- registra automaticamente o histórico de reajustes dos três valores de mensalidade, com vigência no mês seguinte ao salvamento;
+- mantém competências retroativas ainda em aberto no valor vigente antes do reajuste;
+- aplica a regra a mensalidade individual, Titular Familiar e Familiar Adicional;
+- mantém pagamentos futuros usando o valor correspondente à competência selecionada, inclusive no modal de baixa;
+- oferece compatibilidade com bases da v6.46.10 sem histórico explícito, inferindo o valor anterior a partir dos snapshots de pagamentos já existentes;
+- sincroniza Dashboard, Mensalidades, baixa, cobrança e Extrato com a mesma resolução histórica por competência;
+- refina os cards do Extrato com altura estável, melhor separação visual, estados Quitada/Parcial/Em aberto mais claros e rolagem responsiva;
+- preserva o valor esperado histórico de cada competência quando já existe pagamento vinculado;
+- impede que reajustes posteriores reabram como Parcial uma competência anteriormente quitada;
+- aplica a mesma regra a mensalidade individual, Titular Familiar e Familiar Adicional;
+- mantém competências parcialmente pagas com o valor esperado registrado no momento da baixa;
+- competências sem histórico de pagamento continuam usando o valor vigente configurado;
+- registros legados sem detalhamento de rateio usam a alocação já recebida como referência histórica de quitação;
+- sincroniza Mensalidades, modal de baixa, Extrato individual e resumo do Dashboard com a mesma regra histórica;
+- adiciona regressões específicas para reajuste após quitação e para preservação de pagamentos parciais;
+- remove o botão “Selecionar pendentes” e o código de evento associado;
+- amplia e reorganiza o modal de baixa no desktop, com melhor espaçamento dos blocos;
+- melhora a leitura das competências, inclusive estados Parcial e Pago, mantendo comportamento responsivo;
+- usa o período já selecionado em Mensalidades ao abrir o extrato;
+- limita competências, Total recebido, Em aberto, Saldo positivo e Saldo líquido ao intervalo selecionado;
+- mantém Saldo anterior e seus pagamentos em bloco próprio e independente;
+- preserva pagamentos parciais, créditos, cobranças individuais/familiares e carregamento lazy;
+- reforça o estado **Parcial** em azul na tela de Mensalidades e sincroniza o bundle `app.css`;
+- melhora a hierarquia, compactação e responsividade do CSS do extrato;
+- adiciona teste de regressão específico para o filtro de período;
 - preserva integralmente `data/dados.json` e `data/modelo.json`;
-- mantém o esquema de dados na versão **12**;
-- mantém o workflow próprio do GitHub Pages com Actions compatíveis com Node.js 24;
-- mantém obrigatória a auditoria de mídia para impedir releases com miniaturas de associados ausentes;
-- não altera regras financeiras, permissões, usuários, cargos, dirigentes, agenda, avisos ou publicação.
+- mantém o esquema de dados na versão **12**.
 
 ## Refatoração técnica concluída — etapa 4
 
@@ -59,7 +91,7 @@ A revisão manual deve seguir `docs/homologation.md`, priorizando Tesouraria, M�
 
 ## Política após a etapa 4
 
-O ciclo de refatoração v6.46.7 fica encerrado nesta base. Evoluções posteriores devem ser incrementais e mensuráveis, preservando os orçamentos de CSS/JavaScript e os contratos de lazy loading. Qualquer ampliação de orçamento deve ser justificada por uma necessidade funcional concreta e acompanhada de testes de regressão.
+O ciclo de refatoração v6.46.7 permanece encerrado; as versões v6.46.8, v6.46.9, v6.46.10 e v6.46.11 são evoluções incrementais sobre essa base. Evoluções posteriores devem ser incrementais e mensuráveis, preservando os orçamentos de CSS/JavaScript e os contratos de lazy loading. Qualquer ampliação de orçamento deve ser justificada por uma necessidade funcional concreta e acompanhada de testes de regressão.
 
 ### Refatoração pós-movimentações — etapa 2
 
@@ -76,3 +108,8 @@ A Tesouraria passa a apresentar o saldo realizado da conta ao fim da data de cad
 ### Rateio de mensalidades e pagamentos parciais — 21/08/2026
 
 O controle de mensalidades passa a acompanhar o valor efetivamente recebido por associado e competência. Uma competência somente é considerada quitada quando os recebimentos acumulados atingem o valor esperado. O novo modo de rateio permite informar um valor recebido e distribuí-lo das competências mais antigas selecionadas para as mais recentes, mantendo eventual saldo restante como parcial. A cobrança compartilhada considera somente o débito remanescente. A evolução é compatível com registros anteriores e não exige migração do esquema 12.
+
+## Complemento visual — 2026-08-21
+
+- Ajustado o layout do extrato de mensalidades, compactando os blocos de saldo anterior e pagamentos vinculados.
+- Reforçada a diferenciação visual entre os status Quitado, Pendente e Parcial na listagem de mensalidades e no extrato.

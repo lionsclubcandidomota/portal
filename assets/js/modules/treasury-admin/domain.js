@@ -75,7 +75,7 @@ export function allocateMembershipPayment({
 
   months.forEach(month => {
     ids.forEach(memberId => {
-      const expectedAmount = roundMoney(Math.max(0, Number(expectedAmountForMember(memberId) || 0)));
+      const expectedAmount = roundMoney(Math.max(0, Number(expectedAmountForMember(memberId, month) || 0)));
       const previouslyPaid = roundMoney(Math.max(0, Number(paidAmountForMemberMonth(memberId, month) || 0)));
       const outstandingBefore = roundMoney(Math.max(0, expectedAmount - previouslyPaid));
       if (outstandingBefore <= 0) return;
@@ -114,7 +114,7 @@ export function allocateMembershipPayment({
       memberId,
       memberName: member?.name || '',
       role: hasFamilyGroup ? (isPrimary ? 'Titular' : 'Familiar') : 'Individual',
-      monthlyAmount: roundMoney(Math.max(0, Number(expectedAmountForMember(memberId) || 0))),
+      monthlyAmount: roundMoney(Math.max(0, Number(expectedAmountForMember(memberId, monthAllocations[0]?.month) || 0))),
       months: monthAllocations.map(allocation => allocation.month),
       amount: roundMoney(monthAllocations.reduce((sum, allocation) => sum + allocation.amount, 0)),
       monthAllocations

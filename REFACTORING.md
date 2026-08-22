@@ -238,3 +238,8 @@ O módulo `integrated-homologation.mjs` valida o esquema, referências, período
 - Entrada, Saída e Transferência ficam estabilizadas como operações lógicas distintas.
 - Novas evoluções na Tesouraria devem reutilizar `movement-domain.js` e `movement-transfer-domain.js`, evitando voltar a inferir tipos diretamente pelos campos `entry`/`exit` fora da camada de compatibilidade.
 - Alterações futuras em transferências devem preservar a regra contábil: dois lançamentos internos para os saldos das contas, uma operação para a interface e zero impacto em receitas/despesas gerais.
+
+## Complemento visual — 2026-08-21
+
+- Ajustado o layout do extrato de mensalidades, compactando os blocos de saldo anterior e pagamentos vinculados.
+- Reforçada a diferenciação visual entre os status Quitado, Pendente e Parcial na listagem de mensalidades e no extrato.

@@ -4,7 +4,7 @@ import {
   normalize,
   toInputDate
 } from '../../utils.js';
-import { uiIcon } from '../visual-helpers.js?v=6.46.7';
+import { uiIcon } from '../visual-helpers.js?v=6.46.13';
 
 export function buildMembershipViewModel(state, treasury, now = new Date()) {
   const currentMembershipMonth = toInputDate(now).slice(0, 7);
@@ -21,7 +21,7 @@ export function buildMembershipViewModel(state, treasury, now = new Date()) {
     .sort((first, second) => first.name.localeCompare(second.name, 'pt-BR'));
   const membershipProgress = new Map(membershipMembers.map(member => {
     const monthDetails = membershipMonths.map(month => {
-      const expected = treasury.membershipExpectedAmountForMember(member.id);
+      const expected = treasury.membershipExpectedAmountForMemberMonth(member.id, month);
       const paid = treasury.membershipPaidAmountForMonth(member.id, month);
       const outstanding = treasury.membershipOutstandingForMonth(member.id, month);
       return { month, expected, paid, outstanding, paidInFull: outstanding <= 0.005, partial: paid > 0.005 && outstanding > 0.005 };
@@ -201,7 +201,7 @@ export function renderMembershipSection({
               <small class="membership-progress-note">${progressNote}</small>
             </span>
           </button>
-          ${adminUnlocked ? `<div class="membership-member-actions"><div class="membership-actions-menu"><button type="button" class="membership-more-toggle" data-membership-menu-toggle aria-expanded="false" aria-haspopup="menu" aria-label="Mais ações para ${escapeHtml(member.name)}">•••</button><div class="membership-more-menu" data-membership-menu role="menu" hidden>${!paid ? `<button type="button" class="membership-menu-item" role="menuitem" data-membership-charge="${escapeHtml(member.id)}" data-membership-months="${escapeHtml(progress.pendingMonths.join(','))}" data-membership-period="${escapeHtml(membershipMonths.join(','))}"><span aria-hidden="true">${uiIcon('message')}</span><span><strong>Enviar cobrança</strong><small>Escolher associado ou família; inclui mensalidades e saldo anterior</small></span></button>` : ''}<button type="button" class="membership-menu-item" role="menuitem" data-membership-opening-debt="${escapeHtml(member.id)}"><span aria-hidden="true">${uiIcon('history')}</span><span><strong>Saldo anterior</strong><small>${progress.openingDebt > 0.005 ? 'Débito anterior configurado' : 'Informar débito anterior ao início do controle'}</small></span></button></div></div></div>` : ''}
+          ${adminUnlocked ? `<div class="membership-member-actions"><div class="membership-actions-menu"><button type="button" class="membership-more-toggle" data-membership-menu-toggle aria-expanded="false" aria-haspopup="menu" aria-label="Mais ações para ${escapeHtml(member.name)}">•••</button><div class="membership-more-menu" data-membership-menu role="menu" hidden><button type="button" class="membership-menu-item" role="menuitem" data-membership-statement="${escapeHtml(member.id)}"><span aria-hidden="true">${uiIcon('receipt')}</span><span><strong>Extrato de mensalidades</strong><small>Histórico individual de competências, pagamentos e saldos</small></span></button>${!paid ? `<button type="button" class="membership-menu-item" role="menuitem" data-membership-charge="${escapeHtml(member.id)}" data-membership-months="${escapeHtml(progress.pendingMonths.join(','))}" data-membership-period="${escapeHtml(membershipMonths.join(','))}"><span aria-hidden="true">${uiIcon('message')}</span><span><strong>Enviar cobrança</strong><small>Escolher associado ou família; inclui mensalidades e saldo anterior</small></span></button>` : ''}<button type="button" class="membership-menu-item" role="menuitem" data-membership-opening-debt="${escapeHtml(member.id)}"><span aria-hidden="true">${uiIcon('history')}</span><span><strong>Saldo anterior</strong><small>${progress.openingDebt > 0.005 ? 'Débito anterior configurado' : 'Informar débito anterior ao início do controle'}</small></span></button></div></div></div>` : ''}
         </article>`;
       }).join('') : empty('search', 'Nenhum associado cadastrado.')}</div>
       <div id="membershipFilterEmpty" class="membership-filter-empty" ${membershipVisibleMembers.length ? 'hidden' : ''}>${uiIcon('search')}<span>Nenhum associado encontrado com os filtros selecionados.</span></div>

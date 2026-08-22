@@ -1,9 +1,9 @@
-# Homologação — v6.46.7
+# Homologação — v6.46.13
 
-> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.46.7.
+> Procedimento de validação funcional, responsiva e de desempenho do Portal 6.46.13.
 
 
-## Consolidação do pacote — versão 6.46.7
+## Consolidação do pacote — versão 6.46.13
 
 1. Execute `FINALIZAR-ATUALIZACAO.bat` e confirme a aprovação do pipeline completo.
 2. Confirme que `data/dados.json` continua no esquema 12 e que seu conteúdo operacional não foi alterado.
@@ -18,6 +18,20 @@
 11. Atualize a página e confirme ausência de erros no console.
 
 > A arquitetura está congelada após esta estabilização. Correções posteriores devem ser locais e acompanhadas de testes de regressão.
+
+
+### Vigência histórica das mensalidades e Extrato — v6.46.13
+
+1. Em **Ajustes → Mensalidades**, anote os três valores atuais e altere pelo menos um deles durante o mês corrente.
+2. Em **Tesouraria → Mensalidades**, confirme que competências do mês corrente e meses anteriores continuam com o valor anterior, inclusive quando ainda estão em aberto.
+3. Avance o filtro para o mês seguinte e confirme que a nova competência utiliza o valor reajustado.
+4. Repita a validação com um associado individual, um Titular Familiar e um Familiar Adicional.
+5. Abra **Dar baixa de mensalidade** e confirme que o valor usado no rateio acompanha a competência selecionada, e não apenas o valor mais recente configurado.
+6. Abra o **Extrato de mensalidades** e confira os cards de Quitada, Parcial e Em aberto, sem cortes nos valores ou sobreposição entre competências.
+7. Em um associado com saldo anterior ainda em aberto, confirme que o **Saldo devedor** soma esse débito ao aberto das competências do período.
+8. Gere um crédito/saldo positivo em uma competência e confirme que ele é descontado do **Saldo devedor**, sem alterar o valor bruto exibido no KPI **Em aberto**.
+9. Em 390, 768 e 1366 px, valide o Extrato com rolagem interna, KPIs e cards de competências legíveis.
+10. Confirme que `data/dados.json` e `data/modelo.json` permanecem inalterados.
 
 ## Largura integral da prévia de participantes — versão 6.46.4
 

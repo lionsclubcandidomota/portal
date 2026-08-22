@@ -1,5 +1,5 @@
-import { uiIcon } from './visual-helpers.js?v=6.46.7';
-export { buildPublicationReview } from './publication-review-domain.js?v=6.46.7';
+import { uiIcon } from './visual-helpers.js?v=6.46.13';
+export { buildPublicationReview } from './publication-review-domain.js?v=6.46.13';
 
 function escapeHtml(value) {
   return String(value ?? '')

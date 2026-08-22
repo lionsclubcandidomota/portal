@@ -1,5 +1,5 @@
-import { cloneState } from '../../core/portal-state.js?v=6.46.7';
-import { REMOTE_REFRESH_INTERVALS } from './constants.js?v=6.46.7';
+import { cloneState } from '../../core/portal-state.js?v=6.46.13';
+import { REMOTE_REFRESH_INTERVALS } from './constants.js?v=6.46.13';
 
 export function normalizePendingChanges(value) {
   const parsed = Number(value);

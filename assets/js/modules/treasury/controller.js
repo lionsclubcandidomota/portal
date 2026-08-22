@@ -13,6 +13,7 @@ import {
   isMutualEntry as checkMutualEntry,
   memberIds,
   membershipAllocationForMonth as getMembershipAllocationForMonth,
+  membershipExpectedSnapshotForMonth as getMembershipExpectedSnapshotForMonth,
   memberCanJoinMutual,
   memberIsActive,
   memberIsInactive,
@@ -36,6 +37,7 @@ import {
   periodBounds as getPeriodBounds,
   referenceMonth as getReferenceMonth
 } from './domain.js';
+import { inferLegacyMembershipFeeForMonth, membershipFeeForMonth as resolveMembershipFeeForMonth } from '../membership-fees.js?v=6.46.13';
 export function createTreasuryController({
   getState,
   parseLocalDate,
@@ -119,9 +121,12 @@ export function createTreasuryController({
   };
   const membershipAllocationForMonth = (item, memberId, month) =>
     getMembershipAllocationForMonth(item, memberId, month, parseLocalDate);
-  const membershipFee = () => Math.max(0, Number(state().settings.membershipMonthlyFee || 0));
-  const membershipFamilyPrimaryFee = () => Math.max(0, Number(state().settings.membershipFamilyPrimaryFee || 0));
-  const membershipFamilyAdditionalFee = () => Math.max(0, Number(state().settings.membershipFamilyAdditionalFee || 0));
+  const membershipFee = () => Math.max(0, Number(state().settings.membershipMonthlyFee || 0)), membershipFamilyPrimaryFee = () => Math.max(0, Number(state().settings.membershipFamilyPrimaryFee || 0)), membershipFamilyAdditionalFee = () => Math.max(0, Number(state().settings.membershipFamilyAdditionalFee || 0));
+  const effectiveMembershipFeeForMonth = (field, month) => inferLegacyMembershipFeeForMonth(state(), field, month, currentMonth())
+    ?? resolveMembershipFeeForMonth(state().settings, field, month);
+  const membershipFeeForMonth = month => effectiveMembershipFeeForMonth('membershipMonthlyFee', month);
+  const membershipFamilyPrimaryFeeForMonth = month => effectiveMembershipFeeForMonth('membershipFamilyPrimaryFee', month);
+  const membershipFamilyAdditionalFeeForMonth = month => effectiveMembershipFeeForMonth('membershipFamilyAdditionalFee', month);
   const familyGroups = () => {
     const current = state();
     if (!Array.isArray(current.familyGroups)) current.familyGroups = [];
@@ -239,7 +244,17 @@ export function createTreasuryController({
   );
   const membershipPaidAmountForMonth = (memberId, month) => paymentsFor(memberId, month)
     .reduce((sum, item) => sum + membershipAllocationForMonth(item, memberId, month), 0);
-  const membershipOutstandingForMonth = (memberId, month) => Math.max(0, membershipExpectedAmountForMember(memberId) - membershipPaidAmountForMonth(memberId, month));
+  const membershipExpectedAmountForMemberMonth = (memberId, month) => {
+    const payments = [...paymentsFor(memberId, month)].sort((first, second) => String(first?.paymentDate || first?.date || '').localeCompare(String(second?.paymentDate || second?.date || '')));
+    const historicalAmount = payments.map(item => getMembershipExpectedSnapshotForMonth(item, memberId, month, parseLocalDate)).find(amount => Number.isFinite(Number(amount)) && Number(amount) > 0);
+    if (historicalAmount !== undefined) return Math.max(0, Number(historicalAmount));
+    const group = familyGroupForMember(memberId);
+    if (!group) return membershipFeeForMonth(month);
+    return group.primaryMemberId === memberId
+      ? membershipFamilyPrimaryFeeForMonth(month)
+      : membershipFamilyAdditionalFeeForMonth(month);
+  };
+  const membershipOutstandingForMonth = (memberId, month) => Math.max(0, membershipExpectedAmountForMemberMonth(memberId, month) - membershipPaidAmountForMonth(memberId, month));
   const monthIsPaid = (memberId, month) => membershipOutstandingForMonth(memberId, month) <= 0.005;
   const monthIsPartial = (memberId, month) => membershipPaidAmountForMonth(memberId, month) > 0.005 && membershipOutstandingForMonth(memberId, month) > 0.005;
   const paidMonthsFor = (memberId, months) => (months || []).filter(month => monthIsPaid(memberId, month));
@@ -249,13 +264,7 @@ export function createTreasuryController({
   const membershipOpeningDebtPaidAmount = id => state().treasury.filter(item => isMembershipEntry(item) && !status.isProgrammed(item)).reduce((sum, item) => sum + Math.max(0, Number((item.membershipOpeningDebtAllocations || []).find(entry => entry.memberId === id)?.amount || 0)), 0);
   const membershipOpeningDebtOutstanding = id => Math.max(0, membershipOpeningDebtForMember(id) - membershipOpeningDebtPaidAmount(id));
   const membershipOpeningDebtIsPartial = id => membershipOpeningDebtPaidAmount(id) > 0.005 && membershipOpeningDebtOutstanding(id) > 0.005;
-  const membershipExpectedAmountForMember = memberId => {
-    const group = familyGroupForMember(memberId);
-    if (!group) return membershipFee();
-    return group.primaryMemberId === memberId
-      ? membershipFamilyPrimaryFee()
-      : membershipFamilyAdditionalFee();
-  };
+  const membershipExpectedAmountForMember = memberId => membershipExpectedAmountForMemberMonth(memberId, currentMonth());
   const paymentConflicts = (ids, months) => {
     const conflicts = [];
     for (const memberId of ids) {
@@ -441,9 +450,7 @@ export function createTreasuryController({
     monthLabel,
     isMembershipEntry,
     isMutualEntry,
-    membershipFee,
-    membershipFamilyPrimaryFee,
-    membershipFamilyAdditionalFee,
+    membershipFee, membershipFamilyPrimaryFee, membershipFamilyAdditionalFee, membershipFeeForMonth, membershipFamilyPrimaryFeeForMonth, membershipFamilyAdditionalFeeForMonth,
     familyGroups,
     familyGroupForMember,
     currentMonth,
@@ -493,6 +500,7 @@ export function createTreasuryController({
     membershipOpeningDebtOutstanding,
     membershipOpeningDebtIsPartial,
     membershipExpectedAmountForMember,
+    membershipExpectedAmountForMemberMonth,
     paymentConflicts,
     accountSummaries,
     accountBalanceAtDate,

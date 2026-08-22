@@ -1,6 +1,6 @@
-import { memberIsActive } from '../../core/portal-members.js?v=6.46.7';
+import { memberIsActive } from '../../core/portal-members.js?v=6.46.13';
 import { normalize, parseLocalDate, sumTreasury } from '../../utils.js';
-import { todayStart } from '../timeline.js?v=6.46.7';
+import { todayStart } from '../timeline.js?v=6.46.13';
 import {
   DEFAULT_ACCOUNTS,
   coveredMonths,
@@ -8,15 +8,16 @@ import {
   isMembershipEntry,
   isMutualEntry,
   membershipAllocationForMonth,
+  membershipExpectedSnapshotForMonth,
   monthLabel,
   mutualActiveMemberIds,
   mutualEventMemberIds,
   normalizeMutualGroup
-} from './domain.js?v=6.46.7';
+} from './shared-domain.js?v=6.46.13';
 import {
   financialTreasuryItems,
   uniqueTreasuryMovementCount
-} from './movement-domain.js?v=6.46.7';
+} from './movement-domain.js?v=6.46.13';
 
 function accountSummaries(state) {
   const storedAccounts = Array.isArray(state?.treasuryAccounts) ? state.treasuryAccounts : [];
@@ -51,19 +52,28 @@ export function buildTreasuryDashboardSummary(state) {
     && coveredMonths(item, parseLocalDate).includes(currentMembershipMonth)
   ));
   const familyGroups = Array.isArray(state?.familyGroups) ? state.familyGroups : [];
+  const fee = field => (state?.settings?.membershipFeeHistory || []).reduceRight((value, change) => currentMembershipMonth < String(change?.effectiveFrom || '') ? Math.max(0, Number(change?.previous?.[field] || 0)) : value, Math.max(0, Number(state?.settings?.[field] || 0)));
   const expectedMembershipFor = memberId => {
     const group = familyGroups.find(item => Array.isArray(item?.memberIds) && item.memberIds.includes(memberId));
-    if (!group) return Math.max(0, Number(state?.settings?.membershipMonthlyFee || 0));
+    if (!group) return fee('membershipMonthlyFee');
     return String(group.primaryMemberId || '') === String(memberId || '')
-      ? Math.max(0, Number(state?.settings?.membershipFamilyPrimaryFee || 0))
-      : Math.max(0, Number(state?.settings?.membershipFamilyAdditionalFee || 0));
+      ? fee('membershipFamilyPrimaryFee')
+      : fee('membershipFamilyAdditionalFee');
   };
   const membershipPaidByMember = new Map(activeMembers.map(member => [
     member.id,
     membershipEntries.reduce((sum, item) => sum + membershipAllocationForMonth(item, member.id, currentMembershipMonth, parseLocalDate), 0)
   ]));
+  const membershipExpectedForCurrentMonth = memberId => {
+    const historicalAmount = [...membershipEntries]
+      .filter(item => membershipAllocationForMonth(item, memberId, currentMembershipMonth, parseLocalDate) > 0)
+      .sort((first, second) => String(first?.paymentDate || first?.date || '').localeCompare(String(second?.paymentDate || second?.date || '')))
+      .map(item => membershipExpectedSnapshotForMonth(item, memberId, currentMembershipMonth, parseLocalDate))
+      .find(amount => Number.isFinite(Number(amount)) && Number(amount) > 0);
+    return historicalAmount === undefined ? expectedMembershipFor(memberId) : Math.max(0, Number(historicalAmount));
+  };
   const membershipPaidIds = new Set(activeMembers
-    .filter(member => (membershipPaidByMember.get(member.id) || 0) + 0.005 >= expectedMembershipFor(member.id))
+    .filter(member => (membershipPaidByMember.get(member.id) || 0) + 0.005 >= membershipExpectedForCurrentMonth(member.id))
     .map(member => member.id));
 
   const normalizedGroups = (Array.isArray(state?.mutualGroups) ? state.mutualGroups : [])

@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { createPortalEnvelope, migratePortalPayload } from '../assets/js/core/portal-schema.js?v=6.46.7';
+import { createPortalEnvelope, migratePortalPayload } from '../assets/js/core/portal-schema.js?v=6.46.13';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dataFiles = ['data/dados.json', 'data/modelo.json'];

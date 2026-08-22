@@ -11,8 +11,9 @@ import {
   resolveDisplayLogo,
   normalizePortalFont,
   settingsFrom
-} from './settings-appearance.js?v=6.46.7';
-import { directorProfileFromState, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.46.7';
+} from './settings-appearance.js?v=6.46.13';
+import { directorProfileFromState, hasLegacyDirectorTokenProfile } from './portal-runtime/access-profile.js?v=6.46.13';
+import { registerMembershipFeeChange } from './membership-fees.js?v=6.46.13';
 
 function currencyField(name, label, value, help, currencyInputValue, disabled = false) {
   return `<div class="form-field settings-money-field"><label for="${escapeHtml(name)}">${escapeHtml(label)}</label><div class="currency-input"><span>R$</span><input id="${escapeHtml(name)}" name="${escapeHtml(name)}" type="text" inputmode="decimal" value="${escapeHtml(currencyInputValue(value))}" autocomplete="off" ${disabled ? 'disabled' : ''}></div><small>${escapeHtml(help)}</small></div>`;
@@ -147,7 +148,7 @@ export function createSettingsController({
         </section>
 
         <section class="card settings-section" id="settingsFees">
-          ${settingsSectionHeading('💳', 'Mensalidades', 'Valores padrão', 'Defina os valores sugeridos ao registrar novos pagamentos.')}
+          ${settingsSectionHeading('💳', 'Mensalidades', 'Valores padrão', 'Os reajustes passam a valer no mês seguinte; competências anteriores preservam o valor histórico.')}
           <div class="settings-fee-grid">
             ${currencyField('membershipMonthlyFee', 'Individual', settings.membershipMonthlyFee, 'Valor de um associado individual.', currencyInputValue, !writeAllowed)}
             ${currencyField('membershipFamilyPrimaryFee', 'Família — titular', settings.membershipFamilyPrimaryFee, 'Valor do responsável pelo grupo familiar.', currencyInputValue, !writeAllowed)}
@@ -202,9 +203,11 @@ export function createSettingsController({
         currentSettings.primaryColor = String(data.get('primaryText') || DEFAULT_PRIMARY_COLOR).trim();
         currentSettings.accentColor = String(data.get('accentText') || DEFAULT_ACCENT_COLOR).trim();
         currentSettings.fontFamily = normalizePortalFont(data.get('fontFamily'));
-        currentSettings.membershipMonthlyFee = parseCurrencyInput(data.get('membershipMonthlyFee'));
-        currentSettings.membershipFamilyPrimaryFee = parseCurrencyInput(data.get('membershipFamilyPrimaryFee'));
-        currentSettings.membershipFamilyAdditionalFee = parseCurrencyInput(data.get('membershipFamilyAdditionalFee'));
+        registerMembershipFeeChange(currentSettings, {
+          membershipMonthlyFee: parseCurrencyInput(data.get('membershipMonthlyFee')),
+          membershipFamilyPrimaryFee: parseCurrencyInput(data.get('membershipFamilyPrimaryFee')),
+          membershipFamilyAdditionalFee: parseCurrencyInput(data.get('membershipFamilyAdditionalFee'))
+        });
         persist('Ajustes atualizados.');
         rerender();
         toast('Ajustes salvos neste navegador. Publique quando terminar.');

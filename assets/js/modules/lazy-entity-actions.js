@@ -1,5 +1,5 @@
 import { escapeHtml } from '../utils.js';
-import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.7';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.13';
 
 export function createLazyEntityActions({
   getState,
@@ -58,8 +58,8 @@ export function createLazyEntityActions({
     if (!featurePromise) {
       featurePromise = Promise.all([
         loadTreasuryController(),
-        import('./treasury-admin.js?v=6.46.7'),
-        import('./entity-forms.js?v=6.46.7')
+        import('./treasury-admin.js?v=6.46.13'),
+        import('./entity-forms.js?v=6.46.13')
       ]).then(([treasury, treasuryAdminModule, entityFormsModule]) => {
         const treasuryAdmin = treasuryAdminModule.createTreasuryAdminController({
           getState,
@@ -145,6 +145,7 @@ export function createLazyEntityActions({
     openFamilyGroupsManager: (...args) => invoke('openFamilyGroupsManager', ...args),
     openMembershipPayment: (...args) => invoke('openMembershipPayment', ...args),
     openMembershipOpeningDebt: (...args) => invoke('openMembershipOpeningDebt', ...args),
+    openMembershipStatement: (...args) => invoke('openMembershipStatement', ...args),
     openMutualGroupsManager: (...args) => invoke('openMutualGroupsManager', ...args),
     openMutualEventManager: (...args) => invoke('openMutualEventManager', ...args),
     openMutualPayment: (...args) => invoke('openMutualPayment', ...args),

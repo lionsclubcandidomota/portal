@@ -3,6 +3,7 @@ import { createMemberSelectorCard } from './treasury-admin/member-selector.js';
 import { createFamilyGroupsManager } from './treasury-admin/family-groups.js';
 import { createMembershipPaymentManager } from './treasury-admin/membership-payments.js';
 import { createMembershipOpeningDebtManager } from './treasury-admin/membership-opening-debt.js';
+import { createMembershipStatementManager } from './treasury-admin/membership-statement.js';
 import { createMutualGroupsManager } from './treasury-admin/mutual-groups.js';
 import { createMutualEventManager } from './treasury-admin/mutual-events.js';
 import { createMutualPaymentManager } from './treasury-admin/mutual-payments.js';
@@ -16,6 +17,7 @@ export function createTreasuryAdminController(dependencies) {
   const openFamilyGroupsManager = createFamilyGroupsManager(context, memberSelectorCard);
   const openMembershipPayment = createMembershipPaymentManager(context, memberSelectorCard);
   const openMembershipOpeningDebt = createMembershipOpeningDebtManager(context);
+  const openMembershipStatement = createMembershipStatementManager(context);
   const openMutualGroupsManager = createMutualGroupsManager(context);
   const openMutualEventManager = createMutualEventManager(context);
   const openMutualPayment = createMutualPaymentManager(context);
@@ -28,6 +30,7 @@ export function createTreasuryAdminController(dependencies) {
     openFamilyGroupsManager,
     openMembershipPayment,
     openMembershipOpeningDebt,
+    openMembershipStatement,
     openMutualGroupsManager,
     openMutualEventManager,
     openMutualPayment,

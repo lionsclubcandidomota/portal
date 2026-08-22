@@ -2,33 +2,33 @@ import { loadState, saveState } from '../../storage.js';
 import {
   loadPublicGitHubPayload,
   waitForPagesDeployment
-} from '../../github-public.js?v=6.46.7';
+} from '../../github-public.js?v=6.46.13';
 
 let githubAdminPromise = null;
 
 function loadGitHubAdmin() {
   if (!githubAdminPromise) {
-    githubAdminPromise = import('../../github-admin.js?v=6.46.7').catch(error => {
+    githubAdminPromise = import('../../github-admin.js?v=6.46.13').catch(error => {
       githubAdminPromise = null;
       throw error;
     });
   }
   return githubAdminPromise;
 }
-import { createPortalRuntimeContext } from './context.js?v=6.46.7';
-import { createPersistenceActions } from './persistence.js?v=6.46.7';
-import { createAdminSessionActions } from './session.js?v=6.46.7';
-import { createPublicationActions } from './publication.js?v=6.46.7';
-import { createRemoteSyncActions } from './remote-sync.js?v=6.46.7';
-import { createBootstrapAction } from './bootstrap.js?v=6.46.7';
-import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.46.7';
-import { createAccessProfileActions } from './access-profile.js?v=6.46.7';
+import { createPortalRuntimeContext } from './context.js?v=6.46.13';
+import { createPersistenceActions } from './persistence.js?v=6.46.13';
+import { createAdminSessionActions } from './session.js?v=6.46.13';
+import { createPublicationActions } from './publication.js?v=6.46.13';
+import { createRemoteSyncActions } from './remote-sync.js?v=6.46.13';
+import { createBootstrapAction } from './bootstrap.js?v=6.46.13';
+import { createInterfaceRefreshActions } from './interface-refresh.js?v=6.46.13';
+import { createAccessProfileActions } from './access-profile.js?v=6.46.13';
 import {
   ACCESS_CAPABILITIES,
   accessSnapshot,
   canAccessView,
   roleHasCapability
-} from './authorization.js?v=6.46.7';
+} from './authorization.js?v=6.46.13';
 
 export function createPortalRuntimeController(dependencies) {
   const services = {

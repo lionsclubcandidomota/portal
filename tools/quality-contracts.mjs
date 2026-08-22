@@ -1,8 +1,8 @@
 export const performanceBudgets = Object.freeze({
-  staticJavaScriptBytes: 315_000,
-  cssBytes: 430_000,
+  staticJavaScriptBytes: 305_000,
+  cssBytes: 422_000,
   optimizedLogoBytes: 60_000,
-  criticalAssetsBytes: 775_000
+  criticalAssetsBytes: 765_000
 });
 
 export const lazyOnlyModules = Object.freeze([
@@ -26,6 +26,7 @@ export const lazyOnlyModules = Object.freeze([
   'assets/js/modules/publication-review.js',
   'assets/js/modules/treasury-admin.js',
   'assets/js/modules/treasury/controller.js',
+  'assets/js/modules/treasury/domain.js',
   'assets/js/modules/treasury/view.js',
   'assets/js/modules/treasury/charts.js',
   'assets/js/modules/portal-runtime/user-access.js',

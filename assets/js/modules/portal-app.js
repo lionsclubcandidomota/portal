@@ -1,19 +1,19 @@
 import { loadState, exportState, parseImportFile } from '../storage.js';
 import { fullDateFormat, parseLocalDate, formatDate, nextBirthdayDate, daysUntil, escapeHtml, normalize, fileToDataUrl, sumTreasury, toInputDate } from '../utils.js';
 import { createFinancePrivacyController } from './finance-privacy.js';
-import { createLazyTreasuryController } from './lazy-treasury-controller.js?v=6.46.7';
-import { currencyInputValue, parseCurrencyInput } from './treasury/domain.js?v=6.46.7';
-import { memberIsActive } from '../core/portal-members.js?v=6.46.7';
-import { createLazySettingsController } from './lazy-settings.js?v=6.46.7';
-import { createNavigationController } from './navigation.js?v=6.46.7';
+import { createLazyTreasuryController } from './lazy-treasury-controller.js?v=6.46.13';
+import { currencyInputValue, parseCurrencyInput } from './currency-input.js?v=6.46.13';
+import { memberIsActive } from '../core/portal-members.js?v=6.46.13';
+import { createLazySettingsController } from './lazy-settings.js?v=6.46.13';
+import { createNavigationController } from './navigation.js?v=6.46.13';
 import { createUiShellController } from './ui-shell.js';
 import { createModalController } from './modal.js';
 import { createFileInputsController } from './file-inputs.js';
-import { createLazyPublishCenterController } from './lazy-publish-center.js?v=6.46.7';
-import { createPortalRefreshController } from './portal-refresh.js?v=6.46.7';
-import { createAuditLogController } from './audit-log.js?v=6.46.7';
-import { createLazyRecoveryCenterController } from './lazy-recovery-center.js?v=6.46.7';
-import { createPublicationReviewController } from './publication-review-controller.js?v=6.46.7';
+import { createLazyPublishCenterController } from './lazy-publish-center.js?v=6.46.13';
+import { createPortalRefreshController } from './portal-refresh.js?v=6.46.13';
+import { createAuditLogController } from './audit-log.js?v=6.46.13';
+import { createLazyRecoveryCenterController } from './lazy-recovery-center.js?v=6.46.13';
+import { createPublicationReviewController } from './publication-review-controller.js?v=6.46.13';
 import { markdownToHtml } from './markdown.js';
 import { createConfirmationController } from './confirmation.js';
 import { todayStart, timelineHeading } from './timeline.js';
@@ -27,7 +27,7 @@ import {
   birthdayCards
 } from './birthdays.js';
 import { avatar, empty, kpi, priorityBadge, statusBadge } from './visual-helpers.js';
-import { createLazyBirthdayArtworkShare } from './lazy-birthday-artwork.js?v=6.46.7';
+import { createLazyBirthdayArtworkShare } from './lazy-birthday-artwork.js?v=6.46.13';
 import {
   appointmentLocationText,
   appointmentTypeBadge,
@@ -36,17 +36,17 @@ import {
   getAppointments as buildAppointments,
   locationInfo,
   renderLocation
-} from './appointments.js?v=6.46.7';
-import { createPortalRuntimeController } from './portal-runtime.js?v=6.46.7';
-import { getPortalElements } from './portal-elements.js?v=6.46.7';
-import { createReadOnlyGuard } from './read-only-guard.js?v=6.46.7';
-import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.46.7';
-import { createAgendaController } from './agenda-state.js?v=6.46.7';
-import { createLazyEntityActions } from './lazy-entity-actions.js?v=6.46.7';
-import { createLazyAdminPanelController } from './lazy-admin-panel.js?v=6.46.7';
-import { createInterfaceContextController } from './interface-context.js?v=6.46.7';
-import { createLazyAccessManagementController } from './lazy-access-management.js?v=6.46.7';
-import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.7';
+} from './appointments.js?v=6.46.13';
+import { createPortalRuntimeController } from './portal-runtime.js?v=6.46.13';
+import { getPortalElements } from './portal-elements.js?v=6.46.13';
+import { createReadOnlyGuard } from './read-only-guard.js?v=6.46.13';
+import { createPortalViewRenderer } from './portal-view-renderer.js?v=6.46.13';
+import { createAgendaController } from './agenda-state.js?v=6.46.13';
+import { createLazyEntityActions } from './lazy-entity-actions.js?v=6.46.13';
+import { createLazyAdminPanelController } from './lazy-admin-panel.js?v=6.46.13';
+import { createInterfaceContextController } from './interface-context.js?v=6.46.13';
+import { createLazyAccessManagementController } from './lazy-access-management.js?v=6.46.13';
+import { ACCESS_CAPABILITIES } from './portal-runtime/authorization.js?v=6.46.13';
 
 export function bootstrapPortal() {
   let state = loadState();
@@ -205,6 +205,7 @@ export function bootstrapPortal() {
     openFamilyGroupsManager,
     openMembershipPayment,
     openMembershipOpeningDebt,
+    openMembershipStatement,
     openMutualGroupsManager,
     openMutualEventManager,
     openMutualPayment,
@@ -487,6 +488,7 @@ export function bootstrapPortal() {
       openFamilyGroupsManager,
       openMembershipPayment,
       openMembershipOpeningDebt,
+      openMembershipStatement,
       openMutualGroupsManager,
       openMutualEventManager,
       openMutualPayment,

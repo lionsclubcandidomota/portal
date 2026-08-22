@@ -45,18 +45,95 @@ export const CSS_SOURCES = Object.freeze([
   'pages/mutual-registration.css'
 ]);
 
+
+function compactCss(source) {
+  let output = '';
+  let quote = '';
+  let inComment = false;
+  let comment = '';
+  let pendingSpace = false;
+
+  const flushComment = () => {
+    if (/Portal Lions v|Evolução funcional/i.test(comment)) {
+      output += `/*${comment.trim()}*/`;
+    }
+    comment = '';
+  };
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+    const previous = source[index - 1];
+
+    if (inComment) {
+      if (char === '*' && next === '/') {
+        inComment = false;
+        index += 1;
+        flushComment();
+      } else {
+        comment += char;
+      }
+      continue;
+    }
+
+    if (quote) {
+      output += char;
+      if (char === quote && previous !== '\\') quote = '';
+      continue;
+    }
+
+    if (char === '/' && next === '*') {
+      inComment = true;
+      comment = '';
+      index += 1;
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      if (pendingSpace && output && !/[{(:;,>~\s]$/.test(output)) output += ' ';
+      pendingSpace = false;
+      quote = char;
+      output += char;
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      pendingSpace = true;
+      continue;
+    }
+
+    if (/[{}:;,>~]/.test(char)) {
+      output = output.replace(/\s+$/, '');
+      output += char;
+      pendingSpace = false;
+      continue;
+    }
+
+    if (pendingSpace) {
+      const last = output.at(-1) || '';
+      if (last && !/[{(:;,>~]/.test(last)) output += ' ';
+      pendingSpace = false;
+    }
+
+    output += char;
+  }
+
+  if (inComment) flushComment();
+  return output.replace(/;}/g, '}').trim();
+}
+
 export async function buildCssBundle() {
   const sections = await Promise.all(CSS_SOURCES.map(async relativePath => {
     const sourcePath = path.join(cssRoot, relativePath);
     const content = await readFile(sourcePath, 'utf8');
-    return `/* ===== ${relativePath} ===== */\n${content.trim()}\n`;
+    return compactCss(content);
   }));
 
   return [
     `/* Portal Lions v${packageJson.version} — arquivo gerado. Não edite diretamente. */`,
     '/* Execute `npm run build:css` após alterar os arquivos-fonte. */',
     '',
-    ...sections
+    sections.join('\n')
   ].join('\n');
 }
 

@@ -13,7 +13,7 @@ const budget = Object.freeze({
   maxLegacySources: 0,
   maxLegacyBytes: 0,
   maxSourceBytes: 38_000,
-  maxBundleBytes: 430_000
+  maxBundleBytes: 422_000
 });
 
 function stripComments(source) {
