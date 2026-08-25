@@ -1,0 +1,9 @@
+{
+  "name": "portal-lions-publico-candido-mota",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tools/verify-public.mjs"
+  }
+}
