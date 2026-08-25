@@ -31,3 +31,10 @@ npm test
 
 - Corrigida a renderização dos ícones SVG de navegação e ações.
 - Mantida a validação automática para impedir referências a ícones inexistentes.
+
+
+## Revisão 1.0.2
+
+- Aniversariantes do mês agora são ordenados com os próximos aniversários primeiro.
+- Aniversários que já ocorreram no mês aparecem depois, do mais recente para o mais antigo.
+- Para datas já passadas, o indicador mostra `Ontem` ou `Há X dias`, evitando exibir o próximo ano como se fosse a ordenação atual.

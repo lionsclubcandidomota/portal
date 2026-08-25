@@ -25,6 +25,12 @@ if (!/\.ui-icon\{[^}]*fill:none;[^}]*stroke:currentColor;[^}]*stroke-width:/s.te
   throw new Error('Os ícones públicos precisam ser renderizados por traço (stroke), não por fill.');
 }
 
+
+if (!/function birthdayRelativeDays\(/.test(js) || !/if \(aUpcoming !== bUpcoming\) return aUpcoming \? -1 : 1;/.test(js) || !/return bDays - aDays/.test(js)) {
+  throw new Error('A ordenação pública de aniversários deve priorizar próximos e depois os já ocorridos, do mais recente ao mais antigo.');
+}
+if (!/birthday-status\.past\{/.test(css)) throw new Error('O estado visual de aniversário já ocorrido está ausente.');
+
 for (const person of json.data.birthdays || []) {
   if ('memberNumber' in person || 'birthDate' in person || 'status' in person) throw new Error(`Campo privado em aniversariante: ${person.name}`);
   if (!/^\d{2}-\d{2}$/.test(person.birthday || '')) throw new Error(`Aniversário público inválido: ${person.name}`);

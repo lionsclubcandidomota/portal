@@ -161,16 +161,35 @@ function birthdayDateText(person) {
   const p = birthdayParts(person); if (!p) return '—';
   return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'long'}).format(new Date(2000,p.month,p.day));
 }
+function birthdayRelativeDays(person, from = new Date()) {
+  const parts = birthdayParts(person); if (!parts) return Number.POSITIVE_INFINITY;
+  const today = new Date(from); today.setHours(0,0,0,0);
+  const occurrence = new Date(today.getFullYear(), parts.month, parts.day); occurrence.setHours(0,0,0,0);
+  return Math.round((occurrence - today) / 86400000);
+}
 function birthdayStatus(person) {
-  const days = daysUntilBirthday(person);
+  const days = birthdayRelativeDays(person);
   if (days === 0) return { text:'Hoje', cls:'today' };
   if (days === 1) return { text:'Amanhã', cls:'soon' };
-  if (days <= 7) return { text:`Daqui a ${days} dias`, cls:'soon' };
-  return { text:`Daqui a ${days} dias`, cls:'' };
+  if (days > 1 && days <= 7) return { text:`Daqui a ${days} dias`, cls:'soon' };
+  if (days > 7) return { text:`Daqui a ${days} dias`, cls:'' };
+  if (days === -1) return { text:'Ontem', cls:'past' };
+  return { text:`Há ${Math.abs(days)} dias`, cls:'past' };
 }
 function currentMonthBirthdays() {
-  const month = new Date().getMonth();
-  return state.data.birthdays.filter(p => birthdayParts(p)?.month === month).sort((a,b) => birthdayParts(a).day - birthdayParts(b).day);
+  const today = new Date();
+  const month = today.getMonth();
+  return state.data.birthdays
+    .filter(p => birthdayParts(p)?.month === month)
+    .sort((a,b) => {
+      const aDays = birthdayRelativeDays(a, today);
+      const bDays = birthdayRelativeDays(b, today);
+      const aUpcoming = aDays >= 0;
+      const bUpcoming = bDays >= 0;
+      if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+      if (aUpcoming) return aDays - bDays || String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR');
+      return bDays - aDays || String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR');
+    });
 }
 function appointments() {
   const events = state.data.events.map(e => ({...e,type:'event',title:e.name,details:e.description}));
@@ -216,9 +235,9 @@ function renderBirthdays() {
   const input = document.getElementById('birthdaySearch');
   const draw = () => {
     const q=normalize(input.value); const items=currentMonthBirthdays().filter(p=>normalize(p.name).includes(q));
-    const rows = items.map(p=>{const s=birthdayStatus(p);return `<tr><td><div class="birthday-person">${avatar(p)}<strong>${escapeHtml(p.name)}</strong></div></td><td class="birthday-date">${escapeHtml(birthdayDateText(p))}</td><td><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></td><td>${daysUntilBirthday(p)===0?`<button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button>`:''}</td></tr>`}).join('');
-    const cards = items.map(p=>{const s=birthdayStatus(p);return `<article class="birthday-card"><div class="birthday-card-head">${avatar(p)}<div><h3>${escapeHtml(p.name)}</h3><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div></div><div class="birthday-card-meta"><div><small>Aniversário</small><strong>${escapeHtml(birthdayDateText(p))}</strong></div><div><small>Próxima data</small><strong>${formatDate(nextBirthday(p),{day:'2-digit',month:'2-digit'})}</strong></div></div>${daysUntilBirthday(p)===0?`<div class="birthday-card-actions"><button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button></div>`:''}</article>`}).join('');
-    document.getElementById('birthdayResults').innerHTML = items.length ? `<div class="card birthdays-table"><table><thead><tr><th>Pessoa</th><th>Aniversário</th><th>Próxima data</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div><div class="birthday-cards">${cards}</div>` : empty('Nenhum aniversariante encontrado neste mês.');
+    const rows = items.map(p=>{const s=birthdayStatus(p);return `<tr><td><div class="birthday-person">${avatar(p)}<strong>${escapeHtml(p.name)}</strong></div></td><td class="birthday-date">${escapeHtml(birthdayDateText(p))}</td><td><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></td><td>${birthdayRelativeDays(p)===0?`<button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button>`:''}</td></tr>`}).join('');
+    const cards = items.map(p=>{const s=birthdayStatus(p);return `<article class="birthday-card"><div class="birthday-card-head">${avatar(p)}<div><h3>${escapeHtml(p.name)}</h3><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div></div><div class="birthday-card-meta"><div><small>Aniversário</small><strong>${escapeHtml(birthdayDateText(p))}</strong></div><div><small>Próxima data</small><strong>${formatDate(nextBirthday(p),{day:'2-digit',month:'2-digit'})}</strong></div></div>${birthdayRelativeDays(p)===0?`<div class="birthday-card-actions"><button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button></div>`:''}</article>`}).join('');
+    document.getElementById('birthdayResults').innerHTML = items.length ? `<div class="card birthdays-table"><table><thead><tr><th>Pessoa</th><th>Aniversário</th><th>Situação</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div><div class="birthday-cards">${cards}</div>` : empty('Nenhum aniversariante encontrado neste mês.');
     document.querySelectorAll('[data-birthday-share]').forEach(btn=>btn.addEventListener('click',()=>shareBirthday(btn.dataset.birthdayShare)));
   };
   input.addEventListener('input',draw); draw();
