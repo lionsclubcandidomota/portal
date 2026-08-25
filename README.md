@@ -25,3 +25,9 @@ O workflow `.github/workflows/pages.yml` continua publicando automaticamente no 
 ```bash
 npm test
 ```
+
+
+## Revisão 1.0.1
+
+- Corrigida a renderização dos ícones SVG de navegação e ações.
+- Mantida a validação automática para impedir referências a ícones inexistentes.
