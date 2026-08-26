@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-26T01:19:28.102Z",
+  "updatedAt": "2026-08-26T18:17:26.718Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -373,7 +373,7 @@
         "notes": "🔹 Apuração do resultado do leilão\n🔹 Avaliação e encaminhamentos\n🔹 Demais assuntos de interesse do Lions\n\n🤝 Contamos com a participação de todos!",
         "locationType": "physical",
         "onlineUrl": "",
-        "status": "Concluído"
+        "status": "Em andamento"
       }
     ],
     "notices": [
