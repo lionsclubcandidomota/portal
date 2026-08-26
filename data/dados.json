@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-26T22:06:22.306Z",
+  "updatedAt": "2026-08-26T22:07:05.570Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -182,12 +182,6 @@
         "id": "b_ms40it6p_0df3zb",
         "name": "Silvio Begosso",
         "birthday": "01-01",
-        "photo": ""
-      },
-      {
-        "id": "b_mtan8dwe_ay8yr1",
-        "name": "teste",
-        "birthday": "08-26",
         "photo": ""
       }
     ],
