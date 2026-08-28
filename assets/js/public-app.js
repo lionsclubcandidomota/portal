@@ -9,7 +9,7 @@ const VIEW_META = {
   notices: ['Avisos', 'Comunicados públicos do clube']
 };
 
-const state = { data: null, currentView: 'dashboard', agendaMode: 'list', calendarCursor: new Date() };
+const state = { data: null, currentView: 'dashboard', agendaMode: 'list', calendarCursor: new Date(), lastFocusedElement: null };
 const els = {
   root: document.getElementById('viewRoot'),
   title: document.getElementById('pageTitle'),
@@ -142,8 +142,22 @@ function setView(view, {updateHash=true} = {}) {
   if (updateHash) history.replaceState(null,'',`#${view}`);
   closeSidebar(); render(); window.scrollTo({top:0,behavior:'auto'});
 }
-function openModal(title, html) { els.modalTitle.textContent = title; els.modalBody.innerHTML = html; els.modal.hidden = false; document.body.style.overflow = 'hidden'; }
-function closeModal() { if (els.modal.hidden) return; els.modal.hidden = true; els.modalBody.innerHTML = ''; document.body.style.overflow = ''; }
+function openModal(title, html) {
+  state.lastFocusedElement = document.activeElement;
+  els.modalTitle.textContent = title;
+  els.modalBody.innerHTML = html;
+  els.modal.hidden = false;
+  document.body.classList.add('modal-open');
+  requestAnimationFrame(() => els.modal.querySelector('[data-close-modal]')?.focus());
+}
+function closeModal() {
+  if (els.modal.hidden) return;
+  els.modal.hidden = true;
+  els.modalBody.innerHTML = '';
+  document.body.classList.remove('modal-open');
+  state.lastFocusedElement?.focus?.();
+  state.lastFocusedElement = null;
+}
 
 function birthdayParts(person) {
   const m = String(person.birthday || '').match(/^(\d{2})-(\d{2})$/); if (!m) return null;
@@ -211,22 +225,73 @@ function lastUpdateText() {
 }
 
 function renderDashboard() {
-  const bdays = currentMonthBirthdays(); const upcoming = upcomingAppointments(5); const notices = publicNotices().slice(0,3); const settings = state.data.settings;
+  const bdays = currentMonthBirthdays();
+  const upcoming = upcomingAppointments(5);
+  const notices = publicNotices().slice(0,3);
+  const settings = state.data.settings;
+  const upcomingCount = upcomingAppointments().length;
+  const noticeCount = publicNotices().length;
+
   els.root.innerHTML = `
     <section class="hero">
-      <div class="hero-content"><span class="hero-eyebrow">Portal do clube</span><h2>${greeting()}!</h2><p>Acompanhe as novidades do ${escapeHtml(settings.clubName)}.</p><div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div></div>
-      <div class="hero-logo"><div class="hero-logo-wrap"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt="Logo do ${escapeHtml(settings.clubName)}"></div><small>${escapeHtml(settings.clubName)}</small></div>
+      <div class="hero-content">
+        <span class="hero-eyebrow">Portal do clube</span>
+        <h2>${greeting()}!</h2>
+        <p>Informações públicas, agenda e comunicados do ${escapeHtml(settings.clubName)} em um só lugar.</p>
+        <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
+        <div class="hero-actions">
+          <button class="hero-action primary" type="button" data-go="agenda">${icon('calendar')} Ver agenda</button>
+          <button class="hero-action" type="button" data-go="notices">${icon('megaphone')} Ver avisos</button>
+        </div>
+      </div>
+      <div class="hero-logo">
+        <div class="hero-logo-wrap"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt="Logo do ${escapeHtml(settings.clubName)}"></div>
+        <small>${escapeHtml(settings.clubName)}</small>
+      </div>
     </section>
-    <section class="grid grid-kpis">
-      <button class="kpi-card" type="button" data-go="agenda"><span class="kpi-icon">${icon('calendar')}</span><span class="kpi-copy"><small>Próximos na agenda</small><strong>${upcomingAppointments().length}</strong></span></button>
-      <button class="kpi-card" type="button" data-go="notices"><span class="kpi-icon">${icon('megaphone')}</span><span class="kpi-copy"><small>Avisos disponíveis</small><strong>${publicNotices().length}</strong></span></button>
+
+    <section class="grid grid-kpis" aria-label="Resumo do portal">
+      <button class="kpi-card" type="button" data-go="agenda">
+        <span class="kpi-icon">${icon('calendar')}</span>
+        <span class="kpi-copy"><small>Próximos na agenda</small><strong>${upcomingCount}</strong></span>
+      </button>
+      <button class="kpi-card" type="button" data-go="birthdays">
+        <span class="kpi-icon">${icon('cake')}</span>
+        <span class="kpi-copy"><small>Aniversários no mês</small><strong>${bdays.length}</strong></span>
+      </button>
+      <button class="kpi-card" type="button" data-go="notices">
+        <span class="kpi-icon">${icon('megaphone')}</span>
+        <span class="kpi-copy"><small>Avisos disponíveis</small><strong>${noticeCount}</strong></span>
+      </button>
     </section>
+
     <section class="dashboard-grid">
-      <article class="card full"><div class="card-header"><div><h3>${icon('cake')} Aniversários</h3><div class="card-subtitle">Aniversariantes do mês atual</div></div><button class="btn btn-ghost" type="button" data-go="birthdays">Ver todos</button></div><div class="list">${bdays.length ? bdays.slice(0,8).map(p => { const s=birthdayStatus(p); return `<div class="list-item">${avatar(p)}<div class="list-item-main"><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(birthdayDateText(p))}</small></div><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div>`; }).join('') : empty('Nenhum aniversariante neste mês.')}</div></article>
-      <article class="card"><div class="card-header"><div><h3>${icon('calendar')} Agenda</h3><div class="card-subtitle">Próximos eventos e reuniões</div></div><button class="btn btn-ghost" type="button" data-go="agenda">Ver agenda</button></div><div class="list">${upcoming.length ? upcoming.map(a => `<button class="list-item" type="button" data-appt="${escapeHtml(a.type)}:${escapeHtml(a.id)}"><span class="kpi-icon">${icon(a.type==='meeting'?'handshake':'calendar')}</span><span class="list-item-main"><strong>${escapeHtml(a.title)}</strong><small>${formatDate(a.date,{day:'2-digit',month:'2-digit'})} · ${escapeHtml(a.time || 'Horário não informado')}</small></span></button>`).join('') : empty('Nenhum compromisso próximo.')}</div></article>
-      <article class="card"><div class="card-header"><div><h3>${icon('megaphone')} Avisos</h3><div class="card-subtitle">Comunicados em destaque</div></div><button class="btn btn-ghost" type="button" data-go="notices">Ver avisos</button></div><div class="list">${notices.length ? notices.map(n => `<div class="notice"><h4>${escapeHtml(n.title)}</h4><div class="markdown">${simpleMarkdown(n.text)}</div><small>${formatDate(n.date)}${n.endDate ? ` até ${formatDate(n.endDate)}`:''}</small></div>`).join('') : empty('Nenhum aviso disponível.')}</div></article>
+      <article class="card full">
+        <div class="card-header">
+          <div><h3>${icon('cake')} Aniversários</h3><div class="card-subtitle">Aniversariantes do mês atual</div></div>
+          <button class="btn btn-ghost" type="button" data-go="birthdays">Ver todos</button>
+        </div>
+        <div class="list">${bdays.length ? bdays.slice(0,8).map(p => { const s=birthdayStatus(p); return `<div class="list-item">${avatar(p)}<div class="list-item-main"><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(birthdayDateText(p))}</small></div><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div>`; }).join('') : empty('Nenhum aniversariante neste mês.')}</div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <div><h3>${icon('calendar')} Agenda</h3><div class="card-subtitle">Próximos eventos e reuniões</div></div>
+          <button class="btn btn-ghost" type="button" data-go="agenda">Ver agenda</button>
+        </div>
+        <div class="list">${upcoming.length ? upcoming.map(a => `<button class="list-item" type="button" data-appt="${escapeHtml(a.type)}:${escapeHtml(a.id)}"><span class="kpi-icon">${icon(a.type==='meeting'?'handshake':'calendar')}</span><span class="list-item-main"><strong>${escapeHtml(a.title)}</strong><small>${formatDate(a.date,{day:'2-digit',month:'2-digit'})} · ${escapeHtml(a.time || 'Horário não informado')}</small></span></button>`).join('') : empty('Nenhum compromisso próximo.')}</div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <div><h3>${icon('megaphone')} Avisos</h3><div class="card-subtitle">Comunicados em destaque</div></div>
+          <button class="btn btn-ghost" type="button" data-go="notices">Ver avisos</button>
+        </div>
+        <div class="list">${notices.length ? notices.map(n => `<div class="notice"><h4>${escapeHtml(n.title)}</h4><div class="markdown">${simpleMarkdown(n.text)}</div><small>${formatDate(n.date)}${n.endDate ? ` até ${formatDate(n.endDate)}`:''}</small></div>`).join('') : empty('Nenhum aviso disponível.')}</div>
+      </article>
     </section>`;
-  bindViewNavigation(); bindAppointmentButtons();
+  bindViewNavigation();
+  bindAppointmentButtons();
 }
 
 function renderBirthdays() {
@@ -262,7 +327,7 @@ function appointmentLocation(a) {
 }
 function openAppointment(type,id) {
   const a=appointments().find(x=>x.type===type&&String(x.id)===String(id)); if(!a)return;
-  openModal(a.title, `<div><span class="agenda-type">${a.type==='meeting'?`${icon('handshake')} Reunião`:`${icon('calendar')} Evento`}</span><div class="detail-grid"><div><small>Data</small><strong>${formatDate(a.date)}</strong></div><div><small>Horário</small><strong>${escapeHtml(a.time||'Não informado')}</strong></div><div><small>Local</small><strong>${appointmentLocation(a)}</strong></div><div><small>Status</small><strong>${escapeHtml(a.status||'Confirmado')}</strong></div></div><div class="markdown">${simpleMarkdown(a.details||'')}</div><div style="margin-top:16px;display:flex;justify-content:flex-end"><button class="btn btn-primary" type="button" id="addCalendar">${icon('calendar')} Adicionar ao calendário</button></div></div>`);
+  openModal(a.title, `<div><span class="agenda-type">${a.type==='meeting'?`${icon('handshake')} Reunião`:`${icon('calendar')} Evento`}</span><div class="detail-grid"><div><small>Data</small><strong>${formatDate(a.date)}</strong></div><div><small>Horário</small><strong>${escapeHtml(a.time||'Não informado')}</strong></div><div><small>Local</small><strong>${appointmentLocation(a)}</strong></div><div><small>Status</small><strong>${escapeHtml(a.status||'Confirmado')}</strong></div></div><div class="markdown">${simpleMarkdown(a.details||'')}</div><div class="modal-actions"><button class="btn btn-primary" type="button" id="addCalendar">${icon('calendar')} Adicionar ao calendário</button></div></div>`);
   document.getElementById('addCalendar')?.addEventListener('click',()=>downloadIcs(a));
 }
 function bindAppointmentButtons() { document.querySelectorAll('[data-appt]').forEach(btn=>btn.addEventListener('click',()=>{const [type,id]=btn.dataset.appt.split(':');openAppointment(type,id)})); }
