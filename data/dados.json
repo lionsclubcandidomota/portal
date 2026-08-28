@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-28T01:02:21.648Z",
+  "updatedAt": "2026-08-28T01:02:34.350Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -66,7 +66,7 @@
       },
       {
         "id": "b_ms3xlpvb_50kztj",
-        "name": "Luiz Henrique Franciscatte",
+        "name": "Luiz Henrique Baratelli Franciscatte",
         "birthday": "08-22",
         "photo": "./public/members/b_ms3xlpvb_50kztj-1wypju9.jpg"
       },
@@ -397,7 +397,7 @@
     "leaders": [
       {
         "id": "leadership_msjqmcsu_tdz2qg",
-        "name": "Luiz Henrique Franciscatte",
+        "name": "Luiz Henrique Baratelli Franciscatte",
         "photo": "./public/members/b_ms3xlpvb_50kztj-1wypju9.jpg",
         "role": "Segundo Vice-Presidente",
         "lionYear": "2026/2027",
