@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-28T01:01:43.042Z",
+  "updatedAt": "2026-08-28T01:01:58.550Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -48,7 +48,7 @@
       },
       {
         "id": "b_ms3xi4tc_b25op6",
-        "name": "Evelin do Nascimento Ferreira",
+        "name": "Evelin Aparecida do Nascimento Ferreira",
         "birthday": "11-04",
         "photo": "./public/members/b_ms3xi4tc_b25op6-0qjacss.jpg"
       },
