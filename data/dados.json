@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-28T01:34:40.507Z",
+  "updatedAt": "2026-08-28T01:50:27.547Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -119,6 +119,12 @@
         "photo": "./public/members/b_ms3xp6en_ka98gi-1kyoy6v.jpg"
       },
       {
+        "id": "b_ms3xpn5s_svjeqa",
+        "name": "Regina Bolfarini Jabur Freire",
+        "birthday": "09-06",
+        "photo": "./public/members/b_ms3xpn5s_svjeqa-04mh3eo.jpg"
+      },
+      {
         "id": "b_ms3xpzjw_4n88dj",
         "name": "Roberta Maria Bolfarini Jabur Freire",
         "birthday": "09-24",
@@ -176,6 +182,12 @@
         "id": "b_ms40it6p_0df3zb",
         "name": "Silvio Renato Begosso",
         "birthday": "01-01",
+        "photo": ""
+      },
+      {
+        "id": "b_mtcaoex7_wl8vch",
+        "name": "teste",
+        "birthday": "08-27",
         "photo": ""
       }
     ],
@@ -439,6 +451,15 @@
         "name": "Daniel Flavio Gozzi",
         "photo": "./public/members/b_ms3xh5de_4qya3j-0lmscuw.jpg",
         "role": "Assessor de Sócios",
+        "lionYear": "2026/2027",
+        "startsOn": "2026-07-01",
+        "endsOn": "2027-06-30"
+      },
+      {
+        "id": "leadership_msjqo3at_vw46sy",
+        "name": "Regina Bolfarini Jabur Freire",
+        "photo": "./public/members/b_ms3xpn5s_svjeqa-04mh3eo.jpg",
+        "role": "Assessor de Marketing",
         "lionYear": "2026/2027",
         "startsOn": "2026-07-01",
         "endsOn": "2027-06-30"
