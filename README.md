@@ -40,6 +40,16 @@ npm test
 - Para datas já passadas, o indicador mostra `Ontem` ou `Há X dias`, evitando exibir o próximo ano como se fosse a ordenação atual.
 
 
+
+## Revisão 1.1.1 — Refinamento mobile
+
+- cartões de aniversários compactados no celular;
+- removida a data redundante de “Próxima data”;
+- filtro de aniversários reorganizado para ocupar menos altura;
+- nomes longos e selos de situação passam a se adaptar melhor a telas estreitas;
+- dashboard mobile ganhou maior densidade, legibilidade e menos rolagem;
+- navegação inferior passou a funcionar como barra ancorada, menos intrusiva sobre o conteúdo.
+
 ## Revisão 1.1.0 — Refatoração visual e responsiva
 
 - Design system revisado com tipografia, espaçamentos, superfícies, bordas, sombras e estados consistentes.

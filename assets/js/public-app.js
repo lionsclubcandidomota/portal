@@ -253,15 +253,15 @@ function renderDashboard() {
     <section class="grid grid-kpis" aria-label="Resumo do portal">
       <button class="kpi-card" type="button" data-go="agenda">
         <span class="kpi-icon">${icon('calendar')}</span>
-        <span class="kpi-copy"><small>Próximos na agenda</small><strong>${upcomingCount}</strong></span>
+        <span class="kpi-copy"><small>Próximos eventos</small><strong>${upcomingCount}</strong></span>
       </button>
       <button class="kpi-card" type="button" data-go="birthdays">
         <span class="kpi-icon">${icon('cake')}</span>
-        <span class="kpi-copy"><small>Aniversários no mês</small><strong>${bdays.length}</strong></span>
+        <span class="kpi-copy"><small>Aniversários</small><strong>${bdays.length}</strong></span>
       </button>
       <button class="kpi-card" type="button" data-go="notices">
         <span class="kpi-icon">${icon('megaphone')}</span>
-        <span class="kpi-copy"><small>Avisos disponíveis</small><strong>${noticeCount}</strong></span>
+        <span class="kpi-copy"><small>Avisos</small><strong>${noticeCount}</strong></span>
       </button>
     </section>
 
@@ -271,7 +271,7 @@ function renderDashboard() {
           <div><h3>${icon('cake')} Aniversários</h3><div class="card-subtitle">Aniversariantes do mês atual</div></div>
           <button class="btn btn-ghost" type="button" data-go="birthdays">Ver todos</button>
         </div>
-        <div class="list">${bdays.length ? bdays.slice(0,8).map(p => { const s=birthdayStatus(p); return `<div class="list-item">${avatar(p)}<div class="list-item-main"><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(birthdayDateText(p))}</small></div><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div>`; }).join('') : empty('Nenhum aniversariante neste mês.')}</div>
+        <div class="list dashboard-birthday-list">${bdays.length ? bdays.slice(0,8).map(p => { const s=birthdayStatus(p); return `<div class="list-item dashboard-birthday-item">${avatar(p)}<div class="list-item-main"><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(birthdayDateText(p))}</small></div><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div>`; }).join('') : empty('Nenhum aniversariante neste mês.')}</div>
       </article>
 
       <article class="card">
@@ -301,7 +301,7 @@ function renderBirthdays() {
   const draw = () => {
     const q=normalize(input.value); const items=currentMonthBirthdays().filter(p=>normalize(p.name).includes(q));
     const rows = items.map(p=>{const s=birthdayStatus(p);return `<tr><td><div class="birthday-person">${avatar(p)}<strong>${escapeHtml(p.name)}</strong></div></td><td class="birthday-date">${escapeHtml(birthdayDateText(p))}</td><td><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></td><td>${birthdayRelativeDays(p)===0?`<button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button>`:''}</td></tr>`}).join('');
-    const cards = items.map(p=>{const s=birthdayStatus(p);return `<article class="birthday-card"><div class="birthday-card-head">${avatar(p)}<div><h3>${escapeHtml(p.name)}</h3><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div></div><div class="birthday-card-meta"><div><small>Aniversário</small><strong>${escapeHtml(birthdayDateText(p))}</strong></div><div><small>Próxima data</small><strong>${formatDate(nextBirthday(p),{day:'2-digit',month:'2-digit'})}</strong></div></div>${birthdayRelativeDays(p)===0?`<div class="birthday-card-actions"><button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button></div>`:''}</article>`}).join('');
+    const cards = items.map(p=>{const s=birthdayStatus(p);return `<article class="birthday-card"><div class="birthday-card-head">${avatar(p)}<div class="birthday-card-copy"><h3>${escapeHtml(p.name)}</h3><div class="birthday-card-date">${icon('calendar')}<strong>${escapeHtml(birthdayDateText(p))}</strong></div></div><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div>${birthdayRelativeDays(p)===0?`<div class="birthday-card-actions"><button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button></div>`:''}</article>`}).join('');
     document.getElementById('birthdayResults').innerHTML = items.length ? `<div class="card birthdays-table"><table><thead><tr><th>Pessoa</th><th>Aniversário</th><th>Situação</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div><div class="birthday-cards">${cards}</div>` : empty('Nenhum aniversariante encontrado neste mês.');
     document.querySelectorAll('[data-birthday-share]').forEach(btn=>btn.addEventListener('click',()=>shareBirthday(btn.dataset.birthdayShare)));
   };

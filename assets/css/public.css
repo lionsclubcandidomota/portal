@@ -1,4 +1,4 @@
-/* Portal Lions Público — UI/UX refactor v1.1.0 */
+/* Portal Lions Público — UI/UX refactor v1.1.1 */
 
 /* ==========================================================================
    Design tokens
@@ -1743,6 +1743,142 @@ html[data-theme="dark"] .leaders-hero option{background:#172638;color:#fff}
   .detail-grid{grid-template-columns:1fr}
   .mobile-bottom-nav{right:7px;left:7px;border-radius:18px}
   .mobile-bottom-nav small{font-size:.51rem}
+}
+
+/* ==========================================================================
+   Mobile refinement v1.1.1
+   ========================================================================== */
+@media(max-width:720px){
+  :root{--mobile-nav-height:64px}
+  body{padding-bottom:calc(var(--mobile-nav-height) + 10px + env(safe-area-inset-bottom))}
+
+  .topbar{min-height:62px;padding:7px 10px}
+  .topbar-title h1{font-size:1rem}
+  .menu-btn,.theme-toggle,.icon-btn{width:40px;height:40px}
+  .content-area{width:calc(100% - 16px);margin:10px auto 22px}
+
+  .hero{padding:19px 16px;border-radius:20px}
+  .hero h2{margin:10px 0 7px;font-size:1.95rem}
+  .hero p{font-size:.82rem;line-height:1.4}
+  .hero-meta{margin-top:12px}
+  .pill{min-height:30px;padding:5px 8px;font-size:.65rem}
+  .hero-actions{gap:7px;margin-top:12px}
+  .hero-action{min-height:40px;padding:8px 9px;font-size:.72rem}
+
+  .grid-kpis{gap:7px;margin:9px 0 10px}
+  .kpi-card{min-height:94px;padding:9px 5px;gap:5px;border-radius:17px}
+  .kpi-icon{width:35px;height:35px;border-radius:12px;font-size:1rem}
+  .kpi-copy small{font-size:.63rem;line-height:1.15}
+  .kpi-copy strong{font-size:1.22rem}
+
+  .card{padding:13px;border-radius:18px}
+  .card-header{gap:8px;margin-bottom:10px}
+  .card-header h3{font-size:.9rem}
+  .card-subtitle{margin-top:2px;font-size:.68rem}
+  .card-header .btn{min-height:38px;padding:7px 9px}
+
+  .dashboard-birthday-list{gap:6px}
+  .dashboard-birthday-item{
+    display:grid;
+    grid-template-columns:40px minmax(0,1fr) auto;
+    gap:8px;
+    min-height:56px;
+    padding:7px 8px;
+  }
+  .dashboard-birthday-item .avatar{width:38px;height:38px}
+  .dashboard-birthday-item .list-item-main strong{
+    font-size:.82rem;
+    line-height:1.2;
+    white-space:normal;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+  .dashboard-birthday-item .list-item-main small{font-size:.68rem}
+  .dashboard-birthday-item .birthday-status{min-height:25px;padding:4px 7px;font-size:.62rem}
+  .dashboard-birthday-item:nth-child(n+6){display:none}
+
+  .section-banner{gap:12px;margin-bottom:10px;padding:14px;border-radius:18px}
+  .section-banner h2{font-size:1rem}
+  .section-banner p{margin-top:3px;font-size:.7rem;line-height:1.35}
+  .search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+  .search{min-width:0;min-height:42px;padding:0 10px}
+  .search input{font-size:.8rem}
+  .month-chip{min-height:42px;padding:0 10px;font-size:.7rem}
+
+  .birthday-cards{gap:7px}
+  .birthday-card{padding:11px 12px;border-radius:17px}
+  .birthday-card-head{
+    display:grid;
+    grid-template-columns:42px minmax(0,1fr) auto;
+    align-items:center;
+    gap:9px;
+  }
+  .birthday-card-head .avatar{width:40px;height:40px}
+  .birthday-card-copy{min-width:0}
+  .birthday-card-head h3{
+    margin:0;
+    font-size:.83rem;
+    line-height:1.25;
+    overflow-wrap:anywhere;
+  }
+  .birthday-card-date{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    margin-top:4px;
+    color:var(--muted);
+    font-size:.69rem;
+  }
+  .birthday-card-date .ui-icon{color:var(--primary);font-size:.92rem}
+  .birthday-card-date strong{color:var(--text-soft);font-size:.7rem}
+  .birthday-card-head>.birthday-status{align-self:start;margin-top:1px;min-height:25px;padding:4px 7px;font-size:.62rem}
+  .birthday-card-meta{display:none}
+  .birthday-card-actions{margin-top:8px}
+  .birthday-card-actions .btn{min-height:40px}
+
+  .mobile-bottom-nav{
+    right:0;
+    bottom:0;
+    left:0;
+    min-height:60px;
+    padding:4px 7px max(4px,env(safe-area-inset-bottom));
+    border-right:0;
+    border-bottom:0;
+    border-left:0;
+    border-radius:18px 18px 0 0;
+    background:color-mix(in srgb,var(--surface) 97%,transparent);
+    box-shadow:0 -10px 28px rgba(5,24,42,.13);
+  }
+  .mobile-bottom-nav button{min-height:50px;border-radius:13px}
+  .mobile-bottom-nav .ui-icon{font-size:1.08rem}
+  .mobile-bottom-nav small{font-size:.56rem}
+}
+
+@media(max-width:430px){
+  .content-area{width:calc(100% - 12px)}
+  .hero-logo{display:none}
+  .hero-content{padding-right:0}
+  .hero p{max-width:none}
+  .grid-kpis{gap:5px}
+  .kpi-card{min-height:90px}
+  .kpi-copy small{font-size:.6rem}
+  .card{padding:12px}
+  .list-item{border-radius:13px}
+  .section-banner{padding:13px}
+  .month-chip{padding:0 8px}
+  .birthday-card{padding:10px}
+  .mobile-bottom-nav{right:0;left:0;border-radius:16px 16px 0 0}
+  .mobile-bottom-nav small{font-size:.55rem}
+}
+
+@media(max-width:360px){
+  .dashboard-birthday-item{grid-template-columns:38px minmax(0,1fr)}
+  .dashboard-birthday-item>.birthday-status{grid-column:2;justify-self:start}
+  .birthday-card-head{grid-template-columns:40px minmax(0,1fr)}
+  .birthday-card-head>.birthday-status{grid-column:2;justify-self:start;margin-top:0}
+  .search-row{grid-template-columns:1fr}
+  .month-chip{justify-self:start}
 }
 
 @media(prefers-reduced-motion:reduce){
