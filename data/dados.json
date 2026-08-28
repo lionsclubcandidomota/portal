@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-28T01:01:13.003Z",
+  "updatedAt": "2026-08-28T01:01:43.042Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -90,7 +90,7 @@
       },
       {
         "id": "b_ms3xnmv9_jt5r46",
-        "name": "Maria Madalena da Rocha",
+        "name": "Maria Madalena Barbosa da Rocha Gozzi",
         "birthday": "03-10",
         "photo": "./public/members/b_ms3xnmv9_jt5r46-1cvgkh0.jpg"
       },
