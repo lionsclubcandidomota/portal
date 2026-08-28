@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-28T01:02:46.326Z",
+  "updatedAt": "2026-08-28T01:02:59.101Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -132,7 +132,7 @@
       },
       {
         "id": "b_ms3xq92x_jjequd",
-        "name": "Roberto Freire",
+        "name": "Roberto Martins Freire",
         "birthday": "10-26",
         "photo": "./public/members/b_ms3xq92x_jjequd-0r3hzuz.jpg"
       },
@@ -469,7 +469,7 @@
       },
       {
         "id": "leadership_msjqolv4_c2he8q",
-        "name": "Roberto Freire",
+        "name": "Roberto Martins Freire",
         "photo": "./public/members/b_ms3xq92x_jjequd-0r3hzuz.jpg",
         "role": "Primeiro Vice-Presidente",
         "lionYear": "2026/2027",
