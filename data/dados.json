@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:08:46.435Z",
+  "updatedAt": "2026-08-29T03:09:58.855Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -440,14 +440,6 @@
         "endDate": "2026-01-01",
         "priority": "Alta",
         "text": "**🕊️ Que a paz comece em nossas atitudes e se multiplique através do servir.**"
-      },
-      {
-        "id": "n_mtdslgtg_fhtaut",
-        "title": "Confraternização Universal",
-        "date": "2026-01-01",
-        "endDate": "2026-01-01",
-        "priority": "Baixa",
-        "text": "**✨ Um novo ano começa! Que possamos renovar nossa esperança e nossa vontade de servir.**"
       },
       {
         "id": "n_mtdsm096_2bqjcw",
