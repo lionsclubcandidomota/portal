@@ -118,10 +118,16 @@ function applyTheme(theme) {
 }
 function isMobileShell() { return window.matchMedia('(max-width: 900px)').matches; }
 function syncSidebarState() {
-  els.appShell?.classList.toggle('sidebar-collapsed', state.sidebarCollapsed && !isMobileShell());
-  els.sidebar.classList.toggle('collapsed', state.sidebarCollapsed && !isMobileShell());
+  const desktopCollapsed = state.sidebarCollapsed && !isMobileShell();
+  els.appShell?.classList.toggle('sidebar-collapsed', desktopCollapsed);
+  els.sidebar.classList.toggle('collapsed', desktopCollapsed);
   els.menuBtn.setAttribute('aria-expanded', isMobileShell() ? String(els.sidebar.classList.contains('open')) : String(!state.sidebarCollapsed));
   els.menuBtn.setAttribute('aria-label', isMobileShell() ? 'Abrir menu' : (state.sidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'));
+  document.querySelectorAll('#mainNav .nav-item').forEach(btn => {
+    const label = btn.querySelector('span:last-child')?.textContent?.trim() || '';
+    if (desktopCollapsed && label) btn.setAttribute('title', label);
+    else btn.removeAttribute('title');
+  });
 }
 function toggleDesktopSidebar() {
   state.sidebarCollapsed = !state.sidebarCollapsed;
@@ -334,9 +340,9 @@ function renderBirthdays() {
   const input = document.getElementById('birthdaySearch');
   const draw = () => {
     const q=normalize(input.value); const items=currentMonthBirthdays().filter(p=>normalize(p.name).includes(q));
-    const rows = items.map(p=>{const s=birthdayStatus(p);return `<tr><td><div class="birthday-person">${avatar(p)}<strong>${escapeHtml(p.name)}</strong></div></td><td class="birthday-date">${escapeHtml(birthdayDateText(p))}</td><td><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></td><td>${birthdayRelativeDays(p)===0?`<button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button>`:''}</td></tr>`}).join('');
+    const rows = items.map(p=>{const s=birthdayStatus(p);return `<tr><td><div class="birthday-person">${avatar(p)}<strong>${escapeHtml(p.name)}</strong></div></td><td class="birthday-date">${escapeHtml(birthdayDateText(p))}</td><td><div class="birthday-status-actions"><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span>${birthdayRelativeDays(p)===0?`<button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button>`:''}</div></td></tr>`}).join('');
     const cards = items.map(p=>{const s=birthdayStatus(p);return `<article class="birthday-card"><div class="birthday-card-head">${avatar(p)}<div class="birthday-card-copy"><h3>${escapeHtml(p.name)}</h3><div class="birthday-card-date">${icon('calendar')}<strong>${escapeHtml(birthdayDateText(p))}</strong></div></div><span class="birthday-status ${s.cls}">${escapeHtml(s.text)}</span></div>${birthdayRelativeDays(p)===0?`<div class="birthday-card-actions"><button class="btn btn-primary" type="button" data-birthday-share="${escapeHtml(p.id)}">${icon('cake')} Enviar parabéns</button></div>`:''}</article>`}).join('');
-    document.getElementById('birthdayResults').innerHTML = items.length ? `<div class="card birthdays-table"><table><thead><tr><th>Pessoa</th><th>Aniversário</th><th>Situação</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div><div class="birthday-cards">${cards}</div>` : empty('Nenhum aniversariante encontrado neste mês.');
+    document.getElementById('birthdayResults').innerHTML = items.length ? `<div class="card birthdays-table"><table><thead><tr><th>Pessoa</th><th>Aniversário</th><th>Situação</th></tr></thead><tbody>${rows}</tbody></table></div><div class="birthday-cards">${cards}</div>` : empty('Nenhum aniversariante encontrado neste mês.');
     document.querySelectorAll('[data-birthday-share]').forEach(btn=>btn.addEventListener('click',()=>shareBirthday(btn.dataset.birthdayShare)));
   };
   input.addEventListener('input',draw); draw();
@@ -397,7 +403,7 @@ function renderNotices() {
           <button class="notice-summary" type="button" data-notice-toggle="${prefix}-${i}" aria-expanded="${openFirst && i === 0 ? 'true' : 'false'}">
             <span class="notice-icon">${icon(prefix === 'history' ? 'clock' : 'megaphone')}</span>
             <span><strong>${escapeHtml(n.title)}</strong><small>${formatDate(n.date)}${n.endDate ? ` até ${formatDate(n.endDate)}` : ''}</small></span>
-            <span class="priority">${escapeHtml(n.priority || (prefix === 'history' ? 'Encerrado' : 'Normal'))}</span>
+            <span class="priority">${escapeHtml(prefix === 'history' ? 'Encerrado' : (n.priority || 'Normal'))}</span>
           </button>
           <div class="notice-details markdown" data-notice-details="${prefix}-${i}" ${openFirst && i === 0 ? '' : 'hidden'}>${simpleMarkdown(n.text)}</div>
         </article>`).join('')}</div>` : empty(prefix === 'history' ? 'Nenhum aviso anterior publicado.' : 'Nenhum aviso ativo no momento.')}
@@ -412,7 +418,7 @@ function renderNotices() {
       </div>
     </section>
     ${section('Avisos atuais', 'Comunicados que ainda estão em vigor ou visíveis ao público.', active, 'active', true)}
-    ${section('Histórico de avisos', 'Avisos anteriores, semelhante ao histórico da agenda.', history, 'history', false)}
+    ${section('Histórico de avisos', 'Avisos anteriores, semelhante ao histórico da agenda.', history, 'history', active.length === 0)}
   `;
 
   document.querySelectorAll('[data-notice-toggle]').forEach(btn => btn.addEventListener('click', () => {

@@ -42,6 +42,25 @@ npm test
 
 
 
+## Revisão 1.1.4 — Polimento premium
+
+- acabamento final de UI/UX com microinterações e transições mais naturais no desktop;
+- removido o selo redundante “Público” da barra superior;
+- sidebar recolhida ganhou transição e dicas de navegação pelos ícones;
+- banner foi refinado para manter o logo como elemento gráfico também no celular, sem ocupar espaço útil;
+- removidos indicadores redundantes do banner, preservando os KPIs logo abaixo;
+- tabela de aniversários no desktop ficou mais limpa, unificando situação e ação e eliminando coluna vazia;
+- histórico de avisos identifica claramente itens como “Encerrado”;
+- navegação inferior mobile, cards, estados de foco/hover e telas muito estreitas receberam ajustes finais de consistência.
+
+## Revisão 1.1.3 — Acabamento visual desktop + mobile
+
+- segunda passagem visual com refinamento simultâneo para desktop e celular;
+- banner inicial ficou mais institucional, com composição mais rica, destaques rápidos e melhor hierarquia;
+- barra superior, cards, listas e seções receberam acabamento visual mais consistente e moderno;
+- melhorias adicionais de densidade, leitura e toques no mobile, sem esquecer o desktop;
+- tela de avisos ganhou melhor apresentação do resumo e o histórico abre automaticamente quando não houver avisos ativos.
+
 ## Revisão 1.1.2 — Ajustes de desktop e avisos
 
 - botão do menu lateral passou a funcionar também no desktop, com recolhimento/expansão da sidebar;
