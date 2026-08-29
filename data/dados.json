@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:04:04.288Z",
+  "updatedAt": "2026-08-29T03:04:47.218Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -488,6 +488,14 @@
         "endDate": "2026-01-11",
         "priority": "Baixa",
         "text": "**🌱 Proteger a saúde e o meio ambiente também faz parte da nossa missão de servir.**"
+      },
+      {
+        "id": "n_mtdsrus8_ntaher",
+        "title": "Aniversário de Melvin Jones",
+        "date": "2026-01-13",
+        "endDate": "2026-01-13",
+        "priority": "Alta",
+        "text": "**🦁 Celebramos o legado de Melvin Jones, cuja visão continua inspirando milhões de pessoas a servir.**"
       }
     ],
     "leaders": [
