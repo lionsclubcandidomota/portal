@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:00:14.377Z",
+  "updatedAt": "2026-08-29T03:00:32.687Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -456,6 +456,14 @@
         "endDate": "2026-01-04",
         "priority": "Baixa",
         "text": "**♿ Inclusão é garantir que todos possam participar, aprender e viver com autonomia.**"
+      },
+      {
+        "id": "n_mtdsmedq_cbl2f7",
+        "title": "Dia do Hemofílico",
+        "date": "2026-01-04",
+        "endDate": "2026-01-04",
+        "priority": "Baixa",
+        "text": "**❤️ Informação, cuidado e solidariedade podem transformar vidas.**"
       }
     ],
     "leaders": [
