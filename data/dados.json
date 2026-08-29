@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:06:45.636Z",
+  "updatedAt": "2026-08-29T03:07:22.052Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -520,6 +520,14 @@
         "endDate": "2026-01-26",
         "priority": "Baixa",
         "text": "**🌎 Conhecer para preservar. Educar para transformar. Servir para deixar um mundo melhor.**"
+      },
+      {
+        "id": "n_mtdsv69m_bab7wc",
+        "title": "Redução das Emissões de CO₂",
+        "date": "2026-01-28",
+        "endDate": "2026-01-28",
+        "priority": "Baixa",
+        "text": "**🌱 Pequenas atitudes de hoje podem garantir um planeta melhor amanhã.**"
       }
     ],
     "leaders": [
