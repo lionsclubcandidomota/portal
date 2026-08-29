@@ -42,6 +42,18 @@ npm test
 
 
 
+## Revisão 1.1.6 — Consolidação visual e refatoração leve
+
+- revisão estética geral da tela inicial e dos componentes compartilhados em desktop e mobile;
+- KPIs ganharam contexto mais claro, cards do dashboard receberam hierarquia visual mais consistente e a agenda diferencia melhor itens anteriores;
+- JavaScript foi separado em módulos de núcleo, modelo, shell, compartilhamento de aniversário e views, reduzindo acoplamento e facilitando manutenção;
+- CSS foi reorganizado em base, páginas, responsividade e refinamentos, mantendo uma folha de compatibilidade para usos antigos;
+- navegação dinâmica passou a usar delegação central de eventos, evitando múltiplos listeners a cada renderização;
+- validação automatizada foi ampliada para verificar todos os módulos JS e arquivos CSS;
+- o workflow do GitHub Pages agora executa a validação pública antes de publicar, evitando deploy de uma versão estruturalmente inválida;
+- adicionado suporte explícito a `prefers-reduced-motion` e pequenos refinamentos de foco/acessibilidade;
+- publicação continua 100% estática, sem framework, build ou dependências adicionais.
+
 ## Revisão 1.1.5 — Banner mais atraente
 
 - banner principal redesenhado com composição visual mais rica e institucional;

@@ -23,6 +23,14 @@ jobs:
       - name: Baixar código-fonte
         uses: actions/checkout@v5
 
+      - name: Configurar Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Validar versão pública
+        run: npm test
+
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v6
 
