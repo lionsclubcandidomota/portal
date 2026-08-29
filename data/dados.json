@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-25T11:36:00.372Z",
+  "updatedAt": "2026-08-29T02:09:01.873Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -18,55 +18,55 @@
       },
       {
         "id": "b_ms3xfcuq_bi8m42",
-        "name": "Adriano Moreira",
-        "birthday": "04-09",
+        "name": "Adriano Ferreira Moreira",
+        "birthday": "04-10",
         "photo": "./public/members/b_ms3xfcuq_bi8m42-0g4mufr.jpg"
       },
       {
         "id": "b_ms3xfobh_l0tq8n",
-        "name": "Amanda Cristina Gozzi",
+        "name": "Amanda Cristina Cavina Marroni Gozzi",
         "birthday": "09-11",
         "photo": "./public/members/b_ms3xfobh_l0tq8n-1wu2wak.jpg"
       },
       {
         "id": "b_ms3xg16k_59dtg6",
-        "name": "Ana Elisa Almeida",
-        "birthday": "12-26",
+        "name": "Ana Elisa Toledo Baldo de Almeida",
+        "birthday": "12-27",
         "photo": "./public/members/b_ms3xg16k_59dtg6-03uycut.jpg"
       },
       {
         "id": "b_ms3xh5de_4qya3j",
-        "name": "Daniel Flávio Gozzi",
+        "name": "Daniel Flavio Gozzi",
         "birthday": "03-18",
         "photo": "./public/members/b_ms3xh5de_4qya3j-0lmscuw.jpg"
       },
       {
         "id": "b_ms3xhsbp_w6a41l",
-        "name": "Denis Coelho",
+        "name": "Denis Gonçalves Coelho",
         "birthday": "08-26",
         "photo": "./public/members/b_ms3xhsbp_w6a41l-0ypsu5j.jpg"
       },
       {
         "id": "b_ms3xi4tc_b25op6",
-        "name": "Evelin do Nascimento Ferreira",
-        "birthday": "11-04",
+        "name": "Evelin Aparecida do Nascimento Ferreira",
+        "birthday": "11-05",
         "photo": "./public/members/b_ms3xi4tc_b25op6-0qjacss.jpg"
       },
       {
         "id": "b_ms3xkgot_6anwnv",
-        "name": "Fernanda Bolfarini Franciscatte",
+        "name": "Fernanda Bolfarini Jabur Franciscatte",
         "birthday": "08-21",
         "photo": "./public/members/b_ms3xkgot_6anwnv-1mvzcx8.jpg"
       },
       {
         "id": "b_ms3xlhbw_3m6x55",
-        "name": "Larissa Baldesserra",
-        "birthday": "07-31",
+        "name": "Larissa Iaia Baldesserra",
+        "birthday": "08-01",
         "photo": "./public/members/b_ms3xlhbw_3m6x55-0qrkx6v.jpg"
       },
       {
         "id": "b_ms3xlpvb_50kztj",
-        "name": "Luiz Henrique Franciscatte",
+        "name": "Luiz Henrique Baratelli Franciscatte",
         "birthday": "08-22",
         "photo": "./public/members/b_ms3xlpvb_50kztj-1wypju9.jpg"
       },
@@ -85,24 +85,24 @@
       {
         "id": "b_ms3xn2nf_jifrzi",
         "name": "Maria Aparecida Gonçalves",
-        "birthday": "06-13",
+        "birthday": "06-14",
         "photo": "./public/members/b_ms3xn2nf_jifrzi-01qc7tc.jpg"
       },
       {
         "id": "b_ms3xnmv9_jt5r46",
-        "name": "Maria Madalena da Rocha",
+        "name": "Maria Madalena Barbosa da Rocha Gozzi",
         "birthday": "03-10",
         "photo": "./public/members/b_ms3xnmv9_jt5r46-1cvgkh0.jpg"
       },
       {
         "id": "b_ms3xnxct_7h4wxe",
-        "name": "Mario Gozzi",
+        "name": "Mario Sergio Gozzi",
         "birthday": "04-15",
         "photo": "./public/members/b_ms3xnxct_7h4wxe-0ucc51o.jpg"
       },
       {
         "id": "b_ms3xo8wh_z97ryn",
-        "name": "Matheus Prado",
+        "name": "Matheus Alves Prado",
         "birthday": "02-08",
         "photo": "./public/members/b_ms3xo8wh_z97ryn-1r3v4xy.jpg"
       },
@@ -120,19 +120,19 @@
       },
       {
         "id": "b_ms3xpn5s_svjeqa",
-        "name": "Regina Freire",
+        "name": "Regina Bolfarini Jabur Freire",
         "birthday": "09-06",
         "photo": "./public/members/b_ms3xpn5s_svjeqa-04mh3eo.jpg"
       },
       {
         "id": "b_ms3xpzjw_4n88dj",
-        "name": "Roberta Bolfarini Jabur Freire",
-        "birthday": "09-26",
+        "name": "Roberta Maria Bolfarini Jabur Freire",
+        "birthday": "09-24",
         "photo": "./public/members/b_ms3xpzjw_4n88dj-157z39t.jpg"
       },
       {
         "id": "b_ms3xq92x_jjequd",
-        "name": "Roberto Freire",
+        "name": "Roberto Martins Freire",
         "birthday": "10-26",
         "photo": "./public/members/b_ms3xq92x_jjequd-0r3hzuz.jpg"
       },
@@ -144,13 +144,13 @@
       },
       {
         "id": "b_ms3xr0sd_wd81n3",
-        "name": "Sônia Maria Brancalhão",
-        "birthday": "12-31",
+        "name": "Sônia Maria Zibordi Brancalhão",
+        "birthday": "08-27",
         "photo": "./public/members/b_ms3xr0sd_wd81n3-1m42eb5.jpg"
       },
       {
         "id": "b_ms3xrctq_knqsof",
-        "name": "Sueli Neves",
+        "name": "Sueli Ferreira das Neves",
         "birthday": "08-18",
         "photo": "./public/members/b_ms3xrctq_knqsof-11zsuyd.jpg"
       },
@@ -168,8 +168,8 @@
       },
       {
         "id": "b_ms3zd19y_z8aqbx",
-        "name": "Gustavo Almeida",
-        "birthday": "12-19",
+        "name": "Gustavo Manfio de Almeida",
+        "birthday": "12-20",
         "photo": "./public/members/b_ms3zd19y_z8aqbx-1g28b9o.jpg"
       },
       {
@@ -180,7 +180,7 @@
       },
       {
         "id": "b_ms40it6p_0df3zb",
-        "name": "Silvio Begosso",
+        "name": "Silvio Renato Begosso",
         "birthday": "01-01",
         "photo": ""
       }
@@ -370,10 +370,10 @@
         "time": "20:00",
         "location": "Sede da Apae de Cândido Mota",
         "theme": "🦁 Reunião de Alinhamento",
-        "notes": "🔹 Apuração do resultado do leilão\n🔹 Avaliação e encaminhamentos\n🔹 Demais assuntos de interesse do Lions\n\n🤝 Contamos com a participação de todos!",
+        "notes": "🔹 Apuração do resultado do leilão;\n🔹 Avaliação e encaminhamentos;\n🔹 Demais assuntos de interesse do Lions\n\n🤝 Contamos com a participação de todos!",
         "locationType": "physical",
         "onlineUrl": "",
-        "status": "Em andamento"
+        "status": "Concluído"
       }
     ],
     "notices": [
@@ -381,23 +381,39 @@
         "id": "n_ms3ydhvf_zmqoii",
         "title": "🦁 Desafio da Governadoria – Mês de Julho",
         "date": "2026-07-01",
-        "endDate": "2026-07-31",
+        "endDate": "2026-08-10",
         "priority": "Alta",
         "text": "📌 Campanha do mês: BOLACHA 🍪\n🤝 Vamos fortalecer as ações de combate à FOME! ❤️\n\nContamos com o apoio de todos os Clubes e associados para participar desta campanha, sempre respeitando e sem interferir nas atividades de cada Clube.\n\n📋 Caso o seu Clube não esteja na lista ou haja alguma informação incorreta, por favor, entre em contato para que possamos fazer a correção.\n\n📅 A lista será atualizada até o dia 10 do próximo mês.\n\n📝 Importante: Lançar a atividade como FOME.\n\n⚠️ Lembrando: NÃO coletaremos dados pelo Portal Lions.\n\n🙏 Agradecemos a todos os Clubes e Associados pela participação, dedicação e espírito de servir!\n\n🦁 Juntos, fazemos a diferença! 🦁"
       },
       {
         "id": "n_mseoj0xi_aiu46g",
         "title": "DIA \"D\" LIONS! 🦁",
-        "date": "2026-08-04",
+        "date": "2026-08-08",
         "endDate": "2026-08-08",
         "priority": "Alta",
         "text": "**🦁 É SÁBADO, 08 DE AGOSTO – DIA \"D\" LIONS! 🦁**\n\n**Todo segundo sábado de cada mês é o nosso Dia \"D\" Lions!**\n\nConvido todos os companheiros e companheiras a vestirem, com muito orgulho, a camiseta, o colete, o jaleco, o boné ou qualquer peça que represente o Lions, demonstrando o nosso **ORGULHO DE SER LEÃO! 🦁💙💛**\n\n🚗🚎✈️ Vai viajar? Não se esqueça de levar sua camiseta do Lions!\n\nVamos vestir as cores do Lions para ir ao mercado, à feira, ao shopping, ao trabalho, durante nossas atividades de serviços leonísticos ou em qualquer outro lugar. Quanto mais visível estivermos, mais divulgaremos a nossa missão de servir.\n\n📸 Não se esqueçam de tirar uma foto e publicar em suas redes sociais (Facebook, Instagram, TikTok, YouTube, WhatsApp e outras), utilizando as hashtags:\n\n#DiaDLions #DiaDLionsDLB1\n\n**Vamos mostrar a força do nosso movimento e o orgulho de fazer parte desta grande família leonística! 🤗🦁🦁🦁**"
+      },
+      {
+        "id": "n_mtdq36co_jsu439",
+        "title": "🍚❤️ CAMPANHA DO MÊS DE AGOSTO — ARROZ ❤️🍚",
+        "date": "2026-08-01",
+        "endDate": "2026-09-10",
+        "priority": "Alta",
+        "text": "🍽️🦁 **Ações em prol do FOME**\n**Neste mês de AGOSTO, nossa campanha é dedicada à ARRECADAÇÃO DE ARROZ** 🍚❤️\n\nContamos com vocês e com a participação de todos os nossos Clubes e Associados em mais uma ação em prol do FOME! 🤝🦁\n\n✨ Cada doação, cada campanha e cada gesto de solidariedade fazem a diferença! Vamos juntos fortalecer essa iniciativa, sempre de forma integrada e sem interferir nas demais atividades do Clube.\n\n**📅 PRAZO PARA ATUALIZAÇÃO**\nNossa lista de ações será atualizada até o dia 10 do próximo mês. 📝\n\nPor isso, pedimos a colaboração de todos para que as informações das ações realizadas sejam encaminhadas dentro desse prazo.\n\n**📌 IMPORTANTE**\nAo realizar sua ação, lembrem-se de LANÇAR A ATIVIDADE COMO FOME.\n\n🚨** ATENÇÃO:** **NÃO** colheremos dados diretamente pelo Portal Lions.\n\nContamos, portanto, com a colaboração de todos para que as informações referentes às ações sejam devidamente encaminhadas.\n\n🙏 Nosso muito obrigado a todos os Clubes e Associados pelo comprometimento, pela parceria e, principalmente, pela participação nessa importante causa!\n\n🍚❤️ Neste mês, vamos transformar cada quilo de arroz em solidariedade, alimento e esperança!\n\n🦁🤝 **Juntos, fazemos a diferença!** ❤️🍽️"
+      },
+      {
+        "id": "n_mtdqm3m8_efyla2",
+        "title": "📢 AVISO AOS ASSOCIADOS",
+        "date": "2026-08-25",
+        "endDate": "2026-09-10",
+        "priority": "Alta",
+        "text": "Conforme informado na última reunião, solicitamos aos associados que possuem mensalidades em aberto que, por gentileza, regularizem sua situação assim que possível. 💰\n\n📅 Aos associados que optarem pelo pagamento **semestral**, informamos que o pagamento deverá ser realizado **antecipadamente, contemplando todo o semestre.**\n\n📋 O **Tesoureiro** encaminhará **mensalmente** aos associados que possuírem mensalidades pendentes a relação dos valores em aberto, facilitando o acompanhamento e a regularização.\n\n❓ Em caso de dúvidas, sugestões ou necessidade de esclarecimentos, procurem um dos dirigentes do Clube.\n\n🤝 **Agradecemos a compreensão e a colaboração de todos!**"
       }
     ],
     "leaders": [
       {
         "id": "leadership_msjqmcsu_tdz2qg",
-        "name": "Luiz Henrique Franciscatte",
+        "name": "Luiz Henrique Baratelli Franciscatte",
         "photo": "./public/members/b_ms3xlpvb_50kztj-1wypju9.jpg",
         "role": "Segundo Vice-Presidente",
         "lionYear": "2026/2027",
@@ -415,7 +431,7 @@
       },
       {
         "id": "leadership_msjqmxno_3mpbkd",
-        "name": "Denis Coelho",
+        "name": "Denis Gonçalves Coelho",
         "photo": "./public/members/b_ms3xhsbp_w6a41l-0ypsu5j.jpg",
         "role": "Presidente",
         "lionYear": "2026/2027",
@@ -433,7 +449,7 @@
       },
       {
         "id": "leadership_msjqnhed_lwhibt",
-        "name": "Mario Gozzi",
+        "name": "Mario Sergio Gozzi",
         "photo": "./public/members/b_ms3xnxct_7h4wxe-0ucc51o.jpg",
         "role": "Diretor",
         "lionYear": "2026/2027",
@@ -442,7 +458,7 @@
       },
       {
         "id": "leadership_msjqnx06_mfjejb",
-        "name": "Daniel Flávio Gozzi",
+        "name": "Daniel Flavio Gozzi",
         "photo": "./public/members/b_ms3xh5de_4qya3j-0lmscuw.jpg",
         "role": "Assessor de Sócios",
         "lionYear": "2026/2027",
@@ -451,7 +467,7 @@
       },
       {
         "id": "leadership_msjqo3at_vw46sy",
-        "name": "Regina Freire",
+        "name": "Regina Bolfarini Jabur Freire",
         "photo": "./public/members/b_ms3xpn5s_svjeqa-04mh3eo.jpg",
         "role": "Assessor de Marketing",
         "lionYear": "2026/2027",
@@ -469,7 +485,7 @@
       },
       {
         "id": "leadership_msjqolv4_c2he8q",
-        "name": "Roberto Freire",
+        "name": "Roberto Martins Freire",
         "photo": "./public/members/b_ms3xq92x_jjequd-0r3hzuz.jpg",
         "role": "Primeiro Vice-Presidente",
         "lionYear": "2026/2027",
