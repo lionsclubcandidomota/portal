@@ -27,13 +27,12 @@ export function renderDashboard() {
   const visibleNotices = notices.length ? notices : recentNoticeHistory;
 
   els.root.innerHTML = `
-    <section class="hero hero-impact">
+    <section class="hero hero-impact hero-impact-clean">
       <div class="hero-watermark" aria-hidden="true"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt=""></div>
       <div class="hero-content">
         <span class="hero-eyebrow">Portal do clube</span>
         <div class="hero-kicker">${escapeHtml(settings.clubName)}</div>
         <h2>${greeting()}!</h2>
-        <p>Um portal público para acompanhar a agenda, os aniversários e os comunicados do clube com clareza, proximidade e identidade visual marcante.</p>
         <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
         <div class="hero-chip-row" aria-label="Destaques do portal">
           <span class="hero-chip">${icon('calendar')} Agenda</span>

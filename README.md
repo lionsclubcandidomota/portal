@@ -120,6 +120,14 @@ npm test
 - Modal agora preserva e devolve o foco ao elemento de origem, melhorando a navegação por teclado.
 - Mantida a estrutura pública de dados e a validação de privacidade existente.
 
+## Revisão 1.1.11 — Banner premium e nova paleta dos menus
+
+- banner reformulado inspirado em uma estética mais premium, impactante e limpa;
+- removido o texto descritivo longo do hero, priorizando composição visual e ações;
+- logo do Lions ficou maior, com selo em destaque e marca d’água de fundo;
+- slogan do banner mantido em português: **“Nós Servimos”**;
+- menus lateral e mobile receberam uma paleta mais nobre, alinhada ao novo banner.
+
 ## Revisão 1.1.10 — Banner impactante e correção do rodapé
 
 - banner inicial redesenhado para um visual mais impactante, mantendo a linha moderna e limpa;
