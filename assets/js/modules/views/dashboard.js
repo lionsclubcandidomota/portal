@@ -18,35 +18,27 @@ export function renderDashboard() {
   const visibleNotices = notices.length ? notices : recentNoticeHistory;
 
   els.root.innerHTML = `
-    <section class="hero">
+    <section class="hero hero-minimal">
       <div class="hero-brand-mark" aria-hidden="true"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt=""></div>
       <div class="hero-content">
         <span class="hero-eyebrow">Portal do clube</span>
         <div class="hero-kicker">${escapeHtml(settings.clubName)}</div>
         <h2>${greeting()}!</h2>
-        <p>Um espaço público, moderno e acolhedor para acompanhar a agenda, os aniversários e os comunicados do clube.</p>
+        <p>Acompanhe a agenda, os aniversários e os comunicados do clube de forma simples, moderna e acolhedora.</p>
         <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
-        <div class="hero-chip-row" aria-label="Acessos rápidos do portal">
-          <span class="hero-chip">${icon('calendar')} Agenda pública</span>
-          <span class="hero-chip">${icon('cake')} Aniversariantes do mês</span>
-          <span class="hero-chip">${icon('megaphone')} Comunicados do clube</span>
+        <div class="hero-chip-row" aria-label="Destaques do portal">
+          <span class="hero-chip">${icon('calendar')} Agenda</span>
+          <span class="hero-chip">${icon('cake')} Aniversários</span>
+          <span class="hero-chip">${icon('megaphone')} Avisos</span>
         </div>
         <div class="hero-actions">
           <button class="hero-action primary" type="button" data-go="agenda">${icon('calendar')} Ver agenda</button>
           <button class="hero-action" type="button" data-go="notices">${icon('megaphone')} Ver avisos</button>
         </div>
       </div>
-      <div class="hero-visual" aria-hidden="true">
-        <span class="hero-orbit orbit-a"></span>
-        <span class="hero-orbit orbit-b"></span>
-        <span class="hero-orbit orbit-c"></span>
-        <span class="hero-float hero-float-top">Distrito LB 1</span>
-        <span class="hero-float hero-float-left">${icon('calendar')} Agenda</span>
-        <span class="hero-float hero-float-right">${icon('megaphone')} Avisos</span>
-        <div class="hero-logo">
-          <div class="hero-logo-wrap"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt="Logo do ${escapeHtml(settings.clubName)}"></div>
-          <div class="hero-seal-copy"><strong>We Serve</strong><small>Servindo com união e propósito</small></div>
-        </div>
+      <div class="hero-badge" aria-hidden="true">
+        <div class="hero-logo-wrap"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt=""></div>
+        <div class="hero-seal-copy"><strong>We Serve</strong><small>Distrito LB 1</small></div>
       </div>
     </section>
 

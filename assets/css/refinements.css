@@ -805,3 +805,235 @@ html[data-theme="dark"] .hero-float{background:rgba(255,255,255,.07)}
     font-size:.67rem;
   }
 }
+
+/* ========================================================================== 
+   Banner minimalism v1.1.8
+   ========================================================================== */
+.hero.hero-minimal{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:24px;
+  min-height:228px;
+  padding:32px 34px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:28px;
+  background:linear-gradient(135deg,#0c79c8 0%, #0867b5 48%, #0a4d8f 100%);
+  box-shadow:0 20px 44px rgba(0,82,155,.16);
+}
+.hero.hero-minimal::before,
+.hero.hero-minimal::after{content:none}
+.hero.hero-minimal .hero-brand-mark{
+  position:absolute;
+  right:26px;
+  bottom:-22px;
+  width:min(24vw,240px);
+  opacity:.08;
+  filter:grayscale(1) brightness(2.9);
+  z-index:0;
+}
+.hero.hero-minimal .hero-content{
+  position:relative;
+  z-index:1;
+  max-width:680px;
+}
+.hero.hero-minimal .hero-eyebrow{
+  min-height:27px;
+  padding:4px 10px;
+  background:rgba(255,255,255,.11);
+  border-color:rgba(255,255,255,.16);
+  font-size:.67rem;
+}
+.hero.hero-minimal .hero-kicker{
+  margin-top:10px;
+  color:rgba(255,255,255,.78);
+  font-size:.78rem;
+  font-weight:790;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.hero.hero-minimal h2{
+  margin:12px 0 10px;
+  font-size:clamp(2rem,4vw,3rem);
+  line-height:1.02;
+  letter-spacing:-.045em;
+  color:#fff;
+}
+.hero.hero-minimal p{
+  max-width:580px;
+  margin:0;
+  color:rgba(255,255,255,.9);
+  font-size:.99rem;
+  line-height:1.55;
+}
+.hero.hero-minimal .hero-meta{margin-top:16px}
+.hero.hero-minimal .pill{
+  min-height:34px;
+  padding:6px 11px;
+  background:rgba(255,255,255,.10);
+  border-color:rgba(255,255,255,.13);
+  color:rgba(255,255,255,.9);
+}
+.hero.hero-minimal .hero-chip-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+.hero.hero-minimal .hero-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:30px;
+  padding:5px 10px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.92);
+  font-size:.7rem;
+  font-weight:780;
+}
+.hero.hero-minimal .hero-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+.hero.hero-minimal .hero-action{
+  min-height:42px;
+  padding:10px 14px;
+  border-radius:14px;
+  box-shadow:none;
+}
+.hero.hero-minimal .hero-action.primary{
+  background:#fff;
+  color:#05508e;
+}
+.hero.hero-minimal .hero-badge{
+  position:relative;
+  z-index:1;
+  display:grid;
+  justify-items:center;
+  gap:10px;
+  width:136px;
+  padding:14px 12px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:22px;
+  background:rgba(255,255,255,.07);
+  backdrop-filter:blur(10px);
+}
+.hero.hero-minimal .hero-logo-wrap{
+  display:grid;
+  place-items:center;
+  width:84px;
+  height:84px;
+  padding:10px;
+  border-radius:24px;
+  background:rgba(255,255,255,.96);
+  box-shadow:none;
+}
+.hero.hero-minimal .hero-logo-wrap img{width:100%;height:100%;object-fit:contain}
+.hero.hero-minimal .hero-seal-copy strong{
+  display:block;
+  color:#fff;
+  font-size:.82rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  text-align:center;
+}
+.hero.hero-minimal .hero-seal-copy small{
+  display:block;
+  margin-top:3px;
+  color:rgba(255,255,255,.72);
+  font-size:.68rem;
+  font-weight:760;
+  text-align:center;
+}
+
+html[data-theme="dark"] .hero.hero-minimal{
+  box-shadow:0 22px 52px rgba(0,0,0,.34);
+}
+html[data-theme="dark"] .hero.hero-minimal .hero-badge{background:rgba(255,255,255,.05)}
+
+@media(max-width:900px){
+  .hero.hero-minimal{
+    gap:18px;
+    padding:28px 26px;
+    min-height:216px;
+  }
+  .hero.hero-minimal .hero-brand-mark{
+    width:min(28vw,210px);
+    right:18px;
+  }
+  .hero.hero-minimal .hero-badge{width:124px}
+}
+
+@media(max-width:720px){
+  .hero.hero-minimal{
+    grid-template-columns:1fr;
+    gap:12px;
+    min-height:0;
+    padding:22px 18px;
+    border-radius:24px;
+  }
+  .hero.hero-minimal .hero-brand-mark{
+    right:-6px;
+    bottom:-8px;
+    width:108px;
+    opacity:.07;
+  }
+  .hero.hero-minimal .hero-badge{
+    position:absolute;
+    top:16px;
+    right:14px;
+    width:auto;
+    padding:0;
+    border:0;
+    background:transparent;
+    backdrop-filter:none;
+  }
+  .hero.hero-minimal .hero-logo-wrap{
+    width:62px;
+    height:62px;
+    padding:8px;
+    border-radius:18px;
+    background:rgba(255,255,255,.93);
+  }
+  .hero.hero-minimal .hero-seal-copy{display:none}
+  .hero.hero-minimal .hero-content{padding-right:76px}
+  .hero.hero-minimal .hero-kicker{font-size:.68rem}
+  .hero.hero-minimal h2{font-size:1.98rem}
+  .hero.hero-minimal p{font-size:.86rem;max-width:none}
+  .hero.hero-minimal .hero-meta{margin-top:12px}
+  .hero.hero-minimal .hero-chip-row{margin-top:12px;gap:7px}
+  .hero.hero-minimal .hero-chip{font-size:.64rem;min-height:28px;padding:4px 8px}
+  .hero.hero-minimal .hero-actions{margin-top:14px}
+  .hero.hero-minimal .hero-action{flex:1;min-height:40px;font-size:.74rem}
+}
+
+@media(max-width:430px){
+  .hero.hero-minimal{
+    padding:20px 14px;
+    gap:10px;
+  }
+  .hero.hero-minimal .hero-brand-mark{
+    right:-14px;
+    bottom:-6px;
+    width:92px;
+  }
+  .hero.hero-minimal .hero-content{padding-right:64px}
+  .hero.hero-minimal h2{font-size:1.78rem}
+  .hero.hero-minimal p{font-size:.83rem;line-height:1.48}
+  .hero.hero-minimal .hero-chip-row{display:none}
+  .hero.hero-minimal .hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hero.hero-minimal .hero-action{min-width:0;padding:10px 12px}
+  .hero.hero-minimal .hero-badge{top:14px;right:12px}
+  .hero.hero-minimal .hero-logo-wrap{width:56px;height:56px}
+}
+
+@media(max-width:360px){
+  .hero.hero-minimal .hero-content{padding-right:58px}
+  .hero.hero-minimal .hero-actions{grid-template-columns:1fr}
+}
