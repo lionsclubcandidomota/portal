@@ -1,6 +1,6 @@
 import {
   state, els, icon, normalize, escapeHtml, formatDate, parseLocalDate, dateKey,
-  todayStart, safeUrl, simpleMarkdown, empty, openModal
+  todayStart, safeUrl, simpleMarkdown, empty, openModal, lastUpdateText
 } from '../core.js';
 import { appointments } from '../model.js';
 
@@ -53,9 +53,33 @@ export function openAppointment(type, id) {
 }
 
 export function renderAgenda() {
+  const items = appointments();
+  const meetings = items.filter(item => item.type === 'meeting').length;
+  const events = items.filter(item => item.type === 'event').length;
+  const logo = escapeHtml(state.data?.settings?.logo || './public/logo.png');
+
   els.root.innerHTML = `
-    <section class="section-banner agenda-toolbar">
-      <div><h2>${icon('calendar')} Agenda pública</h2><p>Eventos e reuniões publicados pelo clube.</p></div>
+    <section class="hero hero-impact hero-impact-clean section-hero-home agenda-hero-home">
+      <div class="hero-watermark" aria-hidden="true"><img src="${logo}" alt=""></div>
+      <div class="hero-content">
+        <span class="hero-eyebrow">Agenda do clube</span>
+        <div class="hero-kicker">Compromissos públicos</div>
+        <h2>Agenda pública</h2>
+        <p>Eventos e reuniões publicados pelo clube para consulta pública.</p>
+        <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
+        <div class="hero-chip-row" aria-label="Resumo da agenda">
+          <span class="hero-chip">${icon('calendar')} ${items.length} compromisso${items.length === 1 ? '' : 's'}</span>
+          <span class="hero-chip">${icon('handshake')} ${meetings} reuni${meetings === 1 ? 'ão' : 'ões'}</span>
+          <span class="hero-chip">${icon('list')} ${events} evento${events === 1 ? '' : 's'}</span>
+        </div>
+      </div>
+      <div class="hero-badge hero-badge-impact section-hero-badge" aria-hidden="true">
+        <div class="hero-logo-wrap"><img src="${logo}" alt=""></div>
+        <div class="hero-seal-copy"><strong>Nós Servimos</strong><small>Distrito LB 1</small></div>
+      </div>
+    </section>
+    <section class="section-banner agenda-toolbar agenda-toolbar-home">
+      <div><h2>${icon('calendar')} Visualização da agenda</h2><p>Escolha como deseja consultar os compromissos.</p></div>
       <div class="segmented">
         <button type="button" data-agenda-mode="list" class="${state.agendaMode === 'list' ? 'active' : ''}">${icon('list')} Lista</button>
         <button type="button" data-agenda-mode="calendar" class="${state.agendaMode === 'calendar' ? 'active' : ''}">${icon('calendar')} Calendário</button>

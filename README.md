@@ -145,6 +145,14 @@ npm test
 - revisão específica para manter o novo banner equilibrado também no celular.
 
 
+## Revisão 1.1.14 — Agenda e Avisos no padrão da home
+
+- telas de Agenda e Avisos alinhadas ao mesmo padrão visual premium do Início e de Dirigentes;
+- banners das duas páginas agora usam marca d’água do logo, selo “Nós Servimos” e a mesma linguagem azul + dourado;
+- Agenda ganhou um cabeçalho institucional e barra de visualização mais refinada;
+- Avisos ganhou cabeçalho no mesmo estilo e melhor coerência com os cartões internos;
+- revisão aplicada também para o mobile.
+
 ## Revisão 1.1.13 — Dirigentes no estilo da home
 
 - tela de Dirigentes ganhou o mesmo padrão visual premium do Início;

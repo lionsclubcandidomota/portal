@@ -1,4 +1,4 @@
-import { els, icon, escapeHtml, formatDate, simpleMarkdown, empty } from '../core.js';
+import { els, icon, escapeHtml, formatDate, simpleMarkdown, empty, state, lastUpdateText } from '../core.js';
 import { publicNotices, historicalNotices } from '../model.js';
 
 function noticeSection(title, subtitle, items, prefix, openFirst = false) {
@@ -27,10 +27,22 @@ export function toggleNotice(id) {
 export function renderNotices() {
   const active = publicNotices();
   const history = historicalNotices();
+  const logo = escapeHtml(state.data?.settings?.logo || './public/logo.png');
   els.root.innerHTML = `
-    <section class="section-banner notices-banner">
-      <div><h2>${icon('megaphone')} Avisos públicos</h2><p>Consulte os comunicados atuais e o histórico recente do clube.</p></div>
-      <div class="notice-summary-chips"><span class="month-chip">${icon('megaphone')} Ativos: ${active.length}</span><span class="month-chip">${icon('clock')} Histórico: ${history.length}</span></div>
+    <section class="hero hero-impact hero-impact-clean section-hero-home notices-hero-home">
+      <div class="hero-watermark" aria-hidden="true"><img src="${logo}" alt=""></div>
+      <div class="hero-content">
+        <span class="hero-eyebrow">Comunicados do clube</span>
+        <div class="hero-kicker">Informações públicas</div>
+        <h2>Avisos públicos</h2>
+        <p>Consulte os comunicados atuais e o histórico recente do clube.</p>
+        <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
+        <div class="hero-chip-row notice-summary-chips" aria-label="Resumo dos avisos"><span class="hero-chip">${icon('megaphone')} Ativos: ${active.length}</span><span class="hero-chip">${icon('clock')} Histórico: ${history.length}</span></div>
+      </div>
+      <div class="hero-badge hero-badge-impact section-hero-badge" aria-hidden="true">
+        <div class="hero-logo-wrap"><img src="${logo}" alt=""></div>
+        <div class="hero-seal-copy"><strong>Nós Servimos</strong><small>Distrito LB 1</small></div>
+      </div>
     </section>
     ${noticeSection('Avisos atuais', 'Comunicados que ainda estão em vigor ou visíveis ao público.', active, 'active', true)}
     ${noticeSection('Histórico de avisos', 'Avisos anteriores, preservados para consulta pública.', history, 'history', active.length === 0)}`;
