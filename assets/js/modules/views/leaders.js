@@ -1,4 +1,4 @@
-import { state, els, normalize, escapeHtml, avatar, empty } from '../core.js';
+import { state, els, normalize, escapeHtml, avatar, empty, icon, lastUpdateText } from '../core.js';
 
 function currentLionYear(date = new Date()) {
   const year = date.getFullYear();
@@ -25,12 +25,25 @@ export function renderLeaders(selectedYear = '') {
     .filter(leader => leader.lionYear === year)
     .sort((a, b) => rolePriority(a.role) - rolePriority(b.role) || a.role.localeCompare(b.role, 'pt-BR'));
 
+  const logo = escapeHtml(state.data?.settings?.logo || './public/logo.png');
+
   els.root.innerHTML = `
-    <section class="leaders-hero">
-      <div><span class="hero-eyebrow">Diretoria do clube</span><h2>Dirigentes do AL ${escapeHtml(year)}</h2><p>Conheça as pessoas responsáveis pela condução do clube neste Ano Leonístico.</p></div>
-      ${years.length ? `<label><span class="sr-only">Ano Leonístico</span><select id="leaderYear" aria-label="Selecionar Ano Leonístico">${years.map(item => `<option value="${escapeHtml(item)}" ${item === year ? 'selected' : ''}>AL ${escapeHtml(item)}${item === current ? ' · Atual' : ''}</option>`).join('')}</select></label>` : ''}
+    <section class="hero hero-impact hero-impact-clean leaders-hero-home">
+      <div class="hero-watermark" aria-hidden="true"><img src="${logo}" alt=""></div>
+      <div class="hero-content">
+        <span class="hero-eyebrow">Diretoria do clube</span>
+        <div class="hero-kicker">Ano Leonístico ${escapeHtml(year)}</div>
+        <h2>Dirigentes do AL ${escapeHtml(year)}</h2>
+        <p>Conheça as pessoas responsáveis pela condução do clube neste Ano Leonístico.</p>
+        <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
+      </div>
+      <div class="hero-badge hero-badge-impact leaders-hero-badge" aria-hidden="true">
+        <div class="hero-logo-wrap"><img src="${logo}" alt=""></div>
+        <div class="hero-seal-copy"><strong>Nós Servimos</strong><small>Distrito LB 1</small></div>
+        ${years.length ? `<label class="leaders-year-field"><span class="sr-only">Ano Leonístico</span><select id="leaderYear" aria-label="Selecionar Ano Leonístico">${years.map(item => `<option value="${escapeHtml(item)}" ${item === year ? 'selected' : ''}>AL ${escapeHtml(item)}${item === current ? ' · Atual' : ''}</option>`).join('')}</select></label>` : ''}
+      </div>
     </section>
-    <section class="leaders-grid">${leaders.length ? leaders.map((leader, index) => `<article class="leader-card ${index === 0 ? 'featured' : ''}">${avatar(leader, 'leader-photo')}<span class="leader-role">${escapeHtml(leader.role)}</span><h3>${escapeHtml(leader.name)}</h3><p>${year === current ? 'Dirigente atual' : `Dirigente no AL ${escapeHtml(year)}`}</p></article>`).join('') : empty('Os dirigentes deste Ano Leonístico ainda não foram publicados.')}</section>`;
+    <section class="leaders-grid leaders-grid-home">${leaders.length ? leaders.map((leader, index) => `<article class="leader-card leader-card-home ${index === 0 ? 'featured' : ''}">${avatar(leader, 'leader-photo')}<span class="leader-role">${escapeHtml(leader.role)}</span><h3>${escapeHtml(leader.name)}</h3><p>${year === current ? 'Dirigente atual' : `Dirigente no AL ${escapeHtml(year)}`}</p></article>`).join('') : empty('Os dirigentes deste Ano Leonístico ainda não foram publicados.')}</section>`;
 
   document.getElementById('leaderYear')?.addEventListener('change', event => renderLeaders(event.target.value));
 }

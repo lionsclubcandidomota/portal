@@ -144,3 +144,11 @@ npm test
 - correção do aparecimento indevido de atalhos no rodapé do desktop, com reforço das regras da navegação mobile;
 - revisão específica para manter o novo banner equilibrado também no celular.
 
+
+## Revisão 1.1.13 — Dirigentes no estilo da home
+
+- tela de Dirigentes ganhou o mesmo padrão visual premium do Início;
+- banner da diretoria agora usa composição semelhante à home, com marca d’água do logo e selo “Nós Servimos”;
+- seletor de Ano Leonístico foi integrado ao próprio banner;
+- cards dos dirigentes receberam refinamento visual para combinar com o novo cabeçalho.
+

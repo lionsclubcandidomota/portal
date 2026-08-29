@@ -1,8 +1,8 @@
 import { DATA_URL, VIEW_META, state, els } from './modules/core.js';
 import { bindShell, applyBrand, updateClock, applyTheme, closeSidebar } from './modules/shell.js';
-import { renderDashboard } from './modules/views/dashboard.js?v=1.1.12';
+import { renderDashboard } from './modules/views/dashboard.js?v=1.1.13';
 import { renderBirthdays } from './modules/views/birthdays.js';
-import { renderLeaders } from './modules/views/leaders.js';
+import { renderLeaders } from './modules/views/leaders.js?v=1.1.13';
 import { renderAgenda, openAppointment } from './modules/views/agenda.js';
 import { renderNotices, toggleNotice } from './modules/views/notices.js';
 import { shareBirthday } from './modules/birthday-share.js';
