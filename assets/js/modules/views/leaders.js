@@ -37,13 +37,15 @@ export function renderLeaders(selectedYear = '') {
         <p>Conheça as pessoas responsáveis pela condução do clube neste Ano Leonístico.</p>
         <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
       </div>
-      <div class="hero-badge hero-badge-impact leaders-hero-badge" aria-hidden="true">
-        <div class="hero-logo-wrap"><img src="${logo}" alt=""></div>
-        <div class="hero-seal-copy"><strong>Nós Servimos</strong><small>Distrito LB 1</small></div>
+      <div class="hero-badge hero-badge-impact leaders-hero-badge">
+        <div class="hero-logo-wrap" aria-hidden="true"><img src="${logo}" alt=""></div>
+        <div class="hero-seal-copy" aria-hidden="true"><strong>Nós Servimos</strong><small>Distrito LB 1</small></div>
         ${years.length ? `<label class="leaders-year-field"><span class="sr-only">Ano Leonístico</span><select id="leaderYear" aria-label="Selecionar Ano Leonístico">${years.map(item => `<option value="${escapeHtml(item)}" ${item === year ? 'selected' : ''}>AL ${escapeHtml(item)}${item === current ? ' · Atual' : ''}</option>`).join('')}</select></label>` : ''}
       </div>
     </section>
+    ${years.length > 1 ? `<div class="leaders-mobile-toolbar"><label><span>Ano Leonístico</span><select id="leaderYearMobile" aria-label="Selecionar Ano Leonístico no celular">${years.map(item => `<option value="${escapeHtml(item)}" ${item === year ? 'selected' : ''}>AL ${escapeHtml(item)}${item === current ? ' · Atual' : ''}</option>`).join('')}</select></label></div>` : ''}
     <section class="leaders-grid leaders-grid-home">${leaders.length ? leaders.map((leader, index) => `<article class="leader-card leader-card-home ${index === 0 ? 'featured' : ''}">${avatar(leader, 'leader-photo')}<span class="leader-role">${escapeHtml(leader.role)}</span><h3>${escapeHtml(leader.name)}</h3><p>${year === current ? 'Dirigente atual' : `Dirigente no AL ${escapeHtml(year)}`}</p></article>`).join('') : empty('Os dirigentes deste Ano Leonístico ainda não foram publicados.')}</section>`;
 
   document.getElementById('leaderYear')?.addEventListener('change', event => renderLeaders(event.target.value));
+  document.getElementById('leaderYearMobile')?.addEventListener('change', event => renderLeaders(event.target.value));
 }

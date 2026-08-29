@@ -1,5 +1,4 @@
-   Visual refinement v1.1.3
-   ========================================================================== */
+/* ========================================================================== */
 :root{
   --content-max:1320px;
 }
@@ -2569,4 +2568,136 @@ html[data-theme="dark"] .calendar-shell{
 @media(max-width:360px){
   .agenda-toolbar-home .segmented{flex-direction:column}
   .agenda-toolbar-home .segmented button{width:100%}
+}
+
+/* ========================================================================== 
+   Final QA consolidation v1.1.15
+   ========================================================================== */
+.birthdays-toolbar-home{
+  margin-bottom:14px;
+  border-color:color-mix(in srgb,var(--lions-blue) 9%,var(--border));
+  background:linear-gradient(180deg,color-mix(in srgb,var(--primary-soft) 38%,#fff),var(--surface));
+  box-shadow:var(--shadow-sm);
+}
+.birthdays-toolbar-home .search-row{
+  flex:0 1 560px;
+}
+.birthdays-toolbar-home .search{
+  min-width:min(360px,48vw);
+  background:var(--surface);
+}
+.search:focus-within{
+  border-color:color-mix(in srgb,var(--lions-gold) 42%,var(--border));
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--lions-gold) 10%,transparent);
+}
+.birthdays-table{
+  border-color:color-mix(in srgb,var(--lions-blue) 8%,var(--border));
+  border-radius:22px;
+  box-shadow:var(--shadow-sm);
+}
+.birthdays-table th{
+  color:color-mix(in srgb,var(--lions-navy) 78%,var(--muted));
+}
+.birthdays-table tbody tr:hover{
+  background:color-mix(in srgb,var(--lions-gold-soft) 28%,var(--surface-2));
+}
+.birthday-card{
+  border-color:color-mix(in srgb,var(--lions-blue) 8%,var(--border));
+  background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 97%,#fff),var(--surface));
+}
+
+.leaders-mobile-toolbar{display:none}
+.leaders-mobile-toolbar label{
+  display:grid;
+  gap:6px;
+}
+.leaders-mobile-toolbar span{
+  color:var(--muted);
+  font-size:.68rem;
+  font-weight:820;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.leaders-mobile-toolbar select{
+  width:100%;
+  min-height:44px;
+  padding:0 36px 0 12px;
+  border:1px solid color-mix(in srgb,var(--lions-gold) 20%,var(--border));
+  border-radius:14px;
+  background:var(--surface);
+  color:var(--text);
+  font-size:.8rem;
+  font-weight:800;
+  outline:none;
+}
+.leaders-mobile-toolbar select:focus-visible{
+  border-color:color-mix(in srgb,var(--lions-gold) 55%,var(--border));
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--lions-gold) 10%,transparent);
+}
+
+.modal-card{
+  border-color:color-mix(in srgb,var(--lions-blue) 10%,var(--border));
+}
+.modal-header{
+  border-bottom-color:color-mix(in srgb,var(--lions-gold) 14%,var(--border));
+}
+.modal-header::after{
+  content:"";
+  position:absolute;
+  right:18px;
+  bottom:-1px;
+  left:18px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--lions-gold) 38%,transparent),transparent);
+  pointer-events:none;
+}
+.empty{
+  border-color:color-mix(in srgb,var(--lions-blue) 10%,var(--border-strong));
+}
+
+/* Keep decorative banner badges from intercepting pointer events, except the
+   Leaders desktop badge where the year selector is interactive. */
+.section-hero-badge{pointer-events:none}
+.leaders-hero-badge{pointer-events:auto}
+
+html[data-theme="dark"] .birthdays-toolbar-home,
+html[data-theme="dark"] .birthdays-table,
+html[data-theme="dark"] .birthday-card{
+  box-shadow:var(--shadow-sm);
+}
+
+@media(max-width:720px){
+  .birthdays-toolbar-home{
+    align-items:stretch;
+    padding:16px;
+    border-radius:20px;
+  }
+  .birthdays-toolbar-home .search-row{
+    width:100%;
+    flex:1 1 auto;
+  }
+  .birthdays-toolbar-home .search{
+    min-width:0;
+    flex:1 1 auto;
+  }
+  .leaders-mobile-toolbar{
+    display:block;
+    margin:-4px 0 12px;
+    padding:12px;
+    border:1px solid color-mix(in srgb,var(--lions-blue) 8%,var(--border));
+    border-radius:16px;
+    background:var(--surface);
+    box-shadow:var(--shadow-xs);
+  }
+}
+
+@media(max-width:430px){
+  .birthdays-hero-home .hero-chip-row{display:none}
+  .birthdays-toolbar-home{padding:14px}
+  .birthdays-toolbar-home .search-row{grid-template-columns:1fr auto}
+}
+
+@media(max-width:360px){
+  .birthdays-toolbar-home .search-row{grid-template-columns:1fr}
+  .birthdays-toolbar-home .month-chip{justify-self:start}
 }

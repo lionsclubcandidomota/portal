@@ -145,6 +145,15 @@ npm test
 - revisão específica para manter o novo banner equilibrado também no celular.
 
 
+## Revisão 1.1.15 — QA visual final e consolidação
+
+- revisão final de consistência visual entre Início, Aniversários, Dirigentes, Agenda e Avisos;
+- Aniversários passou a usar o mesmo banner premium das demais telas e ganhou barra de pesquisa separada;
+- corrigido o seletor de Ano Leonístico em Dirigentes para não perder funcionalidade/acessibilidade no mobile quando houver histórico;
+- refinados estados de foco, cards, modais e detalhes de contraste para manter a identidade azul + dourado;
+- limpos fragmentos residuais de comentários dos CSS modularizados e validado o parsing das folhas de estilo;
+- validação estrutural final mantida antes do deploy.
+
 ## Revisão 1.1.14 — Agenda e Avisos no padrão da home
 
 - telas de Agenda e Avisos alinhadas ao mesmo padrão visual premium do Início e de Dirigentes;

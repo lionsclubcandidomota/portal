@@ -1,10 +1,10 @@
 import { DATA_URL, VIEW_META, state, els } from './modules/core.js';
 import { bindShell, applyBrand, updateClock, applyTheme, closeSidebar } from './modules/shell.js';
-import { renderDashboard } from './modules/views/dashboard.js?v=1.1.14';
-import { renderBirthdays } from './modules/views/birthdays.js';
-import { renderLeaders } from './modules/views/leaders.js?v=1.1.14';
-import { renderAgenda, openAppointment } from './modules/views/agenda.js?v=1.1.14';
-import { renderNotices, toggleNotice } from './modules/views/notices.js?v=1.1.14';
+import { renderDashboard } from './modules/views/dashboard.js?v=1.1.15';
+import { renderBirthdays } from './modules/views/birthdays.js?v=1.1.15';
+import { renderLeaders } from './modules/views/leaders.js?v=1.1.15';
+import { renderAgenda, openAppointment } from './modules/views/agenda.js?v=1.1.15';
+import { renderNotices, toggleNotice } from './modules/views/notices.js?v=1.1.15';
 import { shareBirthday } from './modules/birthday-share.js';
 
 const renderers = {
