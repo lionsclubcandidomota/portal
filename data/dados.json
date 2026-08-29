@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T02:59:49.167Z",
+  "updatedAt": "2026-08-29T03:00:14.377Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -448,6 +448,14 @@
         "endDate": "2026-01-01",
         "priority": "Baixa",
         "text": "**✨ Um novo ano começa! Que possamos renovar nossa esperança e nossa vontade de servir.**"
+      },
+      {
+        "id": "n_mtdsm096_2bqjcw",
+        "title": "Dia Mundial do Braille",
+        "date": "2026-01-04",
+        "endDate": "2026-01-04",
+        "priority": "Baixa",
+        "text": "**♿ Inclusão é garantir que todos possam participar, aprender e viver com autonomia.**"
       }
     ],
     "leaders": [
