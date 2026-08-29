@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:10:02.737Z",
+  "updatedAt": "2026-08-29T03:10:06.174Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -424,14 +424,6 @@
         "endDate": "2026-01-31",
         "priority": "Média",
         "text": "**Cuidar da mente é cuidar da vida. 🤍 Que nunca nos faltem escuta, acolhimento e empatia.**"
-      },
-      {
-        "id": "n_mtdsk570_qzdjug",
-        "title": "💚 Janeiro Verde",
-        "date": "2026-01-01",
-        "endDate": "2026-01-31",
-        "priority": "Média",
-        "text": "**Prevenção também é uma forma de servir. 💚 Cuide-se e incentive quem você ama a cuidar da saúde.**"
       },
       {
         "id": "n_mtdsm096_2bqjcw",
