@@ -42,6 +42,16 @@ npm test
 
 
 
+
+## Revisão 1.1.7 — Correção fina do banner mobile
+
+- corrigida a proporção do banner em celulares de 360–430 px;
+- removida a reserva lateral excessiva que estreitava o conteúdo do hero;
+- logo passa a funcionar como elemento compacto no canto superior, sem aumentar a altura do banner;
+- chips deixam de empilhar em telas estreitas e são ocultados quando passam a competir com o conteúdo principal;
+- botões do banner recuperam a largura útil completa no celular;
+- comportamento de 360 px, 390 px, 430 px e até 720 px consolidado em regras finais de responsividade.
+
 ## Revisão 1.1.6 — Consolidação visual e refatoração leve
 
 - revisão estética geral da tela inicial e dos componentes compartilhados em desktop e mobile;

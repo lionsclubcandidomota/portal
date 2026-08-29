@@ -634,3 +634,174 @@ html[data-theme="dark"] .hero-float{background:rgba(255,255,255,.07)}
   .hero-visual{opacity:.42}
 }
 
+
+/* ========================================================================== 
+   Mobile hero proportionality fix v1.1.7
+   Final overrides: keep the banner compact and aligned with the page width.
+   ========================================================================== */
+@media(max-width:720px){
+  .hero{
+    position:relative;
+    display:block;
+    min-height:0;
+    padding:18px 16px 16px;
+    overflow:hidden;
+    border-radius:20px;
+  }
+  .hero-content{
+    max-width:none;
+    padding-right:0;
+  }
+  .hero-brand-mark{display:none}
+  .hero-eyebrow,
+  .hero-kicker,
+  .hero h2,
+  .hero p,
+  .hero-meta{
+    max-width:calc(100% - 88px);
+  }
+  .hero-kicker{
+    margin-top:8px;
+    font-size:.66rem;
+    line-height:1.25;
+  }
+  .hero h2{
+    margin:8px 0 7px;
+    font-size:1.82rem;
+    line-height:1.02;
+  }
+  .hero p{
+    margin:0;
+    padding-right:0;
+    font-size:.82rem;
+    line-height:1.42;
+  }
+  .hero-meta{margin-top:10px}
+  .pill{
+    min-height:28px;
+    padding:4px 8px;
+    font-size:.62rem;
+  }
+  .hero-chip-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:10px;
+    padding-right:0;
+  }
+  .hero-chip{
+    min-height:27px;
+    padding:4px 8px;
+    font-size:.61rem;
+  }
+  .hero-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+    margin-top:12px;
+    padding-right:0;
+  }
+  .hero-action{
+    width:100%;
+    min-height:39px;
+    padding:8px 9px;
+    font-size:.71rem;
+  }
+  .hero-visual{
+    position:absolute;
+    top:14px;
+    right:13px;
+    bottom:auto;
+    left:auto;
+    display:block;
+    width:76px;
+    min-height:0;
+    padding:0;
+    opacity:.96;
+    pointer-events:none;
+  }
+  .hero-orbit,
+  .hero-float,
+  .hero-seal-copy{display:none}
+  .hero-logo{
+    position:static;
+    display:block;
+    width:76px;
+    padding:0;
+    border:0;
+    border-radius:20px;
+    background:transparent;
+    box-shadow:none;
+    opacity:1;
+  }
+  .hero-logo-wrap{
+    width:76px;
+    height:76px;
+    padding:8px;
+    border-radius:20px;
+    box-shadow:0 10px 22px rgba(3,28,51,.15);
+  }
+}
+
+@media(max-width:430px){
+  .hero{
+    padding:16px 14px 14px;
+    border-radius:18px;
+  }
+  .hero-eyebrow,
+  .hero-kicker,
+  .hero h2,
+  .hero p,
+  .hero-meta{
+    max-width:calc(100% - 76px);
+  }
+  .hero h2{font-size:1.7rem}
+  .hero p{font-size:.79rem;line-height:1.4}
+  /* KPIs immediately below already expose these categories; hiding the chips
+     keeps the mobile hero concise instead of turning it into a tall card. */
+  .hero-chip-row{display:none}
+  .hero-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    margin-top:11px;
+  }
+  .hero-visual{top:13px;right:12px;width:66px;opacity:.92}
+  .hero-logo{width:66px}
+  .hero-logo-wrap{
+    width:66px;
+    height:66px;
+    padding:7px;
+    border-radius:18px;
+  }
+}
+
+@media(max-width:360px){
+  .hero{
+    padding:15px 13px 13px;
+  }
+  .hero-eyebrow,
+  .hero-kicker,
+  .hero h2,
+  .hero p,
+  .hero-meta{
+    max-width:calc(100% - 64px);
+  }
+  .hero h2{font-size:1.58rem}
+  .hero p{font-size:.76rem}
+  .hero-visual{top:12px;right:10px;width:56px;opacity:.8}
+  .hero-logo{width:56px}
+  .hero-logo-wrap{
+    width:56px;
+    height:56px;
+    padding:6px;
+    border-radius:16px;
+  }
+  .hero-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+  }
+  .hero-action{
+    min-height:38px;
+    padding:7px 6px;
+    font-size:.67rem;
+  }
+}
