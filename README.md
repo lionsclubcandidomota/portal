@@ -42,6 +42,13 @@ npm test
 
 
 
+## Revisão 1.1.5 — Banner mais atraente
+
+- banner principal redesenhado com composição visual mais rica e institucional;
+- inclusão de chips visuais e elementos flutuantes para destacar agenda, aniversários e comunicados;
+- área do logo passou a atuar como peça central da arte, sem perder legibilidade no mobile;
+- refinado o equilíbrio visual do hero no desktop e no celular, sem alterar a lógica do portal.
+
 ## Revisão 1.1.4 — Polimento premium
 
 - acabamento final de UI/UX com microinterações e transições mais naturais no desktop;
