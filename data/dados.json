@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:10:40.624Z",
+  "updatedAt": "2026-08-29T03:10:43.992Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -432,14 +432,6 @@
         "endDate": "2026-01-30",
         "priority": "Baixa",
         "text": "**🕊️ Onde existe diálogo, respeito e compreensão, a paz encontra espaço para crescer.**"
-      },
-      {
-        "id": "n_mtdswzdc_rseg9x",
-        "title": "Último domingo – Combate à Hanseníase",
-        "date": "2026-01-25",
-        "endDate": "2026-01-25",
-        "priority": "Média",
-        "text": "**💜 Informação combate o preconceito. Diagnóstico e tratamento transformam vidas.**"
       }
     ],
     "leaders": [
