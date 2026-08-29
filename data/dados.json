@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:00:32.687Z",
+  "updatedAt": "2026-08-29T03:01:09.826Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -464,6 +464,14 @@
         "endDate": "2026-01-04",
         "priority": "Baixa",
         "text": "**❤️ Informação, cuidado e solidariedade podem transformar vidas.**"
+      },
+      {
+        "id": "n_mtdsn71x_2cyyai",
+        "title": "Dia da Gratidão",
+        "date": "2026-01-06",
+        "endDate": "2026-01-06",
+        "priority": "Baixa",
+        "text": "**🙏 Gratidão por cada companheiro, voluntário e amigo que escolhe servir ao próximo.**"
       }
     ],
     "leaders": [
