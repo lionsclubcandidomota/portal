@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:03:40.870Z",
+  "updatedAt": "2026-08-29T03:04:04.288Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -480,6 +480,14 @@
         "endDate": "2026-01-07",
         "priority": "Baixa",
         "text": "**📚 Cada leitura abre uma nova janela para o conhecimento e para um mundo melhor.**"
+      },
+      {
+        "id": "n_mtdsqxnw_3y95xx",
+        "title": "Controle da Poluição por Agrotóxicos",
+        "date": "2026-01-11",
+        "endDate": "2026-01-11",
+        "priority": "Baixa",
+        "text": "**🌱 Proteger a saúde e o meio ambiente também faz parte da nossa missão de servir.**"
       }
     ],
     "leaders": [
