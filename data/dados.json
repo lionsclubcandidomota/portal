@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:05:05.923Z",
+  "updatedAt": "2026-08-29T03:06:11.561Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -504,6 +504,14 @@
         "endDate": "2026-01-14",
         "priority": "Baixa",
         "text": "**💙 Que nenhum enfermo se sinta sozinho. Um gesto de carinho também pode ser cuidado.**"
+      },
+      {
+        "id": "n_mtdstnv4_svotcc",
+        "title": "Combate ao Doping no Esporte",
+        "date": "2026-01-15",
+        "endDate": "2026-01-15",
+        "priority": "Baixa",
+        "text": "**🏅 No esporte e na vida, ética, respeito e honestidade sempre devem vencer.**"
       }
     ],
     "leaders": [
