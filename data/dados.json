@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:04:47.218Z",
+  "updatedAt": "2026-08-29T03:05:05.923Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -496,6 +496,14 @@
         "endDate": "2026-01-13",
         "priority": "Alta",
         "text": "**🦁 Celebramos o legado de Melvin Jones, cuja visão continua inspirando milhões de pessoas a servir.**"
+      },
+      {
+        "id": "n_mtdss984_4xtt63",
+        "title": "Dia Mundial do Enfermo",
+        "date": "2026-01-14",
+        "endDate": "2026-01-14",
+        "priority": "Baixa",
+        "text": "**💙 Que nenhum enfermo se sinta sozinho. Um gesto de carinho também pode ser cuidado.**"
       }
     ],
     "leaders": [
