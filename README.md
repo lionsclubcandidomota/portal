@@ -120,6 +120,14 @@ npm test
 - Modal agora preserva e devolve o foco ao elemento de origem, melhorando a navegação por teclado.
 - Mantida a estrutura pública de dados e a validação de privacidade existente.
 
+## Revisão 1.1.12 — Consolidação visual premium
+
+- refinamento final da identidade azul-marinho + dourado em banner, menus, cards e botões;
+- removidos os chips redundantes do banner para dar mais protagonismo à marca e ao selo **“Nós Servimos”**;
+- KPIs e cards ganharam detalhes sutis da nova paleta, sem escurecer a área de conteúdo;
+- navegação mobile foi harmonizada com a sidebar e revisada para legibilidade e contraste;
+- conferência visual específica em desktop e celular antes do fechamento da versão.
+
 ## Revisão 1.1.11 — Banner premium e nova paleta dos menus
 
 - banner reformulado inspirado em uma estética mais premium, impactante e limpa;

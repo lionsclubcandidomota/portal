@@ -1,6 +1,6 @@
 import { DATA_URL, VIEW_META, state, els } from './modules/core.js';
 import { bindShell, applyBrand, updateClock, applyTheme, closeSidebar } from './modules/shell.js';
-import { renderDashboard } from './modules/views/dashboard.js?v=1.1.11';
+import { renderDashboard } from './modules/views/dashboard.js?v=1.1.12';
 import { renderBirthdays } from './modules/views/birthdays.js';
 import { renderLeaders } from './modules/views/leaders.js';
 import { renderAgenda, openAppointment } from './modules/views/agenda.js';

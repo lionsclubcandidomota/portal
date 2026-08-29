@@ -34,11 +34,6 @@ export function renderDashboard() {
         <div class="hero-kicker">${escapeHtml(settings.clubName)}</div>
         <h2>${greeting()}!</h2>
         <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
-        <div class="hero-chip-row" aria-label="Destaques do portal">
-          <span class="hero-chip">${icon('calendar')} Agenda</span>
-          <span class="hero-chip">${icon('cake')} Aniversários</span>
-          <span class="hero-chip">${icon('megaphone')} Avisos</span>
-        </div>
         <div class="hero-actions">
           <button class="hero-action primary" type="button" data-go="agenda">${icon('calendar')} Ver agenda</button>
           <button class="hero-action" type="button" data-go="notices">${icon('megaphone')} Ver avisos</button>
