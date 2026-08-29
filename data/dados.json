@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T03:01:09.826Z",
+  "updatedAt": "2026-08-29T03:03:40.870Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -472,6 +472,14 @@
         "endDate": "2026-01-06",
         "priority": "Baixa",
         "text": "**🙏 Gratidão por cada companheiro, voluntário e amigo que escolhe servir ao próximo.**"
+      },
+      {
+        "id": "n_mtdsqfl7_m2emvn",
+        "title": "Dia do Leitor",
+        "date": "2026-01-07",
+        "endDate": "2026-01-07",
+        "priority": "Baixa",
+        "text": "**📚 Cada leitura abre uma nova janela para o conhecimento e para um mundo melhor.**"
       }
     ],
     "leaders": [
