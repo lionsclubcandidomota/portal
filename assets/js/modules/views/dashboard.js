@@ -27,13 +27,13 @@ export function renderDashboard() {
   const visibleNotices = notices.length ? notices : recentNoticeHistory;
 
   els.root.innerHTML = `
-    <section class="hero hero-minimal">
-      <div class="hero-brand-mark" aria-hidden="true"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt=""></div>
+    <section class="hero hero-impact">
+      <div class="hero-watermark" aria-hidden="true"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt=""></div>
       <div class="hero-content">
         <span class="hero-eyebrow">Portal do clube</span>
         <div class="hero-kicker">${escapeHtml(settings.clubName)}</div>
         <h2>${greeting()}!</h2>
-        <p>Acompanhe a agenda, os aniversários e os comunicados do clube de forma simples, moderna e acolhedora.</p>
+        <p>Um portal público para acompanhar a agenda, os aniversários e os comunicados do clube com clareza, proximidade e identidade visual marcante.</p>
         <div class="hero-meta"><span class="pill">${icon('refresh')} ${escapeHtml(lastUpdateText())}</span></div>
         <div class="hero-chip-row" aria-label="Destaques do portal">
           <span class="hero-chip">${icon('calendar')} Agenda</span>
@@ -45,9 +45,9 @@ export function renderDashboard() {
           <button class="hero-action" type="button" data-go="notices">${icon('megaphone')} Ver avisos</button>
         </div>
       </div>
-      <div class="hero-badge" aria-hidden="true">
+      <div class="hero-badge hero-badge-impact" aria-hidden="true">
         <div class="hero-logo-wrap"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt=""></div>
-        <div class="hero-seal-copy"><strong>We Serve</strong><small>Distrito LB 1</small></div>
+        <div class="hero-seal-copy"><strong>Nós Servimos</strong><small>Distrito LB 1</small></div>
       </div>
     </section>
 

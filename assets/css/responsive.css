@@ -1,3 +1,8 @@
+@media(min-width:721px){
+  .mobile-bottom-nav{display:none!important}
+}
+
+/* ==========================================================================
    Mobile navigation
    ========================================================================== */
 .mobile-bottom-nav{display:none}

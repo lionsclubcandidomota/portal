@@ -119,3 +119,12 @@ npm test
 - Modo escuro atualizado para manter contraste e consistência com a nova interface.
 - Modal agora preserva e devolve o foco ao elemento de origem, melhorando a navegação por teclado.
 - Mantida a estrutura pública de dados e a validação de privacidade existente.
+
+## Revisão 1.1.10 — Banner impactante e correção do rodapé
+
+- banner inicial redesenhado para um visual mais impactante, mantendo a linha moderna e limpa;
+- logo do Lions ficou maior e mais presente, com composição em destaque e marca d’água de fundo;
+- substituído o texto em inglês por **“Nós Servimos”**;
+- correção do aparecimento indevido de atalhos no rodapé do desktop, com reforço das regras da navegação mobile;
+- revisão específica para manter o novo banner equilibrado também no celular.
+
