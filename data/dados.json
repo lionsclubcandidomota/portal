@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T02:58:47.477Z",
+  "updatedAt": "2026-08-29T02:59:21.848Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -432,6 +432,14 @@
         "endDate": "2026-01-31",
         "priority": "Média",
         "text": "**Prevenção também é uma forma de servir. 💚 Cuide-se e incentive quem você ama a cuidar da saúde.**"
+      },
+      {
+        "id": "n_mtdskvq8_17j35c",
+        "title": "Dia Mundial da Paz",
+        "date": "2026-01-01",
+        "endDate": "2026-01-01",
+        "priority": "Alta",
+        "text": "**🕊️ Que a paz comece em nossas atitudes e se multiplique através do servir.**"
       }
     ],
     "leaders": [
