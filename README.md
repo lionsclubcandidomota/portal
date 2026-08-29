@@ -41,6 +41,16 @@ npm test
 
 
 
+
+## Revisão 1.1.2 — Ajustes de desktop e avisos
+
+- botão do menu lateral passou a funcionar também no desktop, com recolhimento/expansão da sidebar;
+- sidebar ficou menos redundante, removendo o rótulo “Portal público” e substituindo o rodapé por uma mensagem institucional;
+- banner inicial foi redesenhado com composição visual mais atraente usando o logo do Lions;
+- selo lateral do banner deixou de repetir o nome completo do clube, priorizando uma mensagem institucional;
+- página de Avisos agora separa “Avisos atuais” e “Histórico de avisos”, semelhante ao comportamento da Agenda;
+- dashboard passou a mostrar comunicados recentes mesmo quando não houver aviso ativo no momento.
+
 ## Revisão 1.1.1 — Refinamento mobile
 
 - cartões de aniversários compactados no celular;

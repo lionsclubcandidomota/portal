@@ -9,8 +9,9 @@ const VIEW_META = {
   notices: ['Avisos', 'Comunicados públicos do clube']
 };
 
-const state = { data: null, currentView: 'dashboard', agendaMode: 'list', calendarCursor: new Date(), lastFocusedElement: null };
+const state = { data: null, currentView: 'dashboard', agendaMode: 'list', calendarCursor: new Date(), lastFocusedElement: null, sidebarCollapsed: false };
 const els = {
+  appShell: document.querySelector('.app-shell'),
   root: document.getElementById('viewRoot'),
   title: document.getElementById('pageTitle'),
   description: document.getElementById('pageDescription'),
@@ -90,7 +91,10 @@ function toast(message) {
 
 function applyBrand() {
   const settings = state.data?.settings || {};
-  if (settings.clubName) els.clubName.textContent = settings.clubName;
+  if (settings.clubName) {
+    const clubName = String(settings.clubName).replace(/\s*-\s*Distrito\s+LB\s*1/i, '').trim();
+    els.clubName.textContent = clubName || settings.clubName;
+  }
   if (settings.primaryColor) document.documentElement.style.setProperty('--primary', settings.primaryColor);
   if (settings.accentColor) document.documentElement.style.setProperty('--accent', settings.accentColor);
 }
@@ -112,10 +116,30 @@ function applyTheme(theme) {
   els.themeIcon.textContent = dark ? '☀' : '☾';
   els.themeLabel.textContent = dark ? 'Claro' : 'Escuro';
 }
+function isMobileShell() { return window.matchMedia('(max-width: 900px)').matches; }
+function syncSidebarState() {
+  els.appShell?.classList.toggle('sidebar-collapsed', state.sidebarCollapsed && !isMobileShell());
+  els.sidebar.classList.toggle('collapsed', state.sidebarCollapsed && !isMobileShell());
+  els.menuBtn.setAttribute('aria-expanded', isMobileShell() ? String(els.sidebar.classList.contains('open')) : String(!state.sidebarCollapsed));
+  els.menuBtn.setAttribute('aria-label', isMobileShell() ? 'Abrir menu' : (state.sidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'));
+}
+function toggleDesktopSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  localStorage.setItem('lions.public.sidebarCollapsed', String(state.sidebarCollapsed));
+  syncSidebarState();
+}
 function bindShell() {
+  state.sidebarCollapsed = localStorage.getItem('lions.public.sidebarCollapsed') === 'true';
+  syncSidebarState();
   els.menuBtn.addEventListener('click', () => {
-    const open = !els.sidebar.classList.contains('open');
-    els.sidebar.classList.toggle('open', open); els.overlay.classList.toggle('show', open); els.menuBtn.setAttribute('aria-expanded', String(open));
+    if (isMobileShell()) {
+      const open = !els.sidebar.classList.contains('open');
+      els.sidebar.classList.toggle('open', open);
+      els.overlay.classList.toggle('show', open);
+      els.menuBtn.setAttribute('aria-expanded', String(open));
+      return;
+    }
+    toggleDesktopSidebar();
   });
   els.overlay.addEventListener('click', closeSidebar);
   els.themeToggle.addEventListener('click', () => {
@@ -129,8 +153,12 @@ function bindShell() {
     const view = location.hash.replace(/^#\/?/, '');
     if (VIEW_META[view] && view !== state.currentView) setView(view, {updateHash:false});
   });
+  window.addEventListener('resize', () => {
+    if (!isMobileShell()) closeSidebar();
+    syncSidebarState();
+  });
 }
-function closeSidebar(){ els.sidebar.classList.remove('open'); els.overlay.classList.remove('show'); els.menuBtn.setAttribute('aria-expanded','false'); }
+function closeSidebar(){ els.sidebar.classList.remove('open'); els.overlay.classList.remove('show'); syncSidebarState(); }
 function setView(view, {updateHash=true} = {}) {
   if (!VIEW_META[view]) view = 'dashboard';
   state.currentView = view;
@@ -217,7 +245,8 @@ function upcomingAppointments(limit = Infinity) {
 function noticeExpired(n) {
   if (!n.endDate) return false; const end = parseLocalDate(n.endDate); end.setHours(23,59,59,999); return end < new Date();
 }
-function publicNotices() { return state.data.notices.filter(n => !noticeExpired(n)).sort((a,b) => a.date.localeCompare(b.date)); }
+function publicNotices() { return state.data.notices.filter(n => !noticeExpired(n)).sort((a,b) => b.date.localeCompare(a.date)); }
+function historicalNotices() { return state.data.notices.filter(noticeExpired).sort((a,b) => b.date.localeCompare(a.date)); }
 function lastUpdateText() {
   const value = state.data.updatedAt; if (!value) return 'Informações atualizadas';
   const d = new Date(value); if (Number.isNaN(d.getTime())) return 'Informações atualizadas';
@@ -228,12 +257,14 @@ function renderDashboard() {
   const bdays = currentMonthBirthdays();
   const upcoming = upcomingAppointments(5);
   const notices = publicNotices().slice(0,3);
+  const recentNoticeHistory = historicalNotices().slice(0,2);
   const settings = state.data.settings;
   const upcomingCount = upcomingAppointments().length;
   const noticeCount = publicNotices().length;
 
   els.root.innerHTML = `
     <section class="hero">
+      <div class="hero-brand-mark" aria-hidden="true"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt=""></div>
       <div class="hero-content">
         <span class="hero-eyebrow">Portal do clube</span>
         <h2>${greeting()}!</h2>
@@ -246,7 +277,10 @@ function renderDashboard() {
       </div>
       <div class="hero-logo">
         <div class="hero-logo-wrap"><img src="${escapeHtml(settings.logo || './public/logo.png')}" alt="Logo do ${escapeHtml(settings.clubName)}"></div>
-        <small>${escapeHtml(settings.clubName)}</small>
+        <div class="hero-seal-copy">
+          <strong>We Serve</strong>
+          <small>Comunidade • Serviço • União</small>
+        </div>
       </div>
     </section>
 
@@ -284,10 +318,10 @@ function renderDashboard() {
 
       <article class="card">
         <div class="card-header">
-          <div><h3>${icon('megaphone')} Avisos</h3><div class="card-subtitle">Comunicados em destaque</div></div>
+          <div><h3>${icon('megaphone')} Avisos</h3><div class="card-subtitle">${noticeCount ? 'Comunicados em destaque' : 'Últimos comunicados publicados'}</div></div>
           <button class="btn btn-ghost" type="button" data-go="notices">Ver avisos</button>
         </div>
-        <div class="list">${notices.length ? notices.map(n => `<div class="notice"><h4>${escapeHtml(n.title)}</h4><div class="markdown">${simpleMarkdown(n.text)}</div><small>${formatDate(n.date)}${n.endDate ? ` até ${formatDate(n.endDate)}`:''}</small></div>`).join('') : empty('Nenhum aviso disponível.')}</div>
+        <div class="list">${(notices.length ? notices : recentNoticeHistory).length ? (notices.length ? notices : recentNoticeHistory).map(n => `<div class="notice"><h4>${escapeHtml(n.title)}</h4><div class="markdown">${simpleMarkdown(n.text)}</div><small>${formatDate(n.date)}${n.endDate ? ` até ${formatDate(n.endDate)}`:''}${noticeExpired(n) ? ' · histórico' : ''}</small></div>`).join('') : empty('Nenhum aviso disponível.')}</div>
       </article>
     </section>`;
   bindViewNavigation();
@@ -351,8 +385,42 @@ function downloadIcs(a) {
 }
 
 function renderNotices() {
-  const items=publicNotices(); els.root.innerHTML = `<section class="section-banner"><div><h2>${icon('megaphone')} Avisos públicos</h2><p>Comunicados ativos e programados.</p></div></section><section class="notices-list">${items.length?items.map((n,i)=>`<article class="notice-card"><button class="notice-summary" type="button" data-notice-toggle="${i}" aria-expanded="${i===0?'true':'false'}"><span class="notice-icon">${icon('megaphone')}</span><span><strong>${escapeHtml(n.title)}</strong><small>${formatDate(n.date)}${n.endDate?` até ${formatDate(n.endDate)}`:''}</small></span><span class="priority">${escapeHtml(n.priority||'Normal')}</span></button><div class="notice-details markdown" data-notice-details="${i}" ${i===0?'':'hidden'}>${simpleMarkdown(n.text)}</div></article>`).join(''):empty('Nenhum aviso disponível.')}</section>`;
-  document.querySelectorAll('[data-notice-toggle]').forEach(btn=>btn.addEventListener('click',()=>{const d=document.querySelector(`[data-notice-details="${btn.dataset.noticeToggle}"]`); const open=!d.hidden; d.hidden=open; btn.setAttribute('aria-expanded',String(!open));}));
+  const active = publicNotices();
+  const history = historicalNotices();
+  const section = (title, subtitle, items, prefix, openFirst = false) => `
+    <section class="notice-section">
+      <div class="card-header notice-section-header">
+        <div><h3>${icon('megaphone')} ${title}</h3><div class="card-subtitle">${subtitle}</div></div>
+      </div>
+      ${items.length ? `<div class="notices-list">${items.map((n, i) => `
+        <article class="notice-card ${prefix === 'history' ? 'notice-card-history' : ''}">
+          <button class="notice-summary" type="button" data-notice-toggle="${prefix}-${i}" aria-expanded="${openFirst && i === 0 ? 'true' : 'false'}">
+            <span class="notice-icon">${icon(prefix === 'history' ? 'clock' : 'megaphone')}</span>
+            <span><strong>${escapeHtml(n.title)}</strong><small>${formatDate(n.date)}${n.endDate ? ` até ${formatDate(n.endDate)}` : ''}</small></span>
+            <span class="priority">${escapeHtml(n.priority || (prefix === 'history' ? 'Encerrado' : 'Normal'))}</span>
+          </button>
+          <div class="notice-details markdown" data-notice-details="${prefix}-${i}" ${openFirst && i === 0 ? '' : 'hidden'}>${simpleMarkdown(n.text)}</div>
+        </article>`).join('')}</div>` : empty(prefix === 'history' ? 'Nenhum aviso anterior publicado.' : 'Nenhum aviso ativo no momento.')}
+    </section>`;
+
+  els.root.innerHTML = `
+    <section class="section-banner">
+      <div><h2>${icon('megaphone')} Avisos públicos</h2><p>Consulte os comunicados atuais e o histórico recente do clube.</p></div>
+      <div class="notice-summary-chips">
+        <span class="month-chip">${icon('megaphone')} Ativos: ${active.length}</span>
+        <span class="month-chip">${icon('clock')} Histórico: ${history.length}</span>
+      </div>
+    </section>
+    ${section('Avisos atuais', 'Comunicados que ainda estão em vigor ou visíveis ao público.', active, 'active', true)}
+    ${section('Histórico de avisos', 'Avisos anteriores, semelhante ao histórico da agenda.', history, 'history', false)}
+  `;
+
+  document.querySelectorAll('[data-notice-toggle]').forEach(btn => btn.addEventListener('click', () => {
+    const details = document.querySelector(`[data-notice-details="${btn.dataset.noticeToggle}"]`);
+    const open = !details.hidden;
+    details.hidden = open;
+    btn.setAttribute('aria-expanded', String(!open));
+  }));
 }
 
 async function shareBirthday(id) {
