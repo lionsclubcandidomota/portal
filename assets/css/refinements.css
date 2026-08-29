@@ -1037,3 +1037,199 @@ html[data-theme="dark"] .hero.hero-minimal .hero-badge{background:rgba(255,255,2
   .hero.hero-minimal .hero-content{padding-right:58px}
   .hero.hero-minimal .hero-actions{grid-template-columns:1fr}
 }
+
+/* ========================================================================== 
+   Home composition refinement v1.1.9
+   ========================================================================== */
+.hero.hero-minimal{
+  min-height:212px;
+  padding:28px 30px;
+  gap:20px;
+  box-shadow:0 16px 36px rgba(0,82,155,.14);
+}
+.hero.hero-minimal .hero-brand-mark{
+  width:min(20vw,190px);
+  right:20px;
+  bottom:-24px;
+  opacity:.065;
+}
+.hero.hero-minimal .hero-badge{
+  width:118px;
+  padding:12px 10px;
+  border-radius:20px;
+}
+.hero.hero-minimal .hero-logo-wrap{
+  width:72px;
+  height:72px;
+  padding:8px;
+  border-radius:21px;
+}
+.hero.hero-minimal .hero-seal-copy strong{font-size:.75rem}
+.hero.hero-minimal .hero-seal-copy small{font-size:.62rem}
+.hero.hero-minimal .hero-chip-row{margin-top:12px}
+.hero.hero-minimal .hero-actions{margin-top:15px}
+
+.grid-kpis{
+  gap:12px;
+  margin:14px 0;
+}
+.kpi-card{
+  min-height:78px;
+  padding:13px 15px;
+  border-radius:18px;
+  box-shadow:0 7px 20px rgba(15,31,48,.055);
+}
+.kpi-icon{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+}
+.kpi-copy strong{font-size:1.35rem}
+.kpi-caption{font-size:.64rem}
+
+.dashboard-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.22fr) minmax(340px,.78fr);
+  align-items:start;
+  gap:14px;
+}
+.dashboard-side-stack{
+  display:grid;
+  gap:14px;
+}
+.dashboard-layout .card{
+  padding:17px;
+  border-radius:20px;
+}
+.dashboard-layout .card-header{margin-bottom:11px}
+.dashboard-layout .list{gap:6px}
+.dashboard-birthdays-card{
+  min-height:100%;
+}
+.dashboard-birthday-item{
+  min-height:56px;
+  padding:7px 9px;
+}
+.dashboard-birthday-item .avatar{
+  width:40px;
+  height:40px;
+}
+.dashboard-birthday-item .list-item-main strong{font-size:.84rem}
+.dashboard-birthday-item .list-item-main small{font-size:.7rem}
+
+.dashboard-agenda-list{gap:6px}
+.dashboard-agenda-item{
+  min-height:54px;
+  padding:7px 8px;
+}
+.dashboard-agenda-item .kpi-icon{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  font-size:.94rem;
+}
+.dashboard-agenda-item .list-item-main strong{font-size:.82rem}
+.dashboard-agenda-item .list-item-main small{font-size:.68rem}
+
+.dashboard-notice-list{
+  display:grid;
+  gap:7px;
+}
+.dashboard-notice{
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--surface-2);
+}
+.dashboard-notice-title{
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+}
+.dashboard-notice-title .notice-icon{
+  width:34px;
+  height:34px;
+  border-radius:11px;
+  font-size:.86rem;
+}
+.dashboard-notice-title h4{
+  margin:0;
+  overflow:hidden;
+  color:var(--text);
+  font-size:.8rem;
+  line-height:1.25;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.dashboard-notice-title small{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.63rem;
+}
+.dashboard-notice p{
+  display:-webkit-box;
+  margin:7px 0 0;
+  overflow:hidden;
+  color:var(--text-soft);
+  font-size:.72rem;
+  line-height:1.45;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:3;
+}
+
+@media(max-width:1100px) and (min-width:901px){
+  .dashboard-layout{grid-template-columns:1fr}
+  .dashboard-side-stack{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:900px){
+  .dashboard-layout{grid-template-columns:1fr;gap:12px}
+  .dashboard-side-stack{grid-template-columns:1fr;gap:12px}
+}
+
+@media(max-width:720px){
+  .hero.hero-minimal{
+    min-height:0;
+    padding:20px 16px;
+    gap:10px;
+  }
+  .hero.hero-minimal .hero-badge{top:14px;right:13px}
+  .hero.hero-minimal .hero-logo-wrap{width:58px;height:58px}
+  .hero.hero-minimal .hero-content{padding-right:70px}
+  .hero.hero-minimal .hero-kicker{max-width:100%;font-size:.65rem}
+  .hero.hero-minimal h2{font-size:1.86rem}
+  .hero.hero-minimal p{font-size:.82rem;line-height:1.45}
+  .hero.hero-minimal .pill{min-height:30px;padding:5px 9px;font-size:.65rem}
+
+  .grid-kpis{gap:7px;margin:10px 0 11px}
+  .kpi-card{
+    min-height:88px;
+    padding:9px 6px;
+    border-radius:16px;
+  }
+  .kpi-icon{width:36px;height:36px;border-radius:12px}
+  .kpi-copy strong{font-size:1.2rem}
+  .kpi-caption{font-size:.54rem}
+
+  .dashboard-layout .card{padding:13px;border-radius:17px}
+  .dashboard-birthday-item{min-height:54px}
+  .dashboard-agenda-item{min-height:52px}
+  .dashboard-notice{padding:9px 10px}
+  .dashboard-notice-title h4{font-size:.77rem;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .dashboard-notice p{-webkit-line-clamp:2;font-size:.69rem}
+}
+
+@media(max-width:430px){
+  .hero.hero-minimal{padding:18px 13px}
+  .hero.hero-minimal .hero-content{padding-right:60px}
+  .hero.hero-minimal h2{font-size:1.7rem}
+  .hero.hero-minimal .hero-actions{gap:7px}
+  .hero.hero-minimal .hero-action{min-height:38px;padding:8px 9px;font-size:.69rem}
+  .grid-kpis{gap:5px}
+  .kpi-card{min-height:84px;padding:8px 4px}
+  .kpi-copy small{font-size:.57rem}
+  .kpi-copy strong{font-size:1.14rem}
+  .dashboard-layout .card{padding:12px}
+}

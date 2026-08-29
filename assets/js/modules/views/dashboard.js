@@ -1,14 +1,23 @@
 import {
-  state, els, icon, escapeHtml, avatar, empty, formatDate, simpleMarkdown, greeting, lastUpdateText
+  state, els, icon, escapeHtml, avatar, empty, formatDate, greeting, lastUpdateText
 } from '../core.js';
 import {
   currentMonthBirthdays, birthdayStatus, birthdayDateText, upcomingAppointments,
   publicNotices, historicalNotices, noticeExpired
 } from '../model.js';
 
+function noticePreview(value = '', limit = 190) {
+  const plain = String(value)
+    .replace(/\*\*/g, '')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return plain.length > limit ? `${plain.slice(0, limit).trimEnd()}…` : plain;
+}
+
 export function renderDashboard() {
   const birthdays = currentMonthBirthdays();
-  const upcoming = upcomingAppointments(5);
+  const upcoming = upcomingAppointments(4);
   const notices = publicNotices().slice(0, 3);
   const recentNoticeHistory = historicalNotices().slice(0, 2);
   const settings = state.data.settings;
@@ -57,32 +66,34 @@ export function renderDashboard() {
       </button>
     </section>
 
-    <section class="dashboard-grid" aria-label="Destaques do portal">
-      <article class="card full dashboard-card dashboard-birthdays-card">
+    <section class="dashboard-layout" aria-label="Destaques do portal">
+      <article class="card dashboard-card dashboard-birthdays-card">
         <div class="card-header">
           <div><h3>${icon('cake')} Aniversários</h3><div class="card-subtitle">Aniversariantes do mês atual</div></div>
           <button class="btn btn-ghost" type="button" data-go="birthdays">Ver todos</button>
         </div>
-        <div class="list dashboard-birthday-list">${birthdays.length ? birthdays.slice(0, 6).map(person => {
+        <div class="list dashboard-birthday-list">${birthdays.length ? birthdays.slice(0, 5).map(person => {
           const status = birthdayStatus(person);
           return `<div class="list-item dashboard-birthday-item">${avatar(person)}<div class="list-item-main"><strong>${escapeHtml(person.name)}</strong><small>${escapeHtml(birthdayDateText(person))}</small></div><span class="birthday-status ${status.cls}">${escapeHtml(status.text)}</span></div>`;
         }).join('') : empty('Nenhum aniversariante neste mês.')}</div>
       </article>
 
-      <article class="card dashboard-card">
-        <div class="card-header">
-          <div><h3>${icon('calendar')} Agenda</h3><div class="card-subtitle">Próximos eventos e reuniões</div></div>
-          <button class="btn btn-ghost" type="button" data-go="agenda">Ver agenda</button>
-        </div>
-        <div class="list">${upcoming.length ? upcoming.map(item => `<button class="list-item" type="button" data-appt="${escapeHtml(item.type)}:${escapeHtml(item.id)}"><span class="kpi-icon">${icon(item.type === 'meeting' ? 'handshake' : 'calendar')}</span><span class="list-item-main"><strong>${escapeHtml(item.title)}</strong><small>${formatDate(item.date, { day: '2-digit', month: '2-digit' })} · ${escapeHtml(item.time || 'Horário não informado')}</small></span></button>`).join('') : empty('Nenhum compromisso próximo.')}</div>
-      </article>
+      <div class="dashboard-side-stack">
+        <article class="card dashboard-card dashboard-agenda-card">
+          <div class="card-header">
+            <div><h3>${icon('calendar')} Agenda</h3><div class="card-subtitle">Próximos eventos e reuniões</div></div>
+            <button class="btn btn-ghost" type="button" data-go="agenda">Ver agenda</button>
+          </div>
+          <div class="list dashboard-agenda-list">${upcoming.length ? upcoming.map(item => `<button class="list-item dashboard-agenda-item" type="button" data-appt="${escapeHtml(item.type)}:${escapeHtml(item.id)}"><span class="kpi-icon">${icon(item.type === 'meeting' ? 'handshake' : 'calendar')}</span><span class="list-item-main"><strong>${escapeHtml(item.title)}</strong><small>${formatDate(item.date, { day: '2-digit', month: '2-digit' })} · ${escapeHtml(item.time || 'Horário não informado')}</small></span></button>`).join('') : empty('Nenhum compromisso próximo.')}</div>
+        </article>
 
-      <article class="card dashboard-card">
-        <div class="card-header">
-          <div><h3>${icon('megaphone')} Avisos</h3><div class="card-subtitle">${noticeCount ? 'Comunicados em destaque' : 'Últimos comunicados publicados'}</div></div>
-          <button class="btn btn-ghost" type="button" data-go="notices">Ver avisos</button>
-        </div>
-        <div class="list">${visibleNotices.length ? visibleNotices.map(notice => `<div class="notice"><h4>${escapeHtml(notice.title)}</h4><div class="markdown">${simpleMarkdown(notice.text)}</div><small>${formatDate(notice.date)}${notice.endDate ? ` até ${formatDate(notice.endDate)}` : ''}${noticeExpired(notice) ? ' · histórico' : ''}</small></div>`).join('') : empty('Nenhum aviso disponível.')}</div>
-      </article>
+        <article class="card dashboard-card dashboard-notices-card">
+          <div class="card-header">
+            <div><h3>${icon('megaphone')} Avisos</h3><div class="card-subtitle">${noticeCount ? 'Comunicados em destaque' : 'Últimos comunicados publicados'}</div></div>
+            <button class="btn btn-ghost" type="button" data-go="notices">Ver avisos</button>
+          </div>
+          <div class="dashboard-notice-list">${visibleNotices.length ? visibleNotices.slice(0, 2).map(notice => `<article class="dashboard-notice"><div class="dashboard-notice-title"><span class="notice-icon">${icon('megaphone')}</span><div><h4>${escapeHtml(notice.title)}</h4><small>${formatDate(notice.date)}${noticeExpired(notice) ? ' · histórico' : ''}</small></div></div><p>${escapeHtml(noticePreview(notice.text))}</p></article>`).join('') : empty('Nenhum aviso disponível.')}</div>
+        </article>
+      </div>
     </section>`;
 }
