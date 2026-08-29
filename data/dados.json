@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T02:35:38.401Z",
+  "updatedAt": "2026-08-29T03:01:09.826Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -408,6 +408,70 @@
         "endDate": "2026-09-10",
         "priority": "Alta",
         "text": "Conforme informado na última reunião, solicitamos aos associados que possuem mensalidades em aberto que, por gentileza, regularizem sua situação assim que possível. 💰\n\n📅 Aos associados que optarem pelo pagamento **semestral**, informamos que o pagamento deverá ser realizado **antecipadamente, contemplando todo o semestre.**\n\n📋 O **Tesoureiro** encaminhará **mensalmente** aos associados que possuírem mensalidades pendentes a relação dos valores em aberto, facilitando o acompanhamento e a regularização.\n\n❓ Em caso de dúvidas, sugestões ou necessidade de esclarecimentos, procurem um dos dirigentes do Clube.\n\n🤝 **Agradecemos a compreensão e a colaboração de todos!**"
+      },
+      {
+        "id": "n_mtdsidoi_z04kw2",
+        "title": "💜 Janeiro Roxo",
+        "date": "2026-01-01",
+        "endDate": "2026-01-31",
+        "priority": "Média",
+        "text": "**Cuidar também é informar. 💜 Combater a hanseníase começa com conscientização, respeito e acolhimento.**"
+      },
+      {
+        "id": "n_mtdsj6zf_jb7cuu",
+        "title": "🤍 Janeiro Branco",
+        "date": "2026-01-01",
+        "endDate": "2026-01-31",
+        "priority": "Média",
+        "text": "**Cuidar da mente é cuidar da vida. 🤍 Que nunca nos faltem escuta, acolhimento e empatia.**"
+      },
+      {
+        "id": "n_mtdsk570_qzdjug",
+        "title": "💚 Janeiro Verde",
+        "date": "2026-01-01",
+        "endDate": "2026-01-31",
+        "priority": "Média",
+        "text": "**Prevenção também é uma forma de servir. 💚 Cuide-se e incentive quem você ama a cuidar da saúde.**"
+      },
+      {
+        "id": "n_mtdskvq8_17j35c",
+        "title": "Dia Mundial da Paz",
+        "date": "2026-01-01",
+        "endDate": "2026-01-01",
+        "priority": "Alta",
+        "text": "**🕊️ Que a paz comece em nossas atitudes e se multiplique através do servir.**"
+      },
+      {
+        "id": "n_mtdslgtg_fhtaut",
+        "title": "Confraternização Universal",
+        "date": "2026-01-01",
+        "endDate": "2026-01-01",
+        "priority": "Baixa",
+        "text": "**✨ Um novo ano começa! Que possamos renovar nossa esperança e nossa vontade de servir.**"
+      },
+      {
+        "id": "n_mtdsm096_2bqjcw",
+        "title": "Dia Mundial do Braille",
+        "date": "2026-01-04",
+        "endDate": "2026-01-04",
+        "priority": "Baixa",
+        "text": "**♿ Inclusão é garantir que todos possam participar, aprender e viver com autonomia.**"
+      },
+      {
+        "id": "n_mtdsmedq_cbl2f7",
+        "title": "Dia do Hemofílico",
+        "date": "2026-01-04",
+        "endDate": "2026-01-04",
+        "priority": "Baixa",
+        "text": "**❤️ Informação, cuidado e solidariedade podem transformar vidas.**"
+      },
+      {
+        "id": "n_mtdsn71x_2cyyai",
+        "title": "Dia da Gratidão",
+        "date": "2026-01-06",
+        "endDate": "2026-01-06",
+        "priority": "Baixa",
+        "text": "**🙏 Gratidão por cada companheiro, voluntário e amigo que escolhe servir ao próximo.**"
       }
     ],
     "leaders": [
