@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-11T12:50:35.829Z",
+  "updatedAt": "2026-09-22T18:27:58.914Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -374,6 +374,17 @@
         "locationType": "physical",
         "onlineUrl": "",
         "status": "Concluído"
+      },
+      {
+        "id": "m_mud0bj15_zk5qh5",
+        "date": "2026-09-22",
+        "time": "20:00",
+        "location": "Sede da Apae de Cândido Mota",
+        "theme": "🦁 Reunião de Alinhamento",
+        "notes": "🔹 Decidir nosso próximo evento.\n🔹 ⁠Desfile cívico de Cândido Mota\n\n🤝 Contamos com a participação de todos!",
+        "locationType": "physical",
+        "onlineUrl": "",
+        "status": "Pendente"
       }
     ],
     "notices": [
