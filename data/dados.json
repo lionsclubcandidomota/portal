@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-24T19:26:16.444Z",
+  "updatedAt": "2026-09-24T19:33:57.279Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -182,7 +182,7 @@
         "id": "b_ms40it6p_0df3zb",
         "name": "Silvio Renato Begosso",
         "birthday": "01-01",
-        "photo": ""
+        "photo": "./public/members/b_ms40it6p_0df3zb-12i2es6.jpg"
       }
     ],
     "events": [
