@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-09T12:56:40.451Z",
+  "updatedAt": "2026-10-09T13:16:22.174Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -315,6 +315,17 @@
         "location": "Brasil",
         "status": "Confirmado",
         "description": "**Celebramos o Dia Nacional do LEOísmo, uma data muito especial para todos que fazem parte do Movimento LEO! 🎉**\n\n📅 A data é comemorada em homenagem à fundação do primeiro LEO Clube do Brasil, o LEO Clube de Maceió/AL, fundado em 28 de agosto de 1969. 🦁\n\nAo longo desses anos, os LEO Clubes têm desenvolvido inúmeras atividades de grande relevância, levando solidariedade, companheirismo e serviço à comunidade. 🤝❤️\n\nCom dedicação e entusiasmo, os jovens LEOs demonstram, na prática, os mais elevados princípios que norteiam o Leonismo, contribuindo para a construção de um mundo melhor. 🌎✨\n\n🦁 Parabéns a todos os LEOs pelo seu dia!\nQue possamos continuar servindo com amor, união e propósito. 💙\n\n**Uma vez LEO, sempre LEO! 🦁💙**",
+        "locationType": "physical",
+        "onlineUrl": ""
+      },
+      {
+        "id": "e_mv0zoa0v_iyeddd",
+        "name": "🦁💛 VISITA OFICIAL DO GOVERNADOR DO DISTRITO LB-1 💙🦁",
+        "date": "2026-10-11",
+        "time": "09:00",
+        "location": "Sede Apae Cândido Mota",
+        "status": "Confirmado",
+        "description": "**✨ MJF OLCY GUILHERME POMPEO SANCHES, acompanhado da MJF EDNA.**\n\n🤝 Queridos companheiros!\n\nNo dia 11 de outubro, teremos a honra e a alegria de receber, em nossa sede, a visita oficial do Governador do Distrito LB-1. Será um momento especial de integração, união e fortalecimento dos ideais do Leonismo. 🦁\n\n💛 Contamos com a presença de todos para prestigiar esse importante encontro e demonstrar o espírito de companheirismo, dedicação e união que fazem a força do nosso clube!\n\n**🍽️ Almoço do dia: a combinar.**\n\n🙏 Desde já, agradecemos a participação e o comprometimento de cada companheiro.\n\n🦁 A presença de todos é muito importante! Juntos, somos mais fortes! 💙💛",
         "locationType": "physical",
         "onlineUrl": ""
       }
