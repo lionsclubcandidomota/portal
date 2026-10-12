@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-09T13:16:22.174Z",
+  "updatedAt": "2026-10-12T16:01:17.343Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -327,6 +327,17 @@
         "status": "Confirmado",
         "description": "**✨ MJF OLCY GUILHERME POMPEO SANCHES, acompanhado da MJF EDNA.**\n\n🤝 Queridos companheiros!\n\nNo dia 11 de outubro, teremos a honra e a alegria de receber, em nossa sede, a visita oficial do Governador do Distrito LB-1. Será um momento especial de integração, união e fortalecimento dos ideais do Leonismo. 🦁\n\n💛 Contamos com a presença de todos para prestigiar esse importante encontro e demonstrar o espírito de companheirismo, dedicação e união que fazem a força do nosso clube!\n\n**🍽️ Almoço do dia: a combinar.**\n\n🙏 Desde já, agradecemos a participação e o comprometimento de cada companheiro.\n\n🦁 A presença de todos é muito importante! Juntos, somos mais fortes! 💙💛",
         "locationType": "physical",
+        "onlineUrl": ""
+      },
+      {
+        "id": "e_mv5fvx6p_pjtrhw",
+        "name": "🦁✨ O TREINAMENTO MAIS ESPERADO CHEGOU! ✨🦁",
+        "date": "2026-10-19",
+        "time": "19:30",
+        "location": "",
+        "status": "Confirmado",
+        "description": "🎓 PROGRAMA LEÃO ORIENTADOR CERTIFICADO 🏆\n\n📚 Serão 3 dias de muito aprendizado, conhecimento e crescimento leonístico! Uma oportunidade imperdível para fortalecer nossa liderança e contribuir ainda mais para o sucesso dos nossos clubes! 💛💙\n\n📢 ATENÇÃO, PRESIDENTES E ASSOCIADOS DO DISTRITO LB-1!\n\nO DG Olcy solicita que TODOS os Lions Clubes do Distrito LB-1 tenham um Leão Orientador Certificado! 🦁👏\n\nPor isso, pedimos a cada Presidente de Clube que indique no mínimo 1 associado para participar desse importante treinamento.\n\n💡 Mas atenção: a participação não se limita aos indicados pelos Presidentes! Todos os associados interessados, independentemente de indicação, estão convidados a se inscrever e aproveitar essa excelente oportunidade de aprendizado e desenvolvimento! 🚀📖\n\n📲 QUER PARTICIPAR? FAÇA SUA INSCRIÇÃO!\n\nEntre em contato com a PDG Alexandrina Isabel, GLT do Distrito, para obter informações e realizar sua inscrição.\n\n🤝 Vamos juntos fortalecer nossas lideranças, preparar novos Leões Orientadores e construir clubes cada vez mais fortes e atuantes!\n\n🦁💛💙 Liderança, conhecimento e compromisso com o Leonismo!\n\n✨ NÃO FIQUE DE FORA! PARTICIPE! ✨",
+        "locationType": "virtual",
         "onlineUrl": ""
       }
     ],
