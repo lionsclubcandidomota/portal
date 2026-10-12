@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-12T16:01:45.364Z",
+  "updatedAt": "2026-10-12T16:02:06.573Z",
   "app": "Portal público do Lions Clube de Cândido Mota",
   "version": "public-1.1.1",
   "data": {
@@ -344,6 +344,17 @@
         "id": "e_mv5fwiu3_9rpqh1",
         "name": "🦁✨ O TREINAMENTO MAIS ESPERADO CHEGOU! ✨🦁",
         "date": "2026-10-20",
+        "time": "19:30",
+        "location": "",
+        "status": "Confirmado",
+        "description": "🎓 PROGRAMA LEÃO ORIENTADOR CERTIFICADO 🏆\n\n📚 Serão 3 dias de muito aprendizado, conhecimento e crescimento leonístico! Uma oportunidade imperdível para fortalecer nossa liderança e contribuir ainda mais para o sucesso dos nossos clubes! 💛💙\n\n📢 ATENÇÃO, PRESIDENTES E ASSOCIADOS DO DISTRITO LB-1!\n\nO DG Olcy solicita que TODOS os Lions Clubes do Distrito LB-1 tenham um Leão Orientador Certificado! 🦁👏\n\nPor isso, pedimos a cada Presidente de Clube que indique no mínimo 1 associado para participar desse importante treinamento.\n\n💡 Mas atenção: a participação não se limita aos indicados pelos Presidentes! Todos os associados interessados, independentemente de indicação, estão convidados a se inscrever e aproveitar essa excelente oportunidade de aprendizado e desenvolvimento! 🚀📖\n\n📲 QUER PARTICIPAR? FAÇA SUA INSCRIÇÃO!\n\nEntre em contato com a PDG Alexandrina Isabel, GLT do Distrito, para obter informações e realizar sua inscrição.\n\n🤝 Vamos juntos fortalecer nossas lideranças, preparar novos Leões Orientadores e construir clubes cada vez mais fortes e atuantes!\n\n🦁💛💙 Liderança, conhecimento e compromisso com o Leonismo!\n\n✨ NÃO FIQUE DE FORA! PARTICIPE! ✨",
+        "locationType": "virtual",
+        "onlineUrl": ""
+      },
+      {
+        "id": "e_mv5fwz63_v1rtws",
+        "name": "🦁✨ O TREINAMENTO MAIS ESPERADO CHEGOU! ✨🦁",
+        "date": "2026-10-21",
         "time": "19:30",
         "location": "",
         "status": "Confirmado",
